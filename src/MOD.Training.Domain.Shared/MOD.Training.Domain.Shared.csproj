@@ -36,5 +36,6 @@
     <EmbeddedResource Include="Localization\Training\*.json" />
     <Content Remove="Localization\Training\*.json" />
   </ItemGroup>
+	
 
 </Project>

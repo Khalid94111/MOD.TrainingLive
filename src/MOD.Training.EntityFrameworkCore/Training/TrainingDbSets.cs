@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-
+ 
 
 namespace MOD.Training.Training;
 

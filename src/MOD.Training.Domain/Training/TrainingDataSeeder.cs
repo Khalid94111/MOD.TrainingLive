@@ -8,7 +8,6 @@ using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Guids;
 using Volo.Abp.MultiTenancy;
 
-
 namespace MOD.Training.Training;
 
 /// <summary>

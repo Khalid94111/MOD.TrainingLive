@@ -19,6 +19,7 @@ import type {
   CatalogEnrollmentConditionDto,
 } from '../../../shared';
 import { ConditionType, ResultType } from '../../../shared/models/training-enums';
+import { ToolbarItem } from 'devextreme/ui/popup';
 
 @Component({
   selector: 'app-catalog-form-dialog',
@@ -58,12 +59,39 @@ export class CatalogFormDialogComponent implements OnInit {
   natureDataSource: any[] = [];
   resultTypeDataSource: any[] = [];
   conditionTypeDataSource: any[] = [];
-
+  popupToolbarItems: ({ widget: string; location: string; toolbar: string; options: { text: string; icon: string; type: string; onClick: () => Promise<void>; }; } | { widget: string; location: string; toolbar: string; options: { text: string; onClick: () => void; icon?: undefined; type?: undefined; }; })[] | undefined;
+ 
   get isEditMode(): boolean { return !!this.course(); }
   get dialogTitle(): string { return this.l.t(this.isEditMode ? '::Training.EditCourse' : '::Training.AddNewCourse'); }
   get showEvaluationBlocks(): boolean { return this.formData().requiresEvaluation; }
 
   ngOnInit(): void {
+   this.popupToolbarItems = [
+    {
+      widget: 'dxButton',
+      location: 'after',
+      toolbar: 'bottom',
+      options: {
+        text: this.l.t('::Training.Save'),
+        icon: 'save',
+        type: 'default',
+        onClick: () => this.onSave()
+      }
+    },
+    {
+      widget: 'dxButton',
+      location: 'after',
+      toolbar: 'bottom',
+      options: {
+        text: this.l.t('::Training.Cancel'),
+        onClick: () => this.onCancel()
+      }
+    }
+  ];
+
+    
+
+
     this.categoryDataSource = this.l.categoryDataSource();
     this.natureDataSource = this.l.natureDataSource();
     this.resultTypeDataSource = this.l.resultTypeDataSource();
@@ -96,6 +124,7 @@ export class CatalogFormDialogComponent implements OnInit {
   }
 
   async onSave(): Promise<void> {
+    alert('Save clicked');
     this.isSaving.set(true);
     try {
       const data = this.formData();
@@ -148,4 +177,7 @@ export class CatalogFormDialogComponent implements OnInit {
   updateCondition(index: number, field: string, value: any): void {
     this.conditions.update(list => list.map((c, i) => (i === index ? { ...c, [field]: value } : c)));
   }
+ 
+   
+
 }

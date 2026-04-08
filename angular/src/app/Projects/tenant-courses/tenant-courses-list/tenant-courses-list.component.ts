@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { LocalizationPipe } from '@abp/ng.core';
+import { LocalizationModule } from '@abp/ng.core';
 import {
   DxDataGridModule, DxButtonModule, DxTextBoxModule, DxSelectBoxModule,
   DxPopupModule, DxNumberBoxModule, DxCheckBoxModule, DxSwitchModule, DxDataGridComponent,
@@ -15,7 +15,7 @@ import { AddFromCatalogDialogComponent } from '../add-from-catalog-dialog/add-fr
   selector: 'app-tenant-courses-list',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, LocalizationPipe,
+    CommonModule, FormsModule, LocalizationModule,
     DxDataGridModule, DxButtonModule, DxTextBoxModule, DxSelectBoxModule,
     DxPopupModule, DxNumberBoxModule, DxCheckBoxModule, DxSwitchModule,
     AddFromCatalogDialogComponent,
@@ -102,4 +102,28 @@ export class TenantCoursesListComponent implements OnInit {
   }
 
   getResultTypeText = (rowData: any): string => this.l.resultType(rowData.resultType);
+  get popupToolbarItems() {
+  return [
+    {
+      widget: 'dxButton',
+      location: 'after',
+      toolbar: 'bottom',
+      options: {
+        text: this.l.t('::Training.Save'),
+        icon: 'save',
+        type: 'default',
+        onClick: () => this.onSaveEdit()
+      }
+    },
+    {
+      widget: 'dxButton',
+      location: 'after',
+      toolbar: 'bottom',
+      options: {
+        text: this.l.t('::Training.Cancel'),
+        onClick: () => this.isEditDialogVisible.set(false)
+      }
+    }
+  ];
+}
 }

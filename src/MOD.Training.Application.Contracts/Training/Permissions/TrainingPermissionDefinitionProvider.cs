@@ -1,7 +1,6 @@
-using MOD.Training.Training.Localization;
 using Volo.Abp.Authorization.Permissions;
 using Volo.Abp.Localization;
-using Volo.Abp.MultiTenancy;
+using MOD.Training.Training.Localization;
 
 namespace MOD.Training.Training.Permissions;
 
@@ -10,9 +9,6 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
     public override void Define(IPermissionDefinitionContext context)
     {
         var group = context.AddGroup(TrainingPermissions.GroupName, L("Permission:Training"));
-
-        group.AddPermission(TrainingPermissions.Dashboard.Host, L("Permission:Dashboard"), MultiTenancySides.Host);
-        group.AddPermission(TrainingPermissions.Dashboard.Tenant, L("Permission:Dashboard"), MultiTenancySides.Tenant);
 
         var catalog = group.AddPermission(TrainingPermissions.CourseCatalog.Default, L("Permission:CourseCatalog"));
         catalog.AddChild(TrainingPermissions.CourseCatalog.Create, L("Permission:CourseCatalog.Create"));

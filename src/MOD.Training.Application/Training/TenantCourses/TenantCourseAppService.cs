@@ -46,7 +46,7 @@ public class TenantCourseAppService(
 
         var items = await AsyncExecuter.ToListAsync(
             queryable
-                .OrderBy(input.Sorting.IsNullOrWhiteSpace() ? "CatalogCourse.CourseNameAr" : NormalizeSorting(input.Sorting))
+                .OrderBy(input.Sorting.IsNullOrWhiteSpace() ? "CatalogCourse.CourseNameAr" : input.Sorting)
                 .Skip(input.SkipCount)
                 .Take(input.MaxResultCount));
 
@@ -194,30 +194,7 @@ public class TenantCourseAppService(
         dto.ConditionsCount = conditionsCount;
         return dto;
     }
-    private static string NormalizeSorting(string? sorting)
-    {
-        if (sorting.IsNullOrWhiteSpace())
-            return "CatalogCourse.CourseNameAr";
 
-        // Map DTO property names → entity navigation paths
-        var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["catalogCourseNameAr"] = "CatalogCourse.CourseNameAr",
-            ["catalogCourseNameEn"] = "CatalogCourse.CourseNameEn",
-            ["catalogCourseFieldNameAr"] = "CatalogCourse.Field.NameAr",
-            ["catalogCourseCategory"] = "CatalogCourse.Category",
-            ["isActive"] = "IsActive",
-        };
-
-        // Handle "propertyName DESC" format
-        var parts = sorting.Split(' ', 2);
-        var property = parts[0];
-        var direction = parts.Length > 1 ? " " + parts[1] : "";
-
-        return map.TryGetValue(property, out var mapped)
-            ? mapped + direction
-            : "CatalogCourse.CourseNameAr" + direction;
-    }
     private static IQueryable<TenantCourse> ApplyFilters(
         IQueryable<TenantCourse> query, TenantCourseGetListInput input)
     {

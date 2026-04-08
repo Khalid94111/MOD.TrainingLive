@@ -4,6 +4,7 @@ using Volo.Abp.EntityFrameworkCore.Modeling;
 using MOD.Training.Training.System;
 using MOD.Training.Training.Catalog;
 using MOD.Training.Training.TenantCourses;
+using MOD.Training.Training.Consts;
 
 namespace MOD.Training.Training;
 

@@ -1,148 +1,207 @@
-<!-- PAGE 1.1: Course Catalog Management -->
-<div class="card">
-  <div class="card-header d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">{{ '::Training.CourseCatalog' | abpLocalization }}</h5>
-    <dx-button
-      [text]="'::Training.AddCourse' | abpLocalization"
-      icon="plus"
-      type="default"
-      stylingMode="contained"
-      (onClick)="onAddCourse()">
-    </dx-button>
+<!-- ═══════════════════════════════════════════════════════════
+     PAGE 1.1: Course Catalog — Table with colorful pills
+     Matches: GTMS-Complete-UI-v2.html → #catalog screen
+     ═══════════════════════════════════════════════════════════ -->
+
+<div class="card"
+     style="background: var(--dx-color-bg); border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden;">
+
+  <!-- Header -->
+  <div style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+              padding: 24px; display: flex; justify-content: space-between; align-items: center;
+              border-bottom: 1px solid #e2e8f0;">
+    <div>
+      <h2 style="font-size: 20px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px; margin: 0;">
+        📚 {{ '::Training.CourseCatalog' | abpLocalization }}
+      </h2>
+      <p style="color: #64748b; font-size: 14px; margin-top: 4px;">
+        {{ '::Training.CourseCatalogDescription' | abpLocalization }}
+      </p>
+    </div>
+    <button (click)="onAddCourse()"
+            style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                   color: white; padding: 12px 24px; border-radius: 12px;
+                   font-weight: 500; border: none; cursor: pointer;
+                   transition: all 0.3s ease; font-family: inherit; font-size: 14px;
+                   display: flex; align-items: center; gap: 8px;">
+      ➕ {{ '::Training.AddCourse' | abpLocalization }}
+    </button>
   </div>
 
-  <div class="card-body">
-    <!-- Toolbar: Search + Filters -->
-    <div class="row mb-3">
-      <div class="col-md-4">
-        <dx-text-box
-          [value]="searchText()"
-          (valueChange)="searchText.set($event)"
-          [placeholder]="'::Training.SearchByName' | abpLocalization"
-          mode="search"
-          [showClearButton]="true"
-          (onValueChanged)="onSearch()">
-        </dx-text-box>
+  <!-- Filters -->
+  <div style="padding: 16px 24px; border-bottom: 1px solid #f1f5f9;
+              display: flex; gap: 12px; flex-wrap: wrap;">
+    <dx-text-box
+      [placeholder]="'::Training.SearchByName' | abpLocalization"
+      [value]="searchText()"
+      (valueChange)="searchText.set($event)"
+      (onEnterKey)="onSearch()"
+      [stylingMode]="'outlined'"
+      [showClearButton]="true"
+      style="flex: 1; min-width: 200px;">
+      <dxi-button name="search" location="before"
+                   [options]="{ icon: 'search', onClick: onSearch.bind(this) }">
+      </dxi-button>
+    </dx-text-box>
+
+    <dx-select-box
+      [dataSource]="courseFields()"
+      displayExpr="fieldNameAr"
+      valueExpr="id"
+      [value]="filterFieldId()"
+      (valueChange)="filterFieldId.set($event); onFilterChange()"
+      [placeholder]="'::Training.AllFields' | abpLocalization"
+      [showClearButton]="true"
+      [stylingMode]="'outlined'"
+      style="min-width: 160px;">
+    </dx-select-box>
+
+    <dx-select-box
+      [dataSource]="categoryDataSource"
+      displayExpr="text"
+      valueExpr="value"
+      [value]="filterCategory()"
+      (valueChange)="filterCategory.set($event); onFilterChange()"
+      [placeholder]="'::Training.AllCategories' | abpLocalization"
+      [showClearButton]="true"
+      [stylingMode]="'outlined'"
+      style="min-width: 140px;">
+    </dx-select-box>
+  </div>
+
+  <!-- Data Grid -->
+  <dx-data-grid
+    #catalogGrid
+    [dataSource]="dataSource"
+    [showBorders]="false"
+    [showRowLines]="true"
+    [showColumnLines]="false"
+    [hoverStateEnabled]="true"
+    [rowAlternationEnabled]="false"
+    [remoteOperations]="true"
+    [columnAutoWidth]="true"
+    keyExpr="id"
+    style="border: none;">
+
+    <dxo-paging [pageSize]="10"></dxo-paging>
+    <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[10, 20, 50]" [showInfo]="true"
+               [infoText]="'::Training.PagerInfo' | abpLocalization">
+    </dxo-pager>
+    <dxo-sorting mode="single"></dxo-sorting>
+
+    <!-- # -->
+    <dxi-column dataField="id" [caption]="'#'" [width]="50" [allowSorting]="false"
+                cellTemplate="rowIndexTemplate">
+    </dxi-column>
+    <div *dxTemplate="let cell of 'rowIndexTemplate'">
+      <span style="color: #94a3b8;">{{ cell.rowIndex + 1 }}</span>
+    </div>
+
+    <!-- Course Name (Ar + En) -->
+    <dxi-column dataField="courseNameAr" [caption]="'::Training.CourseName' | abpLocalization"
+                [minWidth]="220" cellTemplate="courseNameTemplate">
+    </dxi-column>
+    <div *dxTemplate="let cell of 'courseNameTemplate'">
+      <div style="font-weight: 500; color: #1e293b;"
+           [style.color]="cell.data.isActive ? '#1e293b' : '#94a3b8'">
+        {{ cell.data.courseNameAr }}
       </div>
-      <div class="col-md-3">
-        <dx-select-box
-          [value]="filterFieldId()"
-          (valueChange)="filterFieldId.set($event)"
-          [dataSource]="courseFields()"
-          displayExpr="fieldNameAr"
-          valueExpr="id"
-          [placeholder]="'::Training.Field' | abpLocalization"
-          [showClearButton]="true"
-          (onValueChanged)="onFilterChange()">
-        </dx-select-box>
-      </div>
-      <div class="col-md-3">
-        <dx-select-box
-          [value]="filterCategory()"
-          (valueChange)="filterCategory.set($event)"
-          [dataSource]="categoryDataSource"
-          displayExpr="text"
-          valueExpr="value"
-          [placeholder]="'::Training.Category' | abpLocalization"
-          [showClearButton]="true"
-          (onValueChanged)="onFilterChange()">
-        </dx-select-box>
+      <div style="font-size: 12px; margin-top: 2px;"
+           [style.color]="cell.data.isActive ? '#64748b' : '#94a3b8'">
+        {{ cell.data.courseNameEn }}
       </div>
     </div>
 
-    <!-- Data Grid -->
-    <dx-data-grid
-      #catalogGrid
-      [dataSource]="dataSource"
-      [remoteOperations]="true"
-      [showBorders]="true"
-      [columnAutoWidth]="true"
-      [allowColumnReordering]="true"
-      [rowAlternationEnabled]="true">
+    <!-- Field -->
+    <dxi-column dataField="fieldNameAr" [caption]="'::Training.Field' | abpLocalization"
+                [width]="150" cellTemplate="fieldTemplate">
+    </dxi-column>
+    <div *dxTemplate="let cell of 'fieldTemplate'">
+      <span style="padding: 4px 12px; border-radius: 16px; font-size: 11px; font-weight: 600;"
+            [style.background]="cell.data.isActive ? '#eef2ff' : '#f1f5f9'"
+            [style.color]="cell.data.isActive ? '#4338ca' : '#94a3b8'">
+        {{ cell.data.fieldNameAr }}
+      </span>
+    </div>
 
-      <dxo-paging [pageSize]="10"></dxo-paging>
-      <dxo-pager
-        [showPageSizeSelector]="true"
-        [allowedPageSizes]="[10, 25, 50]"
-        [showInfo]="true">
-      </dxo-pager>
-      <dxo-sorting mode="single"></dxo-sorting>
+    <!-- Category -->
+    <dxi-column dataField="category" [caption]="'::Training.Category' | abpLocalization"
+                [width]="110" cellTemplate="categoryTemplate">
+    </dxi-column>
+    <div *dxTemplate="let cell of 'categoryTemplate'">
+      <span style="padding: 4px 12px; border-radius: 16px; font-size: 11px; font-weight: 600;"
+            [style.background]="cell.data.isActive ? '#fffbeb' : '#f1f5f9'"
+            [style.color]="cell.data.isActive ? '#b45309' : '#94a3b8'">
+        {{ getCategoryText(cell.data) }}
+      </span>
+    </div>
 
-      <dxi-column
-        dataField="courseNameAr"
-        [caption]="'::Training.CourseNameAr' | abpLocalization"
-        [width]="200"
-        sortOrder="asc">
-      </dxi-column>
-      <dxi-column
-        dataField="courseNameEn"
-        [caption]="'::Training.CourseNameEn' | abpLocalization"
-        [width]="200">
-      </dxi-column>
-      <dxi-column
-        dataField="category"
-        [caption]="'::Training.Category' | abpLocalization"
-        [width]="120"
-        [calculateCellValue]="getCategoryText">
-      </dxi-column>
-      <dxi-column
-        dataField="nature"
-        [caption]="'::Training.Nature' | abpLocalization"
-        [width]="120">
-      </dxi-column>
-      <dxi-column
-        dataField="fieldNameAr"
-        [caption]="'::Training.Field' | abpLocalization"
-        [width]="150"
-        [allowSorting]="false">
-      </dxi-column>
-      <dxi-column
-        dataField="resultType"
-        [caption]="'::Training.ResultType' | abpLocalization"
-        [width]="130"
-        [calculateCellValue]="getResultTypeText">
-      </dxi-column>
-      <dxi-column
-        dataField="requiresEvaluation"
-        [caption]="'::Training.RequiresEvaluation' | abpLocalization"
-        [width]="80"
-        dataType="boolean">
-      </dxi-column>
-      <dxi-column
-        dataField="hasCertificate"
-        [caption]="'::Training.HasCertificate' | abpLocalization"
-        [width]="80"
-        dataType="boolean">
-      </dxi-column>
-      <dxi-column
-        dataField="isActive"
-        [caption]="'::Training.Status' | abpLocalization"
-        [width]="80"
-        cellTemplate="activeTemplate">
-      </dxi-column>
-      <dxi-column
-        [caption]="'::Training.Actions' | abpLocalization"
-        [width]="100"
-        cellTemplate="actionsTemplate"
-        [allowSorting]="false">
-      </dxi-column>
+    <!-- Nature -->
+    <dxi-column dataField="nature" [caption]="'::Training.Nature' | abpLocalization"
+                [width]="100" [visible]="false">
+    </dxi-column>
 
-      <div *dxTemplate="let data of 'activeTemplate'">
-        <span [class]="data.value ? 'badge bg-success' : 'badge bg-secondary'">
-          {{ (data.value ? '::Training.Active' : '::Training.Inactive') | abpLocalization }}
+    <!-- Result Type -->
+    <dxi-column dataField="resultType" [caption]="'::Training.ResultType' | abpLocalization"
+                [width]="140" cellTemplate="resultTypeTemplate">
+    </dxi-column>
+    <div *dxTemplate="let cell of 'resultTypeTemplate'">
+      <span style="padding: 4px 12px; border-radius: 16px; font-size: 11px; font-weight: 600;"
+            [style.background]="cell.data.isActive ? '#faf5ff' : '#f1f5f9'"
+            [style.color]="cell.data.isActive ? '#7e22ce' : '#94a3b8'">
+        {{ getResultTypeText(cell.data) }}
+      </span>
+    </div>
+
+    <!-- Conditions Count -->
+    <dxi-column dataField="conditionsCount" [caption]="'::Training.Conditions' | abpLocalization"
+                [width]="90" cellTemplate="conditionsTemplate" [allowSorting]="false">
+    </dxi-column>
+    <div *dxTemplate="let cell of 'conditionsTemplate'">
+      <span style="background: #f1f5f9; color: #64748b; padding: 4px 12px; border-radius: 16px; font-size: 11px; font-weight: 600;">
+        {{ cell.data.conditionsCount > 0 ? cell.data.conditionsCount + ' شروط' : '—' }}
+      </span>
+    </div>
+
+    <!-- Status -->
+    <dxi-column dataField="isActive" [caption]="'::Training.Status' | abpLocalization"
+                [width]="90" cellTemplate="statusTemplate">
+    </dxi-column>
+    <div *dxTemplate="let cell of 'statusTemplate'">
+      @if (cell.data.isActive) {
+        <span style="background: #dcfce7; color: #15803d; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;">
+          {{ '::Training.Active' | abpLocalization }}
         </span>
-      </div>
+      } @else {
+        <span style="background: #f1f5f9; color: #64748b; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;">
+          {{ '::Training.Inactive' | abpLocalization }}
+        </span>
+      }
+    </div>
 
-      <div *dxTemplate="let data of 'actionsTemplate'">
-        <dx-button
-          icon="edit"
-          stylingMode="text"
-          [hint]="'::Training.EditCourse' | abpLocalization"
-          (onClick)="onEditCourse(data.data)">
-        </dx-button>
+    <!-- Actions -->
+    <dxi-column [caption]="'::Training.Actions' | abpLocalization"
+                [width]="120" cellTemplate="actionsTemplate" [allowSorting]="false">
+    </dxi-column>
+    <div *dxTemplate="let cell of 'actionsTemplate'">
+      <div style="display: flex; gap: 4px;">
+        <span (click)="onEditCourse(cell.data)"
+              style="padding: 6px 8px; border-radius: 8px; cursor: pointer; font-size: 16px;
+                     transition: background 0.2s;"
+              title="{{ '::Training.Edit' | abpLocalization }}">✏️</span>
+        <span style="padding: 6px 8px; border-radius: 8px; cursor: pointer; font-size: 16px;"
+              title="{{ '::Training.Conditions' | abpLocalization }}">📋</span>
+        @if (cell.data.isActive) {
+          <span style="padding: 6px 8px; border-radius: 8px; cursor: pointer; font-size: 16px;"
+                title="{{ '::Training.Deactivate' | abpLocalization }}">🚫</span>
+        } @else {
+          <span style="padding: 6px 8px; border-radius: 8px; cursor: pointer; font-size: 16px;"
+                title="{{ '::Training.Activate' | abpLocalization }}">✅</span>
+        }
       </div>
-    </dx-data-grid>
-  </div>
+    </div>
+
+  </dx-data-grid>
 </div>
 
 <!-- Add/Edit Dialog -->

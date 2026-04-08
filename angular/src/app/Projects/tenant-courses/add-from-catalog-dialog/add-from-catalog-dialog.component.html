@@ -1,73 +1,99 @@
-<!-- Add from Catalog Dialog — Multi-select available courses -->
+<!-- ═══════════════════════════════════════════════════════════
+     Add from Catalog Dialog — Multi-select available courses
+     ═══════════════════════════════════════════════════════════ -->
+
 <dx-popup
   [visible]="visible()"
+  (visibleChange)="cancelled.emit()"
   [title]="'::Training.AddFromCatalog' | abpLocalization"
-  [width]="800"
-  [height]="550"
   [showCloseButton]="true"
   [dragEnabled]="true"
-  (onHiding)="onCancel()">
+  [width]="800"
+  [height]="'auto'"
+  [maxHeight]="'85vh'"
+  [showTitle]="true">
 
-  <div *dxTemplate="let data of 'content'" class="p-3">
-    <p class="text-muted mb-3">{{ '::Training.SelectCoursesInfo' | abpLocalization }}</p>
+  <div *dxTemplate="let data of 'content'" style="padding: 20px;">
 
-    <dx-data-grid
-      [dataSource]="dataSource"
-      [remoteOperations]="true"
-      [showBorders]="true"
-      [columnAutoWidth]="true"
-      [rowAlternationEnabled]="true"
-      keyExpr="id"
-      (onSelectionChanged)="onSelectionChanged($event)">
-
-      <dxo-selection mode="multiple" showCheckBoxesMode="always"></dxo-selection>
-      <dxo-paging [pageSize]="10"></dxo-paging>
-      <dxo-pager [showInfo]="true"></dxo-pager>
-
-      <dxi-column
-        dataField="courseNameAr"
-        [caption]="'::Training.CourseNameAr' | abpLocalization"
-        [width]="200">
-      </dxi-column>
-      <dxi-column
-        dataField="courseNameEn"
-        [caption]="'::Training.CourseNameEn' | abpLocalization"
-        [width]="200">
-      </dxi-column>
-      <dxi-column
-        dataField="category"
-        [caption]="'::Training.Category' | abpLocalization"
-        [width]="100">
-        <dxo-lookup
-          [dataSource]="categoryDataSource"
-          displayExpr="text"
-          valueExpr="value">
-        </dxo-lookup>
-      </dxi-column>
-      <dxi-column
-        dataField="fieldNameAr"
-        [caption]="'::Training.Field' | abpLocalization"
-        [width]="150"
-        [allowSorting]="false">
-      </dxi-column>
-    </dx-data-grid>
-
-    <div class="d-flex justify-content-between align-items-center mt-3">
-      <span class="text-muted">{{ selectedCountText }}</span>
-      <div class="d-flex gap-2">
-        <dx-button
-          [text]="'::Training.Cancel' | abpLocalization"
-          stylingMode="outlined"
-          (onClick)="onCancel()">
-        </dx-button>
-        <dx-button
-          [text]="'::Training.AddSelected' | abpLocalization"
-          type="default"
-          stylingMode="contained"
-          [disabled]="selectedCourseIds().length === 0 || isSaving()"
-          (onClick)="onConfirm()">
-        </dx-button>
+    <!-- Info Banner -->
+    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 14px 18px;
+                margin-bottom: 16px; display: flex; align-items: flex-start; gap: 10px;">
+      <span style="font-size: 16px; flex-shrink: 0;">ℹ️</span>
+      <div style="font-size: 12px; color: #1e3a5f; line-height: 1.6;">
+        {{ '::Training.SelectCoursesInfo' | abpLocalization }}
       </div>
     </div>
+
+    <!-- Selection Grid -->
+    <dx-data-grid
+      [dataSource]="dataSource"
+      [showBorders]="true"
+      [showRowLines]="true"
+      [hoverStateEnabled]="true"
+      [remoteOperations]="true"
+      [columnAutoWidth]="true"
+      keyExpr="id"
+      (onSelectionChanged)="onSelectionChanged($event)"
+      style="border-radius: 10px; overflow: hidden;">
+
+      <dxo-selection mode="multiple" [showCheckBoxesMode]="'always'"></dxo-selection>
+      <dxo-paging [pageSize]="10"></dxo-paging>
+      <dxo-pager [showInfo]="true"></dxo-pager>
+      <dxo-search-panel [visible]="true" [placeholder]="'::Training.SearchByName' | abpLocalization"></dxo-search-panel>
+
+      <!-- Course Name -->
+      <dxi-column dataField="courseNameAr" [caption]="'::Training.CourseName' | abpLocalization"
+                  [minWidth]="200" cellTemplate="nameTpl"></dxi-column>
+      <div *dxTemplate="let cell of 'nameTpl'">
+        <div style="font-weight: 500; color: #1e293b;">{{ cell.data.courseNameAr }}</div>
+        <div style="font-size: 12px; color: #64748b; margin-top: 2px;">{{ cell.data.courseNameEn }}</div>
+      </div>
+
+      <!-- Category -->
+      <dxi-column dataField="category" [caption]="'::Training.Category' | abpLocalization"
+                  [width]="100" cellTemplate="catTpl"></dxi-column>
+      <div *dxTemplate="let cell of 'catTpl'">
+        <span style="background: #f0fdf4; color: #166534; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">
+          {{ l.category(cell.data.category) }}
+        </span>
+      </div>
+
+      <!-- Field -->
+      <dxi-column dataField="fieldNameAr" [caption]="'::Training.Field' | abpLocalization" [width]="130"></dxi-column>
+
+      <!-- Conditions -->
+      <dxi-column dataField="conditionsCount" [caption]="'::Training.Conditions' | abpLocalization"
+                  [width]="90" cellTemplate="condTpl"></dxi-column>
+      <div *dxTemplate="let cell of 'condTpl'">
+        <span style="background: #f1f5f9; color: #64748b; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">
+          {{ cell.data.conditionsCount > 0 ? cell.data.conditionsCount + ' شروط' : '—' }}
+        </span>
+      </div>
+
+    </dx-data-grid>
+
+    <!-- Footer -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+      <span style="color: #2563eb; font-weight: 600; font-size: 14px;">
+        ✓ {{ selectedCourseIds().length }} {{ '::Training.Selected' | abpLocalization }}
+      </span>
+      <div style="display: flex; gap: 8px;">
+        <button (click)="onCancel()"
+                style="padding: 10px 24px; border: 1px solid #e2e8f0; border-radius: 10px;
+                       background: transparent; cursor: pointer; font-family: inherit; font-size: 13px; color: #475569;">
+          {{ '::Training.Cancel' | abpLocalization }}
+        </button>
+        <button (click)="onConfirm()"
+                [disabled]="selectedCourseIds().length === 0 || isSaving()"
+                style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;
+                       padding: 10px 24px; border-radius: 10px; border: none; cursor: pointer;
+                       font-family: inherit; font-size: 13px; font-weight: 500;
+                       transition: all 0.3s ease;"
+                [style.opacity]="selectedCourseIds().length === 0 ? '0.5' : '1'">
+          {{ '::Training.AddSelected' | abpLocalization }}
+        </button>
+      </div>
+    </div>
+
   </div>
 </dx-popup>

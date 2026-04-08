@@ -105,36 +105,36 @@ export enum ProposalStatus {
 // Values are ABP localization keys resolved at runtime via LocalizationService
 
 export const RESULT_TYPE_OPTIONS = [
-  { value: ResultType.AttendanceOnly, key: 'Training::ResultType.AttendanceOnly' },
-  { value: ResultType.PassFail, key: 'Training::ResultType.PassFail' },
-  { value: ResultType.CompletedNotCompleted, key: 'Training::ResultType.CompletedNotCompleted' },
-  { value: ResultType.GradeScore, key: 'Training::ResultType.GradeScore' },
+  { value: ResultType.AttendanceOnly, key: '::Training.ResultType.AttendanceOnly' },
+  { value: ResultType.PassFail, key: '::Training.ResultType.PassFail' },
+  { value: ResultType.CompletedNotCompleted, key: '::Training.ResultType.CompletedNotCompleted' },
+  { value: ResultType.GradeScore, key: '::Training.ResultType.GradeScore' },
 ];
 
 export const CONDITION_TYPE_OPTIONS = [
-  { value: ConditionType.Rank, key: 'Training::ConditionType.Rank' },
-  { value: ConditionType.Age, key: 'Training::ConditionType.Age' },
-  { value: ConditionType.ServiceYears, key: 'Training::ConditionType.ServiceYears' },
-  { value: ConditionType.Education, key: 'Training::ConditionType.Education' },
-  { value: ConditionType.MedicalFitness, key: 'Training::ConditionType.MedicalFitness' },
-  { value: ConditionType.SecurityClearance, key: 'Training::ConditionType.SecurityClearance' },
-  { value: ConditionType.LanguageLevel, key: 'Training::ConditionType.LanguageLevel' },
-  { value: ConditionType.PreviousCourse, key: 'Training::ConditionType.PreviousCourse' },
-  { value: ConditionType.Custom, key: 'Training::ConditionType.Custom' },
+  { value: ConditionType.Rank, key: '::Training.ConditionType.Rank' },
+  { value: ConditionType.Age, key: '::Training.ConditionType.Age' },
+  { value: ConditionType.ServiceYears, key: '::Training.ConditionType.ServiceYears' },
+  { value: ConditionType.Education, key: '::Training.ConditionType.Education' },
+  { value: ConditionType.MedicalFitness, key: '::Training.ConditionType.MedicalFitness' },
+  { value: ConditionType.SecurityClearance, key: '::Training.ConditionType.SecurityClearance' },
+  { value: ConditionType.LanguageLevel, key: '::Training.ConditionType.LanguageLevel' },
+  { value: ConditionType.PreviousCourse, key: '::Training.ConditionType.PreviousCourse' },
+  { value: ConditionType.Custom, key: '::Training.ConditionType.Custom' },
 ];
 
 export const PROPOSAL_STATUS_OPTIONS = [
-  { value: ProposalStatus.Pending, key: 'Training::ProposalStatus.Pending', cssClass: 'badge-warning' },
-  { value: ProposalStatus.Approved, key: 'Training::ProposalStatus.Approved', cssClass: 'badge-success' },
-  { value: ProposalStatus.Rejected, key: 'Training::ProposalStatus.Rejected', cssClass: 'badge-danger' },
+  { value: ProposalStatus.Pending, key: '::Training.ProposalStatus.Pending', cssClass: 'badge-warning' },
+  { value: ProposalStatus.Approved, key: '::Training.ProposalStatus.Approved', cssClass: 'badge-success' },
+  { value: ProposalStatus.Rejected, key: '::Training.ProposalStatus.Rejected', cssClass: 'badge-danger' },
 ];
 
 export const CATEGORY_OPTIONS = [
-  { value: 'Military', key: 'Training::Category.Military' },
-  { value: 'Civilian', key: 'Training::Category.Civilian' },
+  { value: 'Military', key: '::Training.Category.Military' },
+  { value: 'Civilian', key: '::Training.Category.Civilian' },
 ];
 
 export const NATURE_OPTIONS = [
-  { value: 'Mandatory', key: 'Training::Nature.Mandatory' },
-  { value: 'Qualifying', key: 'Training::Nature.Qualifying' },
+  { value: 'Mandatory', key: '::Training.Nature.Mandatory' },
+  { value: 'Qualifying', key: '::Training.Nature.Qualifying' },
 ];

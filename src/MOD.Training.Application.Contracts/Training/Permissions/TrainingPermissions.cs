@@ -3,12 +3,7 @@ namespace MOD.Training.Training.Permissions;
 public static class TrainingPermissions
 {
     public const string GroupName = "Training";
-    public static class Dashboard
-    {
-        public const string DashboardGroup = GroupName + ".Dashboard";
-        public const string Host = DashboardGroup + ".Host";
-        public const string Tenant = DashboardGroup + ".Tenant";
-    }
+
     public static class CourseCatalog
     {
         public const string Default = GroupName + ".CourseCatalog";

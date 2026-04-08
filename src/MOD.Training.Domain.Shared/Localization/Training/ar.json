@@ -38,6 +38,9 @@
     "SeeAllUsers": "رؤية كافة المستخدمين",
     "TakePhoto": "تصوير",
     "ChoosePhoto": "اختر صورة",
+
+
+
     "Permission:Training": "إدارة التدريب",
     "Permission:CourseCatalog": "كتالوج الدورات",
     "Permission:CourseCatalog.Create": "إضافة دورات",
@@ -93,6 +96,7 @@
 
     "Training.CourseCatalog": "كتالوج الدورات",
     "Training.CourseFields": "مجالات الدورات",
+    "Training.CourseFieldsDescription": "تصنيف الدورات حسب المجال",
     "Training.CourseProposals": "اقتراحات الدورات",
     "Training.TenantCourses": "دورات الجهة",
 
@@ -130,6 +134,14 @@
     "Training.FieldNameEn": "اسم المجال (إنجليزي)",
     "Training.FieldNameArRequired": "اسم المجال (عربي) مطلوب",
     "Training.FieldNameEnRequired": "اسم المجال (إنجليزي) مطلوب",
+    "Training.FieldNameArPlaceholder": "أدخل اسم المجال بالعربي",
+    "Training.FieldNameEnPlaceholder": "Enter field name in English",
+    "Training.CourseFieldsDesc": "تصنيف الدورات حسب المجال",
+    "Training.AddField": "إضافة مجال",
+    "Training.AddNewField": "إضافة مجال جديد",
+    "Training.EditField": "تعديل المجال",
+    "Training.Edit": "تعديل",
+    "Training.DeleteFieldConfirm": "هل أنت متأكد من حذف هذا المجال؟",
     "Training.ProposeNewCourse": "اقتراح دورة جديدة",
     "Training.SubmitProposal": "إرسال الاقتراح",
     "Training.ReviewProposal": "مراجعة الاقتراح",
@@ -169,6 +181,44 @@
     "Training.ProposalStatus.Pending": "قيد المراجعة",
     "Training.ProposalStatus.Approved": "مقبول",
     "Training.ProposalStatus.Rejected": "مرفوض",
+    "Training.Activate": "تفعيل",
+    "Training.AllCategories": "جميع التصنيفات",
+    "Training.AllFields": "جميع المجالات",
+    "Training.AllResultTypes": "جميع أنواع النتائج",
+    "Training.AllStatuses": "جميع الحالات",
+    "Training.ApproveWarning": "عند القبول سيتم إضافة الدورة تلقائياً للكتالوج المشترك.",
+    "Training.Approved": "مقبول",
+    "Training.CannotChangeCourse": "لا يمكن تغيير الدورة — لاستخدام دورة أخرى أضف سجلاً جديداً.",
+    "Training.Capacity": "السعة الافتراضية",
+    "Training.Certificate": "شهادة",
+    "Training.ConditionValuePlaceholder": "قيمة JSON مثال {\"min\":5}",
+    "Training.Conditions": "الشروط",
+    "Training.CourseCatalogDescription": "إدارة الدورات المتاحة لجميع الجهات — أدمن النظام فقط",
+    "Training.CourseName": "اسم الدورة",
+    "Training.Deactivate": "إلغاء التفعيل",
+    "Training.Duration": "المدة",
+    "Training.DurationWeeks": "المدة (أسابيع)",
+    "Training.EditTenantCourse": "تعديل إعدادات الدورة",
+    "Training.Evaluation": "تقييم",
+    "Training.Locked": "مقفل",
+    "Training.LockedConditionsWarning": "هذه الشروط منسوخة من الكتالوج ولا يمكن تعديلها على مستوى الجهة.",
+    "Training.NoPendingProposals": "لا توجد اقتراحات في انتظار المراجعة.",
+    "Training.PagerInfo": "عرض {0}-{1} من {2}",
+    "Training.Pending": "في الانتظار",
+    "Training.PendingReview": "في انتظار المراجعة",
+    "Training.ProposalInfoBanner": "إذا لم تجد الدورة في الكتالوج، يمكنك اقتراح دورة جديدة. سيتم مراجعتها من أدمن النظام وإضافتها تلقائياً عند الموافقة.",
+    "Training.ProposalsDescription": "UTM يقترح — System Admin يراجع ويعتمد",
+    "Training.Rejected": "مرفوض",
+    "Training.RejectionReasonPlaceholder": "أدخل سبب الرفض...",
+    "Training.Reviewed": "تمت المراجعة",
+    "Training.Select": "اختر...",
+    "Training.Selected": "محدد",
+    "Training.Submit": "إرسال",
+    "Training.TenantCoursesDescription": "الدورات المضافة من الكتالوج — مدير التدريب / موظفو المديرية",
+    "Training.TenantCoursesLayerInfo": "هذه الطبقة إلزامية بين الكتالوج والخطط. جميع الخطط والترشيحات تشير إلى TenantCourseId. الشروط تُنسخ تلقائياً من الكتالوج (مقفلة 🔒).",
+    "Training.TenantCoursesLayerTitle": "طبقة دورات الجهة (TenantCourses)",
+    "Training.Total": "الإجمالي",
+    "Training.Weeks": "أسابيع",
 
     "Training:CourseCatalog:NotFound": "الدورة غير موجودة في الكتالوج.",
     "Training:CourseCatalog:DuplicateNameAr": "يوجد دورة بالاسم العربي '{name}' مسبقاً.",
@@ -179,6 +229,10 @@
     "Training:TenantCourse:NotFound": "دورة الجهة غير موجودة.",
     "Training:TenantCourse:AlreadyAdded": "تمت إضافة هذه الدورة للجهة مسبقاً.",
     "Training:TenantCourse:CatalogCourseInactive": "لا يمكن إضافة دورة غير نشطة من الكتالوج."
+
+
+
+
 
   }
 }
