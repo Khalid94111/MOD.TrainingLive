@@ -1,0 +1,25 @@
+{
+  "production": true,
+  "application": {
+    "baseUrl":"http://localhost:4200",
+    "name": "Training",
+    "logoUrl": ""
+  },
+  "oAuthConfig": {
+    "issuer": "https://localhost:44324/",
+    "redirectUri": "http://localhost:4200",
+    "clientId": "Training_App",
+    "responseType": "code",
+    "scope": "offline_access openid profile email phone Training"
+  },
+  "apis": {
+    "default": {
+      "url": "https://localhost:44324",
+      "rootNamespace": "Training"
+    },
+    "AbpAccountPublic": {
+      "url": "https://localhost:44324",
+      "rootNamespace": "AbpAccountPublic"
+    }
+  }
+}

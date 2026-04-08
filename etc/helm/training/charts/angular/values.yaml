@@ -1,0 +1,4 @@
+image:
+  repository: "training/angular"
+  tag: "latest"
+  pullPolicy: IfNotPresent

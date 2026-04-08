@@ -1,0 +1,10 @@
+{
+  "config": {
+    "context": "docker-desktop",
+    "namespace": "training-local"
+  },
+  "metadata": {
+    "dotnetEnvironment": "Staging"
+  },
+  "services": {}
+}

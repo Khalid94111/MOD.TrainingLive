@@ -1,0 +1,55 @@
+<!-- PAGE 1.2: Course Fields Management -->
+<div class="card">
+  <div class="card-header">
+    <h5 class="mb-0">{{ '::Training.CourseFields' | abpLocalization }}</h5>
+  </div>
+  <div class="card-body">
+    <dx-data-grid
+      [dataSource]="dataSource"
+      [remoteOperations]="true"
+      [showBorders]="true"
+      [rowAlternationEnabled]="true">
+
+      <dxo-editing
+        mode="row"
+        [allowAdding]="true"
+        [allowUpdating]="true"
+        [allowDeleting]="true">
+      </dxo-editing>
+
+      <dxo-paging [pageSize]="10"></dxo-paging>
+      <dxo-pager
+        [showPageSizeSelector]="true"
+        [allowedPageSizes]="[10, 25, 50]"
+        [showInfo]="true">
+      </dxo-pager>
+
+      <dxi-column
+        dataField="fieldNameAr"
+        [caption]="'::Training.FieldNameAr' | abpLocalization"
+        [width]="250">
+        <dxi-validation-rule
+          type="required"
+          [message]="'::Training.FieldNameArRequired' | abpLocalization">
+        </dxi-validation-rule>
+      </dxi-column>
+
+      <dxi-column
+        dataField="fieldNameEn"
+        [caption]="'::Training.FieldNameEn' | abpLocalization"
+        [width]="250">
+        <dxi-validation-rule
+          type="required"
+          [message]="'::Training.FieldNameEnRequired' | abpLocalization">
+        </dxi-validation-rule>
+      </dxi-column>
+
+      <dxi-column
+        dataField="isActive"
+        [caption]="'::Training.Status' | abpLocalization"
+        [width]="100"
+        dataType="boolean">
+      </dxi-column>
+    </dx-data-grid>
+  </div>
+</div>

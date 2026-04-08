@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-{{ .Chart.Name }}-configmap
+data:
+  dynamic-env.json: |-
+    {
+        "production": "true",
+        "application": {
+            "baseUrl": "{{ include "training.hosts.angular" . }}",
+            "name": "Training",
+            "logoUrl": ""
+        },
+        "oAuthConfig": {
+            "issuer": "{{ include "training.hosts.httpapi" . }}",
+            "redirectUri": "{{ include "training.hosts.angular" . }}",
+            "requireHttps": "false",
+            "clientId": "Training_App",
+            "responseType": "code",
+            "scope": "offline_access Training",
+            "strictDiscoveryDocumentValidation": false,
+            "skipIssuerCheck": true
+        },
+        "apis": {
+            "default": {
+                "url": "{{ include "training.hosts.httpapi" . }}",
+                "rootNamespace": "MOD.Training"
+            }
+        }
+    }

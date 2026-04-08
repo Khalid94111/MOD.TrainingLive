@@ -1,0 +1,108 @@
+{
+  "template": "app",
+  "imports": {
+    "Volo.Abp.LeptonXTheme": {
+      "version": "5.1.1",
+      "isInstalled": true,
+      "creationTime": "04/07/2026 07:58:25 +00:00"      
+    },
+    "Volo.Abp.TextTemplateManagement": {
+      "version": "10.1.1",
+      "isInstalled": true,
+      "creationTime": "04/07/2026 07:58:25 +00:00"
+    },
+    "Volo.Abp.LanguageManagement": {
+      "version": "10.1.1",
+      "isInstalled": true,
+      "creationTime": "04/07/2026 07:58:25 +00:00"
+    },
+    "Volo.FileManagement": {
+      "version": "10.1.1",
+      "isInstalled": true,
+      "creationTime": "04/07/2026 07:58:25 +00:00"
+    },
+    "Volo.Abp.OpenIddict.Pro": {
+      "version": "10.1.1",
+      "isInstalled": true,
+      "creationTime": "04/07/2026 07:58:25 +00:00"
+    },
+    "Volo.Abp.Gdpr": {
+      "version": "10.1.1",
+      "isInstalled": true,
+      "creationTime": "04/07/2026 07:58:25 +00:00"
+    },
+    "Volo.Saas": {
+      "version": "10.1.1",
+      "isInstalled": true,
+      "creationTime": "04/07/2026 07:58:25 +00:00"
+    },
+    "Volo.Abp.Identity.Pro": {
+      "version": "10.1.1",
+      "isInstalled": true,
+      "creationTime": "04/07/2026 07:58:25 +00:00"
+    },
+    "Volo.Abp.Account.Pro": {
+      "version": "10.1.1",
+      "isInstalled": true,
+      "creationTime": "04/07/2026 07:58:25 +00:00"
+    },
+    "Volo.Abp.SettingManagement": {
+      "version": "10.1.1",
+      "isInstalled": true,
+      "creationTime": "04/07/2026 07:58:25 +00:00"
+    },
+    "Volo.Abp.PermissionManagement": {
+      "version": "10.1.1",
+      "isInstalled": true,
+      "creationTime": "04/07/2026 07:58:25 +00:00"
+    },
+    "Volo.Abp.FeatureManagement": {
+      "version": "10.1.1",
+      "isInstalled": true,
+      "creationTime": "04/07/2026 07:58:25 +00:00"
+    }
+  },
+  "folders": {
+    "items": {
+      "src": {}
+    }
+  },
+  "packages": {
+    "MOD.Training.Application": {
+      "path": "src/MOD.Training.Application/MOD.Training.Application.abppkg",
+      "folder": "src"
+    },
+    "MOD.Training.Domain.Shared": {
+      "path": "src/MOD.Training.Domain.Shared/MOD.Training.Domain.Shared.abppkg",
+      "folder": "src"
+    },
+    "MOD.Training.Application.Contracts": {
+      "path": "src/MOD.Training.Application.Contracts/MOD.Training.Application.Contracts.abppkg",
+      "folder": "src"
+    },
+    "MOD.Training.HttpApi": {
+      "path": "src/MOD.Training.HttpApi/MOD.Training.HttpApi.abppkg",
+      "folder": "src"
+    },
+    "MOD.Training.HttpApi.Client": {
+      "path": "src/MOD.Training.HttpApi.Client/MOD.Training.HttpApi.Client.abppkg",
+      "folder": "src"
+    },
+    "MOD.Training.EntityFrameworkCore": {
+      "path": "src/MOD.Training.EntityFrameworkCore/MOD.Training.EntityFrameworkCore.abppkg",
+      "folder": "src"
+    },
+    "MOD.Training.DbMigrator": {
+      "path": "src/MOD.Training.DbMigrator/MOD.Training.DbMigrator.abppkg",
+      "folder": "src"
+    },
+    "MOD.Training.HttpApi.Host": {
+      "path": "src/MOD.Training.HttpApi.Host/MOD.Training.HttpApi.Host.abppkg",
+      "folder": "src"
+    },
+    "MOD.Training.Domain": {
+      "path": "src/MOD.Training.Domain/MOD.Training.Domain.abppkg",
+      "folder": "src"
+    }
+  }
+}

@@ -1,0 +1,226 @@
+<!-- Add/Edit Course Dialog with Conditions Sub-Grid -->
+<dx-popup
+  [visible]="visible()"
+  [showTitle]="true"
+  [title]="dialogTitle"
+  [width]="750"
+  [height]="'auto'"
+  [maxHeight]="'85vh'"
+  [dragEnabled]="true"
+  [showCloseButton]="true"
+  (onHiding)="onCancel()">
+
+  <div *dxTemplate="let data of 'content'" class="p-3">
+    <!-- Course Form Fields -->
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <div class="dx-field">
+          <div class="dx-field-label">{{ '::Training.CourseNameAr' | abpLocalization }} *</div>
+          <dx-text-box
+            [value]="formData().courseNameAr"
+            (valueChange)="updateField('courseNameAr', $event)"
+            [rtlEnabled]="true">
+          </dx-text-box>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="dx-field">
+          <div class="dx-field-label">{{ '::Training.CourseNameEn' | abpLocalization }} *</div>
+          <dx-text-box
+            [value]="formData().courseNameEn"
+            (valueChange)="updateField('courseNameEn', $event)">
+          </dx-text-box>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <div class="dx-field">
+          <div class="dx-field-label">{{ '::Training.DescriptionAr' | abpLocalization }}</div>
+          <dx-text-area
+            [value]="formData().descriptionAr"
+            (valueChange)="updateField('descriptionAr', $event)"
+            [maxLength]="500"
+            [rtlEnabled]="true">
+          </dx-text-area>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="dx-field">
+          <div class="dx-field-label">{{ '::Training.DescriptionEn' | abpLocalization }}</div>
+          <dx-text-area
+            [value]="formData().descriptionEn"
+            (valueChange)="updateField('descriptionEn', $event)"
+            [maxLength]="500">
+          </dx-text-area>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-md-4">
+        <div class="dx-field">
+          <div class="dx-field-label">{{ '::Training.Category' | abpLocalization }} *</div>
+          <dx-select-box
+            [value]="formData().category"
+            (valueChange)="updateField('category', $event)"
+            [dataSource]="categoryDataSource"
+            displayExpr="text"
+            valueExpr="value">
+          </dx-select-box>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="dx-field">
+          <div class="dx-field-label">{{ '::Training.Nature' | abpLocalization }} *</div>
+          <dx-select-box
+            [value]="formData().nature"
+            (valueChange)="updateField('nature', $event)"
+            [dataSource]="natureDataSource"
+            displayExpr="text"
+            valueExpr="value">
+          </dx-select-box>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="dx-field">
+          <div class="dx-field-label">{{ '::Training.Field' | abpLocalization }} *</div>
+          <dx-select-box
+            [value]="formData().fieldId"
+            (valueChange)="updateField('fieldId', $event)"
+            [dataSource]="courseFields()"
+            displayExpr="fieldNameAr"
+            valueExpr="id">
+          </dx-select-box>
+        </div>
+      </div>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-md-4">
+        <div class="dx-field">
+          <div class="dx-field-label">{{ '::Training.ResultType' | abpLocalization }} *</div>
+          <dx-select-box
+            [value]="formData().resultType"
+            (valueChange)="updateField('resultType', $event)"
+            [dataSource]="resultTypeDataSource"
+            displayExpr="text"
+            valueExpr="value">
+          </dx-select-box>
+        </div>
+      </div>
+      <div class="col-md-8 d-flex align-items-end gap-4 flex-wrap">
+        <dx-check-box
+          [value]="formData().requiresEvaluation"
+          (valueChange)="updateField('requiresEvaluation', $event)"
+          [text]="'::Training.RequiresEvaluation' | abpLocalization">
+        </dx-check-box>
+        <dx-check-box
+          [value]="formData().requiresProviderEvaluation"
+          (valueChange)="updateField('requiresProviderEvaluation', $event)"
+          [text]="'::Training.RequiresProviderEvaluation' | abpLocalization">
+        </dx-check-box>
+        <dx-check-box
+          [value]="formData().hasCertificate"
+          (valueChange)="updateField('hasCertificate', $event)"
+          [text]="'::Training.HasCertificate' | abpLocalization">
+        </dx-check-box>
+      </div>
+    </div>
+
+    @if (showEvaluationBlocks) {
+      <div class="row mb-3">
+        <div class="col-md-12">
+          <dx-check-box
+            [value]="formData().evaluationBlocksCertificate"
+            (valueChange)="updateField('evaluationBlocksCertificate', $event)"
+            [text]="'::Training.EvaluationBlocksCertificate' | abpLocalization">
+          </dx-check-box>
+        </div>
+      </div>
+    }
+
+    <div class="row mb-4">
+      <div class="col-md-4">
+        <div class="dx-field">
+          <div class="dx-field-label">{{ '::Training.IsActive' | abpLocalization }}</div>
+          <dx-switch
+            [value]="formData().isActive"
+            (valueChange)="updateField('isActive', $event)"
+            [switchedOnText]="'::Training.Active' | abpLocalization"
+            [switchedOffText]="'::Training.Inactive' | abpLocalization">
+          </dx-switch>
+        </div>
+      </div>
+    </div>
+
+    <hr />
+
+    <!-- ── Enrollment Conditions Sub-Grid ── -->
+    <div class="mb-3">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h6 class="mb-0">{{ '::Training.EnrollmentConditions' | abpLocalization }}</h6>
+        <dx-button
+          [text]="'::Training.AddCondition' | abpLocalization"
+          icon="plus"
+          stylingMode="text"
+          (onClick)="onAddCondition()">
+        </dx-button>
+      </div>
+
+      @if (conditions().length > 0) {
+        <table class="table table-bordered table-sm">
+          <thead>
+            <tr>
+              <th style="width: 200px">{{ '::Training.ConditionType' | abpLocalization }}</th>
+              <th>{{ '::Training.ConditionValue' | abpLocalization }}</th>
+              <th style="width: 80px">{{ '::Training.Actions' | abpLocalization }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (cond of conditions(); track cond.id; let i = $index) {
+              <tr>
+                <td>
+                  <dx-select-box
+                    [value]="cond.conditionType"
+                    (valueChange)="updateCondition(i, 'conditionType', $event); onSaveCondition(cond)"
+                    [dataSource]="conditionTypeDataSource"
+                    displayExpr="text"
+                    valueExpr="value">
+                  </dx-select-box>
+                </td>
+                <td>
+                  <dx-text-box
+                    [value]="cond.conditionValue"
+                    (valueChange)="updateCondition(i, 'conditionValue', $event); onSaveCondition(cond)"
+                    placeholder='{"min": "Captain", "max": "Colonel"}'>
+                  </dx-text-box>
+                </td>
+                <td class="text-center">
+                  <dx-button icon="trash" stylingMode="text" type="danger" (onClick)="onRemoveCondition(i)"></dx-button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <p class="text-muted">{{ '::Training.NoConditions' | abpLocalization }}</p>
+      }
+    </div>
+
+    <hr />
+
+    <!-- Dialog Actions -->
+    <div class="d-flex justify-content-end gap-2">
+      <dx-button [text]="'::Training.Cancel' | abpLocalization" stylingMode="outlined" (onClick)="onCancel()"></dx-button>
+      <dx-button
+        [text]="'::Training.Save' | abpLocalization"
+        type="default"
+        stylingMode="contained"
+        [disabled]="isSaving()"
+        (onClick)="onSave()">
+      </dx-button>
+    </div>
+  </div>
+</dx-popup>

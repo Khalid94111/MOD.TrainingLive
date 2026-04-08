@@ -1,0 +1,16 @@
+<Solution>
+    <Configurations>
+        <Platform Name="Any CPU" />
+    </Configurations>
+    <Folder Name="/src/">
+        <Project Path="src/MOD.Training.Domain/MOD.Training.Domain.csproj" />
+        <Project Path="src/MOD.Training.Application/MOD.Training.Application.csproj" />
+        <Project Path="src/MOD.Training.EntityFrameworkCore/MOD.Training.EntityFrameworkCore.csproj" />
+        <Project Path="src/MOD.Training.Domain.Shared/MOD.Training.Domain.Shared.csproj" />
+        <Project Path="src/MOD.Training.Application.Contracts/MOD.Training.Application.Contracts.csproj" />
+        <Project Path="src/MOD.Training.HttpApi/MOD.Training.HttpApi.csproj" />
+        <Project Path="src/MOD.Training.HttpApi.Client/MOD.Training.HttpApi.Client.csproj" />
+        <Project Path="src/MOD.Training.DbMigrator/MOD.Training.DbMigrator.csproj" />
+        <Project Path="src/MOD.Training.HttpApi.Host/MOD.Training.HttpApi.Host.csproj" />
+    </Folder>
+</Solution>

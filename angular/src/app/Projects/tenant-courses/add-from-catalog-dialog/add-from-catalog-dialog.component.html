@@ -1,0 +1,73 @@
+<!-- Add from Catalog Dialog — Multi-select available courses -->
+<dx-popup
+  [visible]="visible()"
+  [title]="'::Training.AddFromCatalog' | abpLocalization"
+  [width]="800"
+  [height]="550"
+  [showCloseButton]="true"
+  [dragEnabled]="true"
+  (onHiding)="onCancel()">
+
+  <div *dxTemplate="let data of 'content'" class="p-3">
+    <p class="text-muted mb-3">{{ '::Training.SelectCoursesInfo' | abpLocalization }}</p>
+
+    <dx-data-grid
+      [dataSource]="dataSource"
+      [remoteOperations]="true"
+      [showBorders]="true"
+      [columnAutoWidth]="true"
+      [rowAlternationEnabled]="true"
+      keyExpr="id"
+      (onSelectionChanged)="onSelectionChanged($event)">
+
+      <dxo-selection mode="multiple" showCheckBoxesMode="always"></dxo-selection>
+      <dxo-paging [pageSize]="10"></dxo-paging>
+      <dxo-pager [showInfo]="true"></dxo-pager>
+
+      <dxi-column
+        dataField="courseNameAr"
+        [caption]="'::Training.CourseNameAr' | abpLocalization"
+        [width]="200">
+      </dxi-column>
+      <dxi-column
+        dataField="courseNameEn"
+        [caption]="'::Training.CourseNameEn' | abpLocalization"
+        [width]="200">
+      </dxi-column>
+      <dxi-column
+        dataField="category"
+        [caption]="'::Training.Category' | abpLocalization"
+        [width]="100">
+        <dxo-lookup
+          [dataSource]="categoryDataSource"
+          displayExpr="text"
+          valueExpr="value">
+        </dxo-lookup>
+      </dxi-column>
+      <dxi-column
+        dataField="fieldNameAr"
+        [caption]="'::Training.Field' | abpLocalization"
+        [width]="150"
+        [allowSorting]="false">
+      </dxi-column>
+    </dx-data-grid>
+
+    <div class="d-flex justify-content-between align-items-center mt-3">
+      <span class="text-muted">{{ selectedCountText }}</span>
+      <div class="d-flex gap-2">
+        <dx-button
+          [text]="'::Training.Cancel' | abpLocalization"
+          stylingMode="outlined"
+          (onClick)="onCancel()">
+        </dx-button>
+        <dx-button
+          [text]="'::Training.AddSelected' | abpLocalization"
+          type="default"
+          stylingMode="contained"
+          [disabled]="selectedCourseIds().length === 0 || isSaving()"
+          (onClick)="onConfirm()">
+        </dx-button>
+      </div>
+    </div>
+  </div>
+</dx-popup>

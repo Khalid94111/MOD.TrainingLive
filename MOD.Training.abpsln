@@ -1,0 +1,187 @@
+{
+  "id": "5bc906ab-adfb-4b59-8338-2730f664832e",
+  "creationTime": "04/07/2026 07:58:25 +00:00",
+  "template": "app",
+  "versions": {
+    "LeptonX": "5.1.1",
+    "AbpFramework": "10.1.1",
+    "AbpCommercial": "10.1.1",
+    "AbpStudio": "2.2.4",
+    "TargetDotnetFramework": "net10.0"
+  },
+  "modules": {
+    "MOD.Training": {
+      "path": "MOD.Training.abpmdl"
+    }
+  },
+  "runProfiles": {
+    "Default": {
+      "path": "etc/abp-studio/run-profiles/Default.abprun.json"
+    }
+  },
+  "k8sProfiles": {
+    "local": {
+      "path": "etc/abp-studio/k8s-profiles/local.abpk8s.json"
+    }
+  },
+  "commands": {
+    "helmBuildDotnetImage": {
+      "triggerTargets": [
+        "HELM_CHARTS_ROOT",
+        "HELM_MAIN_CHART",
+        "HELM_SUB_CHART"
+      ],
+      "executionTargets": [
+        "HELM_MAIN_CHART",
+        "HELM_SUB_CHART"
+      ],
+      "displayName": "Build Docker Image(s)",
+      "workingDirectory": "etc/helm",
+      "terminalCommand": "./build-image.ps1 -ProjectPath {{metadata.projectPath}} -ImageName {{metadata.imageName}} -ProjectType {{metadata.projectType}}",
+      "condition": "{{metadata.projectPath != null && metadata.imageName != null && metadata.projectType != null}}"
+    },
+    "helmInstallChart": {
+      "triggerTargets": [
+        "HELM_CHARTS_ROOT",
+        "HELM_MAIN_CHART"
+      ],
+      "executionTargets": [
+        "HELM_MAIN_CHART"
+      ],
+      "displayName": "Install Chart(s)",
+      "workingDirectory": "etc/helm",
+      "terminalCommand": "./install.ps1 -ChartName {{chart.name}} -Namespace {{profile.namespace}} -ReleaseName {{chart.name}}-{{profile.name}} -DotnetEnvironment {{metadata.dotnetEnvironment}} {{~if metadata.k8ssuffix}} -User {{metadata.k8ssuffix}}{{end}}",
+      "requireConfirmation": "true",
+      "confirmationText": "Are you sure to install the chart(s) for the profile {{ profile.name }}?"
+    },
+    "helmUninstallChart": {
+      "triggerTargets": [
+        "HELM_CHARTS_ROOT",
+        "HELM_MAIN_CHART"
+      ],
+      "executionTargets": [
+        "HELM_MAIN_CHART"
+      ],
+      "displayName": "Uninstall Chart(s)",
+      "workingDirectory": "etc/helm",
+      "terminalCommand": "./uninstall.ps1 -Namespace {{profile.namespace}} -ReleaseName {{chart.name}}-{{profile.name}} {{~if metadata.k8ssuffix}} -User {{metadata.k8ssuffix}}{{end}}",
+      "requireConfirmation": "true",
+      "confirmationText": "Are you sure to uninstall the chart(s) for the profile {{profile.name}}?"
+    },
+    "kubernetesRedeploy": {
+      "triggerTargets": [
+        "KUBERNETES_SERVICE"
+      ],
+      "executionTargets": [
+        "KUBERNETES_SERVICE"
+      ],
+      "displayName": "Redeploy",
+      "workingDirectory": "etc/helm",
+      "terminalCommand": "./build-image.ps1 -ProjectPath {{chart.metadata.projectPath}} -ImageName {{chart.metadata.imageName}} -ProjectType {{chart.metadata.projectType}} &&& ./install.ps1 -ChartName {{mainChart.name}} -Namespace {{profile.namespace}} -ReleaseName {{mainChart.name}}-{{profile.name}} -DotnetEnvironment {{mainChart.metadata.dotnetEnvironment}} {{~if metadata.k8ssuffix}} -User {{metadata.k8ssuffix}}{{end}}",
+      "requireConfirmation": "true",
+      "confirmationText": "Are you sure to redeploy the related chart '{{chart.name}}' for the service '{{name}}'?",
+      "condition": "{{chart != null && chart.metadata.projectPath != null && chart.metadata.imageName != null && chart.metadata.projectType != null}}"
+    },
+    "createTlsSecret": {
+      "triggerTargets": [
+        "HELM_CHARTS_ROOT"
+      ],
+      "executionTargets": [
+        "HELM_CHARTS_ROOT"
+      ],
+      "displayName": "Create Self-Signed TLS secret",
+      "workingDirectory": "etc/helm",
+      "terminalCommand": "./create-tls-secrets.ps1 -Namespace {{profile.namespace}} {{~if metadata.k8ssuffix}} -User {{metadata.k8ssuffix}}{{end}}"
+    }
+  },
+  "helm": {
+    "charts": {
+      "training": {
+        "name": "training",
+        "path": "etc/helm/training",
+        "charts": {
+          "angular": {
+            "name": "angular",
+            "path": "etc/helm/training/charts/angular",
+            "metadata": {
+              "projectPath": "../../angular",
+              "imageName": "training/angular",
+              "projectType": "angular"
+            },
+            "services": [
+              ".*-angular$"
+            ]
+          },
+          "dbmigrator": {
+            "name": "dbmigrator",
+            "path": "etc/helm/training/charts/dbmigrator",
+            "metadata": {
+              "projectPath": "../../src/MOD.Training.DbMigrator/MOD.Training.DbMigrator.csproj",
+              "imageName": "training/dbmigrator",
+              "projectType": "dotnet"
+            },
+            "services": [
+              ".*-dbmigrator"
+            ]
+          },
+          "httpapihost": {
+            "name": "httpapihost",
+            "path": "etc/helm/training/charts/httpapihost",
+            "metadata": {
+              "projectPath": "../../src/MOD.Training.HttpApi.Host/MOD.Training.HttpApi.Host.csproj",
+              "imageName": "training/httpapihost",
+              "projectType": "dotnet"
+            },
+            "services": [
+              ".*-httpapihost"
+            ]
+          },
+          "sqlserver": {
+            "name": "sqlserver",
+            "path": "etc/helm/training/charts/sqlserver"
+          },
+        },
+        "metadata": {}
+      }
+    }
+  },
+  "options": {
+    "httpRequests": {
+      "ignoredUrls": [
+      
+      ]
+    }
+  },
+  "creatingStudioConfiguration": {
+    "template": "app",
+    "createdAbpStudioVersion": "2.2.4",
+    "creationTool": "ABP Studio UI",
+    "tiered": "false",
+    "runInstallLibs": "",
+    "useLocalReferences": "false",
+    "multiTenancy": "true",
+    "includeTests": "false",
+    "kubernetesConfiguration": "true",
+    "uiFramework": "angular",
+    "mobileFramework": "none",
+    "distributedEventBus": "none",
+    "databaseProvider": "ef",
+    "runDbMigrator": "",
+    "databaseManagementSystem": "sqlserver",
+    "separateTenantSchema": "false",
+    "createInitialMigration": "",
+    "theme": "leptonx",
+    "themeStyle": "system",
+    "themeMenuPlacement": "side",
+    "mobileFramework": "none",
+    "progressiveWebApp": "false",
+    "runProgressiveWebAppSupport": "false",
+    "publicWebsite": "false",
+    "optionalModules": "GDPR FileManagement TextTemplateManagement LanguageManagement OpenIddictAdmin",
+    "socialLogin": "false",
+    "sampleCrudPage": "true",
+    "selectedLanguages": ["English", "Arabic", ],
+    "defaultLanguage": "English",
+    "createCommand": "abp new MOD.Training -t app --ui-framework angular --database-provider ef --database-management-system sqlserver --theme leptonx --skip-migration  --skip-migrator  --no-tests --without-cms-kit --sample-crud-page --dont-run-install-libs --dont-run-bundling --no-social-logins -no-audit-logging -file-management"
+  }
+}

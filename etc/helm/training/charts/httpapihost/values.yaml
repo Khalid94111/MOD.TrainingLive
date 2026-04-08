@@ -1,0 +1,4 @@
+image:
+  repository: "training/httpapihost"
+  tag: "latest"
+  pullPolicy: IfNotPresent

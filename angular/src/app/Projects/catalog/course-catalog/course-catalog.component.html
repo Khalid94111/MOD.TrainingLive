@@ -1,0 +1,157 @@
+<!-- PAGE 1.1: Course Catalog Management -->
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">{{ '::Training.CourseCatalog' | abpLocalization }}</h5>
+    <dx-button
+      [text]="'::Training.AddCourse' | abpLocalization"
+      icon="plus"
+      type="default"
+      stylingMode="contained"
+      (onClick)="onAddCourse()">
+    </dx-button>
+  </div>
+
+  <div class="card-body">
+    <!-- Toolbar: Search + Filters -->
+    <div class="row mb-3">
+      <div class="col-md-4">
+        <dx-text-box
+          [value]="searchText()"
+          (valueChange)="searchText.set($event)"
+          [placeholder]="'::Training.SearchByName' | abpLocalization"
+          mode="search"
+          [showClearButton]="true"
+          (onValueChanged)="onSearch()">
+        </dx-text-box>
+      </div>
+      <div class="col-md-3">
+        <dx-select-box
+          [value]="filterFieldId()"
+          (valueChange)="filterFieldId.set($event)"
+          [dataSource]="courseFields()"
+          displayExpr="fieldNameAr"
+          valueExpr="id"
+          [placeholder]="'::Training.Field' | abpLocalization"
+          [showClearButton]="true"
+          (onValueChanged)="onFilterChange()">
+        </dx-select-box>
+      </div>
+      <div class="col-md-3">
+        <dx-select-box
+          [value]="filterCategory()"
+          (valueChange)="filterCategory.set($event)"
+          [dataSource]="categoryDataSource"
+          displayExpr="text"
+          valueExpr="value"
+          [placeholder]="'::Training.Category' | abpLocalization"
+          [showClearButton]="true"
+          (onValueChanged)="onFilterChange()">
+        </dx-select-box>
+      </div>
+    </div>
+
+    <!-- Data Grid -->
+    <dx-data-grid
+      #catalogGrid
+      [dataSource]="dataSource"
+      [remoteOperations]="true"
+      [showBorders]="true"
+      [columnAutoWidth]="true"
+      [allowColumnReordering]="true"
+      [rowAlternationEnabled]="true">
+
+      <dxo-paging [pageSize]="10"></dxo-paging>
+      <dxo-pager
+        [showPageSizeSelector]="true"
+        [allowedPageSizes]="[10, 25, 50]"
+        [showInfo]="true">
+      </dxo-pager>
+      <dxo-sorting mode="single"></dxo-sorting>
+
+      <dxi-column
+        dataField="courseNameAr"
+        [caption]="'::Training.CourseNameAr' | abpLocalization"
+        [width]="200"
+        sortOrder="asc">
+      </dxi-column>
+      <dxi-column
+        dataField="courseNameEn"
+        [caption]="'::Training.CourseNameEn' | abpLocalization"
+        [width]="200">
+      </dxi-column>
+      <dxi-column
+        dataField="category"
+        [caption]="'::Training.Category' | abpLocalization"
+        [width]="120"
+        [calculateCellValue]="getCategoryText">
+      </dxi-column>
+      <dxi-column
+        dataField="nature"
+        [caption]="'::Training.Nature' | abpLocalization"
+        [width]="120">
+      </dxi-column>
+      <dxi-column
+        dataField="fieldNameAr"
+        [caption]="'::Training.Field' | abpLocalization"
+        [width]="150"
+        [allowSorting]="false">
+      </dxi-column>
+      <dxi-column
+        dataField="resultType"
+        [caption]="'::Training.ResultType' | abpLocalization"
+        [width]="130"
+        [calculateCellValue]="getResultTypeText">
+      </dxi-column>
+      <dxi-column
+        dataField="requiresEvaluation"
+        [caption]="'::Training.RequiresEvaluation' | abpLocalization"
+        [width]="80"
+        dataType="boolean">
+      </dxi-column>
+      <dxi-column
+        dataField="hasCertificate"
+        [caption]="'::Training.HasCertificate' | abpLocalization"
+        [width]="80"
+        dataType="boolean">
+      </dxi-column>
+      <dxi-column
+        dataField="isActive"
+        [caption]="'::Training.Status' | abpLocalization"
+        [width]="80"
+        cellTemplate="activeTemplate">
+      </dxi-column>
+      <dxi-column
+        [caption]="'::Training.Actions' | abpLocalization"
+        [width]="100"
+        cellTemplate="actionsTemplate"
+        [allowSorting]="false">
+      </dxi-column>
+
+      <div *dxTemplate="let data of 'activeTemplate'">
+        <span [class]="data.value ? 'badge bg-success' : 'badge bg-secondary'">
+          {{ (data.value ? '::Training.Active' : '::Training.Inactive') | abpLocalization }}
+        </span>
+      </div>
+
+      <div *dxTemplate="let data of 'actionsTemplate'">
+        <dx-button
+          icon="edit"
+          stylingMode="text"
+          [hint]="'::Training.EditCourse' | abpLocalization"
+          (onClick)="onEditCourse(data.data)">
+        </dx-button>
+      </div>
+    </dx-data-grid>
+  </div>
+</div>
+
+<!-- Add/Edit Dialog -->
+@if (isDialogVisible()) {
+  <app-catalog-form-dialog
+    [visible]="isDialogVisible()"
+    [course]="editingCourse()"
+    [courseFields]="courseFields()"
+    (saved)="onDialogSaved()"
+    (cancelled)="onDialogCancelled()">
+  </app-catalog-form-dialog>
+}

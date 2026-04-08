@@ -1,0 +1,196 @@
+<!-- PAGE 1.4: Tenant Courses Management -->
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">{{ '::Training.TenantCourses' | abpLocalization }}</h5>
+    <dx-button
+      [text]="'::Training.AddFromCatalog' | abpLocalization"
+      icon="plus"
+      type="default"
+      stylingMode="contained"
+      (onClick)="onOpenAddDialog()">
+    </dx-button>
+  </div>
+
+  <div class="card-body">
+    <!-- Toolbar -->
+    <div class="row mb-3">
+      <div class="col-md-4">
+        <dx-text-box
+          [value]="searchText()"
+          (valueChange)="searchText.set($event)"
+          [placeholder]="'::Training.SearchByName' | abpLocalization"
+          mode="search"
+          [showClearButton]="true"
+          (onValueChanged)="onSearch()">
+        </dx-text-box>
+      </div>
+      <div class="col-md-3">
+        <dx-select-box
+          [value]="filterResultType()"
+          (valueChange)="filterResultType.set($event)"
+          [dataSource]="resultTypeDataSource"
+          displayExpr="text"
+          valueExpr="value"
+          [placeholder]="'::Training.ResultType' | abpLocalization"
+          [showClearButton]="true"
+          (onValueChanged)="onFilterChange()">
+        </dx-select-box>
+      </div>
+    </div>
+
+    <!-- Grid -->
+    <dx-data-grid
+      #tenantGrid
+      [dataSource]="dataSource"
+      [remoteOperations]="true"
+      [showBorders]="true"
+      [columnAutoWidth]="true"
+      [rowAlternationEnabled]="true">
+
+      <dxo-paging [pageSize]="10"></dxo-paging>
+      <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[10, 25, 50]" [showInfo]="true"></dxo-pager>
+      <dxo-sorting mode="single"></dxo-sorting>
+
+      <dxi-column dataField="catalogCourseNameAr" [caption]="'::Training.CourseNameAr' | abpLocalization" [width]="180" sortOrder="asc"></dxi-column>
+      <dxi-column dataField="catalogCourseNameEn" [caption]="'::Training.CourseNameEn' | abpLocalization" [width]="180"></dxi-column>
+      <dxi-column dataField="catalogCourseFieldNameAr" [caption]="'::Training.Field' | abpLocalization" [width]="120" [allowSorting]="false"></dxi-column>
+      <dxi-column dataField="defaultCapacity" [caption]="'::Training.DefaultCapacity' | abpLocalization" [width]="100" dataType="number"></dxi-column>
+      <dxi-column dataField="defaultDurationWeeks" [caption]="'::Training.DefaultDurationWeeks' | abpLocalization" [width]="100" dataType="number"></dxi-column>
+      <dxi-column [caption]="'::Training.ResultType' | abpLocalization" [width]="120" [calculateCellValue]="getResultTypeText"></dxi-column>
+      <dxi-column dataField="requiresEvaluation" [caption]="'::Training.RequiresEvaluation' | abpLocalization" [width]="80" dataType="boolean"></dxi-column>
+      <dxi-column dataField="isActive" [caption]="'::Training.Status' | abpLocalization" [width]="80" cellTemplate="activeTemplate"></dxi-column>
+      <dxi-column [caption]="'::Training.Actions' | abpLocalization" [width]="100" cellTemplate="actionsTemplate" [allowSorting]="false"></dxi-column>
+
+      <div *dxTemplate="let data of 'activeTemplate'">
+        <span [class]="data.value ? 'badge bg-success' : 'badge bg-secondary'">
+          {{ (data.value ? '::Training.Active' : '::Training.Inactive') | abpLocalization }}
+        </span>
+      </div>
+
+      <div *dxTemplate="let data of 'actionsTemplate'">
+        <dx-button icon="edit" stylingMode="text" [hint]="'::Training.EditCourse' | abpLocalization" (onClick)="onEditCourse(data.data)"></dx-button>
+      </div>
+    </dx-data-grid>
+  </div>
+</div>
+
+<!-- ═══ Add from Catalog Dialog ═══ -->
+@if (isAddDialogVisible()) {
+  <app-add-from-catalog-dialog
+    [visible]="isAddDialogVisible()"
+    (saved)="onCoursesAdded()"
+    (cancelled)="isAddDialogVisible.set(false)">
+  </app-add-from-catalog-dialog>
+}
+
+<!-- ═══ Edit Tenant Course Dialog ═══ -->
+<dx-popup
+  [visible]="isEditDialogVisible()"
+  [title]="'::Training.EditSettings' | abpLocalization"
+  [width]="600"
+  [height]="'auto'"
+  [maxHeight]="'80vh'"
+  [showCloseButton]="true"
+  [dragEnabled]="true"
+  (onHiding)="isEditDialogVisible.set(false)">
+
+  <div *dxTemplate="let data of 'content'" class="p-3">
+    <!-- Course name (read-only) -->
+    @if (editingCourse(); as course) {
+      <div class="mb-3 p-2 bg-light rounded">
+        <strong>{{ course.catalogCourseNameAr }}</strong> /
+        <span class="text-muted">{{ course.catalogCourseNameEn }}</span>
+      </div>
+    }
+
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <div class="dx-field">
+          <div class="dx-field-label">{{ '::Training.DefaultCapacity' | abpLocalization }}</div>
+          <dx-number-box [value]="editForm().defaultCapacity" (valueChange)="updateEditField('defaultCapacity', $event)" [min]="1"></dx-number-box>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="dx-field">
+          <div class="dx-field-label">{{ '::Training.DefaultDurationWeeks' | abpLocalization }}</div>
+          <dx-number-box [value]="editForm().defaultDurationWeeks" (valueChange)="updateEditField('defaultDurationWeeks', $event)" [min]="1"></dx-number-box>
+        </div>
+      </div>
+    </div>
+
+    <div class="dx-field mb-3">
+      <div class="dx-field-label">{{ '::Training.ResultType' | abpLocalization }} *</div>
+      <dx-select-box
+        [value]="editForm().resultType"
+        (valueChange)="updateEditField('resultType', $event)"
+        [dataSource]="resultTypeDataSource"
+        displayExpr="text"
+        valueExpr="value">
+      </dx-select-box>
+    </div>
+
+    <div class="d-flex gap-4 flex-wrap mb-3">
+      <dx-check-box [value]="editForm().requiresEvaluation" (valueChange)="updateEditField('requiresEvaluation', $event)" [text]="'::Training.RequiresEvaluation' | abpLocalization"></dx-check-box>
+      <dx-check-box [value]="editForm().requiresProviderEvaluation" (valueChange)="updateEditField('requiresProviderEvaluation', $event)" [text]="'::Training.RequiresProviderEvaluation' | abpLocalization"></dx-check-box>
+      <dx-check-box [value]="editForm().hasCertificate" (valueChange)="updateEditField('hasCertificate', $event)" [text]="'::Training.HasCertificate' | abpLocalization"></dx-check-box>
+    </div>
+
+    @if (showEvaluationBlocks) {
+      <div class="mb-3">
+        <dx-check-box
+          [value]="editForm().evaluationBlocksCertificate"
+          (valueChange)="updateEditField('evaluationBlocksCertificate', $event)"
+          [text]="'::Training.EvaluationBlocksCertificate' | abpLocalization">
+        </dx-check-box>
+      </div>
+    }
+
+    <div class="dx-field mb-4">
+      <div class="dx-field-label">{{ '::Training.IsActive' | abpLocalization }}</div>
+      <dx-switch
+        [value]="editForm().isActive"
+        (valueChange)="updateEditField('isActive', $event)"
+        [switchedOnText]="'::Training.Active' | abpLocalization"
+        [switchedOffText]="'::Training.Inactive' | abpLocalization">
+      </dx-switch>
+    </div>
+
+    <hr />
+
+    <!-- Locked Conditions (read-only) -->
+    <div class="mb-3">
+      <h6 class="mb-2">
+        {{ '::Training.EnrollmentConditions' | abpLocalization }}
+        <span class="badge bg-secondary ms-1">{{ '::Training.ConditionsLocked' | abpLocalization }}</span>
+      </h6>
+
+      @if (conditions().length > 0) {
+        <table class="table table-bordered table-sm">
+          <thead>
+            <tr>
+              <th>{{ '::Training.ConditionType' | abpLocalization }}</th>
+              <th>{{ '::Training.ConditionValue' | abpLocalization }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (cond of conditions(); track cond.id) {
+              <tr>
+                <td>{{ l.conditionType(cond.conditionType) }}</td>
+                <td class="text-start" dir="ltr">{{ cond.conditionValue }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <p class="text-muted">{{ '::Training.NoConditions' | abpLocalization }}</p>
+      }
+    </div>
+
+    <hr />
+
+    <div class="d-flex justify-content-end gap-2">
+      <dx-button [text]="'::Training.Cancel' | abpLocalization" stylingMode="outlined" (onClick)="isEditDialogVisible.set(false)"></dx-button>
+      <dx-button [text]="'::Training.Save' | abpLocalization" type="default" stylingMode="contained" (onClick)="onSaveEdit()"></dx-button>
+    </div>
+  </div>
+</dx-popup>

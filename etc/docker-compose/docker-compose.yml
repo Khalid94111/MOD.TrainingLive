@@ -1,0 +1,89 @@
+services:
+  training-angular:
+    image: mod/training-angular:latest
+    container_name: training-angular
+    build:
+      context: ../../
+      dockerfile: angular/Dockerfile.local
+    ports:
+      - "4200:80"
+    depends_on:
+      - training-api
+    volumes:
+      - ./dynamic-env.json://usr/share/nginx/html/dynamic-env.json
+    networks:
+      - abp-network
+
+  training-api:
+    image: mod/training-api:latest
+    container_name: training-api
+    hostname: training-api
+    build:
+      context: ../../
+      dockerfile: src/MOD.Training.HttpApi.Host/Dockerfile.local
+    environment:
+      - ASPNETCORE_URLS=https://+:8081;http://+:8080;
+      - Kestrel__Certificates__Default__Path=/app/certs/localhost.pfx
+      - Kestrel__Certificates__Default__Password=20fc70d9-1865-4a9a-b15f-3b5395acce47
+      - App__SelfUrl=https://localhost:44371
+      - App__AngularUrl=http://localhost:4200
+      - App_CorsOrigins=http://localhost:4200
+      - App__HealthCheckUrl=http://training-api:8080/health-status
+      - AuthServer__RequireHttpsMetadata=false
+      - AuthServer__Authority=https://localhost:44324
+      - App__RedirectAllowedUrls=http://localhost:4200
+      - ConnectionStrings__Default=Data Source=sql-server;Initial Catalog=Training;User Id=sa;Password=myPassw0rd;MultipleActiveResultSets=true;TrustServerCertificate=True;
+    ports:
+      - "44324:8081"
+    depends_on:
+      sql-server:
+        condition: service_healthy
+    restart: on-failure    
+    volumes:
+      - ./certs:/app/certs
+    networks:
+      - abp-network
+  
+
+  db-migrator:
+    image: mod/training-db-migrator:latest
+    container_name: db-migrator
+    build:
+      context: ../../
+      dockerfile: src/MOD.Training.DbMigrator/Dockerfile.local
+    environment:
+      - OpenIddict__Applications__Training_App__RootUrl=http://localhost:4200
+      - OpenIddict__Applications__Training_Swagger__RootUrl=https://localhost:44324
+      - ConnectionStrings__Default=Data Source=sql-server;Initial Catalog=Training;User Id=sa;Password=myPassw0rd;MultipleActiveResultSets=true;TrustServerCertificate=True;
+    restart: on-failure
+    depends_on:
+      sql-server:
+        condition: service_healthy
+    networks:
+      - abp-network    
+  
+  sql-server:
+    container_name: sql-server
+    image: mcr.microsoft.com/azure-sql-edge:1.0.7
+    ports:
+      - "1434:1433"
+    environment:
+      SA_PASSWORD: "myPassw0rd"
+      ACCEPT_EULA: "Y"
+    volumes:
+      - sqldata:/var/opt/mssql
+    networks:
+      - abp-network
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S sql-server -U sa -P "myPassw0rd" -Q "SELECT 1" -C -b -o /dev/null
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+volumes:
+  sqldata:
+    name: training_sqldata
+networks:
+  abp-network:
+    name: training-network
+    driver: bridge
