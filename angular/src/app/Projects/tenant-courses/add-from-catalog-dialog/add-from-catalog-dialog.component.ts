@@ -1,6 +1,6 @@
 import { Component, inject, input, OnInit, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LocalizationPipe, LocalizationService } from '@abp/ng.core';
+import { LocalizationPipe } from '@abp/ng.core';
 import { DxDataGridModule, DxButtonModule, DxPopupModule } from 'devextreme-angular';
 import { TenantCourseService, TrainingLocalizationHelper, createAbpStore } from '../../shared';
 import type { CourseCatalogDto } from '../../shared';
@@ -10,10 +10,10 @@ import type { CourseCatalogDto } from '../../shared';
   standalone: true,
   imports: [CommonModule, LocalizationPipe, DxDataGridModule, DxButtonModule, DxPopupModule],
   templateUrl: './add-from-catalog-dialog.component.html',
+  styleUrl: './add-from-catalog-dialog.component.scss',
 })
 export class AddFromCatalogDialogComponent implements OnInit {
   private readonly tenantCourseService = inject(TenantCourseService);
-  private readonly localization = inject(LocalizationService);
   readonly l = inject(TrainingLocalizationHelper);
 
   readonly visible = input.required<boolean>();
@@ -24,14 +24,11 @@ export class AddFromCatalogDialogComponent implements OnInit {
   selectedCourseIds = signal<string[]>([]);
   isSaving = signal(false);
 
-  categoryDataSource: any[] = [];
-
   get selectedCountText(): string {
-    return this.localization.instant('::Training.SelectedCount', this.selectedCourseIds().length.toString());
+    return this.selectedCourseIds().length + ' ' + this.l.t('::Training.Selected');
   }
 
   ngOnInit(): void {
-    this.categoryDataSource = this.l.categoryDataSource();
     this.dataSource = createAbpStore<CourseCatalogDto>({
       loadFn: params => this.tenantCourseService.getAvailableCatalogCourses(params),
     });
@@ -48,9 +45,7 @@ export class AddFromCatalogDialogComponent implements OnInit {
     try {
       await this.tenantCourseService.addFromCatalog({ catalogCourseIds: ids });
       this.saved.emit();
-    } finally {
-      this.isSaving.set(false);
-    }
+    } finally { this.isSaving.set(false); }
   }
 
   onCancel(): void { this.cancelled.emit(); }

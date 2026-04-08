@@ -1,0 +1,8 @@
+@use '../../shared/styles/training-common' as *;
+
+.filter-search { flex: 1; min-width: 200px; }
+.filter-select { min-width: 150px; }
+.catalog-grid { border: none; }
+.row-index { color: #94a3b8; }
+.cell-name { font-weight: 500; color: #1e293b; &--faded { color: #94a3b8; } }
+.cell-sub { font-size: 12px; color: #64748b; margin-top: 2px; &--faded { color: #94a3b8; } }

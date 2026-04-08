@@ -2,34 +2,17 @@ import { Component, inject, input, OnInit, output, signal } from '@angular/core'
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LocalizationPipe } from '@abp/ng.core';
-import {
-  DxPopupModule,
-  DxTextBoxModule,
-  DxTextAreaModule,
-  DxSelectBoxModule,
-  DxCheckBoxModule,
-  DxSwitchModule,
-  DxButtonModule,
-} from 'devextreme-angular';
+import { DxPopupModule, DxTextBoxModule, DxTextAreaModule, DxSelectBoxModule, DxCheckBoxModule, DxSwitchModule, DxButtonModule } from 'devextreme-angular';
 import { CourseCatalogService, TrainingLocalizationHelper } from '../../../shared';
-import type {
-  CourseCatalogDto,
-  CourseFieldDto,
-  CreateUpdateCourseCatalogDto,
-  CatalogEnrollmentConditionDto,
-} from '../../../shared';
+import type { CourseCatalogDto, CourseFieldDto, CreateUpdateCourseCatalogDto, CatalogEnrollmentConditionDto } from '../../../shared';
 import { ConditionType, ResultType } from '../../../shared/models/training-enums';
-import { ToolbarItem } from 'devextreme/ui/popup';
 
 @Component({
   selector: 'app-catalog-form-dialog',
   standalone: true,
-  imports: [
-    CommonModule, FormsModule, LocalizationPipe,
-    DxPopupModule, DxTextBoxModule, DxTextAreaModule,
-    DxSelectBoxModule, DxCheckBoxModule, DxSwitchModule, DxButtonModule,
-  ],
+  imports: [CommonModule, FormsModule, LocalizationPipe, DxPopupModule, DxTextBoxModule, DxTextAreaModule, DxSelectBoxModule, DxCheckBoxModule, DxSwitchModule, DxButtonModule],
   templateUrl: './catalog-form-dialog.component.html',
+  styleUrl: './catalog-form-dialog.component.scss',
 })
 export class CatalogFormDialogComponent implements OnInit {
   private readonly catalogService = inject(CourseCatalogService);
@@ -38,64 +21,39 @@ export class CatalogFormDialogComponent implements OnInit {
   readonly visible = input.required<boolean>();
   readonly course = input<CourseCatalogDto | null>(null);
   readonly courseFields = input<CourseFieldDto[]>([]);
-
   readonly saved = output<void>();
   readonly cancelled = output<void>();
 
   formData = signal<CreateUpdateCourseCatalogDto>({
-    courseNameAr: '', courseNameEn: '',
-    descriptionAr: '', descriptionEn: '',
-    category: '', nature: '', fieldId: '',
-    resultType: ResultType.AttendanceOnly,
+    courseNameAr: '', courseNameEn: '', descriptionAr: '', descriptionEn: '',
+    category: '', nature: '', fieldId: '', resultType: ResultType.AttendanceOnly,
     requiresEvaluation: false, requiresProviderEvaluation: false,
-    hasCertificate: false, evaluationBlocksCertificate: false,
-    isActive: true,
+    hasCertificate: false, evaluationBlocksCertificate: false, isActive: true,
   });
-
   conditions = signal<(CatalogEnrollmentConditionDto & { _isNew?: boolean })[]>([]);
   isSaving = signal(false);
-
   categoryDataSource: any[] = [];
   natureDataSource: any[] = [];
   resultTypeDataSource: any[] = [];
   conditionTypeDataSource: any[] = [];
-  popupToolbarItems: ({ widget: string; location: string; toolbar: string; options: { text: string; icon: string; type: string; onClick: () => Promise<void>; }; } | { widget: string; location: string; toolbar: string; options: { text: string; onClick: () => void; icon?: undefined; type?: undefined; }; })[] | undefined;
- 
+  dialogToolbarItems: any[] = [];
+
   get isEditMode(): boolean { return !!this.course(); }
-  get dialogTitle(): string { return this.l.t(this.isEditMode ? '::Training.EditCourse' : '::Training.AddNewCourse'); }
+  get dialogTitle(): string { return this.isEditMode ? this.l.t('::Training.EditCourse') : this.l.t('::Training.AddNewCourse'); }
   get showEvaluationBlocks(): boolean { return this.formData().requiresEvaluation; }
 
   ngOnInit(): void {
-   this.popupToolbarItems = [
-    {
-      widget: 'dxButton',
-      location: 'after',
-      toolbar: 'bottom',
-      options: {
-        text: this.l.t('::Training.Save'),
-        icon: 'save',
-        type: 'default',
-        onClick: () => this.onSave()
-      }
-    },
-    {
-      widget: 'dxButton',
-      location: 'after',
-      toolbar: 'bottom',
-      options: {
-        text: this.l.t('::Training.Cancel'),
-        onClick: () => this.onCancel()
-      }
-    }
-  ];
-
-    
-
-
     this.categoryDataSource = this.l.categoryDataSource();
     this.natureDataSource = this.l.natureDataSource();
     this.resultTypeDataSource = this.l.resultTypeDataSource();
     this.conditionTypeDataSource = this.l.conditionTypeDataSource();
+
+    this.dialogToolbarItems = [
+      { widget: 'dxButton', location: 'after', toolbar: 'bottom',
+        options: { text: this.l.t('::Training.Save'), icon: 'save', type: 'default', stylingMode: 'contained', onClick: () => this.onSave() } },
+      { widget: 'dxButton', location: 'after', toolbar: 'bottom',
+        options: { text: this.l.t('::Training.Cancel'), stylingMode: 'outlined', onClick: () => this.onCancel() } },
+    ];
 
     const c = this.course();
     if (c) {
@@ -103,20 +61,17 @@ export class CatalogFormDialogComponent implements OnInit {
         courseNameAr: c.courseNameAr, courseNameEn: c.courseNameEn,
         descriptionAr: c.descriptionAr ?? '', descriptionEn: c.descriptionEn ?? '',
         category: c.category, nature: c.nature, fieldId: c.fieldId,
-        resultType: c.resultType,
-        requiresEvaluation: c.requiresEvaluation,
+        resultType: c.resultType, requiresEvaluation: c.requiresEvaluation,
         requiresProviderEvaluation: c.requiresProviderEvaluation,
-        hasCertificate: c.hasCertificate,
-        evaluationBlocksCertificate: c.evaluationBlocksCertificate,
+        hasCertificate: c.hasCertificate, evaluationBlocksCertificate: c.evaluationBlocksCertificate,
         isActive: c.isActive,
       });
       this.loadConditions(c.id);
     }
   }
 
-  private async loadConditions(catalogCourseId: string): Promise<void> {
-    const conds = await this.catalogService.getConditions(catalogCourseId);
-    this.conditions.set(conds);
+  private async loadConditions(id: string): Promise<void> {
+    this.conditions.set(await this.catalogService.getConditions(id));
   }
 
   updateField<K extends keyof CreateUpdateCourseCatalogDto>(key: K, value: CreateUpdateCourseCatalogDto[K]): void {
@@ -124,7 +79,6 @@ export class CatalogFormDialogComponent implements OnInit {
   }
 
   async onSave(): Promise<void> {
-    alert('Save clicked');
     this.isSaving.set(true);
     try {
       const data = this.formData();
@@ -133,29 +87,19 @@ export class CatalogFormDialogComponent implements OnInit {
       } else {
         const created = await this.catalogService.create(data);
         for (const cond of this.conditions()) {
-          if (cond._isNew) {
-            await this.catalogService.addCondition(created.id, {
-              conditionType: cond.conditionType,
-              conditionValue: cond.conditionValue,
-            });
-          }
+          if (cond._isNew) await this.catalogService.addCondition(created.id, { conditionType: cond.conditionType, conditionValue: cond.conditionValue });
         }
       }
       this.saved.emit();
-    } finally {
-      this.isSaving.set(false);
-    }
+    } finally { this.isSaving.set(false); }
   }
 
   onCancel(): void { this.cancelled.emit(); }
 
   onAddCondition(): void {
     this.conditions.update(list => [...list, {
-      id: crypto.randomUUID(),
-      catalogCourseId: this.course()?.id ?? '',
-      conditionType: ConditionType.Rank,
-      conditionValue: '',
-      _isNew: true,
+      id: crypto.randomUUID(), catalogCourseId: this.course()?.id ?? '',
+      conditionType: ConditionType.Rank, conditionValue: '', _isNew: true,
     }]);
   }
 
@@ -167,9 +111,7 @@ export class CatalogFormDialogComponent implements OnInit {
 
   async onSaveCondition(cond: CatalogEnrollmentConditionDto & { _isNew?: boolean }): Promise<void> {
     if (this.isEditMode && cond._isNew && this.course()?.id) {
-      const saved = await this.catalogService.addCondition(this.course()!.id, {
-        conditionType: cond.conditionType, conditionValue: cond.conditionValue,
-      });
+      const saved = await this.catalogService.addCondition(this.course()!.id, { conditionType: cond.conditionType, conditionValue: cond.conditionValue });
       this.conditions.update(list => list.map(c => (c.id === cond.id ? { ...saved, _isNew: false } : c)));
     }
   }
@@ -177,7 +119,4 @@ export class CatalogFormDialogComponent implements OnInit {
   updateCondition(index: number, field: string, value: any): void {
     this.conditions.update(list => list.map((c, i) => (i === index ? { ...c, [field]: value } : c)));
   }
- 
-   
-
 }

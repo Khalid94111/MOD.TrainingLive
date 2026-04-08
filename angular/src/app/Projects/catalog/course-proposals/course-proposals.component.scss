@@ -1,0 +1,10 @@
+@use '../../shared/styles/training-common' as *;
+
+.proposals-filters { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.filter-search { flex: 1; min-width: 200px; }
+.filter-select { min-width: 160px; }
+.proposals-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px; }
+.reviewed-list { display: flex; flex-direction: column; gap: 8px; }
+.empty-state { text-align: center; padding: 24px; color: #94a3b8; font-size: 14px; }
+.section-header--mt { margin-top: 24px; }
+.review-details { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; margin-top: 12px; }

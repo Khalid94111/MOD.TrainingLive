@@ -1,0 +1,51 @@
+@use '../../shared/styles/training-common' as *;
+
+.fields-grid {
+  padding: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.field-card {
+  border: 2px solid;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+
+  &:hover { box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12); transform: translateY(-3px); }
+
+  &--inactive { opacity: 0.6; border-color: #e2e8f0 !important; background: #f8fafc !important; }
+
+  &--blue   { border-color: #bfdbfe; background: #eff6ff; .field-card__icon { background: #3b82f6; } .field-card__btn-edit { border-color: #93c5fd; color: #2563eb; &:hover { background: #dbeafe; } } }
+  &--indigo { border-color: #c7d2fe; background: #eef2ff; .field-card__icon { background: #6366f1; } .field-card__btn-edit { border-color: #a5b4fc; color: #4f46e5; &:hover { background: #e0e7ff; } } }
+  &--green  { border-color: #bbf7d0; background: #f0fdf4; .field-card__icon { background: #22c55e; } .field-card__btn-edit { border-color: #86efac; color: #16a34a; &:hover { background: #dcfce7; } } }
+  &--amber  { border-color: #fde68a; background: #fffbeb; .field-card__icon { background: #f59e0b; } .field-card__btn-edit { border-color: #fcd34d; color: #d97706; &:hover { background: #fef3c7; } } }
+  &--purple { border-color: #e9d5ff; background: #faf5ff; .field-card__icon { background: #a855f7; } .field-card__btn-edit { border-color: #d8b4fe; color: #9333ea; &:hover { background: #f3e8ff; } } }
+  &--rose   { border-color: #fecdd3; background: #fff1f2; .field-card__icon { background: #f43f5e; } .field-card__btn-edit { border-color: #fda4af; color: #e11d48; &:hover { background: #ffe4e6; } } }
+  &--teal   { border-color: #99f6e4; background: #f0fdfa; .field-card__icon { background: #14b8a6; } .field-card__btn-edit { border-color: #5eead4; color: #0d9488; &:hover { background: #ccfbf1; } } }
+  &--cyan   { border-color: #a5f3fc; background: #ecfeff; .field-card__icon { background: #06b6d4; } .field-card__btn-edit { border-color: #67e8f9; color: #0891b2; &:hover { background: #cffafe; } } }
+
+  &__top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  &__icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 20px; }
+  &__name-ar { font-weight: 700; font-size: 18px; color: #1e293b; margin: 0; }
+  &__name-en { color: #64748b; font-size: 14px; margin-top: 2px; }
+  &__actions { margin-top: 16px; display: flex; gap: 8px; }
+  &__btn-edit { flex: 1; padding: 8px; border: 1px solid; border-radius: 8px; background: transparent; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 500; transition: all 0.2s; }
+  &__btn-delete { padding: 8px 12px; border: 1px solid #fecaca; border-radius: 8px; background: transparent; cursor: pointer; font-size: 13px; color: #dc2626; transition: all 0.2s; &:hover { background: #fee2e2; } }
+
+  &--add {
+    border: 2px dashed #d1d5db;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    min-height: 180px;
+    transition: all 0.3s ease;
+
+    &:hover { border-color: #60a5fa; background: #eff6ff; }
+
+    &__icon { width: 48px; height: 48px; background: #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 24px; margin: 0 auto 8px; }
+    &__text { color: #64748b; font-size: 14px; display: block; text-align: center; }
+  }
+}

@@ -1,173 +1,74 @@
-<!-- ═══════════════════════════════════════════════════════════
-     PAGE 1.3: Course Proposals — Stat cards + proposal cards
-     Matches: GTMS-Complete-UI-v2.html → #proposals screen
-     ═══════════════════════════════════════════════════════════ -->
-
-<div class="card"
-     style="background: var(--dx-color-bg); border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden;">
-
-  <!-- Header -->
-  <div style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-              padding: 24px; display: flex; justify-content: space-between; align-items: center;
-              border-bottom: 1px solid #e2e8f0;">
+<div class="page-card">
+  <div class="page-card__header">
     <div>
-      <h2 style="font-size: 20px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px; margin: 0;">
-        💡 {{ '::Training.CourseProposals' | abpLocalization }}
-        <span style="background: linear-gradient(135deg, #22c55e, #16a34a); color: white;
-                     padding: 2px 10px; border-radius: 10px; font-size: 10px; font-weight: 700;">MOD-17</span>
-      </h2>
-      <p style="color: #64748b; font-size: 14px; margin-top: 4px;">
-        {{ '::Training.ProposalsDescription' | abpLocalization }}
-      </p>
+      <h2 class="page-card__title">💡 {{ '::Training.CourseProposals' | abpLocalization }} <span class="badge badge--new">MOD-17</span></h2>
+      <p class="page-card__subtitle">{{ '::Training.ProposalsDescription' | abpLocalization }}</p>
     </div>
-    <button (click)="onOpenSubmitDialog()"
-            style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-                   color: white; padding: 12px 24px; border-radius: 12px;
-                   font-weight: 500; border: none; cursor: pointer; font-family: inherit; font-size: 14px;">
+    <button class="btn-gradient btn-gradient--primary" (click)="onOpenSubmitDialog()">
       ➕ {{ '::Training.ProposeNewCourse' | abpLocalization }}
     </button>
   </div>
 
   <!-- Stat Cards -->
-  <div style="padding: 20px 24px; border-bottom: 1px solid #f1f5f9;
-              display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
-    <!-- Pending -->
-    <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 16px; text-align: center;
-                transition: all 0.3s ease; cursor: default;">
-      <div style="font-size: 28px; font-weight: 700; color: #b45309;">{{ pendingCount() }}</div>
-      <div style="font-size: 12px; color: #92400e; margin-top: 2px;">{{ '::Training.Pending' | abpLocalization }}</div>
-    </div>
-    <!-- Approved -->
-    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 16px; text-align: center;">
-      <div style="font-size: 28px; font-weight: 700; color: #15803d;">{{ approvedCount() }}</div>
-      <div style="font-size: 12px; color: #166534; margin-top: 2px;">{{ '::Training.Approved' | abpLocalization }}</div>
-    </div>
-    <!-- Rejected -->
-    <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 16px; text-align: center;">
-      <div style="font-size: 28px; font-weight: 700; color: #b91c1c;">{{ rejectedCount() }}</div>
-      <div style="font-size: 12px; color: #991b1b; margin-top: 2px;">{{ '::Training.Rejected' | abpLocalization }}</div>
-    </div>
-    <!-- Total -->
-    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 16px; text-align: center;">
-      <div style="font-size: 28px; font-weight: 700; color: #1e40af;">{{ totalCount() }}</div>
-      <div style="font-size: 12px; color: #1e3a5f; margin-top: 2px;">{{ '::Training.Total' | abpLocalization }}</div>
-    </div>
+  <div class="stat-cards">
+    <div class="stat-card stat-card--amber"><div class="stat-card__value">{{ pendingCount() }}</div><div class="stat-card__label">{{ '::Training.Pending' | abpLocalization }}</div></div>
+    <div class="stat-card stat-card--green"><div class="stat-card__value">{{ approvedCount() }}</div><div class="stat-card__label">{{ '::Training.Approved' | abpLocalization }}</div></div>
+    <div class="stat-card stat-card--red"><div class="stat-card__value">{{ rejectedCount() }}</div><div class="stat-card__label">{{ '::Training.Rejected' | abpLocalization }}</div></div>
+    <div class="stat-card stat-card--blue"><div class="stat-card__value">{{ totalCount() }}</div><div class="stat-card__label">{{ '::Training.Total' | abpLocalization }}</div></div>
   </div>
 
-  <div style="padding: 24px;">
-
+  <div class="page-card__body">
     <!-- Filters -->
-    <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
-      <dx-text-box
-        [placeholder]="'::Training.SearchByName' | abpLocalization"
-        [value]="searchText()"
-        (valueChange)="searchText.set($event)"
-        (onEnterKey)="onSearch()"
-        [stylingMode]="'outlined'"
-        [showClearButton]="true"
-        style="flex: 1; min-width: 200px;">
-      </dx-text-box>
-      <dx-select-box
-        [dataSource]="statusFilterDataSource"
-        displayExpr="text"
-        valueExpr="value"
-        [value]="filterStatus()"
-        (valueChange)="filterStatus.set($event); onFilterChange()"
-        [placeholder]="'::Training.AllStatuses' | abpLocalization"
-        [stylingMode]="'outlined'"
-        style="min-width: 160px;">
-      </dx-select-box>
+    <div class="proposals-filters">
+      <dx-text-box [placeholder]="'::Training.SearchByName' | abpLocalization" [value]="searchText()"
+        (valueChange)="searchText.set($event)" (onEnterKey)="onSearch()" [stylingMode]="'outlined'"
+        [showClearButton]="true" class="filter-search"></dx-text-box>
+      <dx-select-box [dataSource]="statusFilterDataSource" displayExpr="text" valueExpr="value"
+        [value]="filterStatus()" (valueChange)="filterStatus.set($event); onFilterChange()"
+        [placeholder]="'::Training.AllStatuses' | abpLocalization" [stylingMode]="'outlined'" class="filter-select"></dx-select-box>
     </div>
 
-    <!-- Proposals Grid — uses dx-data-grid for server paging -->
-    <dx-data-grid
-      #proposalGrid
-      [dataSource]="dataSource"
-      [showBorders]="false"
-      [showRowLines]="false"
-      [showColumnLines]="false"
-      [hoverStateEnabled]="false"
-      [remoteOperations]="true"
-      [rowAlternationEnabled]="false"
-      keyExpr="id"
-      [visible]="false">
-      <!-- Hidden grid for data loading — we render custom cards below -->
-    </dx-data-grid>
-
-    <!-- Pending Section -->
-    <h3 style="font-weight: 700; color: #1e293b; margin-bottom: 16px; font-size: 15px; display: flex; align-items: center; gap: 6px;">
-      🕐 {{ '::Training.PendingReview' | abpLocalization }}
-    </h3>
-
-    <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px;">
-      @for (proposal of pendingProposals(); track proposal.id) {
-        <div style="border: 2px solid #fde68a; background: #fffbeb; border-radius: 12px; padding: 20px;
-                    transition: all 0.3s ease;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-            <div style="flex: 1;">
-              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
-                <span style="font-weight: 700; font-size: 16px; color: #1e293b;">{{ proposal.courseNameAr }}</span>
-                <span style="padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
-                             background: #fef3c7; color: #92400e;">
-                  {{ '::Training.Pending' | abpLocalization }}
-                </span>
+    <!-- Pending -->
+    <h3 class="section-header">🕐 {{ '::Training.PendingReview' | abpLocalization }}</h3>
+    <div class="proposals-list">
+      @for (p of pendingProposals(); track p.id) {
+        <div class="proposal-card proposal-card--pending">
+          <div class="proposal-card__top">
+            <div class="proposal-card__content">
+              <div class="proposal-card__title-row">
+                <span class="proposal-card__name">{{ p.courseNameAr }}</span>
+                <span class="badge badge--warning">{{ '::Training.Pending' | abpLocalization }}</span>
               </div>
-              <div style="font-size: 13px; color: #64748b; margin-bottom: 12px;">{{ proposal.courseNameEn }}</div>
-              <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; font-size: 12px;">
-                <div><span style="color: #94a3b8;">{{ '::Training.Field' | abpLocalization }}:</span> <span style="font-weight: 500; color: #1e293b;">{{ proposal.fieldNameAr }}</span></div>
-                <div><span style="color: #94a3b8;">{{ '::Training.Category' | abpLocalization }}:</span> <span style="font-weight: 500; color: #1e293b;">{{ getCategoryText(proposal) }}</span></div>
-                <div><span style="color: #94a3b8;">{{ '::Training.Nature' | abpLocalization }}:</span> <span style="font-weight: 500; color: #1e293b;">{{ getNatureText(proposal) }}</span></div>
-                <div><span style="color: #94a3b8;">{{ '::Training.ProposedBy' | abpLocalization }}:</span> <span style="font-weight: 500; color: #1e293b;">{{ proposal.proposedByName }}</span></div>
+              <div class="proposal-card__name-en">{{ p.courseNameEn }}</div>
+              <div class="proposal-card__details">
+                <div><span class="proposal-card__detail-label">{{ '::Training.Field' | abpLocalization }}:</span> <span class="proposal-card__detail-value">{{ p.fieldNameAr }}</span></div>
+                <div><span class="proposal-card__detail-label">{{ '::Training.Category' | abpLocalization }}:</span> <span class="proposal-card__detail-value">{{ getCategoryText(p) }}</span></div>
+                <div><span class="proposal-card__detail-label">{{ '::Training.Nature' | abpLocalization }}:</span> <span class="proposal-card__detail-value">{{ getNatureText(p) }}</span></div>
+                <div><span class="proposal-card__detail-label">{{ '::Training.ProposedBy' | abpLocalization }}:</span> <span class="proposal-card__detail-value">{{ p.proposedByName }}</span></div>
               </div>
             </div>
-            <div style="display: flex; gap: 8px; margin-right: 16px; flex-shrink: 0;">
-              <button (click)="onOpenReviewDialog(proposal)"
-                      style="background: linear-gradient(135deg, #22c55e, #16a34a); color: white;
-                             padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer;
-                             font-size: 12px; font-weight: 600; font-family: inherit;
-                             transition: all 0.3s ease;">
-                ✓ {{ '::Training.Approve' | abpLocalization }}
-              </button>
-              <button (click)="onOpenReviewDialog(proposal)"
-                      style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white;
-                             padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer;
-                             font-size: 12px; font-weight: 600; font-family: inherit;
-                             transition: all 0.3s ease;">
-                ✕ {{ '::Training.Reject' | abpLocalization }}
-              </button>
+            <div class="proposal-card__actions">
+              <button class="btn-gradient btn-gradient--success btn-gradient--sm" (click)="onOpenReviewDialog(p)">✓ {{ '::Training.Approve' | abpLocalization }}</button>
+              <button class="btn-gradient btn-gradient--danger btn-gradient--sm" (click)="onOpenReviewDialog(p)">✕ {{ '::Training.Reject' | abpLocalization }}</button>
             </div>
           </div>
         </div>
       }
-
       @if (pendingProposals().length === 0) {
-        <div style="text-align: center; padding: 24px; color: #94a3b8; font-size: 14px;">
-          {{ '::Training.NoPendingProposals' | abpLocalization }}
-        </div>
+        <div class="empty-state">{{ '::Training.NoPendingProposals' | abpLocalization }}</div>
       }
     </div>
 
-    <!-- Reviewed Section -->
-    <h3 style="font-weight: 700; color: #1e293b; margin-bottom: 12px; font-size: 15px; display: flex; align-items: center; gap: 6px;">
-      ✅ {{ '::Training.Reviewed' | abpLocalization }}
-    </h3>
-
-    <div style="display: flex; flex-direction: column; gap: 8px;">
-      @for (proposal of reviewedProposals(); track proposal.id) {
-        <div style="border: 1px solid; border-radius: 12px; padding: 14px 20px;
-                    display: flex; justify-content: space-between; align-items: center;"
-             [style.border-color]="proposal.status === 1 ? '#bbf7d0' : '#fecaca'"
-             [style.background]="proposal.status === 1 ? '#f0fdf4' : '#fef2f2'">
-          <div>
-            <div style="font-weight: 500; font-size: 14px; color: #1e293b;">{{ proposal.courseNameAr }}</div>
-            <div style="font-size: 12px; color: #64748b; margin-top: 2px;">{{ proposal.courseNameEn }}</div>
-          </div>
-          @if (proposal.status === 1) {
-            <span style="padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
-                         background: #dcfce7; color: #15803d;">{{ '::Training.Approved' | abpLocalization }} ✓</span>
+    <!-- Reviewed -->
+    <h3 class="section-header section-header--mt">✅ {{ '::Training.Reviewed' | abpLocalization }}</h3>
+    <div class="reviewed-list">
+      @for (p of reviewedProposals(); track p.id) {
+        <div class="reviewed-item" [class.reviewed-item--approved]="p.status === 1" [class.reviewed-item--rejected]="p.status === 2">
+          <div><div class="reviewed-item__name">{{ p.courseNameAr }}</div><div class="reviewed-item__sub">{{ p.courseNameEn }}</div></div>
+          @if (p.status === 1) {
+            <span class="badge badge--success">{{ '::Training.Approved' | abpLocalization }} ✓</span>
           } @else {
-            <span style="padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
-                         background: #fee2e2; color: #b91c1c;">{{ '::Training.Rejected' | abpLocalization }} ✕</span>
+            <span class="badge badge--danger">{{ '::Training.Rejected' | abpLocalization }} ✕</span>
           }
         </div>
       }
@@ -175,150 +76,59 @@
   </div>
 </div>
 
-<!-- ═══ Submit Proposal Dialog (UTM) ═══ -->
-<dx-popup
-  [visible]="isSubmitDialogVisible()"
-  (visibleChange)="isSubmitDialogVisible.set($event)"
-  [title]="'::Training.ProposeNewCourse' | abpLocalization"
-  [showCloseButton]="true"
-  [dragEnabled]="true"
-  [width]="560"
-  [height]="'auto'"
-  [toolbarItems]="submitProposalPopupToolbarItems">
-  <div *dxTemplate="let data of 'content'" style="padding: 20px;">
-
-    <!-- Info Banner -->
-    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 14px 18px;
-                margin-bottom: 20px; display: flex; align-items: flex-start; gap: 10px;">
-      <span style="font-size: 16px; flex-shrink: 0;">ℹ️</span>
-      <div style="font-size: 12px; color: #1e3a5f; line-height: 1.6;">
-        {{ '::Training.ProposalInfoBanner' | abpLocalization }}
-      </div>
+<!-- Submit Dialog -->
+<dx-popup [visible]="isSubmitDialogVisible()" (visibleChange)="isSubmitDialogVisible.set($event)"
+  [title]="'::Training.ProposeNewCourse' | abpLocalization" [showCloseButton]="true" [dragEnabled]="true"
+  [width]="560" [height]="'auto'" [toolbarItems]="submitDialogToolbarItems">
+  <div *dxTemplate="let data of 'content'" class="dialog-body">
+    <div class="info-banner">
+      <span class="info-banner__icon">ℹ️</span>
+      <div class="info-banner__text">{{ '::Training.ProposalInfoBanner' | abpLocalization }}</div>
     </div>
-
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
-      <div>
-        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">
-          {{ '::Training.CourseNameAr' | abpLocalization }} <span style="color: #dc2626;">*</span>
-        </label>
-        <dx-text-box [value]="proposalForm().courseNameAr"
-                     (valueChange)="updateProposalField('courseNameAr', $event)"
-                     [stylingMode]="'outlined'" [rtlEnabled]="true">
-        </dx-text-box>
-      </div>
-      <div>
-        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">
-          {{ '::Training.CourseNameEn' | abpLocalization }} <span style="color: #dc2626;">*</span>
-        </label>
-        <dx-text-box [value]="proposalForm().courseNameEn"
-                     (valueChange)="updateProposalField('courseNameEn', $event)"
-                     [stylingMode]="'outlined'" [rtlEnabled]="false">
-        </dx-text-box>
-      </div>
+    <div class="form-row-2">
+      <div class="form-group"><label class="form-label">{{ '::Training.CourseNameAr' | abpLocalization }} <span class="req">*</span></label><dx-text-box [value]="proposalForm().courseNameAr" (valueChange)="updateProposalField('courseNameAr', $event)" [stylingMode]="'outlined'" [rtlEnabled]="true"></dx-text-box></div>
+      <div class="form-group"><label class="form-label">{{ '::Training.CourseNameEn' | abpLocalization }} <span class="req">*</span></label><dx-text-box [value]="proposalForm().courseNameEn" (valueChange)="updateProposalField('courseNameEn', $event)" [stylingMode]="'outlined'" [rtlEnabled]="false"></dx-text-box></div>
     </div>
-
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
-      <div>
-        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">
-          {{ '::Training.Category' | abpLocalization }} <span style="color: #dc2626;">*</span>
-        </label>
-        <dx-select-box [dataSource]="categoryDataSource" displayExpr="text" valueExpr="value"
-                       [value]="proposalForm().category"
-                       (valueChange)="updateProposalField('category', $event)"
-                       [stylingMode]="'outlined'" [placeholder]="'::Training.Select' | abpLocalization">
-        </dx-select-box>
-      </div>
-      <div>
-        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">
-          {{ '::Training.Nature' | abpLocalization }} <span style="color: #dc2626;">*</span>
-        </label>
-        <dx-select-box [dataSource]="natureDataSource" displayExpr="text" valueExpr="value"
-                       [value]="proposalForm().nature"
-                       (valueChange)="updateProposalField('nature', $event)"
-                       [stylingMode]="'outlined'" [placeholder]="'::Training.Select' | abpLocalization">
-        </dx-select-box>
-      </div>
-      <div>
-        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">
-          {{ '::Training.Field' | abpLocalization }} <span style="color: #dc2626;">*</span>
-        </label>
-        <dx-select-box [dataSource]="courseFields()" displayExpr="fieldNameAr" valueExpr="id"
-                       [value]="proposalForm().fieldId"
-                       (valueChange)="updateProposalField('fieldId', $event)"
-                       [stylingMode]="'outlined'" [placeholder]="'::Training.Select' | abpLocalization">
-        </dx-select-box>
-      </div>
+    <div class="form-row-3">
+      <div class="form-group"><label class="form-label">{{ '::Training.Category' | abpLocalization }} <span class="req">*</span></label><dx-select-box [dataSource]="categoryDataSource" displayExpr="text" valueExpr="value" [value]="proposalForm().category" (valueChange)="updateProposalField('category', $event)" [stylingMode]="'outlined'" [placeholder]="'::Training.Select' | abpLocalization"></dx-select-box></div>
+      <div class="form-group"><label class="form-label">{{ '::Training.Nature' | abpLocalization }} <span class="req">*</span></label><dx-select-box [dataSource]="natureDataSource" displayExpr="text" valueExpr="value" [value]="proposalForm().nature" (valueChange)="updateProposalField('nature', $event)" [stylingMode]="'outlined'" [placeholder]="'::Training.Select' | abpLocalization"></dx-select-box></div>
+      <div class="form-group"><label class="form-label">{{ '::Training.Field' | abpLocalization }} <span class="req">*</span></label><dx-select-box [dataSource]="courseFields()" displayExpr="fieldNameAr" valueExpr="id" [value]="proposalForm().fieldId" (valueChange)="updateProposalField('fieldId', $event)" [stylingMode]="'outlined'" [placeholder]="'::Training.Select' | abpLocalization"></dx-select-box></div>
     </div>
   </div>
 </dx-popup>
 
-<!-- ═══ Review Proposal Dialog (System Admin) ═══ -->
-<dx-popup
-  [visible]="isReviewDialogVisible()"
-  (visibleChange)="isReviewDialogVisible.set($event)"
-  [title]="'::Training.ReviewProposal' | abpLocalization"
-  [showCloseButton]="true"
-  [dragEnabled]="true"
-  [width]="500"
-  [height]="'auto'"
-  [toolbarItems]="reviewProposelPopupToolbarItems">
-  <div *dxTemplate="let data of 'content'" style="padding: 20px;">
+<!-- Review Dialog -->
+<dx-popup [visible]="isReviewDialogVisible()" (visibleChange)="isReviewDialogVisible.set($event)"
+  [title]="'::Training.ReviewProposal' | abpLocalization" [showCloseButton]="true" [dragEnabled]="true"
+  [width]="500" [height]="'auto'" [toolbarItems]="reviewDialogToolbarItems">
+  <div *dxTemplate="let data of 'content'" class="dialog-body">
     @if (selectedProposal(); as p) {
-      <!-- Proposal Info -->
-      <div style="background: linear-gradient(135deg, #eff6ff, #eef2ff); border: 1px solid #bfdbfe;
-                  border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-        <div style="font-weight: 700; font-size: 16px; color: #1e293b; margin-bottom: 6px;">{{ p.courseNameAr }}</div>
-        <div style="font-size: 13px; color: #64748b; margin-bottom: 12px;">{{ p.courseNameEn }}</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
-          <div><span style="color: #94a3b8;">{{ '::Training.Field' | abpLocalization }}:</span> <span style="font-weight: 500;">{{ p.fieldNameAr }}</span></div>
-          <div><span style="color: #94a3b8;">{{ '::Training.Category' | abpLocalization }}:</span> <span style="font-weight: 500;">{{ getCategoryText(p) }}</span></div>
+      <div class="course-info-header">
+        <div class="course-info-header__name">{{ p.courseNameAr }}</div>
+        <div class="course-info-header__name-en">{{ p.courseNameEn }}</div>
+        <div class="review-details">
+          <div><span class="proposal-card__detail-label">{{ '::Training.Field' | abpLocalization }}:</span> {{ p.fieldNameAr }}</div>
+          <div><span class="proposal-card__detail-label">{{ '::Training.Category' | abpLocalization }}:</span> {{ getCategoryText(p) }}</div>
         </div>
       </div>
 
-      <!-- Decision -->
-      <div style="margin-bottom: 16px;">
-        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 10px;">
-          {{ '::Training.Decision' | abpLocalization }} <span style="color: #dc2626;">*</span>
-        </label>
-        <div style="display: flex; gap: 12px;">
-          <label (click)="reviewDecision.set(1)"
-                 style="flex: 1; padding: 14px; border: 2px solid; border-radius: 12px; cursor: pointer;
-                        text-align: center; font-weight: 600; font-size: 14px; transition: all 0.2s;"
-                 [style.border-color]="reviewDecision() === 1 ? '#22c55e' : '#e2e8f0'"
-                 [style.background]="reviewDecision() === 1 ? '#f0fdf4' : 'transparent'"
-                 [style.color]="reviewDecision() === 1 ? '#15803d' : '#64748b'">
-            ✓ {{ '::Training.Approve' | abpLocalization }}
-          </label>
-          <label (click)="reviewDecision.set(2)"
-                 style="flex: 1; padding: 14px; border: 2px solid; border-radius: 12px; cursor: pointer;
-                        text-align: center; font-weight: 600; font-size: 14px; transition: all 0.2s;"
-                 [style.border-color]="reviewDecision() === 2 ? '#ef4444' : '#e2e8f0'"
-                 [style.background]="reviewDecision() === 2 ? '#fef2f2' : 'transparent'"
-                 [style.color]="reviewDecision() === 2 ? '#b91c1c' : '#64748b'">
-            ✕ {{ '::Training.Reject' | abpLocalization }}
-          </label>
+      <div class="form-group">
+        <label class="form-label">{{ '::Training.Decision' | abpLocalization }} <span class="req">*</span></label>
+        <div class="decision-cards">
+          <button class="decision-card decision-card--approve" [class.selected]="reviewDecision() === 1" (click)="reviewDecision.set(1)">✓ {{ '::Training.Approve' | abpLocalization }}</button>
+          <button class="decision-card decision-card--reject" [class.selected]="reviewDecision() === 2" (click)="reviewDecision.set(2)">✕ {{ '::Training.Reject' | abpLocalization }}</button>
         </div>
       </div>
 
-      <!-- Rejection Reason -->
       @if (reviewDecision() === 2) {
-        <div style="margin-bottom: 16px;">
-          <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">
-            {{ '::Training.RejectionReason' | abpLocalization }}
-          </label>
-          <dx-text-area [value]="rejectionReason()" (valueChange)="rejectionReason.set($event)"
-                        [height]="80" [stylingMode]="'outlined'"
-                        [placeholder]="'::Training.RejectionReasonPlaceholder' | abpLocalization">
-          </dx-text-area>
+        <div class="form-group">
+          <label class="form-label">{{ '::Training.RejectionReason' | abpLocalization }}</label>
+          <dx-text-area [value]="rejectionReason()" (valueChange)="rejectionReason.set($event)" [height]="80" [stylingMode]="'outlined'" [placeholder]="'::Training.RejectionReasonPlaceholder' | abpLocalization"></dx-text-area>
         </div>
       }
 
-      <!-- Warning -->
       @if (reviewDecision() === 1) {
-        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 12px 16px;
-                    font-size: 12px; color: #92400e; display: flex; align-items: center; gap: 8px;">
-          ⚠️ {{ '::Training.ApproveWarning' | abpLocalization }}
-        </div>
+        <div class="warning-banner">⚠️ {{ '::Training.ApproveWarning' | abpLocalization }}</div>
       }
     }
   </div>

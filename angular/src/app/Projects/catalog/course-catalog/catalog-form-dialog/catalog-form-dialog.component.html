@@ -1,192 +1,98 @@
-<!-- ═══════════════════════════════════════════════════════════
-     Add/Edit Catalog Course Dialog
-     v2 style: rounded inputs, checkboxes in gray box, conditions grid
-     ═══════════════════════════════════════════════════════════ -->
+<dx-popup [visible]="visible()" [title]="dialogTitle" [showCloseButton]="true" [dragEnabled]="true"
+  [width]="720" [height]="'auto'" [maxHeight]="'85vh'" (onHidden)="onCancel()" [toolbarItems]="dialogToolbarItems">
+  <div *dxTemplate="let data of 'content'" class="dialog-body">
 
-<dx-popup
-  [visible]="visible()"
-  [title]="dialogTitle"
-  [showCloseButton]="true"
-  [dragEnabled]="true"
-  [width]="720"
-  [height]="'auto'"
-  [maxHeight]="'85vh'"
-  [showTitle]="true"
-  (onHidden)="onCancel()"
-  [toolbarItems]="popupToolbarItems">
-
-  <div *dxTemplate="let data of 'content'" style="padding: 20px;">
-
-    <!-- Row 1: Names -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
-      <div>
-        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">
-          {{ '::Training.CourseNameAr' | abpLocalization }} <span style="color: #dc2626;">*</span>
-        </label>
-        <dx-text-box [value]="formData().courseNameAr" (valueChange)="updateField('courseNameAr', $event)"
-                     [stylingMode]="'outlined'" [rtlEnabled]="true">
-        </dx-text-box>
+    <div class="form-row-2">
+      <div class="form-group">
+        <label class="form-label">{{ '::Training.CourseNameAr' | abpLocalization }} <span class="req">*</span></label>
+        <dx-text-box [value]="formData().courseNameAr" (valueChange)="updateField('courseNameAr', $event)" [stylingMode]="'outlined'" [rtlEnabled]="true"></dx-text-box>
       </div>
-      <div>
-        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">
-          {{ '::Training.CourseNameEn' | abpLocalization }} <span style="color: #dc2626;">*</span>
-        </label>
-        <dx-text-box [value]="formData().courseNameEn" (valueChange)="updateField('courseNameEn', $event)"
-                     [stylingMode]="'outlined'" [rtlEnabled]="false">
-        </dx-text-box>
+      <div class="form-group">
+        <label class="form-label">{{ '::Training.CourseNameEn' | abpLocalization }} <span class="req">*</span></label>
+        <dx-text-box [value]="formData().courseNameEn" (valueChange)="updateField('courseNameEn', $event)" [stylingMode]="'outlined'" [rtlEnabled]="false"></dx-text-box>
       </div>
     </div>
 
-    <!-- Row 2: Descriptions -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
-      <div>
-        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">
-          {{ '::Training.DescriptionAr' | abpLocalization }}
-        </label>
-        <dx-text-area [value]="formData().descriptionAr" (valueChange)="updateField('descriptionAr', $event)"
-                      [height]="80" [stylingMode]="'outlined'">
-        </dx-text-area>
+    <div class="form-row-2">
+      <div class="form-group">
+        <label class="form-label">{{ '::Training.DescriptionAr' | abpLocalization }}</label>
+        <dx-text-area [value]="formData().descriptionAr" (valueChange)="updateField('descriptionAr', $event)" [height]="80" [stylingMode]="'outlined'"></dx-text-area>
       </div>
-      <div>
-        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">
-          {{ '::Training.DescriptionEn' | abpLocalization }}
-        </label>
-        <dx-text-area [value]="formData().descriptionEn" (valueChange)="updateField('descriptionEn', $event)"
-                      [height]="80" [stylingMode]="'outlined'" [rtlEnabled]="false">
-        </dx-text-area>
+      <div class="form-group">
+        <label class="form-label">{{ '::Training.DescriptionEn' | abpLocalization }}</label>
+        <dx-text-area [value]="formData().descriptionEn" (valueChange)="updateField('descriptionEn', $event)" [height]="80" [stylingMode]="'outlined'" [rtlEnabled]="false"></dx-text-area>
       </div>
     </div>
 
-    <!-- Row 3: Category, Nature, Field -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px;">
-      <div>
-        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">
-          {{ '::Training.Category' | abpLocalization }} <span style="color: #dc2626;">*</span>
-        </label>
-        <dx-select-box [dataSource]="categoryDataSource" displayExpr="text" valueExpr="value"
-                       [value]="formData().category" (valueChange)="updateField('category', $event)"
-                       [stylingMode]="'outlined'">
-        </dx-select-box>
+    <div class="form-row-3">
+      <div class="form-group">
+        <label class="form-label">{{ '::Training.Category' | abpLocalization }} <span class="req">*</span></label>
+        <dx-select-box [dataSource]="categoryDataSource" displayExpr="text" valueExpr="value" [value]="formData().category" (valueChange)="updateField('category', $event)" [stylingMode]="'outlined'"></dx-select-box>
       </div>
-      <div>
-        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">
-          {{ '::Training.Nature' | abpLocalization }} <span style="color: #dc2626;">*</span>
-        </label>
-        <dx-select-box [dataSource]="natureDataSource" displayExpr="text" valueExpr="value"
-                       [value]="formData().nature" (valueChange)="updateField('nature', $event)"
-                       [stylingMode]="'outlined'">
-        </dx-select-box>
+      <div class="form-group">
+        <label class="form-label">{{ '::Training.Nature' | abpLocalization }} <span class="req">*</span></label>
+        <dx-select-box [dataSource]="natureDataSource" displayExpr="text" valueExpr="value" [value]="formData().nature" (valueChange)="updateField('nature', $event)" [stylingMode]="'outlined'"></dx-select-box>
       </div>
-      <div>
-        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">
-          {{ '::Training.Field' | abpLocalization }} <span style="color: #dc2626;">*</span>
-        </label>
-        <dx-select-box [dataSource]="courseFields()" displayExpr="fieldNameAr" valueExpr="id"
-                       [value]="formData().fieldId" (valueChange)="updateField('fieldId', $event)"
-                       [stylingMode]="'outlined'">
-        </dx-select-box>
+      <div class="form-group">
+        <label class="form-label">{{ '::Training.Field' | abpLocalization }} <span class="req">*</span></label>
+        <dx-select-box [dataSource]="courseFields()" displayExpr="fieldNameAr" valueExpr="id" [value]="formData().fieldId" (valueChange)="updateField('fieldId', $event)" [stylingMode]="'outlined'"></dx-select-box>
       </div>
     </div>
 
-    <!-- Row 4: ResultType + IsActive -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
-      <div>
-        <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 6px;">
-          {{ '::Training.ResultType' | abpLocalization }} <span style="color: #dc2626;">*</span>
-        </label>
-        <dx-select-box [dataSource]="resultTypeDataSource" displayExpr="text" valueExpr="value"
-                       [value]="formData().resultType" (valueChange)="updateField('resultType', $event)"
-                       [stylingMode]="'outlined'">
-        </dx-select-box>
+    <div class="form-row-2">
+      <div class="form-group">
+        <label class="form-label">{{ '::Training.ResultType' | abpLocalization }} <span class="req">*</span></label>
+        <dx-select-box [dataSource]="resultTypeDataSource" displayExpr="text" valueExpr="value" [value]="formData().resultType" (valueChange)="updateField('resultType', $event)" [stylingMode]="'outlined'"></dx-select-box>
       </div>
-      <div style="display: flex; align-items: flex-end; padding-bottom: 4px; gap: 12px;">
-        <span style="font-size: 13px; color: #475569;">{{ '::Training.IsActive' | abpLocalization }}:</span>
+      <div class="form-switch-row">
+        <span class="form-switch-label">{{ '::Training.IsActive' | abpLocalization }}:</span>
         <dx-switch [value]="formData().isActive" (valueChange)="updateField('isActive', $event)"></dx-switch>
         @if (formData().isActive) {
-          <span style="padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 600; background: #dcfce7; color: #15803d;">
-            {{ '::Training.Active' | abpLocalization }}
-          </span>
+          <span class="badge badge--success badge--sm">{{ '::Training.Active' | abpLocalization }}</span>
         } @else {
-          <span style="padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 600; background: #f1f5f9; color: #64748b;">
-            {{ '::Training.Inactive' | abpLocalization }}
-          </span>
+          <span class="badge badge--muted badge--sm">{{ '::Training.Inactive' | abpLocalization }}</span>
         }
       </div>
     </div>
 
-    <!-- Checkboxes -->
-    <div style="background: #f8fafc; border-radius: 10px; padding: 16px; margin-bottom: 16px;">
-      <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 10px;">
-        <dx-check-box [text]="'::Training.RequiresEvaluation' | abpLocalization"
-                      [value]="formData().requiresEvaluation"
-                      (valueChange)="updateField('requiresEvaluation', $event)">
-        </dx-check-box>
-        <dx-check-box [text]="'::Training.RequiresProviderEvaluation' | abpLocalization"
-                      [value]="formData().requiresProviderEvaluation"
-                      (valueChange)="updateField('requiresProviderEvaluation', $event)">
-        </dx-check-box>
-        <dx-check-box [text]="'::Training.HasCertificate' | abpLocalization"
-                      [value]="formData().hasCertificate"
-                      (valueChange)="updateField('hasCertificate', $event)">
-        </dx-check-box>
+    <div class="form-checkbox-box">
+      <div class="form-checkbox-box__row">
+        <dx-check-box [text]="'::Training.RequiresEvaluation' | abpLocalization" [value]="formData().requiresEvaluation" (valueChange)="updateField('requiresEvaluation', $event)"></dx-check-box>
+        <dx-check-box [text]="'::Training.RequiresProviderEvaluation' | abpLocalization" [value]="formData().requiresProviderEvaluation" (valueChange)="updateField('requiresProviderEvaluation', $event)"></dx-check-box>
+        <dx-check-box [text]="'::Training.HasCertificate' | abpLocalization" [value]="formData().hasCertificate" (valueChange)="updateField('hasCertificate', $event)"></dx-check-box>
       </div>
       @if (showEvaluationBlocks) {
-        <dx-check-box [text]="'::Training.EvaluationBlocksCertificate' | abpLocalization"
-                      [value]="formData().evaluationBlocksCertificate"
-                      (valueChange)="updateField('evaluationBlocksCertificate', $event)">
-        </dx-check-box>
+        <dx-check-box [text]="'::Training.EvaluationBlocksCertificate' | abpLocalization" [value]="formData().evaluationBlocksCertificate" (valueChange)="updateField('evaluationBlocksCertificate', $event)"></dx-check-box>
       }
     </div>
 
-    <!-- Conditions Sub-Grid -->
-    <div style="border-top: 1px solid #e2e8f0; padding-top: 16px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <h4 style="font-size: 15px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 8px; margin: 0;">
-          📋 {{ '::Training.EnrollmentConditions' | abpLocalization }}
-        </h4>
-        <button (click)="onAddCondition()"
-                style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;
-                       padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer;
-                       font-size: 12px; font-weight: 500; font-family: inherit;">
+    <!-- Conditions -->
+    <div class="conditions-section">
+      <div class="conditions-section__header">
+        <h4 class="conditions-section__title">📋 {{ '::Training.EnrollmentConditions' | abpLocalization }}</h4>
+        <button class="btn-gradient btn-gradient--primary btn-gradient--sm" (click)="onAddCondition()">
           ➕ {{ '::Training.AddCondition' | abpLocalization }}
         </button>
       </div>
-
       @if (conditions().length === 0) {
-        <div style="text-align: center; padding: 20px; color: #94a3b8; font-size: 13px;">
-          {{ '::Training.NoConditions' | abpLocalization }}
-        </div>
+        <div class="conditions-section__empty">{{ '::Training.NoConditions' | abpLocalization }}</div>
       }
-
       @for (cond of conditions(); track cond.id; let i = $index) {
-        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
-                    border: 2px solid #e2e8f0; border-radius: 12px; padding: 12px; transition: all 0.3s;">
-          <dx-select-box
-            [dataSource]="conditionTypeDataSource"
-            displayExpr="text"
-            valueExpr="value"
-            [value]="cond.conditionType"
-            (valueChange)="updateCondition(i, 'conditionType', $event)"
-            [stylingMode]="'outlined'"
-            style="width: 180px;">
+        <div class="condition-row">
+          <dx-select-box [dataSource]="conditionTypeDataSource" displayExpr="text" valueExpr="value"
+            [value]="cond.conditionType" (valueChange)="updateCondition(i, 'conditionType', $event)"
+            [stylingMode]="'outlined'" class="condition-row__type-select">
           </dx-select-box>
-          <dx-text-box
-            [value]="cond.conditionValue"
-            (valueChange)="updateCondition(i, 'conditionValue', $event)"
+          <dx-text-box [value]="cond.conditionValue" (valueChange)="updateCondition(i, 'conditionValue', $event)"
             [placeholder]="'::Training.ConditionValuePlaceholder' | abpLocalization"
-            [stylingMode]="'outlined'"
-            [rtlEnabled]="false"
-            style="flex: 1;">
+            [stylingMode]="'outlined'" [rtlEnabled]="false" class="condition-row__value-input">
           </dx-text-box>
           @if (cond._isNew && isEditMode) {
-            <span (click)="onSaveCondition(cond)"
-                  style="padding: 8px; cursor: pointer; font-size: 16px;" title="Save">💾</span>
+            <span class="emoji-action" (click)="onSaveCondition(cond)">💾</span>
           }
-          <span (click)="onRemoveCondition(i)"
-                style="padding: 8px; cursor: pointer; font-size: 16px;" title="Delete">🗑️</span>
+          <span class="emoji-action" (click)="onRemoveCondition(i)">🗑️</span>
         </div>
       }
     </div>
-
   </div>
 </dx-popup>
