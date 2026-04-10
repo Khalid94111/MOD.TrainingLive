@@ -1,0 +1,211 @@
+<div class="page-card">
+  <div class="card-header-gradient">
+    <h2 class="card-title">{{ '::Training.FinancialItems.Title' | abpLocalization }}</h2>
+    <p class="card-subtitle">{{ '::Training.FinancialItems.Description' | abpLocalization }}</p>
+  </div>
+
+  <div class="card-body-content">
+    <!-- Toolbar -->
+    <div class="toolbar-row">
+      <div class="toolbar-filters">
+        <dx-text-box
+          class="search-input"
+          [placeholder]="'::Training.FinancialItems.Search' | abpLocalization"
+          [showClearButton]="true"
+          (onValueChanged)="onSearch($event.value)"
+          mode="search"
+        ></dx-text-box>
+
+        <dx-select-box
+          class="filter-select"
+          [items]="activeFilterOptions!"
+          displayExpr="text"
+          valueExpr="value"
+          [value]="filterActive()"
+          (onValueChanged)="onFilterActive($event.value)"
+        ></dx-select-box>
+      </div>
+
+      <dx-button
+        class="btn-add"
+        [text]="'::Training.FinancialItems.Add' | abpLocalization"
+        icon="plus"
+        type="default"
+        stylingMode="contained"
+        (onClick)="onAdd()"
+      ></dx-button>
+    </div>
+
+    <!-- Tree List -->
+    <dx-tree-list
+      #treeList
+      [dataSource]="items()"
+      dataStructure="plain"
+      keyExpr="id"
+      parentIdExpr="parentId"
+      [showBorders]="true"
+      [showRowLines]="true"
+      [columnAutoWidth]="true"
+      [wordWrapEnabled]="true"
+      [autoExpandAll]="true"
+      [rootValue]="null"
+    >
+    <dxi-column
+        dataField="code"
+        [caption]="'::Training.FinancialItems.Code' | abpLocalization"
+        [width]="100"
+        cellTemplate="codeTemplate"
+      ></dxi-column>
+      <dxi-column
+        dataField="nameAr"
+        [caption]="'::Training.FinancialItems.NameAr' | abpLocalization"
+        [width]="250"
+      ></dxi-column>
+
+      <dxi-column
+        dataField="nameEn"
+        [caption]="'::Training.FinancialItems.NameEn' | abpLocalization"
+        [width]="200"
+      ></dxi-column>
+
+      
+
+      <dxi-column
+        dataField="voteCode"
+        [caption]="'::Training.FinancialItems.VoteCode' | abpLocalization"
+        [width]="120"
+        cellTemplate="voteCodeTemplate"
+      ></dxi-column>
+
+      <dxi-column
+        dataField="isGeneral"
+        [caption]="'::Training.FinancialItems.IsGeneral' | abpLocalization"
+        [width]="80"
+        alignment="center"
+        cellTemplate="generalTemplate"
+      ></dxi-column>
+
+      <dxi-column
+        dataField="isActive"
+        [caption]="'::Training.FinancialItems.IsActive' | abpLocalization"
+        [width]="80"
+        alignment="center"
+        cellTemplate="activeTemplate"
+      ></dxi-column>
+
+      <dxi-column
+        [caption]="'::Training.FinancialItems.Actions' | abpLocalization"
+        [width]="120"
+        alignment="center"
+        cellTemplate="actionsTemplate"
+      ></dxi-column>
+
+      <!-- Cell Templates -->
+      <div *dxTemplate="let cell of 'codeTemplate'">
+        <span class="code-pill">{{ cell.data.code }}</span>
+      </div>
+
+      <div *dxTemplate="let cell of 'voteCodeTemplate'">
+        @if (cell.data.voteCode) {
+          <span class="vote-code-pill">{{ cell.data.voteCode }}</span>
+        } @else {
+          <span class="text-muted">—</span>
+        }
+      </div>
+
+      <div *dxTemplate="let cell of 'generalTemplate'">
+        @if (cell.data.isGeneral) {
+          <span class="badge-general">{{ '::Training.FinancialItems.IsGeneral' | abpLocalization }}</span>
+        } @else {
+          <span class="text-muted">—</span>
+        }
+      </div>
+
+      <div *dxTemplate="let cell of 'activeTemplate'">
+        @if (cell.data.isActive) {
+          <span class="badge-active">{{ '::Training.Common.Active' | abpLocalization }}</span>
+        } @else {
+          <span class="badge-inactive">{{ '::Training.Common.Inactive' | abpLocalization }}</span>
+        }
+      </div>
+
+      <div *dxTemplate="let cell of 'actionsTemplate'">
+        <button class="emoji-action-btn" (click)="onEdit(cell.data)" title="Edit">✏️</button>
+        @if (!cell.data.parentId) {
+          <button class="emoji-action-btn" (click)="onAddSubItem(cell.data.id)" title="Add Sub-Item">➕</button>
+        } @else {
+          <button class="emoji-action-btn" (click)="onDelete(cell.data.id)" title="Delete">🗑️</button>
+        }
+      </div>
+    </dx-tree-list>
+  </div>
+</div>
+
+<!-- Add/Edit Dialog -->
+<dx-popup
+  [visible]="isDialogVisible()"
+  (visibleChange)="isDialogVisible.set($event)"
+  [title]="dialogTitle"
+  [showCloseButton]="true"
+  [dragEnabled]="true"
+  [width]="480"
+  [height]="'auto'"
+  [toolbarItems]="dialogToolbarItems!"
+>
+  <div class="dialog-form">
+    <div class="form-group">
+      <label class="form-label">{{ '::Training.FinancialItems.NameAr' | abpLocalization }} *</label>
+      <dx-text-box
+        [(value)]="formData.nameAr"
+        [placeholder]="'::Training.FinancialItems.NameAr' | abpLocalization"
+      ></dx-text-box>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">{{ '::Training.FinancialItems.NameEn' | abpLocalization }} *</label>
+      <dx-text-box
+        [(value)]="formData.nameEn"
+        [placeholder]="'::Training.FinancialItems.NameEn' | abpLocalization"
+        rtlEnabled="false"
+      ></dx-text-box>
+    </div>
+
+    <div class="form-row-2col">
+      <div class="form-group">
+        <label class="form-label">{{ '::Training.FinancialItems.CodeAuto' | abpLocalization }}</label>
+        <dx-text-box
+          [value]="formData.nameEn"
+          [readOnly]="false"
+        ></dx-text-box>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ '::Training.FinancialItems.VoteCodeNebras' | abpLocalization }} *</label>
+        <dx-text-box
+          [(value)]="formData.voteCode"
+          placeholder="VT-XXX-000"
+          rtlEnabled="false"
+        ></dx-text-box>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">{{ '::Training.FinancialItems.Parent' | abpLocalization }}</label>
+      <dx-select-box
+        [(value)]="formData.parentId"
+        [items]="parentItems()"
+        displayExpr="nameAr"
+        valueExpr="id"
+        [showClearButton]="true"
+        [placeholder]="'::Training.FinancialItems.ParentNone' | abpLocalization"
+      ></dx-select-box>
+    </div>
+
+    <div class="form-row-checks">
+      <dx-check-box
+        [(value)]="formData.isActive"
+        [text]="'::Training.FinancialItems.IsActive' | abpLocalization"
+      ></dx-check-box>
+    </div>
+  </div>
+</dx-popup>

@@ -35,8 +35,7 @@ public class TrainingEntityFrameworkCoreModule : AbpModule
             /* Remove "includeAllEntities: true" to create
                  * default repositories only for aggregate roots */
             options.AddDefaultRepositories(includeAllEntities: true);
-            options.AddRepository<Orange, Oranges.EfCoreOrangeRepository>();
-        });
+         });
         if (AbpStudioAnalyzeHelper.IsInAnalyzeMode)
         {
             return;

@@ -1,0 +1,152 @@
+<div class="page-card">
+  <div class="card-header-gradient">
+    <h2 class="card-title">{{ '::Training.ExchangeRates.Title' | abpLocalization }}</h2>
+    <p class="card-subtitle">{{ '::Training.ExchangeRates.Description' | abpLocalization }}</p>
+  </div>
+
+  <div class="card-body-content">
+    <!-- Info Banner -->
+    <div class="info-banner">
+      <span class="info-icon">ℹ️</span>
+      {{ '::Training.ExchangeRates.Info' | abpLocalization }}
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar-row">
+      <div></div>
+      <dx-button
+        class="btn-add"
+        [text]="'::Training.ExchangeRates.Add' | abpLocalization"
+        icon="plus"
+        type="default"
+        stylingMode="contained"
+        (onClick)="onAdd()"
+      ></dx-button>
+    </div>
+
+    <!-- Grid -->
+    <dx-data-grid
+      [dataSource]="rates()"
+      [showBorders]="true"
+      [showRowLines]="true"
+      [columnAutoWidth]="true"
+      [rowAlternationEnabled]="true"
+    >
+      <dxi-column
+        [caption]="'::Training.ExchangeRates.Currency' | abpLocalization"
+        [width]="140"
+        cellTemplate="currencyTemplate"
+      ></dxi-column>
+
+      <dxi-column
+        dataField="rate"
+        [caption]="'::Training.ExchangeRates.Rate' | abpLocalization"
+        [width]="150"
+        cellTemplate="rateTemplate"
+      ></dxi-column>
+
+      <dxi-column
+        dataField="setAt"
+        [caption]="'::Training.ExchangeRates.EffectiveDate' | abpLocalization"
+        [width]="160"
+        dataType="date"
+        format="yyyy-MM-dd"
+      ></dxi-column>
+
+      <dxi-column
+        dataField="isActive"
+        [caption]="'::Training.ExchangeRates.Status' | abpLocalization"
+        [width]="100"
+        alignment="center"
+        cellTemplate="statusTemplate"
+      ></dxi-column>
+
+      <dxi-column
+        [caption]="'::Training.Common.Actions' | abpLocalization"
+        [width]="80"
+        alignment="center"
+        cellTemplate="actionsTemplate"
+      ></dxi-column>
+
+      <!-- Cell Templates -->
+      <div *dxTemplate="let cell of 'currencyTemplate'">
+        <span class="currency-pill" [class.active]="cell.data.isActive" [class.inactive]="!cell.data.isActive">
+          {{ cell.data.fromCurrency }} → {{ cell.data.toCurrency }}
+        </span>
+      </div>
+
+      <div *dxTemplate="let cell of 'rateTemplate'">
+        <span class="rate-value" [class.active-rate]="cell.data.isActive" [class.inactive-rate]="!cell.data.isActive">
+          {{ cell.data.rate }}
+        </span>
+      </div>
+
+      <div *dxTemplate="let cell of 'statusTemplate'">
+        @if (cell.data.isActive) {
+          <span class="badge-active">{{ '::Training.ExchangeRates.Active' | abpLocalization }}</span>
+        } @else {
+          <span class="badge-inactive">{{ '::Training.ExchangeRates.Inactive' | abpLocalization }}</span>
+        }
+      </div>
+
+      <div *dxTemplate="let cell of 'actionsTemplate'">
+        @if (!cell.data.isActive) {
+          <button class="emoji-action-btn" (click)="onDelete(cell.data.id)">🗑️</button>
+        }
+      </div>
+    </dx-data-grid>
+  </div>
+</div>
+
+<!-- Add Exchange Rate Dialog -->
+<dx-popup
+  [visible]="isDialogVisible()"
+  (visibleChange)="isDialogVisible.set($event)"
+  [title]="'::Training.ExchangeRates.Add' | abpLocalization"
+  [showCloseButton]="true"
+  [dragEnabled]="true"
+  [width]="400"
+  [height]="'auto'"
+  [toolbarItems]="dialogToolbarItems!"
+>
+  <div class="dialog-form">
+    <!-- Deactivation Warning -->
+    @if (currentActiveRate() !== null) {
+      <div class="warn-banner">
+        <span>⚠️</span>
+        {{ '::Training.ExchangeRates.DeactivateWarning' | abpLocalization : currentActiveRate() }}
+      </div>
+    }
+
+    <div class="form-row-2col">
+      <div class="form-group">
+        <label class="form-label">{{ '::Training.ExchangeRates.FromCurrency' | abpLocalization }}</label>
+        <dx-text-box value="USD" [readOnly]="true" rtlEnabled="false"></dx-text-box>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ '::Training.ExchangeRates.ToCurrency' | abpLocalization }}</label>
+        <dx-text-box value="OMR" [readOnly]="true" rtlEnabled="false"></dx-text-box>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">{{ '::Training.ExchangeRates.Rate' | abpLocalization }} *</label>
+      <dx-number-box
+        [(value)]="formData.rate"
+        [min]="0"
+        [step]="0.001"
+        format="#0.000"
+        rtlEnabled="false"
+      ></dx-number-box>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">{{ '::Training.ExchangeRates.Notes' | abpLocalization }}</label>
+      <dx-text-box
+        [(value)]="formData.notes"
+        [placeholder]="'::Training.ExchangeRates.Notes' | abpLocalization"
+      ></dx-text-box>
+    </div>
+  </div>
+</dx-popup>

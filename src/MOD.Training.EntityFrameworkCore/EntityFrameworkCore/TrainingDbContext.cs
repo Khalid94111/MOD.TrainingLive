@@ -3,6 +3,7 @@ using MOD.Training.Books;
 using MOD.Training.Oranges;
 using MOD.Training.Training;
 using MOD.Training.Training.Catalog;
+using MOD.Training.Training.Finance;
 using MOD.Training.Training.System;
 using MOD.Training.Training.TenantCourses;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
@@ -44,8 +45,12 @@ public class TrainingDbContext : AbpDbContext<TrainingDbContext>, ISaasDbContext
      
       // ── Training Module: System ──
      public DbSet<Country> Countries => Set<Country>();
-     
 
+    // Phase 2A: Finance
+    public DbSet<FinancialItem> FinancialItems { get; set; } = default!;
+    public DbSet<CourseTypeFinancialItemDefault> CourseTypeFinancialItemDefaults { get; set; } = default!;
+    public DbSet<ExchangeRate> ExchangeRates { get; set; } = default!;
+    public DbSet<TrainingBudget> TrainingBudgets { get; set; } = default!;
 
     public DbSet<Orange> Oranges { get; set; } = null!;
 

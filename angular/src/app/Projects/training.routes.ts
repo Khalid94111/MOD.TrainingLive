@@ -47,6 +47,36 @@ export const TRAINING_ROUTES: Routes = [
           ),
       },
 
+      // Finance routes
+{
+  path: 'finance/financial-items',
+  loadComponent: () =>
+    import('./finance/financial-items/financial-items.component').then(
+      m => m.FinancialItemsComponent
+    ),
+},
+{
+  path: 'finance/defaults',
+  loadComponent: () =>
+    import('./finance/financial-item-defaults/financial-item-defaults.component').then(
+      m => m.FinancialItemDefaultsComponent
+    ),
+},
+{
+  path: 'finance/exchange-rates',
+  loadComponent: () =>
+    import('./finance/exchange-rates/exchange-rates.component').then(
+      m => m.ExchangeRatesComponent
+    ),
+},
+{
+  path: 'finance/budgets',
+  loadComponent: () =>
+    import('./finance/training-budgets/training-budgets.component').then(
+      m => m.TrainingBudgetsComponent
+    ),
+},
+
       // Phase 2 (future)
       // { path: 'finance/items', loadComponent: () => import(...) },
       // { path: 'finance/defaults', loadComponent: () => import(...) },

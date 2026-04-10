@@ -1,10 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using MOD.Training.Training.Catalog;
+using MOD.Training.Training.Consts;
+using MOD.Training.Training.Finance;
+using MOD.Training.Training.System;
+using MOD.Training.Training.TenantCourses;
 using Volo.Abp;
 using Volo.Abp.EntityFrameworkCore.Modeling;
-using MOD.Training.Training.System;
-using MOD.Training.Training.Catalog;
-using MOD.Training.Training.TenantCourses;
-using MOD.Training.Training.Consts;
 
 namespace MOD.Training.Training;
 
@@ -21,6 +22,7 @@ public static class TrainingDbContextModelCreatingExtensions
         builder.ConfigureCatalog();
         builder.ConfigureTenantCourses();
         builder.ConfigureTrainingSystem();
+        builder.ConfigureFinance();
     }
 
     private static void ConfigureCatalog(this ModelBuilder builder)
@@ -138,4 +140,81 @@ public static class TrainingDbContextModelCreatingExtensions
             b.HasIndex(x => x.Code).IsUnique();
         });
     }
+    public static void ConfigureFinance(this ModelBuilder builder)
+    {
+        // ============================================================
+        // TrnFinancialItems
+        // ============================================================
+        builder.Entity<FinancialItem>(b =>
+        {
+            b.ToTable("TrnFinancialItems");
+            b.ConfigureByConvention();
+
+            b.Property(x => x.NameAr).IsRequired().HasMaxLength(200);
+            b.Property(x => x.NameEn).IsRequired().HasMaxLength(200);
+            b.Property(x => x.Code).IsRequired().HasMaxLength(50);
+            b.Property(x => x.VoteCode).HasMaxLength(50);
+
+            b.HasOne(x => x.Parent)
+                .WithMany()
+                .HasForeignKey(x => x.ParentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            b.HasIndex(x => new { x.TenantId, x.ParentId });
+        });
+
+        // ============================================================
+        // TrnCourseTypeFinancialItemDefaults
+        // ============================================================
+        builder.Entity<CourseTypeFinancialItemDefault>(b =>
+        {
+            b.ToTable("TrnCourseTypeFinancialItemDefaults");
+            b.ConfigureByConvention();
+
+            b.Property(x => x.CourseType).IsRequired();
+            b.Property(x => x.SortOrder).IsRequired();
+
+            b.HasOne(x => x.FinancialItem)
+                .WithMany()
+                .HasForeignKey(x => x.FinancialItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            b.HasIndex(x => new { x.TenantId, x.CourseType, x.FinancialItemId })
+                .IsUnique();
+        });
+
+        // ============================================================
+        // TrnExchangeRates
+        // ============================================================
+        builder.Entity<ExchangeRate>(b =>
+        {
+            b.ToTable("TrnExchangeRates");
+            b.ConfigureByConvention();
+
+            b.Property(x => x.FromCurrency).IsRequired().HasMaxLength(10);
+            b.Property(x => x.ToCurrency).IsRequired().HasMaxLength(10);
+            b.Property(x => x.Rate).HasPrecision(18, 6);
+
+            b.HasIndex(x => x.IsActive);
+        });
+
+        // ============================================================
+        // TrnTrainingBudgets
+        // ============================================================
+        builder.Entity<TrainingBudget>(b =>
+        {
+            b.ToTable("TrnTrainingBudgets");
+            b.ConfigureByConvention();
+
+            b.Property(x => x.Year).IsRequired();
+            b.Property(x => x.BudgetType).IsRequired();
+            b.Property(x => x.TotalAmount).HasPrecision(18, 3);
+            b.Property(x => x.SpentAmount).HasPrecision(18, 3);
+            b.Property(x => x.AlertThreshold).HasPrecision(5, 2);
+
+            b.HasIndex(x => new { x.TenantId, x.Year, x.BudgetType })
+                .IsUnique();
+        });
+    }
+
 }

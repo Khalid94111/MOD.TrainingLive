@@ -54,7 +54,50 @@ export const TRAINING_ROUTE_PROVIDER = {
           order: 4,
           requiredPolicy: 'Training.TenantCourses',
         },
-
+// Finance parent menu
+{
+  path: '/training/finance',
+  name: '::Training.Menu.Finance',
+  iconClass: 'bi bi-cash-stack', // or use emoji in layout
+  order: 3,
+  layout: eLayoutType.application,
+},
+// Financial Items
+{
+  path: '/training/finance/financial-items',
+  name: '::Training.Menu.FinancialItems',
+  parentName: '::Training.Menu.Finance',
+  order: 1,
+  layout: eLayoutType.application,
+  requiredPolicy: 'Training.FinancialItems',
+},
+// Course Type Defaults
+{
+  path: '/training/finance/defaults',
+  name: '::Training.Menu.CourseTypeDefaults',
+  parentName: '::Training.Menu.Finance',
+  order: 2,
+  layout: eLayoutType.application,
+  requiredPolicy: 'Training.CourseTypeFinancialDefaults',
+},
+// Exchange Rates
+{
+  path: '/training/finance/exchange-rates',
+  name: '::Training.Menu.ExchangeRates',
+  parentName: '::Training.Menu.Finance',
+  order: 3,
+  layout: eLayoutType.application,
+  requiredPolicy: 'Training.ExchangeRates',
+},
+// Training Budgets
+{
+  path: '/training/finance/budgets',
+  name: '::Training.Menu.TrainingBudgets',
+  parentName: '::Training.Menu.Finance',
+  order: 4,
+  layout: eLayoutType.application,
+  requiredPolicy: 'Training.TrainingBudgets',
+},
         // ── Phase 2 (uncomment when ready) ──
         // {
         //   path: '/training/finance/items',

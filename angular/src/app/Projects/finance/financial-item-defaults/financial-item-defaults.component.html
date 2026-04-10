@@ -1,0 +1,124 @@
+<div class="page-card">
+  <div class="card-header-gradient">
+    <h2 class="card-title">{{ '::Training.CourseTypeDefaults.Title' | abpLocalization }}</h2>
+    <p class="card-subtitle">{{ '::Training.CourseTypeDefaults.Description' | abpLocalization }}</p>
+  </div>
+
+  <div class="card-body-content">
+    <!-- Info Banner -->
+    <div class="info-banner">
+      <span class="info-icon">ℹ️</span>
+      {{ '::Training.CourseTypeDefaults.Info' | abpLocalization }}
+    </div>
+
+    <div class="two-panel-layout">
+      <!-- Left Panel: Course Type Selector -->
+      <div class="panel-left">
+        <h3 class="panel-title">{{ '::Training.CourseTypeDefaults.CourseType' | abpLocalization }}</h3>
+
+        @for (ct of courseTypes; track ct.value) {
+          <div
+            class="type-option"
+            [class.selected]="isCourseTypeSelected(ct.value)"
+            (click)="onCourseTypeChange(ct.value)"
+          >
+            <div class="type-label">
+              @if (ct.value === 0) { 🌍 } @else { 🏢 }
+              {{ ct.label }}
+            </div>
+            <div class="type-count">{{ ct.itemCount }} {{ '::Training.CourseTypeDefaults.ItemCount' | abpLocalization }}</div>
+          </div>
+        }
+
+        <div class="internal-warning">
+          <span>⚠️</span>
+          {{ '::Training.CourseTypeDefaults.InternalWarning' | abpLocalization }}
+        </div>
+      </div>
+
+      <!-- Right Panel: Assigned Items Grid -->
+      <div class="panel-right">
+        <div class="panel-toolbar">
+          <span class="panel-right-title">
+            {{ '::Training.CourseTypeDefaults.FinancialItem' | abpLocalization }} — {{ selectedTypeLabel }}
+          </span>
+          <dx-button
+            [text]="'::Training.CourseTypeDefaults.AddItem' | abpLocalization"
+            icon="plus"
+            type="default"
+            stylingMode="contained"
+            (onClick)="onAddItem()"
+          ></dx-button>
+        </div>
+
+        <dx-data-grid
+          [dataSource]="defaults()"
+          [showBorders]="true"
+          [showRowLines]="true"
+          [columnAutoWidth]="true"
+          [rowDragging]="{
+            allowReordering: true,
+            showDragIcons: true
+          }"
+        >
+          <dxi-column
+            dataField="sortOrder"
+            [caption]="'::Training.CourseTypeDefaults.SortOrder' | abpLocalization"
+            [width]="80"
+            alignment="center"
+          ></dxi-column>
+
+          <dxi-column
+            dataField="financialItemNameAr"
+            [caption]="'::Training.CourseTypeDefaults.FinancialItem' | abpLocalization"
+          ></dxi-column>
+
+          <dxi-column
+            dataField="financialItemNameEn"
+            caption="Item Name (EN)"
+          ></dxi-column>
+
+          <dxi-column
+            [caption]="'::Training.Common.Actions' | abpLocalization"
+            [width]="80"
+            alignment="center"
+            cellTemplate="deleteTemplate"
+          ></dxi-column>
+
+          <div *dxTemplate="let cell of 'deleteTemplate'">
+            <button class="emoji-action-btn" (click)="onDeleteDefault(cell.data.id)">🗑️</button>
+          </div>
+        </dx-data-grid>
+
+        <p class="drag-hint">{{ '::Training.CourseTypeDefaults.DragToReorder' | abpLocalization }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Financial Item Dialog -->
+<dx-popup
+  [visible]="isAddDialogVisible()"
+  (visibleChange)="isAddDialogVisible.set($event)"
+  [title]="'::Training.CourseTypeDefaults.SelectFinancialItem' | abpLocalization"
+  [showCloseButton]="true"
+  [dragEnabled]="true"
+  [width]="400"
+  [height]="'auto'"
+  [toolbarItems]="addDialogToolbarItems!"
+>
+  <div class="dialog-form">
+    <div class="form-group">
+      <label class="form-label">{{ '::Training.CourseTypeDefaults.FinancialItem' | abpLocalization }} *</label>
+      <dx-select-box
+        [items]="subItems()"
+        displayExpr="nameAr"
+        valueExpr="id"
+        [value]="selectedFinancialItemId()"
+        (onValueChanged)="selectedFinancialItemId.set($event.value)"
+        [placeholder]="'::Training.CourseTypeDefaults.SelectFinancialItem' | abpLocalization"
+        [searchEnabled]="true"
+      ></dx-select-box>
+    </div>
+  </div>
+</dx-popup>

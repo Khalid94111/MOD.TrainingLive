@@ -88,4 +88,34 @@ public static class TrainingPermissions
         public const string PlanProgress = Default + ".PlanProgress";
         public const string Reallocation = Default + ".Reallocation";
     }
+
+    public static class FinancialItems
+    {
+        public const string Default = GroupName + ".FinancialItems";
+        public const string Create = Default + ".Create";
+        public const string Edit = Default + ".Edit";
+        public const string Delete = Default + ".Delete";
+    }
+
+    public static class CourseTypeFinancialDefaults
+    {
+        public const string Default = GroupName + ".CourseTypeFinancialDefaults";
+        public const string Create = Default + ".Create";
+        public const string Delete = Default + ".Delete";
+    }
+
+    public static class ExchangeRates
+    {
+        public const string Default = GroupName + ".ExchangeRates";
+        public const string Create = Default + ".Create";
+        public const string Delete = Default + ".Delete";
+    }
+
+    public static class TrainingBudgets
+    {
+        public const string Default = GroupName + ".TrainingBudgets";
+        public const string Create = Default + ".Create";
+        public const string Edit = Default + ".Edit";
+        public const string Delete = Default + ".Delete";
+    }
 }

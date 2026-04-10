@@ -11,7 +11,7 @@ export enum BudgetType {
   Internal = 0,
   ExternalInternational = 1,
   Planning = 2,
-  HigherEd = 3,
+  HigherEducation = 3,
 }
 
 export enum PricingType {

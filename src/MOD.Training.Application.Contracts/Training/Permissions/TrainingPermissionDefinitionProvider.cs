@@ -64,6 +64,56 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
         reports.AddChild(TrainingPermissions.Reports.FinancialReport, L("Permission:Reports.FinancialReport"));
         reports.AddChild(TrainingPermissions.Reports.PlanProgress, L("Permission:Reports.PlanProgress"));
         reports.AddChild(TrainingPermissions.Reports.Reallocation, L("Permission:Reports.Reallocation"));
+
+
+
+
+        var financialItemsGroup = group.AddPermission(
+    TrainingPermissions.FinancialItems.Default,
+    L("Permission:FinancialItems"));
+        financialItemsGroup.AddChild(
+            TrainingPermissions.FinancialItems.Create,
+            L("Permission:FinancialItems.Create"));
+        financialItemsGroup.AddChild(
+            TrainingPermissions.FinancialItems.Edit,
+            L("Permission:FinancialItems.Edit"));
+        financialItemsGroup.AddChild(
+            TrainingPermissions.FinancialItems.Delete,
+            L("Permission:FinancialItems.Delete"));
+
+        var defaultsGroup = group.AddPermission(
+            TrainingPermissions.CourseTypeFinancialDefaults.Default,
+            L("Permission:CourseTypeFinancialDefaults"));
+        defaultsGroup.AddChild(
+            TrainingPermissions.CourseTypeFinancialDefaults.Create,
+            L("Permission:CourseTypeFinancialDefaults.Create"));
+        defaultsGroup.AddChild(
+            TrainingPermissions.CourseTypeFinancialDefaults.Delete,
+            L("Permission:CourseTypeFinancialDefaults.Delete"));
+
+        var exchangeRatesGroup = group.AddPermission(
+            TrainingPermissions.ExchangeRates.Default,
+            L("Permission:ExchangeRates"));
+        exchangeRatesGroup.AddChild(
+            TrainingPermissions.ExchangeRates.Create,
+            L("Permission:ExchangeRates.Create"));
+        exchangeRatesGroup.AddChild(
+            TrainingPermissions.ExchangeRates.Delete,
+            L("Permission:ExchangeRates.Delete"));
+
+        var budgetsGroup = group.AddPermission(
+            TrainingPermissions.TrainingBudgets.Default,
+            L("Permission:TrainingBudgets"));
+        budgetsGroup.AddChild(
+            TrainingPermissions.TrainingBudgets.Create,
+            L("Permission:TrainingBudgets.Create"));
+        budgetsGroup.AddChild(
+            TrainingPermissions.TrainingBudgets.Edit,
+            L("Permission:TrainingBudgets.Edit"));
+        budgetsGroup.AddChild(
+            TrainingPermissions.TrainingBudgets.Delete,
+            L("Permission:TrainingBudgets.Delete"));
+
     }
 
     private static LocalizableString L(string name)
