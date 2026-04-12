@@ -1,13 +1,14 @@
 using System;
+using System.Threading.Tasks;
 using MOD.Training.Training.Finance.Dtos;
+using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 
 namespace MOD.Training.Training.Finance;
 
-public interface ITrainingBudgetAppService : ICrudAppService<
-    TrainingBudgetDto,
-    Guid,
-    TrainingBudgetGetListInput,
-    CreateUpdateTrainingBudgetDto>
+public interface ITrainingBudgetAppService : IApplicationService
 {
+    Task<TrainingBudgetDto> GetAsync(Guid id);
+    Task<PagedResultDto<TrainingBudgetDto>> GetListAsync(TrainingBudgetGetListInput input);
+    Task<TrainingBudgetDto> UpdateAsync(Guid id, UpdateAlertThresholdDto input);
 }

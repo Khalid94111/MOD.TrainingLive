@@ -361,6 +361,10 @@
     "Training.TrainingBudgets.DeleteConfirm": "Are you sure you want to delete this budget?",
 
     "Training.FinancialItemName": "Financial Item",
+    "Training.AlertThreshold": "Alert Threshold",
+    "Training.EditThreshold": "Edit Threshold",
+    "Training.BudgetAutoCalculated": "Budget amounts are automatically calculated from approved annual plan items",
+    "Training.Remaining": "Remaining",
     "Training:TrainingBudget:MustBeParentItem": "Budget must be linked to a parent financial item, not a sub-item.",
     "Training:TrainingBudget:AlreadyExists": "A budget already exists for this financial item in the selected year.",
 

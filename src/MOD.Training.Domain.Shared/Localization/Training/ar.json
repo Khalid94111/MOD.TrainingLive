@@ -308,6 +308,10 @@
     "Training.TrainingBudgets.DeleteConfirm": "هل أنت متأكد من حذف هذه الميزانية؟",
 
     "Training.FinancialItemName": "البند المالي",
+    "Training.AlertThreshold": "حد التنبيه",
+    "Training.EditThreshold": "تعديل حد التنبيه",
+    "Training.BudgetAutoCalculated": "مبالغ الميزانية تُحسب تلقائياً من بنود الخطة السنوية المعتمدة",
+    "Training.Remaining": "المتبقي",
     "Training:TrainingBudget:MustBeParentItem": "يجب ربط الميزانية ببند مالي رئيسي وليس بند فرعي.",
     "Training:TrainingBudget:AlreadyExists": "توجد ميزانية بالفعل لهذا البند المالي في السنة المحددة.",
 

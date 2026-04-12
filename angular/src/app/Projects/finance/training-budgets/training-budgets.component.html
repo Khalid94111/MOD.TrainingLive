@@ -2,7 +2,7 @@
   <div class="card-header-gradient header-with-controls">
     <div>
       <h2 class="card-title">{{ '::Training.TrainingBudgets.Title' | abpLocalization }}</h2>
-      <p class="card-subtitle">{{ '::Training.TrainingBudgets.Description' | abpLocalization }}</p>
+      <p class="card-subtitle">{{ '::Training.BudgetAutoCalculated' | abpLocalization }}</p>
     </div>
     <div class="header-actions">
       <dx-select-box
@@ -11,22 +11,14 @@
         [value]="selectedYear()"
         (onValueChanged)="onYearChange($event.value)"
       ></dx-select-box>
-      <dx-button
-        [text]="'::Training.TrainingBudgets.Add' | abpLocalization"
-        icon="plus"
-        type="default"
-        stylingMode="contained"
-        (onClick)="onAdd()"
-      ></dx-button>
     </div>
   </div>
 
   <div class="card-body-content">
-    <!-- Dynamic Stat Cards: one per parent financial item -->
+    <!-- Dynamic Stat Cards: one per budget record -->
     <div class="stat-cards-grid">
-      @for (item of parentFinancialItems(); track item.id; let i = $index) {
+      @for (budget of budgets(); track budget.id; let i = $index) {
         @let palette = paletteFor(i);
-        @let budget = getBudgetForItem(item.id);
         <div
           class="stat-card"
           [style.border-color]="palette.borderColor"
@@ -34,55 +26,55 @@
         >
           <div class="stat-card-header">
             <div>
-              <div class="stat-card-title" [style.color]="palette.badgeColor">{{ item.nameAr }}</div>
-              <div class="stat-card-en">{{ item.nameEn }}</div>
+              <div class="stat-card-title" [style.color]="palette.badgeColor">{{ budget.financialItemNameAr }}</div>
+              <div class="stat-card-en">{{ budget.financialItemNameEn }}</div>
             </div>
-            @if (budget) {
-              <span
-                class="percent-badge"
-                [style.background]="palette.badgeBg"
-                [style.color]="palette.badgeColor"
-                [class.alert-badge]="budget.isOverThreshold"
-              >
-                {{ budget.spentPercent }}%
-                @if (budget.isOverThreshold) { ⚠ }
-              </span>
-            }
+            <span
+              class="percent-badge"
+              [style.background]="palette.badgeBg"
+              [style.color]="palette.badgeColor"
+              [class.alert-badge]="budget.isOverThreshold"
+            >
+              {{ budget.spentPercent }}%
+              @if (budget.isOverThreshold) { ⚠ }
+            </span>
           </div>
 
-          @if (budget) {
-            <div class="budget-bar">
-              <div
-                class="budget-fill"
-                [style.width.%]="budget.spentPercent"
-                [style.background]="palette.barGradient"
-              ></div>
-            </div>
+          <div class="budget-bar">
+            <div
+              class="budget-fill"
+              [style.width.%]="budget.spentPercent"
+              [style.background]="palette.barGradient"
+            ></div>
+          </div>
 
-            <div class="stat-card-details">
-              <div>
-                <span class="detail-label">{{ '::Training.TrainingBudgets.TotalAmount' | abpLocalization }}:</span>
-                <span class="detail-value">{{ formatCurrency(budget.totalAmount!) }} {{ '::Training.Currency.OMR' | abpLocalization }}</span>
-              </div>
-              <div>
-                <span class="detail-label">{{ '::Training.TrainingBudgets.SpentAmount' | abpLocalization }}:</span>
-                <span class="detail-value" [style.color]="palette.spentColor">{{ formatCurrency(budget.spentAmount!) }} {{ '::Training.Currency.OMR' | abpLocalization }}</span>
-              </div>
-              <div>
-                <span class="detail-label">{{ '::Training.TrainingBudgets.Remaining' | abpLocalization }}:</span>
-                <span class="detail-value remaining-value" [class.danger]="budget.isOverThreshold">{{ formatCurrency(budget.remaining!) }} {{ '::Training.Currency.OMR' | abpLocalization }}</span>
-              </div>
-              <div>
-                <span class="detail-label">{{ '::Training.TrainingBudgets.AlertThreshold' | abpLocalization }}:</span>
-                <span class="detail-value">{{ budget.alertThreshold }}%</span>
-              </div>
+          <div class="stat-card-details">
+            <div>
+              <span class="detail-label">{{ '::Training.TrainingBudgets.TotalAmount' | abpLocalization }}:</span>
+              <span class="detail-value">{{ formatCurrency(budget.totalAmount!) }} {{ '::Training.Currency.OMR' | abpLocalization }}</span>
             </div>
-          } @else {
-            <div class="no-budget">{{ '::Training.TrainingBudgets.Add' | abpLocalization }}</div>
-          }
+            <div>
+              <span class="detail-label">{{ '::Training.TrainingBudgets.SpentAmount' | abpLocalization }}:</span>
+              <span class="detail-value" [style.color]="palette.spentColor">{{ formatCurrency(budget.spentAmount!) }} {{ '::Training.Currency.OMR' | abpLocalization }}</span>
+            </div>
+            <div>
+              <span class="detail-label">{{ '::Training.Remaining' | abpLocalization }}:</span>
+              <span class="detail-value remaining-value" [class.danger]="budget.isOverThreshold">{{ formatCurrency(budget.remaining!) }} {{ '::Training.Currency.OMR' | abpLocalization }}</span>
+            </div>
+            <div>
+              <span class="detail-label">{{ '::Training.AlertThreshold' | abpLocalization }}:</span>
+              <span class="detail-value">{{ budget.alertThreshold }}%</span>
+            </div>
+          </div>
         </div>
       }
     </div>
+
+    @if (budgets().length === 0) {
+      <div class="no-budget" style="padding: 40px; text-align: center;">
+        {{ '::Training.BudgetAutoCalculated' | abpLocalization }}
+      </div>
+    }
 
     <!-- Detailed Grid -->
     <h3 class="grid-section-title">{{ '::Training.TrainingBudgets.DetailedTable' | abpLocalization }}</h3>
@@ -120,22 +112,21 @@
 
       <dxi-column
         dataField="remaining"
-        [caption]="'::Training.TrainingBudgets.Remaining' | abpLocalization"
+        [caption]="'::Training.Remaining' | abpLocalization"
         [width]="150"
         cellTemplate="remainingTemplate"
       ></dxi-column>
 
       <dxi-column
         dataField="alertThreshold"
-        [caption]="'::Training.TrainingBudgets.AlertThreshold' | abpLocalization"
-        [width]="100"
+        [caption]="'::Training.AlertThreshold' | abpLocalization"
+        [width]="120"
         alignment="center"
         cellTemplate="thresholdTemplate"
       ></dxi-column>
 
       <dxi-column
-        [caption]="'::Training.Common.Actions' | abpLocalization
-"
+        [caption]="'::Training.Common.Actions' | abpLocalization"
         [width]="100"
         alignment="center"
         cellTemplate="actionsTemplate"
@@ -167,70 +158,33 @@
       </div>
 
       <div *dxTemplate="let cell of 'actionsTemplate'">
-        <button class="emoji-action-btn" (click)="onEdit(cell.data)">✏️</button>
-        <button class="emoji-action-btn" (click)="onDelete(cell.data.id)">🗑️</button>
+        <button
+          class="emoji-action-btn"
+          [title]="'::Training.EditThreshold' | abpLocalization"
+          (click)="onEditThreshold(cell.data)"
+        >✏️</button>
       </div>
     </dx-data-grid>
   </div>
 </div>
 
-<!-- Add/Edit Budget Dialog -->
+<!-- Edit Alert Threshold Dialog -->
 <dx-popup
-  [visible]="isDialogVisible()"
-  (visibleChange)="isDialogVisible.set($event)"
-  [title]="dialogTitle"
+  [visible]="isThresholdDialogVisible()"
+  (visibleChange)="isThresholdDialogVisible.set($event)"
+  [title]="'::Training.EditThreshold' | abpLocalization"
   [showCloseButton]="true"
   [dragEnabled]="true"
-  [width]="440"
+  [width]="360"
   [height]="'auto'"
   [toolbarItems]="dialogToolbarItems!"
 >
   <div class="dialog-form">
-    <div class="form-row-2col">
-      <div class="form-group">
-        <label class="form-label">{{ '::Training.TrainingBudgets.Year' | abpLocalization }} *</label>
-        <dx-number-box
-          [(value)]="formData.year"
-          [min]="2020"
-          [max]="2050"
-          rtlEnabled="false"
-        ></dx-number-box>
-      </div>
-      <div class="form-group">
-        <label class="form-label">{{ '::Training.TrainingBudgets.FinancialItem' | abpLocalization }} *</label>
-        <dx-select-box
-          [(value)]="formData.financialItemId"
-          [items]="parentFinancialItems()"
-          displayExpr="nameAr"
-          valueExpr="id"
-        ></dx-select-box>
-      </div>
-    </div>
-
     <div class="form-group">
-      <label class="form-label">{{ '::Training.TrainingBudgets.TotalAmount' | abpLocalization }} ({{ '::Training.Currency.OMR' | abpLocalization }}) *</label>
+      <label class="form-label">{{ '::Training.AlertThreshold' | abpLocalization }} (%)</label>
       <dx-number-box
-        [(value)]="formData.totalAmount"
-        [min]="0"
-        format="#,##0.000"
-        rtlEnabled="false"
-      ></dx-number-box>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">{{ '::Training.TrainingBudgets.SpentAmount' | abpLocalization }} ({{ '::Training.Currency.OMR' | abpLocalization }})</label>
-      <dx-number-box
-        [(value)]="formData.spentAmount"
-        [min]="0"
-        format="#,##0.000"
-        rtlEnabled="false"
-      ></dx-number-box>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">{{ '::Training.TrainingBudgets.AlertThreshold' | abpLocalization }} (%)</label>
-      <dx-number-box
-        [(value)]="formData.alertThreshold"
+        [value]="thresholdValue()"
+        (onValueChanged)="thresholdValue.set($event.value)"
         [min]="0"
         [max]="100"
         format="#0"

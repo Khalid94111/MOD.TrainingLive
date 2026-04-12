@@ -27,8 +27,8 @@ import type {
 
 import type {
   TrainingBudgetDto,
-  CreateUpdateTrainingBudgetDto,
   TrainingBudgetGetListInput,
+  UpdateAlertThresholdDto,
 } from '../../../proxy/training/finance/dtos';
 import { CourseType } from '../models/training-enums';
 
@@ -124,15 +124,7 @@ export class TrainingBudgetService {
     return firstValueFrom(this.proxy.get(id));
   }
 
-  create(input: CreateUpdateTrainingBudgetDto): Promise<TrainingBudgetDto> {
-    return firstValueFrom(this.proxy.create(input));
-  }
-
-  update(id: string, input: CreateUpdateTrainingBudgetDto): Promise<TrainingBudgetDto> {
+  updateThreshold(id: string, input: UpdateAlertThresholdDto): Promise<TrainingBudgetDto> {
     return firstValueFrom(this.proxy.update(id, input));
-  }
-
-  delete(id: string): Promise<void> {
-    return firstValueFrom(this.proxy.delete(id));
   }
 }

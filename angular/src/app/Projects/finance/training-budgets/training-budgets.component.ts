@@ -7,13 +7,9 @@ import { DxNumberBoxModule } from 'devextreme-angular/ui/number-box';
 import { DxSelectBoxModule } from 'devextreme-angular/ui/select-box';
 import { DxButtonModule } from 'devextreme-angular/ui/button';
 import { ToolbarItem } from 'devextreme/ui/popup';
-import { FinancialItemService, TrainingBudgetService } from '../../shared/services/finance-proxy.service';
+import { TrainingBudgetService } from '../../shared/services/finance-proxy.service';
 import { TrainingLocalizationHelper } from '../../shared';
-import {
-  CreateUpdateTrainingBudgetDto,
-  FinancialItemDto,
-  TrainingBudgetDto,
-} from 'src/app/proxy/training/finance/dtos';
+import { TrainingBudgetDto } from 'src/app/proxy/training/finance/dtos';
 
 interface BudgetCardPalette {
   colorClass: string;
@@ -42,17 +38,14 @@ interface BudgetCardPalette {
 })
 export class TrainingBudgetsComponent implements OnInit {
   private readonly service = inject(TrainingBudgetService);
-  private readonly financialItemService = inject(FinancialItemService);
   readonly l = inject(TrainingLocalizationHelper);
 
   budgets = signal<TrainingBudgetDto[]>([]);
-  parentFinancialItems = signal<FinancialItemDto[]>([]);
   selectedYear = signal<number>(new Date().getFullYear());
-  isDialogVisible = signal(false);
-  isEditMode = signal(false);
+  isThresholdDialogVisible = signal(false);
 
   editingId: string | null = null;
-  formData: CreateUpdateTrainingBudgetDto = this.getEmptyForm();
+  thresholdValue = signal<number>(80);
 
   dialogToolbarItems: ToolbarItem[] | undefined;
   yearOptions: number[] = [];
@@ -114,12 +107,6 @@ export class TrainingBudgetsComponent implements OnInit {
     },
   ];
 
-  get dialogTitle(): string {
-    return this.isEditMode()
-      ? this.l.t('::Training.TrainingBudgets.Edit')
-      : this.l.t('::Training.TrainingBudgets.Add');
-  }
-
   async ngOnInit(): Promise<void> {
     const currentYear = new Date().getFullYear();
     this.yearOptions = [currentYear + 1, currentYear, currentYear - 1, currentYear - 2];
@@ -133,7 +120,7 @@ export class TrainingBudgetsComponent implements OnInit {
           text: this.l.t('::Training.Common.Save'),
           type: 'default',
           stylingMode: 'contained',
-          onClick: () => this.onSave(),
+          onClick: () => this.onSaveThreshold(),
         },
       },
       {
@@ -142,23 +129,12 @@ export class TrainingBudgetsComponent implements OnInit {
         toolbar: 'bottom',
         options: {
           text: this.l.t('::Training.Common.Cancel'),
-          onClick: () => this.isDialogVisible.set(false),
+          onClick: () => this.isThresholdDialogVisible.set(false),
         },
       },
     ];
 
-    await this.loadParentItems();
     await this.loadData();
-  }
-
-  async loadParentItems(): Promise<void> {
-    const result = await this.financialItemService.getList({
-      maxResultCount: 1000,
-      skipCount: 0,
-      sorting: '',
-    });
-    const parents = (result.items ?? []).filter(i => !i.parentId);
-    this.parentFinancialItems.set(parents);
   }
 
   async loadData(): Promise<void> {
@@ -171,11 +147,6 @@ export class TrainingBudgetsComponent implements OnInit {
     this.budgets.set(result.items ?? []);
   }
 
-  getBudgetForItem(financialItemId: string | undefined): TrainingBudgetDto | undefined {
-    if (!financialItemId) return undefined;
-    return this.budgets().find(b => b.financialItemId === financialItemId);
-  }
-
   paletteFor(index: number): BudgetCardPalette {
     return this.palettes[index % this.palettes.length];
   }
@@ -185,39 +156,18 @@ export class TrainingBudgetsComponent implements OnInit {
     this.loadData();
   }
 
-  onAdd(): void {
-    this.isEditMode.set(false);
-    this.editingId = null;
-    this.formData = this.getEmptyForm();
-    this.formData.year = this.selectedYear();
-    this.isDialogVisible.set(true);
+  onEditThreshold(item: TrainingBudgetDto): void {
+    this.editingId = item.id ?? null;
+    this.thresholdValue.set(item.alertThreshold ?? 80);
+    this.isThresholdDialogVisible.set(true);
   }
 
-  onEdit(item: TrainingBudgetDto): void {
-    this.isEditMode.set(true);
-    this.editingId = item.id;
-    this.formData = {
-      year: item.year,
-      financialItemId: item.financialItemId,
-      totalAmount: item.totalAmount,
-      spentAmount: item.spentAmount,
-      alertThreshold: item.alertThreshold,
-    };
-    this.isDialogVisible.set(true);
-  }
-
-  async onSave(): Promise<void> {
-    if (this.isEditMode() && this.editingId) {
-      await this.service.update(this.editingId, this.formData);
-    } else {
-      await this.service.create(this.formData);
-    }
-    this.isDialogVisible.set(false);
-    await this.loadData();
-  }
-
-  async onDelete(id: string): Promise<void> {
-    await this.service.delete(id);
+  async onSaveThreshold(): Promise<void> {
+    if (!this.editingId) return;
+    await this.service.updateThreshold(this.editingId, {
+      alertThreshold: this.thresholdValue(),
+    });
+    this.isThresholdDialogVisible.set(false);
     await this.loadData();
   }
 
@@ -226,16 +176,5 @@ export class TrainingBudgetsComponent implements OnInit {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     });
-  }
-
-  private getEmptyForm(): CreateUpdateTrainingBudgetDto {
-    const first = this.parentFinancialItems()[0];
-    return {
-      year: new Date().getFullYear(),
-      financialItemId: first?.id,
-      totalAmount: 0,
-      spentAmount: 0,
-      alertThreshold: 80,
-    };
   }
 }

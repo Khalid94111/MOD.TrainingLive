@@ -37,16 +37,9 @@ public partial class ExchangeRateToDtoMapper : MapperBase<ExchangeRate, Exchange
 // TrainingBudget Mappers
 // ============================================================
 
-[Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Target)]
+[Mapper(RequiredMappingStrategy = RequiredMappingStrategy.None)]
 public partial class TrainingBudgetToDtoMapper : MapperBase<TrainingBudget, TrainingBudgetDto>
 {
     public override partial TrainingBudgetDto Map(TrainingBudget source);
     public override partial void Map(TrainingBudget source, TrainingBudgetDto destination);
-}
-
-[Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Target)]
-public partial class CreateUpdateTrainingBudgetToEntityMapper : MapperBase<CreateUpdateTrainingBudgetDto, TrainingBudget>
-{
-    public override partial TrainingBudget Map(CreateUpdateTrainingBudgetDto source);
-    public override partial void Map(CreateUpdateTrainingBudgetDto source, TrainingBudget destination);
 }

@@ -18,16 +18,11 @@ public class TrainingBudgetDto : EntityDto<Guid>
     public decimal SpentPercent { get; set; } // Computed
 }
 
-public class CreateUpdateTrainingBudgetDto
+public class UpdateAlertThresholdDto
 {
-    public int Year { get; set; }
-
     [Required]
-    public Guid FinancialItemId { get; set; }
-
-    public decimal TotalAmount { get; set; }
-    public decimal SpentAmount { get; set; }
-    public decimal AlertThreshold { get; set; } = 80m;
+    [Range(0, 100)]
+    public decimal AlertThreshold { get; set; }
 }
 
 public class TrainingBudgetGetListInput : PagedAndSortedResultRequestDto

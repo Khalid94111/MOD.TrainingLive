@@ -27,12 +27,8 @@ export interface CreateUpdateFinancialItemDto {
   isActive?: boolean;
 }
 
-export interface CreateUpdateTrainingBudgetDto {
-  year?: number;
-  financialItemId: string;
-  totalAmount?: number;
-  spentAmount?: number;
-  alertThreshold?: number;
+export interface UpdateAlertThresholdDto {
+  alertThreshold: number;
 }
 
 export interface ExchangeRateDto extends EntityDto<string> {
