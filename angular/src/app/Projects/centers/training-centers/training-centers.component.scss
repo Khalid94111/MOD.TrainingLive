@@ -1,0 +1,70 @@
+:host { display: block; padding: 24px; }
+
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.page-title { display: flex; align-items: center; gap: 12px; }
+.page-title h2 { font-size: 22px; font-weight: 700; color: #1e293b; margin: 0; }
+.page-title .page-subtitle { font-size: 13px; color: #64748b; margin: 2px 0 0; }
+.page-icon { font-size: 28px; }
+
+.org-unit-cell { display: flex; align-items: center; gap: 6px; font-weight: 500; }
+.count-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; height: 24px; padding: 0 8px; border-radius: 12px; background: #dbeafe; color: #1d4ed8; font-size: 12px; font-weight: 700; }
+.tcm-name { font-size: 13px; color: #334155; }
+.not-assigned { font-size: 12px; color: #94a3b8; }
+
+.status-badge { display: inline-block; padding: 4px 12px; border-radius: 16px; font-size: 12px; font-weight: 600; }
+.status-badge.status-active { background: #dcfce7; color: #16a34a; }
+.status-badge.status-inactive { background: #f1f5f9; color: #64748b; }
+
+.action-buttons { display: flex; align-items: center; justify-content: center; gap: 4px; }
+.action-btn { width: 32px; height: 32px; border: none; background: transparent; border-radius: 8px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+.action-btn.action-edit:hover { background: #eff6ff; }
+.action-btn.action-roles:hover { background: #faf5ff; }
+.action-btn.action-delete:hover { background: #fef2f2; }
+
+.dialog-content { padding: 8px 0; }
+.form-section { margin-bottom: 8px; }
+.section-heading { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: #334155; margin-bottom: 16px; }
+.section-number { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background: #dbeafe; color: #2563eb; font-size: 12px; font-weight: 700; }
+.section-number.section-purple { background: #f3e8ff; color: #9333ea; }
+.section-number.section-green { background: #dcfce7; color: #16a34a; }
+.section-hint { font-size: 12px; font-weight: 400; color: #94a3b8; }
+.section-divider { border: none; border-top: 1px solid #f1f5f9; margin: 20px 0; }
+
+.form-field { margin-bottom: 16px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.field-label { display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 6px; }
+.field-label-sm { font-size: 13px; color: #64748b; }
+.required-mark { color: #ef4444; }
+.auto-fill-hint { display: block; font-size: 11px; color: #3b82f6; margin-top: 4px; }
+
+.role-card { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+.role-card:hover { border-color: #bfdbfe; }
+.tco-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.tco-index { font-size: 12px; color: #94a3b8; font-weight: 500; }
+.btn-remove { background: transparent; border: none; cursor: pointer; font-size: 14px; color: #ef4444; }
+.btn-remove:hover { color: #dc2626; }
+
+.assignment-type-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.search-row { margin-bottom: 12px; }
+.search-input-row { display: flex; gap: 8px; align-items: center; }
+.flex-grow { flex: 1; }
+
+.search-result { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 10px; margin-top: 12px; }
+.search-result.success { background: #f0fdf4; border: 1px solid #bbf7d0; }
+.search-result.info { background: #eff6ff; border: 1px solid #bfdbfe; }
+.search-result.compact { padding: 8px 12px; margin-top: 8px; }
+.result-avatar { width: 40px; height: 40px; border-radius: 50%; background: #dcfce7; display: flex; align-items: center; justify-content: center; color: #15803d; font-weight: 700; font-size: 13px; }
+.result-info { flex: 1; }
+.result-name { font-size: 14px; font-weight: 600; color: #166534; }
+.result-detail { font-size: 12px; color: #16a34a; }
+.result-check { color: #22c55e; font-size: 18px; font-weight: 700; }
+
+.info-banner { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 10px 14px; color: #1d4ed8; font-size: 12px; margin-top: 12px; }
+.btn-add-tco { width: 100%; padding: 12px; border: 2px dashed #cbd5e1; border-radius: 12px; background: transparent; color: #64748b; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+.btn-add-tco:hover { border-color: #60a5fa; color: #3b82f6; }
+.switch-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  margin-right: 8px;
+}

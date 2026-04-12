@@ -76,6 +76,22 @@ export const TRAINING_ROUTES: Routes = [
       m => m.TrainingBudgetsComponent
     ),
 },
+// ─── Phase 2B: Centers (ADD THESE) ───
+  {
+    path: 'centers',
+    loadComponent: () =>
+      import('./centers/training-centers/training-centers.component').then(
+        (m) => m.TrainingCentersComponent
+      ),
+  },
+  {
+    path: 'centers/plans',
+    loadComponent: () =>
+      import('./centers/center-plans/center-plans.component').then(
+        (m) => m.CenterPlansComponent
+      ),
+  },
+
 
       // Phase 2 (future)
       // { path: 'finance/items', loadComponent: () => import(...) },

@@ -28,6 +28,7 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
         tenantCourses.AddChild(TrainingPermissions.TenantCourses.Create, L("Permission:TenantCourses.Create"));
         tenantCourses.AddChild(TrainingPermissions.TenantCourses.Update, L("Permission:TenantCourses.Update"));
         tenantCourses.AddChild(TrainingPermissions.TenantCourses.Delete, L("Permission:TenantCourses.Delete"));
+        tenantCourses.AddChild(TrainingPermissions.TenantCourses.EditConditions,L("Permission:TenantCourses.EditConditions"));
 
         var plans = group.AddPermission(TrainingPermissions.TrainingPlans.Default, L("Permission:TrainingPlans"));
         plans.AddChild(TrainingPermissions.TrainingPlans.Create, L("Permission:TrainingPlans.Create"));
@@ -113,6 +114,65 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
         budgetsGroup.AddChild(
             TrainingPermissions.TrainingBudgets.Delete,
             L("Permission:TrainingBudgets.Delete"));
+
+
+        // --- Centers ---
+        var centersPermission = group.AddPermission(
+            TrainingPermissions.Centers.Default,
+            L("Permission:Centers"));
+        centersPermission.AddChild(
+            TrainingPermissions.Centers.Create,
+            L("Permission:Centers.Create"));
+        centersPermission.AddChild(
+            TrainingPermissions.Centers.Edit,
+            L("Permission:Centers.Edit"));
+        centersPermission.AddChild(
+            TrainingPermissions.Centers.Delete,
+            L("Permission:Centers.Delete"));
+        centersPermission.AddChild(
+            TrainingPermissions.Centers.ManageRoles,
+            L("Permission:Centers.ManageRoles"));
+        centersPermission.AddChild(
+            TrainingPermissions.Centers.ManageWindows,
+            L("Permission:Centers.ManageWindows"));
+
+        // --- Center Plans ---
+        var centerPlansPermission = group.AddPermission(
+            TrainingPermissions.CenterPlans.Default,
+            L("Permission:CenterPlans"));
+        centerPlansPermission.AddChild(
+            TrainingPermissions.CenterPlans.Create,
+            L("Permission:CenterPlans.Create"));
+        centerPlansPermission.AddChild(
+            TrainingPermissions.CenterPlans.Edit,
+            L("Permission:CenterPlans.Edit"));
+        centerPlansPermission.AddChild(
+            TrainingPermissions.CenterPlans.Delete,
+            L("Permission:CenterPlans.Delete"));
+        centerPlansPermission.AddChild(
+            TrainingPermissions.CenterPlans.Submit,
+            L("Permission:CenterPlans.Submit"));
+        centerPlansPermission.AddChild(
+            TrainingPermissions.CenterPlans.Approve,
+            L("Permission:CenterPlans.Approve"));
+
+        // --- Center Plan Items ---
+        var centerPlanItemsPermission = group.AddPermission(
+            TrainingPermissions.CenterPlanItems.Default,
+            L("Permission:CenterPlanItems"));
+        centerPlanItemsPermission.AddChild(
+            TrainingPermissions.CenterPlanItems.Create,
+            L("Permission:CenterPlanItems.Create"));
+        centerPlanItemsPermission.AddChild(
+            TrainingPermissions.CenterPlanItems.Edit,
+            L("Permission:CenterPlanItems.Edit"));
+        centerPlanItemsPermission.AddChild(
+            TrainingPermissions.CenterPlanItems.Delete,
+            L("Permission:CenterPlanItems.Delete"));
+        centerPlanItemsPermission.AddChild(
+            TrainingPermissions.CenterPlanItems.SetUnits,
+            L("Permission:CenterPlanItems.SetUnits"));
+
 
     }
 

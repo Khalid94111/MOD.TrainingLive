@@ -98,6 +98,36 @@ export const TRAINING_ROUTE_PROVIDER = {
   layout: eLayoutType.application,
   requiredPolicy: 'Training.TrainingBudgets',
 },
+// ─── Phase 2B: Centers ───
+// Centers parent menu (like Finance)
+{
+  path: '/training/centers',
+  name: '::Training.Menu.Centers',
+  iconClass: 'bi bi-building',
+  parentName: '::Training.Menu.Training',
+  order: 5,
+  layout: eLayoutType.application,
+},
+// Training Centers page
+{
+  path: '/training/centers',
+  name: '::Training.Menu.TrainingCenters',
+  parentName: '::Training.Menu.Centers',
+  iconClass: 'bi bi-building',
+  order: 1,
+  layout: eLayoutType.application,
+  requiredPolicy: 'Training.Centers',
+},
+// Center Plans page
+{
+  path: '/training/centers/plans',
+  name: '::Training.Menu.CenterPlans',
+  parentName: '::Training.Menu.Centers',
+  iconClass: 'bi bi-calendar-check',
+  order: 2,
+  layout: eLayoutType.application,
+  requiredPolicy: 'Training.CenterPlans',
+},
         // ── Phase 2 (uncomment when ready) ──
         // {
         //   path: '/training/finance/items',

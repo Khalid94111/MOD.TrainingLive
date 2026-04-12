@@ -33,6 +33,8 @@ public static class TrainingPermissions
         public const string Create = Default + ".Create";
         public const string Update = Default + ".Update";
         public const string Delete = Default + ".Delete";
+        public const string EditConditions = Default + ".EditConditions";
+
     }
 
     public static class TrainingPlans
@@ -117,5 +119,34 @@ public static class TrainingPermissions
         public const string Create = Default + ".Create";
         public const string Edit = Default + ".Edit";
         public const string Delete = Default + ".Delete";
+    }
+
+    public static class Centers
+    {
+        public const string Default = GroupName + ".Centers";
+        public const string Create = Default + ".Create";
+        public const string Edit = Default + ".Edit";
+        public const string Delete = Default + ".Delete";
+        public const string ManageRoles = Default + ".ManageRoles";
+        public const string ManageWindows = Default + ".ManageWindows";
+    }
+
+    public static class CenterPlans
+    {
+        public const string Default = GroupName + ".CenterPlans";
+        public const string Create = Default + ".Create";
+        public const string Edit = Default + ".Edit";
+        public const string Delete = Default + ".Delete";
+        public const string Submit = Default + ".Submit";
+        public const string Approve = Default + ".Approve";
+    }
+
+    public static class CenterPlanItems
+    {
+        public const string Default = GroupName + ".CenterPlanItems";
+        public const string Create = Default + ".Create";
+        public const string Edit = Default + ".Edit";
+        public const string Delete = Default + ".Delete";
+        public const string SetUnits = Default + ".SetUnits";
     }
 }

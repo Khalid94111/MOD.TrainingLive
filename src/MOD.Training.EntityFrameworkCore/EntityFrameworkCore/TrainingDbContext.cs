@@ -3,6 +3,7 @@ using MOD.Training.Books;
 using MOD.Training.Oranges;
 using MOD.Training.Training;
 using MOD.Training.Training.Catalog;
+using MOD.Training.Training.Centers;
 using MOD.Training.Training.Finance;
 using MOD.Training.Training.System;
 using MOD.Training.Training.TenantCourses;
@@ -51,6 +52,19 @@ public class TrainingDbContext : AbpDbContext<TrainingDbContext>, ISaasDbContext
     public DbSet<CourseTypeFinancialItemDefault> CourseTypeFinancialItemDefaults { get; set; } = default!;
     public DbSet<ExchangeRate> ExchangeRates { get; set; } = default!;
     public DbSet<TrainingBudget> TrainingBudgets { get; set; } = default!;
+
+    
+    // --- Centers (Phase 2B) ---
+    public DbSet<TrainingCenter> TrainingCenters { get; set; }
+    public DbSet<CenterPlanWindow> CenterPlanWindows { get; set; }
+    public DbSet<CenterRoleAssignment> CenterRoleAssignments { get; set; }
+    public DbSet<TrainingCenterPlan> TrainingCenterPlans { get; set; }
+    public DbSet<TrainingCenterPlanItem> TrainingCenterPlanItems { get; set; }
+    public DbSet<TrainingCenterPlanItemUnit> TrainingCenterPlanItemUnits { get; set; }
+
+
+
+
 
     public DbSet<Orange> Oranges { get; set; } = null!;
 

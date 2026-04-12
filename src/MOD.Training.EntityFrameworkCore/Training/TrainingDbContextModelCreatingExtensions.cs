@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using MOD.Training.Training.Catalog;
+using MOD.Training.Training.Centers;
 using MOD.Training.Training.Consts;
 using MOD.Training.Training.Finance;
 using MOD.Training.Training.System;
@@ -214,6 +215,68 @@ public static class TrainingDbContextModelCreatingExtensions
 
             b.HasIndex(x => new { x.TenantId, x.Year, x.BudgetType })
                 .IsUnique();
+        });
+    }
+    private static void TrainingCenterConfiguration(this ModelBuilder builder)
+    {
+        builder.Entity<CenterRoleAssignment>(b =>
+        {
+            b.ToTable("TrnCenterRoleAssignments");
+            b.ConfigureByConvention();
+
+            b.Property(x => x.RoleType).HasConversion<string>().HasMaxLength(10);
+            b.Property(x => x.AssignmentType).HasConversion<string>().HasMaxLength(20);
+            b.Property(x => x.ServiceNumber).HasMaxLength(50);
+
+            b.HasOne<TrainingCenter>()
+                .WithMany()
+                .HasForeignKey(x => x.CenterId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // TCM: unique per center (only one TCM)
+            // TCO: unique per center + employee/position (no duplicate assignments)
+            // Enforced in AppService, not via EF index (conditional uniqueness)
+        });
+        builder.Entity<TrainingCenterPlan>(b =>
+        {
+
+
+            b.ToTable("TrnTrainingCenterPlans");
+            b.ConfigureByConvention();
+
+            b.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
+
+            b.HasOne<TrainingCenter>()
+                .WithMany()
+                .HasForeignKey(x => x.CenterId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<TrainingCenterPlanItem>(b =>
+        {
+
+
+            b.ToTable("TrnTrainingCenterPlanItems");
+            b.ConfigureByConvention();
+
+            b.Property(x => x.Objective).HasMaxLength(1000);
+            b.Property(x => x.BeneficiaryType).HasConversion<string>().HasMaxLength(20);
+
+            b.HasOne<TrainingCenterPlan>()
+                .WithMany()
+                .HasForeignKey(x => x.PlanId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<TrainingCenterPlanItemUnit>(b =>
+        {
+            b.ToTable("TrnTrainingCenterPlanItemUnits");
+            b.ConfigureByConvention();
+
+            b.HasOne<TrainingCenterPlanItem>()
+                .WithMany()
+                .HasForeignKey(x => x.PlanItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            b.HasIndex(x => new { x.PlanItemId, x.UnitId }).IsUnique();
         });
     }
 

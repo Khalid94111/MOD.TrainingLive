@@ -1,0 +1,163 @@
+<dx-popup
+  [visible]="visible()"
+  (visibleChange)="visibleChange.emit($event)"
+  [title]="dialogTitle"
+  [showCloseButton]="true"
+  [dragEnabled]="true"
+  [width]="700"
+  [height]="'auto'"
+  [maxHeight]="'85vh'"
+  [toolbarItems]="dialogToolbarItems!"
+>
+  <div *dxTemplate="let data of 'content'" class="dialog-content">
+    <div class="form-field">
+      <label class="field-label"
+        >{{ '::Training.Course' | abpLocalization }} <span class="required-mark">*</span></label
+      >
+      <dx-select-box
+        [value]="formData().tenantCourseId"
+        (valueChange)="onTenantCourseChanged($event)"
+        [items]="tenantCourses()"
+        valueExpr="id"
+        displayExpr="catalogCourseNameAr"
+        [searchEnabled]="true"
+        [placeholder]="'::Training.Course' | abpLocalization"
+      ></dx-select-box>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label class="field-label"
+          >{{ '::Training.BeneficiaryType' | abpLocalization }}
+          <span class="required-mark">*</span></label
+        >
+        <dx-select-box
+          [value]="formData().beneficiaryType"
+          (valueChange)="updateBeneficiaryType($event)"
+          [items]="beneficiaryTypeItems"
+          valueExpr="value"
+          displayExpr="text"
+        ></dx-select-box>
+      </div>
+      <div class="form-field">
+        <label class="field-label"
+          >{{ '::Training.Capacity' | abpLocalization }} <span class="required-mark">*</span></label
+        >
+        <dx-number-box
+          [value]="formData().capacity"
+          (valueChange)="updateCapacity($event)"
+          [min]="1"
+        ></dx-number-box>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label class="field-label"
+          >{{ '::Training.EstimatedStartDate' | abpLocalization }}
+          <span class="required-mark">*</span></label
+        >
+        <dx-date-box
+          [value]="formData().estimatedStartDate"
+          (valueChange)="updateEstimatedStartDate($event)"
+          type="date"
+        ></dx-date-box>
+      </div>
+      <div class="form-field">
+        <label class="field-label"
+          >{{ '::Training.EstimatedEndDate' | abpLocalization }}
+          <span class="required-mark">*</span></label
+        >
+        <dx-date-box
+          [value]="formData().estimatedEndDate"
+          (valueChange)="updateEstimatedEndDate($event)"
+          type="date"
+        ></dx-date-box>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label class="field-label">{{ '::Training.DurationWeeks' | abpLocalization }}</label>
+        <dx-number-box
+          [value]="formData().durationWeeks"
+          (valueChange)="updateDurationWeeks($event)"
+          [min]="0"
+        ></dx-number-box>
+      </div>
+      <div class="form-field">
+        <label class="field-label">{{ '::Training.Objective' | abpLocalization }}</label>
+        <dx-text-area
+          [value]="formData().objective"
+          (valueChange)="updateObjective($event)"
+          [height]="60"
+        ></dx-text-area>
+      </div>
+    </div>
+
+    <hr class="section-divider" />
+
+    <!-- Beneficiary Units (Internal only) -->
+    @if (isInternal) {
+      <div class="form-section">
+        <h3 class="section-heading">
+          🏛️ {{ '::Training.BeneficiaryUnits' | abpLocalization }}
+          <span class="section-hint">— {{ '::Training.InternalOnly' | abpLocalization }}</span>
+        </h3>
+        <dx-drop-down-box
+          [value]="selectedUnitIds()"
+          [showClearButton]="true"
+          [placeholder]="'::Training.SelectBeneficiaryUnits' | abpLocalization"
+        >
+          <div *dxTemplate="let data of 'content'">
+            <dx-tree-view
+              [dataSource]="orgUnits()"
+                    dataStructure="plain"
+
+              keyExpr="id"
+              parentIdExpr="parentId"
+              displayExpr="displayName"
+              showCheckBoxesMode="normal"
+              selectionMode="multiple"
+              (onSelectionChanged)="onUnitSelectionChanged($event)"
+            ></dx-tree-view>
+          </div>
+        </dx-drop-down-box>
+        @if (selectedUnitIds().length > 0) {
+          <span class="units-count"
+            >{{ selectedUnitIds().length }} {{ '::Training.UnitsSelected' | abpLocalization }}</span
+          >
+        }
+      </div>
+      <hr class="section-divider" />
+    }
+
+    <!-- Course Conditions (MOD-21) -->
+    @if (formData().tenantCourseId) {
+      <div class="form-section">
+        <h3 class="section-heading">📋 {{ '::Training.CourseConditions' | abpLocalization }}</h3>
+        <div class="warning-banner">
+          ⚠️ {{ '::Training.EditConditionsWarning' | abpLocalization }}
+        </div>
+        <div class="conditions-list">
+          @for (condition of conditions(); track condition.id; let idx = $index) {
+            <div class="condition-row">
+              <div class="condition-info">
+                <span class="condition-index">{{ idx + 1 }}</span>
+                <span class="condition-type-badge">{{ condition.conditionTypeName }}</span>
+                <span class="condition-value">{{ condition.displayValue }}</span>
+              </div>
+              <div class="condition-actions">
+                <button class="action-btn action-edit">✏️</button>
+                <button class="action-btn action-delete">🗑️</button>
+              </div>
+            </div>
+          }
+          <button class="btn-add-condition">
+            ➕ {{ '::Training.AddCondition' | abpLocalization }}
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</dx-popup>

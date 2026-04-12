@@ -1,0 +1,306 @@
+<div class="page-header">
+  <div class="page-title">
+    <span class="page-icon">🏢</span>
+    <div>
+      <h2>{{ '::Training.TrainingCenters' | abpLocalization }}</h2>
+      <p class="page-subtitle">{{ '::Training.ManageRoles' | abpLocalization }}</p>
+    </div>
+  </div>
+  <dx-button
+    [text]="'::Training.AddCenter' | abpLocalization"
+    type="default"
+    stylingMode="contained"
+    icon="plus"
+    (onClick)="onAdd()"
+  ></dx-button>
+</div>
+
+<dx-data-grid
+  #centersGrid
+  [dataSource]="dataSource"
+  [showBorders]="true"
+  [columnAutoWidth]="true"
+  [rowAlternationEnabled]="true"
+  [hoverStateEnabled]="true"
+  [remoteOperations]="true"
+  keyExpr="id"
+>
+  <dxo-paging [pageSize]="10"></dxo-paging>
+  <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[10, 25, 50]" [showInfo]="true"></dxo-pager>
+  <dxo-search-panel [visible]="true" [placeholder]="'::Search' | abpLocalization"></dxo-search-panel>
+
+  <dxi-column dataField="orgUnitName" [caption]="'::Training.OrgUnit' | abpLocalization" [width]="200" cellTemplate="orgUnitTemplate"></dxi-column>
+  <dxi-column dataField="centerNameAr" [caption]="'::Training.CenterNameAr' | abpLocalization" [width]="200"></dxi-column>
+  <dxi-column dataField="centerNameEn" [caption]="'::Training.CenterNameEn' | abpLocalization" [width]="200"></dxi-column>
+  <dxi-column dataField="location" [caption]="'::Training.Location' | abpLocalization" [width]="150"></dxi-column>
+  <dxi-column dataField="tcoCount" [caption]="'::Training.TcoCount' | abpLocalization" [width]="80" alignment="center" cellTemplate="tcoCountTemplate"></dxi-column>
+  <dxi-column dataField="tcmName" [caption]="'::Training.TCM' | abpLocalization" [width]="150" cellTemplate="tcmTemplate"></dxi-column>
+  <dxi-column dataField="isActive" [caption]="'::Status' | abpLocalization" [width]="80" alignment="center" cellTemplate="statusTemplate"></dxi-column>
+  <dxi-column [caption]="'::Actions' | abpLocalization" [width]="120" alignment="center" cellTemplate="actionsTemplate" [allowSorting]="false" [allowFiltering]="false"></dxi-column>
+
+  <div *dxTemplate="let data of 'orgUnitTemplate'">
+    <span class="org-unit-cell">🏛️ {{ data.value }}</span>
+  </div>
+
+  <div *dxTemplate="let data of 'tcoCountTemplate'">
+    <span class="count-badge">{{ data.value }}</span>
+  </div>
+
+  <div *dxTemplate="let data of 'tcmTemplate'">
+    @if (data.value) {
+      <span class="tcm-name">{{ data.value }}</span>
+    } @else {
+      <span class="not-assigned">{{ '::Training.NotAssigned' | abpLocalization }}</span>
+    }
+  </div>
+
+  <div *dxTemplate="let data of 'statusTemplate'">
+    <span [class]="data.value ? 'status-badge status-active' : 'status-badge status-inactive'">
+      {{ data.value ? ('::Active' | abpLocalization) : ('::Inactive' | abpLocalization) }}
+    </span>
+  </div>
+
+  <div *dxTemplate="let data of 'actionsTemplate'">
+    <div class="action-buttons">
+      <button class="action-btn action-edit" (click)="onEdit(data.data)" [title]="'::Edit' | abpLocalization">✏️</button>
+      <button class="action-btn action-roles" (click)="onEdit(data.data)" [title]="'::Training.ManageRoles' | abpLocalization">👥</button>
+      <button class="action-btn action-delete" (click)="onDelete(data.data)" [title]="'::Delete' | abpLocalization">🗑️</button>
+    </div>
+  </div>
+</dx-data-grid>
+
+<dx-popup
+  [visible]="isDialogVisible()"
+  (visibleChange)="isDialogVisible.set($event)"
+  [title]="dialogTitle"
+  [showCloseButton]="true"
+  [dragEnabled]="true"
+  [width]="700"
+  [height]="'auto'"
+  [maxHeight]="'85vh'"
+  [toolbarItems]="dialogToolbarItems!"
+>
+  <div *dxTemplate="let data of 'content'" class="dialog-content">
+    <!-- Section 1: Basic Info -->
+    <div class="form-section">
+      <h3 class="section-heading">
+        <span class="section-number">1</span>
+        {{ '::Training.BasicInfo' | abpLocalization }}
+      </h3>
+
+      <div class="form-field">
+        <label class="field-label">{{ '::Training.OrgUnit' | abpLocalization }} <span class="required-mark">*</span></label>
+     <dx-drop-down-box
+  [value]="formData().orgUnitId"
+  [dataSource]="orgUnits()"
+  [opened]="isOrgUnitDropDownOpen()"
+  (openedChange)="isOrgUnitDropDownOpen.set($event)"
+  [placeholder]="'::Training.SelectOrgUnit' | abpLocalization"
+  displayExpr="displayName"
+  valueExpr="id"
+  [showClearButton]="true"
+>
+  <div *dxTemplate="let data of 'content'">
+    <dx-tree-view
+      [dataSource]="orgUnits()"
+      dataStructure="plain"
+      keyExpr="id"
+      parentIdExpr="parentId"
+      displayExpr="displayName"
+      [selectByClick]="true"
+      selectionMode="single"
+      (onItemClick)="onOrgUnitSelected($event)"
+    ></dx-tree-view>
+  </div>
+</dx-drop-down-box>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label class="field-label">{{ '::Training.CenterNameAr' | abpLocalization }} <span class="required-mark">*</span></label>
+          <dx-text-box [value]="formData().centerNameAr" (valueChange)="updateCenterNameAr($event)"></dx-text-box>
+          @if (formData().orgUnitId) {
+            <span class="auto-fill-hint">{{ '::Training.OrgUnitAutoFill' | abpLocalization }}</span>
+          }
+        </div>
+        <div class="form-field">
+          <label class="field-label">{{ '::Training.CenterNameEn' | abpLocalization }} <span class="required-mark">*</span></label>
+          <dx-text-box [value]="formData().centerNameEn" (valueChange)="updateCenterNameEn($event)"></dx-text-box>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label class="field-label">{{ '::Training.Location' | abpLocalization }}</label>
+          <dx-text-box [value]="formData().location" (valueChange)="updateLocation($event)"></dx-text-box>
+        </div>
+        <div class="form-field">
+          <label class="field-label">{{ '::Status' | abpLocalization }}</label>
+          <dx-switch
+  [value]="formData().isActive"
+  (valueChange)="updateIsActive($event)"
+></dx-switch>
+<span class="switch-label">
+  {{ formData().isActive ? ('::Training.Active' | abpLocalization) : ('::Training.Inactive' | abpLocalization) }}
+</span>
+        </div>
+      </div>
+    </div>
+
+    <hr class="section-divider" />
+
+    <!-- Section 2: TCM -->
+    <div class="form-section">
+      <h3 class="section-heading">
+        <span class="section-number section-purple">2</span>
+        {{ '::Training.TCMSection' | abpLocalization }}
+        <span class="section-hint">— {{ '::Training.SingleAssignment' | abpLocalization }}</span>
+      </h3>
+
+      <div class="role-card">
+        <div class="assignment-type-row">
+          <label class="field-label-sm">{{ '::Training.AssignmentType' | abpLocalization }}:</label>
+          <dx-radio-group
+            [items]="assignmentTypeItems"
+            [value]="tcmAssignment().assignmentType"
+            (valueChange)="onTcmAssignmentTypeChanged($event)"
+            valueExpr="value"
+            displayExpr="text"
+            layout="horizontal"
+          ></dx-radio-group>
+        </div>
+
+        @if (tcmAssignment().assignmentType === 0) {
+          <div class="search-row">
+            <label class="field-label-sm">{{ '::Training.ServiceNumber' | abpLocalization }}</label>
+            <div class="search-input-row">
+              <dx-text-box
+                [value]="tcmAssignment().serviceNumber || ''"
+                (valueChange)="updateTcmServiceNumber($event)"
+                [placeholder]="'::Training.ServiceNumber' | abpLocalization"
+                class="flex-grow"
+              ></dx-text-box>
+              <dx-button
+                [text]="'::Training.Search' | abpLocalization"
+                type="default"
+                icon="search"
+                (onClick)="searchTcmEmployee(tcmAssignment().serviceNumber || '')"
+              ></dx-button>
+            </div>
+          </div>
+        }
+
+        @if (tcmAssignment().assignmentType === 1) {
+          <div class="search-row">
+            <label class="field-label-sm">{{ '::Training.PositionName' | abpLocalization }}</label>
+            <div class="search-input-row">
+              <dx-text-box [placeholder]="'::Training.PositionName' | abpLocalization" class="flex-grow"></dx-text-box>
+              <dx-button [text]="'::Training.Search' | abpLocalization" type="default" icon="search"></dx-button>
+            </div>
+          </div>
+        }
+
+        @if (tcmSearchResult()) {
+          <div class="search-result success">
+            <div class="result-avatar">{{ tcmSearchResult().fullNameAr?.substring(0, 2) }}</div>
+            <div class="result-info">
+              <div class="result-name">{{ tcmSearchResult().rankName }} / {{ tcmSearchResult().fullNameAr }}</div>
+              <div class="result-detail">{{ '::Training.ServiceNumber' | abpLocalization }}: {{ tcmSearchResult().serviceNumber }}</div>
+            </div>
+            <span class="result-check">✓</span>
+          </div>
+        }
+
+        <div class="info-banner">ℹ️ {{ '::Training.OrgUnitScopedSearch' | abpLocalization }}</div>
+      </div>
+    </div>
+
+    <hr class="section-divider" />
+
+    <!-- Section 3: TCOs -->
+    <div class="form-section">
+      <h3 class="section-heading">
+        <span class="section-number section-green">3</span>
+        {{ '::Training.TCOSection' | abpLocalization }}
+        <span class="section-hint">— {{ '::Training.MultipleAssignments' | abpLocalization }}</span>
+      </h3>
+
+      @for (tco of tcoAssignments(); track $index; let idx = $index) {
+        <div class="role-card tco-card">
+          <div class="tco-card-header">
+            <span class="tco-index">{{ '::Training.TCO' | abpLocalization }} #{{ idx + 1 }}</span>
+            <button class="btn-remove" (click)="removeTcoAssignment(idx)">🗑️</button>
+          </div>
+
+          <div class="assignment-type-row">
+            <label class="field-label-sm">{{ '::Training.AssignmentType' | abpLocalization }}:</label>
+            <dx-radio-group
+              [items]="assignmentTypeItems"
+              [value]="tco.assignmentType"
+              (valueChange)="onTcoAssignmentTypeChanged(idx, $event)"
+              valueExpr="value"
+              displayExpr="text"
+              layout="horizontal"
+            ></dx-radio-group>
+          </div>
+
+          @if (tco.assignmentType === 0) {
+          <div class="search-row">
+    <div class="search-input-row">
+        <dx-text-box 
+            [(value)]="tco.serviceNumber" 
+            [placeholder]="'::Training.ServiceNumber' | abpLocalization" 
+            class="flex-grow">
+        </dx-text-box>
+        <dx-button 
+            [text]="'::Training.Search' | abpLocalization" 
+            type="default" 
+            icon="search" 
+            (onClick)="searchTcoEmployee(idx, tco.serviceNumber || '')">
+        </dx-button>
+    </div>
+</div>
+          }
+@if (tco.assignmentType === 0) {
+  <!-- <div class="search-row">
+    <div class="search-input-row">
+      <dx-text-box [value]="tco.serviceNumber || ''" [placeholder]="'::Training.ServiceNumber' | abpLocalization" class="flex-grow"></dx-text-box>
+      <dx-button [text]="'::Training.Search' | abpLocalization" type="default" icon="search" (onClick)="searchTcoEmployee(idx, tco.serviceNumber || '')"></dx-button>
+    </div>
+  </div> -->
+  @if (tcoSearchResults().get(idx)) {
+    <div class="search-result success">
+      <div class="result-avatar">{{ tcoSearchResults().get(idx).fullNameAr?.substring(0, 2) }}</div>
+      <div class="result-info">
+        <div class="result-name">{{ tcoSearchResults().get(idx).rankName }} / {{ tcoSearchResults().get(idx).fullNameAr }}</div>
+        <div class="result-detail">{{ '::Training.ServiceNumber' | abpLocalization }}: {{ tcoSearchResults().get(idx).serviceNumber }}</div>
+      </div>
+      <span class="result-check">✓</span>
+    </div>
+  }
+}
+
+@if (tco.assignmentType === 1) {
+  <div class="search-row">
+    <div class="search-input-row">
+      <dx-text-box [placeholder]="'::Training.PositionName' | abpLocalization" class="flex-grow"></dx-text-box>
+      <dx-button [text]="'::Training.Search' | abpLocalization" type="default" icon="search" (onClick)="searchTcoPosition(idx, '')"></dx-button>
+    </div>
+  </div>
+  @if (tcoSearchResults().get(idx)) {
+    <div class="search-result info">
+      <div class="result-avatar">💼</div>
+      <div class="result-info">
+        <div class="result-name">{{ tcoSearchResults().get(idx).positionNameAr }}</div>
+      </div>
+      <span class="result-check">✓</span>
+    </div>
+  }
+}
+        </div>
+      }
+
+      <button class="btn-add-tco" (click)="addTcoAssignment()">➕ {{ '::Training.AddOfficer' | abpLocalization }}</button>
+    </div>
+  </div>
+</dx-popup>

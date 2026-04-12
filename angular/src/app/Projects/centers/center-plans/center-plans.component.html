@@ -1,0 +1,207 @@
+<!-- Submission Window Section (TD Only) -->
+<div class="card window-card">
+  <div class="card-header">
+    <span class="card-title">📅 {{ '::Training.SubmissionWindow' | abpLocalization }}</span>
+    <span class="td-badge">TD Only</span>
+  </div>
+  <div class="card-body">
+    <div class="window-form">
+      <div class="form-field">
+        <label class="field-label">{{ '::Training.WindowYear' | abpLocalization }}</label>
+        <dx-number-box [value]="windowYear()" (valueChange)="windowYear.set($event)" [min]="2020" [max]="2050"></dx-number-box>
+      </div>
+      <div class="form-field">
+        <label class="field-label">{{ '::Training.WindowOpenDate' | abpLocalization }}</label>
+        <dx-date-box [value]="windowOpenDate()" (valueChange)="windowOpenDate.set($event)" type="date"></dx-date-box>
+      </div>
+      <div class="form-field">
+        <label class="field-label">{{ '::Training.WindowCloseDate' | abpLocalization }}</label>
+        <dx-date-box [value]="windowCloseDate()" (valueChange)="windowCloseDate.set($event)" type="date"></dx-date-box>
+      </div>
+      <div class="form-field form-field-btn">
+        <dx-button [text]="'::Training.OpenWindow' | abpLocalization" type="success" stylingMode="contained" icon="event" (onClick)="onOpenWindow()"></dx-button>
+      </div>
+    </div>
+
+    @if (currentWindow()) {
+      <div [class]="'window-status-banner ' + (currentWindow().isOpen ? 'banner-open' : 'banner-closed')">
+        <span class="banner-icon">{{ currentWindow().isOpen ? '✅' : '🔒' }}</span>
+        <div class="banner-info">
+          <div class="banner-title">{{ windowStatusText }} — {{ currentWindow().year }}</div>
+          <div class="banner-detail">{{ currentWindow().openDate | date:'mediumDate' }} — {{ currentWindow().closeDate | date:'mediumDate' }}</div>
+        </div>
+        <span [class]="'status-badge ' + windowStatusClass">{{ windowStatusText }}</span>
+      </div>
+    } @else {
+      <div class="window-status-banner banner-notset">
+        <span class="banner-icon">📅</span>
+        <div class="banner-info"><div class="banner-title">{{ '::Training.WindowNotSet' | abpLocalization }}</div></div>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Center Plans Section -->
+<div class="card plans-card">
+  <div class="card-header">
+    <span class="card-title">📋 {{ '::Training.CenterPlans' | abpLocalization }}</span>
+    <dx-button [text]="'::Training.CreatePlan' | abpLocalization" type="default" stylingMode="contained" icon="plus" (onClick)="onAddPlan()"></dx-button>
+  </div>
+  <div class="card-body">
+    <!-- Filters -->
+    <div class="filter-row">
+      <div class="form-field">
+        <label class="field-label">{{ '::Training.TrainingCenter' | abpLocalization }}</label>
+        <dx-select-box [value]="filterCenterId()" (valueChange)="filterCenterId.set($event); onFilterChanged()" [items]="centers()" valueExpr="id" displayExpr="centerNameAr" [showClearButton]="true" [placeholder]="'::Training.AllCenters' | abpLocalization"></dx-select-box>
+      </div>
+      <div class="form-field">
+        <label class="field-label">{{ '::Training.WindowYear' | abpLocalization }}</label>
+        <dx-number-box [value]="filterYear()" (valueChange)="filterYear.set($event); onFilterChanged()" [min]="2020" [max]="2050"></dx-number-box>
+      </div>
+      <div class="form-field">
+        <label class="field-label">{{ '::Status' | abpLocalization }}</label>
+        <dx-select-box [value]="filterStatus()" (valueChange)="filterStatus.set($event); onFilterChanged()" [items]="statusFilterItems" valueExpr="value" displayExpr="text"></dx-select-box>
+      </div>
+    </div>
+
+    <!-- Plans Master Grid -->
+ <dx-data-grid
+  #plansGrid
+  [dataSource]="dataSource"
+  [showBorders]="true"
+  [columnAutoWidth]="true"
+  [rowAlternationEnabled]="true"
+  [hoverStateEnabled]="true"
+  [remoteOperations]="true"
+  keyExpr="id"
+  (onRowExpanding)="onRowExpanding($event)"
+>
+      <dxo-paging [pageSize]="10"></dxo-paging>
+      <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[10, 25]" [showInfo]="true"></dxo-pager>
+      <dxo-master-detail [enabled]="true" template="planDetail"></dxo-master-detail>
+
+      <dxi-column dataField="centerName" [caption]="'::Training.TrainingCenter' | abpLocalization" [width]="200"></dxi-column>
+      <dxi-column dataField="year" [caption]="'::Training.WindowYear' | abpLocalization" [width]="80" alignment="center"></dxi-column>
+      <dxi-column dataField="status" [caption]="'::Status' | abpLocalization" [width]="120" alignment="center" cellTemplate="statusTemplate"></dxi-column>
+      <dxi-column dataField="submittedAt" [caption]="'::Training.SubmittedAt' | abpLocalization" [width]="130" dataType="date"></dxi-column>
+      <dxi-column dataField="approvedAt" [caption]="'::Training.ApprovedAt' | abpLocalization" [width]="130" dataType="date"></dxi-column>
+      <dxi-column dataField="itemCount" [caption]="'::Training.CourseCount' | abpLocalization" [width]="80" alignment="center" cellTemplate="itemCountTemplate"></dxi-column>
+      <dxi-column [caption]="'::Actions' | abpLocalization" [width]="250" alignment="center" cellTemplate="planActionsTemplate" [allowSorting]="false" [allowFiltering]="false"></dxi-column>
+
+      <div *dxTemplate="let data of 'statusTemplate'">
+        <span [class]="'status-badge ' + getStatusClass(data.value)">{{ getStatusText(data.value) }}</span>
+      </div>
+
+      <div *dxTemplate="let data of 'itemCountTemplate'">
+        <span class="count-badge">{{ data.value }}</span>
+      </div>
+
+      <div *dxTemplate="let data of 'planActionsTemplate'">
+        <div class="action-buttons">
+          @switch (data.data.status) {
+            @case (CenterPlanStatus.Draft) {
+              <dx-button [text]="'::Training.SubmitForApproval' | abpLocalization" type="default" stylingMode="contained" (onClick)="onSubmit(data.data.id)"></dx-button>
+              <button class="action-btn action-edit" (click)="onAddItem(data.data.id)">✏️</button>
+              <button class="action-btn action-delete" (click)="onDeletePlan(data.data.id)">🗑️</button>
+            }
+            @case (CenterPlanStatus.Submitted) {
+              <dx-button [text]="'::Training.Approve' | abpLocalization" type="success" stylingMode="contained" (onClick)="onApprove(data.data.id)"></dx-button>
+              <dx-button [text]="'::Training.Reject' | abpLocalization" type="danger" stylingMode="contained" (onClick)="onReject(data.data.id)"></dx-button>
+              <dx-button [text]="'::Training.Return' | abpLocalization" type="normal" stylingMode="contained" (onClick)="onReturn(data.data.id)"></dx-button>
+            }
+            @default {
+              <span class="no-actions">{{ '::Training.NoActions' | abpLocalization }}</span>
+            }
+          }
+        </div>
+      </div>
+
+      <!-- Master-Detail: Plan Items -->
+   <div *dxTemplate="let detail of 'planDetail'" class="detail-container">
+  <div class="detail-header">
+    <span class="detail-title">📝 {{ '::Training.PlanItems' | abpLocalization }}</span>
+    @if (detail.data.status === CenterPlanStatus.Draft) {
+      <dx-button [text]="'::Training.AddCourse' | abpLocalization" type="default" stylingMode="contained" icon="plus" (onClick)="onAddItem(detail.data.id)"></dx-button>
+    }
+  </div>
+
+  <dx-data-grid
+    [dataSource]="getPlanItems(detail.data.id)"
+    [showBorders]="true"
+    [columnAutoWidth]="true"
+    [hoverStateEnabled]="true"
+    keyExpr="id"
+  >
+          <dxi-column dataField="tenantCourseName" [caption]="'::Training.Course' | abpLocalization" [width]="200"></dxi-column>
+          <dxi-column dataField="beneficiaryType" [caption]="'::Training.BeneficiaryType' | abpLocalization" [width]="130" alignment="center" cellTemplate="beneficiaryTemplate"></dxi-column>
+          <dxi-column dataField="estimatedStartDate" [caption]="'::Training.EstimatedStartDate' | abpLocalization" [width]="130" dataType="date"></dxi-column>
+          <dxi-column dataField="estimatedEndDate" [caption]="'::Training.EstimatedEndDate' | abpLocalization" [width]="130" dataType="date"></dxi-column>
+          <dxi-column dataField="capacity" [caption]="'::Training.Capacity' | abpLocalization" [width]="80" alignment="center"></dxi-column>
+          <dxi-column dataField="batchNumber" [caption]="'::Training.BatchNumber' | abpLocalization" [width]="80" alignment="center"></dxi-column>
+          <dxi-column dataField="unitIds" [caption]="'::Training.BeneficiaryUnits' | abpLocalization" [width]="100" alignment="center" cellTemplate="unitsTemplate"></dxi-column>
+
+          @if (detail.data.status === CenterPlanStatus.Draft) {
+            <dxi-column [caption]="'::Actions' | abpLocalization" [width]="80" alignment="center" cellTemplate="itemActionsTemplate" [allowSorting]="false"></dxi-column>
+          }
+
+          <div *dxTemplate="let item of 'beneficiaryTemplate'">
+            <span [class]="item.value === 0 ? 'type-badge type-internal' : 'type-badge type-shared'">
+              {{ item.value === 0 ? ('::Training.BeneficiaryType.Internal' | abpLocalization) : ('::Training.BeneficiaryType.Shared' | abpLocalization) }}
+            </span>
+          </div>
+
+          <div *dxTemplate="let item of 'unitsTemplate'">
+            @if (item.value && item.value.length > 0) {
+              <span class="units-badge">{{ item.value.length }} {{ '::Training.UnitsSelected' | abpLocalization }}</span>
+            } @else {
+              <span class="no-data">—</span>
+            }
+          </div>
+
+          <div *dxTemplate="let item of 'itemActionsTemplate'">
+            <div class="action-buttons">
+              <button class="action-btn action-edit" (click)="onEditItem(detail.data.id, item.data.id)">✏️</button>
+              <button class="action-btn action-delete">🗑️</button>
+            </div>
+          </div>
+        </dx-data-grid>
+      </div>
+    </dx-data-grid>
+
+    <div class="info-banner">ℹ️ {{ '::Training.WorkflowButtonsInfo' | abpLocalization }}</div>
+  </div>
+</div>
+
+<!-- Create Plan Dialog -->
+<dx-popup
+  [visible]="isPlanDialogVisible()"
+  (visibleChange)="isPlanDialogVisible.set($event)"
+  [title]="'::Training.CreatePlan' | abpLocalization"
+  [showCloseButton]="true"
+  [dragEnabled]="true"
+  [width]="450"
+  [height]="'auto'"
+  [toolbarItems]="planDialogToolbarItems!"
+>
+  <div *dxTemplate="let data of 'content'" class="dialog-content">
+    <div class="form-field">
+      <label class="field-label">{{ '::Training.TrainingCenter' | abpLocalization }} <span class="required-mark">*</span></label>
+      <dx-select-box [value]="planFormCenterId()" (valueChange)="planFormCenterId.set($event)" [items]="centers()" valueExpr="id" displayExpr="centerNameAr"></dx-select-box>
+    </div>
+    <div class="form-field">
+      <label class="field-label">{{ '::Training.WindowYear' | abpLocalization }} <span class="required-mark">*</span></label>
+      <dx-number-box [value]="planFormYear()" (valueChange)="planFormYear.set($event)" [min]="2020" [max]="2050"></dx-number-box>
+    </div>
+  </div>
+</dx-popup>
+
+<!-- Plan Item Dialog -->
+@if (isItemDialogVisible()) {
+  <app-center-plan-item-dialog
+    [visible]="isItemDialogVisible()"
+    [planId]="editingPlanId()"
+    [itemId]="editingItemId()"
+    (visibleChange)="isItemDialogVisible.set($event)"
+    (saved)="onItemSaved()"
+  ></app-center-plan-item-dialog>
+}
