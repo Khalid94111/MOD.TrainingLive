@@ -7,13 +7,6 @@ export enum CourseType {
   ExternalInternational = 2,
 }
 
-export enum BudgetType {
-  Internal = 0,
-  ExternalInternational = 1,
-  Planning = 2,
-  HigherEducation = 3,
-}
-
 export enum PricingType {
   PerPerson = 0,
   Total = 1,

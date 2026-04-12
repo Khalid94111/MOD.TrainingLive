@@ -177,26 +177,8 @@
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
-
-  &[data-type="0"] {
-    background: #dbeafe;
-    color: #1d4ed8;
-  }
-
-  &[data-type="1"] {
-    background: #dcfce7;
-    color: #15803d;
-  }
-
-  &[data-type="2"] {
-    background: #f3e8ff;
-    color: #7e22ce;
-  }
-
-  &[data-type="3"] {
-    background: #fee2e2;
-    color: #b91c1c;
-  }
+  background: #f1f5f9;
+  color: #1e293b;
 }
 
 .emoji-action-btn {

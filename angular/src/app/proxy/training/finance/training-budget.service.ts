@@ -40,7 +40,7 @@ export class TrainingBudgetService {
     this.restService.request<any, PagedResultDto<TrainingBudgetDto>>({
       method: 'GET',
       url: '/api/app/training-budget',
-      params: { year: input.year, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
+      params: { year: input.year, financialItemId: input.financialItemId, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
     },
     { apiName: this.apiName,...config });
   

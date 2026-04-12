@@ -188,23 +188,14 @@ public class FinanceDataSeeder(
         }, autoSave: true);
 
         // ============================================================
-        // Training Budgets: 4 types for current year
+        // Training Budgets: one per parent financial item for current year
         // ============================================================
         var currentYear = DateTime.Now.Year;
 
         await budgetRepo.InsertAsync(new TrainingBudget
         {
             Year = currentYear,
-            BudgetType = BudgetType.Internal,
-            TotalAmount = 500_000m,
-            SpentAmount = 0m,
-            AlertThreshold = 80m
-        }, autoSave: true);
-
-        await budgetRepo.InsertAsync(new TrainingBudget
-        {
-            Year = currentYear,
-            BudgetType = BudgetType.ExternalInternational,
+            FinancialItemId = parentExtIntl.Id,
             TotalAmount = 1_000_000m,
             SpentAmount = 0m,
             AlertThreshold = 80m
@@ -213,17 +204,8 @@ public class FinanceDataSeeder(
         await budgetRepo.InsertAsync(new TrainingBudget
         {
             Year = currentYear,
-            BudgetType = BudgetType.Planning,
-            TotalAmount = 200_000m,
-            SpentAmount = 0m,
-            AlertThreshold = 80m
-        }, autoSave: true);
-
-        await budgetRepo.InsertAsync(new TrainingBudget
-        {
-            Year = currentYear,
-            BudgetType = BudgetType.HigherEducation,
-            TotalAmount = 300_000m,
+            FinancialItemId = parentCourseCost.Id,
+            TotalAmount = 500_000m,
             SpentAmount = 0m,
             AlertThreshold = 80m
         }, autoSave: true);

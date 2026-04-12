@@ -1,5 +1,4 @@
 export * from './beneficiary-type.enum';
-export * from './budget-type.enum';
 export * from './center-assignment-type.enum';
 export * from './center-plan-status.enum';
 export * from './center-role-type.enum';

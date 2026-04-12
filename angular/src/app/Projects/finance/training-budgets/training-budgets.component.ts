@@ -7,15 +7,15 @@ import { DxNumberBoxModule } from 'devextreme-angular/ui/number-box';
 import { DxSelectBoxModule } from 'devextreme-angular/ui/select-box';
 import { DxButtonModule } from 'devextreme-angular/ui/button';
 import { ToolbarItem } from 'devextreme/ui/popup';
-import { TrainingBudgetService } from '../../shared/services/finance-proxy.service';
+import { FinancialItemService, TrainingBudgetService } from '../../shared/services/finance-proxy.service';
 import { TrainingLocalizationHelper } from '../../shared';
-import { CreateUpdateTrainingBudgetDto, TrainingBudgetDto } from 'src/app/proxy/training/finance/dtos';
-import { BudgetType } from 'src/app/proxy/training/enums';
+import {
+  CreateUpdateTrainingBudgetDto,
+  FinancialItemDto,
+  TrainingBudgetDto,
+} from 'src/app/proxy/training/finance/dtos';
 
-interface BudgetCard {
-  budgetType: BudgetType;
-  labelAr: string;
-  labelEn: string;
+interface BudgetCardPalette {
   colorClass: string;
   barGradient: string;
   borderColor: string;
@@ -42,9 +42,11 @@ interface BudgetCard {
 })
 export class TrainingBudgetsComponent implements OnInit {
   private readonly service = inject(TrainingBudgetService);
+  private readonly financialItemService = inject(FinancialItemService);
   readonly l = inject(TrainingLocalizationHelper);
 
   budgets = signal<TrainingBudgetDto[]>([]);
+  parentFinancialItems = signal<FinancialItemDto[]>([]);
   selectedYear = signal<number>(new Date().getFullYear());
   isDialogVisible = signal(false);
   isEditMode = signal(false);
@@ -55,11 +57,8 @@ export class TrainingBudgetsComponent implements OnInit {
   dialogToolbarItems: ToolbarItem[] | undefined;
   yearOptions: number[] = [];
 
-  budgetCardConfigs: BudgetCard[] = [
+  private readonly palettes: BudgetCardPalette[] = [
     {
-      budgetType: BudgetType.Internal,
-      labelAr: 'التدريب الداخلي',
-      labelEn: 'Internal Training',
       colorClass: 'blue',
       barGradient: 'linear-gradient(90deg, #3b82f6, #2563eb)',
       borderColor: '#bfdbfe',
@@ -69,9 +68,6 @@ export class TrainingBudgetsComponent implements OnInit {
       spentColor: '#2563eb',
     },
     {
-      budgetType: BudgetType.ExternalInternational,
-      labelAr: 'التدريب الخارجي الدولي',
-      labelEn: 'International Training',
       colorClass: 'green',
       barGradient: 'linear-gradient(90deg, #22c55e, #16a34a)',
       borderColor: '#bbf7d0',
@@ -81,9 +77,6 @@ export class TrainingBudgetsComponent implements OnInit {
       spentColor: '#16a34a',
     },
     {
-      budgetType: BudgetType.Planning,
-      labelAr: 'فريق التخطيط',
-      labelEn: 'Planning Team',
       colorClass: 'purple',
       barGradient: 'linear-gradient(90deg, #a855f7, #9333ea)',
       borderColor: '#e9d5ff',
@@ -93,9 +86,6 @@ export class TrainingBudgetsComponent implements OnInit {
       spentColor: '#9333ea',
     },
     {
-      budgetType: BudgetType.HigherEducation,
-      labelAr: 'الدراسات العليا',
-      labelEn: 'Higher Education',
       colorClass: 'red',
       barGradient: 'linear-gradient(90deg, #ef4444, #dc2626)',
       borderColor: '#fecaca',
@@ -104,9 +94,25 @@ export class TrainingBudgetsComponent implements OnInit {
       badgeColor: '#b91c1c',
       spentColor: '#dc2626',
     },
+    {
+      colorClass: 'amber',
+      barGradient: 'linear-gradient(90deg, #f59e0b, #d97706)',
+      borderColor: '#fde68a',
+      bgGradient: 'linear-gradient(135deg, #fffbeb, #fef3c7)',
+      badgeBg: '#fde68a',
+      badgeColor: '#b45309',
+      spentColor: '#d97706',
+    },
+    {
+      colorClass: 'teal',
+      barGradient: 'linear-gradient(90deg, #14b8a6, #0d9488)',
+      borderColor: '#99f6e4',
+      bgGradient: 'linear-gradient(135deg, #f0fdfa, #ccfbf1)',
+      badgeBg: '#99f6e4',
+      badgeColor: '#0f766e',
+      spentColor: '#0d9488',
+    },
   ];
-
-  budgetTypeOptions: { value: BudgetType; text: string }[] = [];
 
   get dialogTitle(): string {
     return this.isEditMode()
@@ -114,16 +120,9 @@ export class TrainingBudgetsComponent implements OnInit {
       : this.l.t('::Training.TrainingBudgets.Add');
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     const currentYear = new Date().getFullYear();
     this.yearOptions = [currentYear + 1, currentYear, currentYear - 1, currentYear - 2];
-
-    this.budgetTypeOptions = [
-      { value: BudgetType.Internal, text: this.l.t('::Training.BudgetType.Internal') },
-      { value: BudgetType.ExternalInternational, text: this.l.t('::Training.BudgetType.ExternalInternational') },
-      { value: BudgetType.Planning, text: this.l.t('::Training.BudgetType.Planning') },
-      { value: BudgetType.HigherEducation, text: this.l.t('::Training.BudgetType.HigherEducation') },
-    ];
 
     this.dialogToolbarItems = [
       {
@@ -148,7 +147,18 @@ export class TrainingBudgetsComponent implements OnInit {
       },
     ];
 
-    this.loadData();
+    await this.loadParentItems();
+    await this.loadData();
+  }
+
+  async loadParentItems(): Promise<void> {
+    const result = await this.financialItemService.getList({
+      maxResultCount: 1000,
+      skipCount: 0,
+      sorting: '',
+    });
+    const parents = (result.items ?? []).filter(i => !i.parentId);
+    this.parentFinancialItems.set(parents);
   }
 
   async loadData(): Promise<void> {
@@ -161,8 +171,13 @@ export class TrainingBudgetsComponent implements OnInit {
     this.budgets.set(result.items ?? []);
   }
 
-  getBudgetForType(type: BudgetType): TrainingBudgetDto | undefined {
-    return this.budgets().find(b => b.budgetType === type);
+  getBudgetForItem(financialItemId: string | undefined): TrainingBudgetDto | undefined {
+    if (!financialItemId) return undefined;
+    return this.budgets().find(b => b.financialItemId === financialItemId);
+  }
+
+  paletteFor(index: number): BudgetCardPalette {
+    return this.palettes[index % this.palettes.length];
   }
 
   onYearChange(year: number): void {
@@ -183,7 +198,7 @@ export class TrainingBudgetsComponent implements OnInit {
     this.editingId = item.id;
     this.formData = {
       year: item.year,
-      budgetType: item.budgetType,
+      financialItemId: item.financialItemId,
       totalAmount: item.totalAmount,
       spentAmount: item.spentAmount,
       alertThreshold: item.alertThreshold,
@@ -206,16 +221,6 @@ export class TrainingBudgetsComponent implements OnInit {
     await this.loadData();
   }
 
-  getBudgetTypeKey(type: BudgetType): string {
-    const map: Record<number, string> = {
-      [BudgetType.Internal]: 'Internal',
-      [BudgetType.ExternalInternational]: 'ExternalInternational',
-      [BudgetType.Planning]: 'Planning',
-      [BudgetType.HigherEducation]: 'HigherEducation',
-    };
-    return map[type] ?? 'Internal';
-  }
-
   formatCurrency(amount: number): string {
     return amount.toLocaleString('en-US', {
       minimumFractionDigits: 0,
@@ -224,9 +229,10 @@ export class TrainingBudgetsComponent implements OnInit {
   }
 
   private getEmptyForm(): CreateUpdateTrainingBudgetDto {
+    const first = this.parentFinancialItems()[0];
     return {
       year: new Date().getFullYear(),
-      budgetType: BudgetType.Internal,
+      financialItemId: first?.id,
       totalAmount: 0,
       spentAmount: 0,
       alertThreshold: 80,

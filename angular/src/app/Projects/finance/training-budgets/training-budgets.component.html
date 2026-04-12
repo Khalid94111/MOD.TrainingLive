@@ -22,25 +22,26 @@
   </div>
 
   <div class="card-body-content">
-    <!-- 4 Stat Cards -->
+    <!-- Dynamic Stat Cards: one per parent financial item -->
     <div class="stat-cards-grid">
-      @for (config of budgetCardConfigs; track config.budgetType) {
-        @let budget = getBudgetForType(config.budgetType);
+      @for (item of parentFinancialItems(); track item.id; let i = $index) {
+        @let palette = paletteFor(i);
+        @let budget = getBudgetForItem(item.id);
         <div
           class="stat-card"
-          [style.border-color]="config.borderColor"
-          [style.background]="config.bgGradient"
+          [style.border-color]="palette.borderColor"
+          [style.background]="palette.bgGradient"
         >
           <div class="stat-card-header">
             <div>
-              <div class="stat-card-title" [style.color]="config.badgeColor">{{ config.labelAr }}</div>
-              <div class="stat-card-en">{{ config.labelEn }}</div>
+              <div class="stat-card-title" [style.color]="palette.badgeColor">{{ item.nameAr }}</div>
+              <div class="stat-card-en">{{ item.nameEn }}</div>
             </div>
             @if (budget) {
               <span
                 class="percent-badge"
-                [style.background]="config.badgeBg"
-                [style.color]="config.badgeColor"
+                [style.background]="palette.badgeBg"
+                [style.color]="palette.badgeColor"
                 [class.alert-badge]="budget.isOverThreshold"
               >
                 {{ budget.spentPercent }}%
@@ -54,22 +55,22 @@
               <div
                 class="budget-fill"
                 [style.width.%]="budget.spentPercent"
-                [style.background]="config.barGradient"
+                [style.background]="palette.barGradient"
               ></div>
             </div>
 
             <div class="stat-card-details">
               <div>
                 <span class="detail-label">{{ '::Training.TrainingBudgets.TotalAmount' | abpLocalization }}:</span>
-                <span class="detail-value">{{ formatCurrency(budget.totalAmount) }} {{ '::Training.Currency.OMR' | abpLocalization }}</span>
+                <span class="detail-value">{{ formatCurrency(budget.totalAmount!) }} {{ '::Training.Currency.OMR' | abpLocalization }}</span>
               </div>
               <div>
                 <span class="detail-label">{{ '::Training.TrainingBudgets.SpentAmount' | abpLocalization }}:</span>
-                <span class="detail-value" [style.color]="config.spentColor">{{ formatCurrency(budget.spentAmount) }} {{ '::Training.Currency.OMR' | abpLocalization }}</span>
+                <span class="detail-value" [style.color]="palette.spentColor">{{ formatCurrency(budget.spentAmount!) }} {{ '::Training.Currency.OMR' | abpLocalization }}</span>
               </div>
               <div>
                 <span class="detail-label">{{ '::Training.TrainingBudgets.Remaining' | abpLocalization }}:</span>
-                <span class="detail-value remaining-value" [class.danger]="budget.isOverThreshold">{{ formatCurrency(budget.remaining) }} {{ '::Training.Currency.OMR' | abpLocalization }}</span>
+                <span class="detail-value remaining-value" [class.danger]="budget.isOverThreshold">{{ formatCurrency(budget.remaining!) }} {{ '::Training.Currency.OMR' | abpLocalization }}</span>
               </div>
               <div>
                 <span class="detail-label">{{ '::Training.TrainingBudgets.AlertThreshold' | abpLocalization }}:</span>
@@ -93,9 +94,9 @@
       [columnAutoWidth]="true"
     >
       <dxi-column
-        dataField="budgetType"
-        [caption]="'::Training.TrainingBudgets.BudgetType' | abpLocalization"
-        [width]="180"
+        dataField="financialItemNameAr"
+        [caption]="'::Training.TrainingBudgets.FinancialItem' | abpLocalization"
+        [width]="220"
         cellTemplate="typeTemplate"
       ></dxi-column>
 
@@ -133,7 +134,8 @@
       ></dxi-column>
 
       <dxi-column
-        [caption]="'::Training.Common.Actions' | abpLocalization"
+        [caption]="'::Training.Common.Actions' | abpLocalization
+"
         [width]="100"
         alignment="center"
         cellTemplate="actionsTemplate"
@@ -141,8 +143,8 @@
 
       <!-- Cell Templates -->
       <div *dxTemplate="let cell of 'typeTemplate'">
-        <span class="budget-type-pill" [attr.data-type]="cell.data.budgetType">
-          {{ l.t('::Training.BudgetType.' + getBudgetTypeKey(cell.data.budgetType)) }}
+        <span class="budget-type-pill">
+          {{ cell.data.financialItemNameAr }}
         </span>
       </div>
 
@@ -195,12 +197,12 @@
         ></dx-number-box>
       </div>
       <div class="form-group">
-        <label class="form-label">{{ '::Training.TrainingBudgets.BudgetType' | abpLocalization }} *</label>
+        <label class="form-label">{{ '::Training.TrainingBudgets.FinancialItem' | abpLocalization }} *</label>
         <dx-select-box
-          [(value)]="formData.budgetType"
-          [items]="budgetTypeOptions"
-          displayExpr="text"
-          valueExpr="value"
+          [(value)]="formData.financialItemId"
+          [items]="parentFinancialItems()"
+          displayExpr="nameAr"
+          valueExpr="id"
         ></dx-select-box>
       </div>
     </div>

@@ -1,6 +1,5 @@
 import type { EntityDto, PagedAndSortedResultRequestDto } from '@abp/ng.core';
 import type { CourseType } from '../../enums/course-type.enum';
-import type { BudgetType } from '../../enums/budget-type.enum';
 
 export interface CourseTypeFinancialItemDefaultDto extends EntityDto<string> {
   courseType?: CourseType;
@@ -30,7 +29,7 @@ export interface CreateUpdateFinancialItemDto {
 
 export interface CreateUpdateTrainingBudgetDto {
   year?: number;
-  budgetType?: BudgetType;
+  financialItemId: string;
   totalAmount?: number;
   spentAmount?: number;
   alertThreshold?: number;
@@ -64,7 +63,9 @@ export interface FinancialItemGetListInput extends PagedAndSortedResultRequestDt
 
 export interface TrainingBudgetDto extends EntityDto<string> {
   year?: number;
-  budgetType?: BudgetType;
+  financialItemId?: string;
+  financialItemNameAr?: string;
+  financialItemNameEn?: string;
   totalAmount?: number;
   spentAmount?: number;
   remaining?: number;
@@ -75,4 +76,5 @@ export interface TrainingBudgetDto extends EntityDto<string> {
 
 export interface TrainingBudgetGetListInput extends PagedAndSortedResultRequestDto {
   year?: number | null;
+  financialItemId?: string | null;
 }

@@ -208,12 +208,16 @@ public static class TrainingDbContextModelCreatingExtensions
             b.ConfigureByConvention();
 
             b.Property(x => x.Year).IsRequired();
-            b.Property(x => x.BudgetType).IsRequired();
             b.Property(x => x.TotalAmount).HasPrecision(18, 3);
             b.Property(x => x.SpentAmount).HasPrecision(18, 3);
             b.Property(x => x.AlertThreshold).HasPrecision(5, 2);
 
-            b.HasIndex(x => new { x.TenantId, x.Year, x.BudgetType })
+            b.HasOne<FinancialItem>()
+                .WithMany()
+                .HasForeignKey(x => x.FinancialItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            b.HasIndex(x => new { x.TenantId, x.Year, x.FinancialItemId })
                 .IsUnique();
         });
     }

@@ -348,11 +348,11 @@
 
     "Training.TrainingBudgets": "Training Budgets",
     "Training.TrainingBudgets.Title": "Training Budgets",
-    "Training.TrainingBudgets.Description": "Manage training budgets — 4 types per year",
+    "Training.TrainingBudgets.Description": "Manage training budgets — one per parent financial item per year",
     "Training.TrainingBudgets.Add": "Add Budget",
     "Training.TrainingBudgets.Edit": "Edit Budget",
     "Training.TrainingBudgets.Year": "Year",
-    "Training.TrainingBudgets.BudgetType": "Budget Type",
+    "Training.TrainingBudgets.FinancialItem": "Financial Item",
     "Training.TrainingBudgets.TotalAmount": "Total Amount",
     "Training.TrainingBudgets.SpentAmount": "Spent Amount",
     "Training.TrainingBudgets.Remaining": "Remaining",
@@ -360,10 +360,9 @@
     "Training.TrainingBudgets.DetailedTable": "Detailed Budget Table",
     "Training.TrainingBudgets.DeleteConfirm": "Are you sure you want to delete this budget?",
 
-    "Training.BudgetType.Internal": "Internal Training",
-    "Training.BudgetType.ExternalInternational": "International Training",
-    "Training.BudgetType.Planning": "Planning Team",
-    "Training.BudgetType.HigherEducation": "Higher Education",
+    "Training.FinancialItemName": "Financial Item",
+    "Training:TrainingBudget:MustBeParentItem": "Budget must be linked to a parent financial item, not a sub-item.",
+    "Training:TrainingBudget:AlreadyExists": "A budget already exists for this financial item in the selected year.",
 
     "Training.Currency.OMR": "OMR",
     "Training.Common.Save": "Save",

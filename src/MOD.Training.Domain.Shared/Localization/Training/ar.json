@@ -295,11 +295,11 @@
 
     "Training.TrainingBudgets": "ميزانيات التدريب",
     "Training.TrainingBudgets.Title": "ميزانيات التدريب",
-    "Training.TrainingBudgets.Description": "إدارة ميزانيات التدريب — 4 أنواع لكل سنة",
+    "Training.TrainingBudgets.Description": "إدارة ميزانيات التدريب — ميزانية واحدة لكل بند مالي رئيسي لكل سنة",
     "Training.TrainingBudgets.Add": "إضافة ميزانية",
     "Training.TrainingBudgets.Edit": "تعديل ميزانية",
     "Training.TrainingBudgets.Year": "السنة",
-    "Training.TrainingBudgets.BudgetType": "نوع الميزانية",
+    "Training.TrainingBudgets.FinancialItem": "البند المالي",
     "Training.TrainingBudgets.TotalAmount": "المبلغ الإجمالي",
     "Training.TrainingBudgets.SpentAmount": "المصروف",
     "Training.TrainingBudgets.Remaining": "المتبقي",
@@ -307,10 +307,9 @@
     "Training.TrainingBudgets.DetailedTable": "جدول الميزانيات التفصيلي",
     "Training.TrainingBudgets.DeleteConfirm": "هل أنت متأكد من حذف هذه الميزانية؟",
 
-    "Training.BudgetType.Internal": "التدريب الداخلي",
-    "Training.BudgetType.ExternalInternational": "التدريب الخارجي الدولي",
-    "Training.BudgetType.Planning": "فريق التخطيط",
-    "Training.BudgetType.HigherEducation": "الدراسات العليا",
+    "Training.FinancialItemName": "البند المالي",
+    "Training:TrainingBudget:MustBeParentItem": "يجب ربط الميزانية ببند مالي رئيسي وليس بند فرعي.",
+    "Training:TrainingBudget:AlreadyExists": "توجد ميزانية بالفعل لهذا البند المالي في السنة المحددة.",
 
     "Training.Currency.OMR": "ر.ع",
     "Training.Common.Save": "حفظ",

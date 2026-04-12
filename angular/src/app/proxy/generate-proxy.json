@@ -5292,6 +5292,79 @@
           "type": "MOD.Training.Training.Centers.CenterPlanItemAppService",
           "interfaces": [],
           "actions": {
+            "GetListAsyncByInput": {
+              "uniqueName": "GetListAsyncByInput",
+              "name": "GetListAsync",
+              "httpMethod": "GET",
+              "url": "api/app/center-plan-item",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.Centers.Dtos.CenterPlanItemGetListInput, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.Centers.Dtos.CenterPlanItemGetListInput",
+                  "typeSimple": "MOD.Training.Training.Centers.Dtos.CenterPlanItemGetListInput",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "PlanId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "Sorting",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "SkipCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "MaxResultCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                }
+              ],
+              "returnValue": {
+                "type": "Volo.Abp.Application.Dtos.PagedResultDto<MOD.Training.Training.Centers.Dtos.TrainingCenterPlanItemDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<MOD.Training.Training.Centers.Dtos.TrainingCenterPlanItemDto>"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "Volo.Abp.Application.Services.IReadOnlyAppService<MOD.Training.Training.Centers.Dtos.TrainingCenterPlanItemDto,MOD.Training.Training.Centers.Dtos.TrainingCenterPlanItemDto,System.Guid,MOD.Training.Training.Centers.Dtos.CenterPlanItemGetListInput>"
+            },
             "CreateAsyncByInput": {
               "uniqueName": "CreateAsyncByInput",
               "name": "CreateAsync",
@@ -5513,79 +5586,6 @@
               "returnValue": {
                 "type": "MOD.Training.Training.Centers.Dtos.TrainingCenterPlanItemDto",
                 "typeSimple": "MOD.Training.Training.Centers.Dtos.TrainingCenterPlanItemDto"
-              },
-              "allowAnonymous": false,
-              "implementFrom": "Volo.Abp.Application.Services.IReadOnlyAppService<MOD.Training.Training.Centers.Dtos.TrainingCenterPlanItemDto,MOD.Training.Training.Centers.Dtos.TrainingCenterPlanItemDto,System.Guid,MOD.Training.Training.Centers.Dtos.CenterPlanItemGetListInput>"
-            },
-            "GetListAsyncByInput": {
-              "uniqueName": "GetListAsyncByInput",
-              "name": "GetListAsync",
-              "httpMethod": "GET",
-              "url": "api/app/center-plan-item",
-              "supportedVersions": [],
-              "parametersOnMethod": [
-                {
-                  "name": "input",
-                  "typeAsString": "MOD.Training.Training.Centers.Dtos.CenterPlanItemGetListInput, MOD.Training.Application.Contracts",
-                  "type": "MOD.Training.Training.Centers.Dtos.CenterPlanItemGetListInput",
-                  "typeSimple": "MOD.Training.Training.Centers.Dtos.CenterPlanItemGetListInput",
-                  "isOptional": false,
-                  "defaultValue": null
-                }
-              ],
-              "parameters": [
-                {
-                  "nameOnMethod": "input",
-                  "name": "PlanId",
-                  "jsonName": null,
-                  "type": "System.Guid",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "Sorting",
-                  "jsonName": null,
-                  "type": "System.String",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "SkipCount",
-                  "jsonName": null,
-                  "type": "System.Int32",
-                  "typeSimple": "number",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "MaxResultCount",
-                  "jsonName": null,
-                  "type": "System.Int32",
-                  "typeSimple": "number",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                }
-              ],
-              "returnValue": {
-                "type": "Volo.Abp.Application.Dtos.PagedResultDto<MOD.Training.Training.Centers.Dtos.TrainingCenterPlanItemDto>",
-                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<MOD.Training.Training.Centers.Dtos.TrainingCenterPlanItemDto>"
               },
               "allowAnonymous": false,
               "implementFrom": "Volo.Abp.Application.Services.IReadOnlyAppService<MOD.Training.Training.Centers.Dtos.TrainingCenterPlanItemDto,MOD.Training.Training.Centers.Dtos.TrainingCenterPlanItemDto,System.Guid,MOD.Training.Training.Centers.Dtos.CenterPlanItemGetListInput>"
@@ -7996,6 +7996,18 @@
                   "jsonName": null,
                   "type": "System.Int32?",
                   "typeSimple": "number?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "FinancialItemId",
+                  "jsonName": null,
+                  "type": "System.Guid?",
+                  "typeSimple": "string?",
                   "isOptional": false,
                   "defaultValue": null,
                   "constraintTypes": null,
@@ -23926,24 +23938,6 @@
       "genericArguments": null,
       "properties": null
     },
-    "MOD.Training.Training.Enums.BudgetType": {
-      "baseType": "System.Enum",
-      "isEnum": true,
-      "enumNames": [
-        "Internal",
-        "ExternalInternational",
-        "Planning",
-        "HigherEducation"
-      ],
-      "enumValues": [
-        0,
-        1,
-        2,
-        3
-      ],
-      "genericArguments": null,
-      "properties": null
-    },
     "MOD.Training.Training.Enums.CenterAssignmentType": {
       "baseType": "System.Enum",
       "isEnum": true,
@@ -24307,11 +24301,11 @@
           "isNullable": false
         },
         {
-          "name": "BudgetType",
+          "name": "FinancialItemId",
           "jsonName": null,
-          "type": "MOD.Training.Training.Enums.BudgetType",
-          "typeSimple": "enum",
-          "isRequired": false,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": true,
           "minLength": null,
           "maxLength": null,
           "minimum": null,
@@ -24598,10 +24592,36 @@
           "isNullable": false
         },
         {
-          "name": "BudgetType",
+          "name": "FinancialItemId",
           "jsonName": null,
-          "type": "MOD.Training.Training.Enums.BudgetType",
-          "typeSimple": "enum",
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "FinancialItemNameAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "FinancialItemNameEn",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -24702,6 +24722,19 @@
           "jsonName": null,
           "type": "System.Int32?",
           "typeSimple": "number?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "FinancialItemId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
