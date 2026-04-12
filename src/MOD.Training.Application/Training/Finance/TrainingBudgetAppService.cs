@@ -27,6 +27,28 @@ public class TrainingBudgetAppService(
 
     public async Task<PagedResultDto<TrainingBudgetDto>> GetListAsync(TrainingBudgetGetListInput input)
     {
+        if (input.Year.HasValue)
+        {
+            var anyExist = await budgetRepo.AnyAsync(x => x.Year == input.Year.Value);
+            if (!anyExist)
+            {
+                var parentItems = await financialItemRepo.GetListAsync(
+                    x => x.ParentId == null && x.IsActive);
+
+                foreach (var parent in parentItems)
+                {
+                    await budgetRepo.InsertAsync(new TrainingBudget
+                    {
+                        Year = input.Year.Value,
+                        FinancialItemId = parent.Id,
+                        TotalAmount = 0,
+                        SpentAmount = 0,
+                        AlertThreshold = 80
+                    }, autoSave: true);
+                }
+            }
+        }
+
         var queryable = await budgetRepo.GetQueryableAsync();
 
         if (input.Year.HasValue)
@@ -77,6 +99,7 @@ public class TrainingBudgetAppService(
         {
             dto.FinancialItemNameAr = fi.NameAr;
             dto.FinancialItemNameEn = fi.NameEn;
+            dto.IsFinancialItemActive = fi.IsActive;
         }
         dto.Remaining = entity.TotalAmount - entity.SpentAmount;
         dto.SpentPercent = entity.TotalAmount > 0

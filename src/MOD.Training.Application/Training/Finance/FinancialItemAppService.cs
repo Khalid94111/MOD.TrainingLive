@@ -15,6 +15,7 @@ namespace MOD.Training.Training.Finance;
 [Authorize(TrainingPermissions.FinancialItems.Default)]
 public class FinancialItemAppService(
     IRepository<FinancialItem, Guid> financialItemRepo,
+    IRepository<TrainingBudget, Guid> budgetRepo,
     FinancialItemToDtoMapper toDtoMapper,
     CreateUpdateFinancialItemToEntityMapper toEntityMapper)
     : ApplicationService, IFinancialItemAppService
@@ -75,7 +76,27 @@ public class FinancialItemAppService(
         entity.Code = GenerateCode(input.NameEn);
         entity.IsGeneral = !input.ParentId.HasValue; // Parents are general, sub-items are not
 
-        await financialItemRepo.InsertAsync(entity);
+        await financialItemRepo.InsertAsync(entity, autoSave: true);
+
+        if (!input.ParentId.HasValue)
+        {
+            var currentYear = DateTime.Now.Year;
+            var budgetExists = await budgetRepo.AnyAsync(
+                x => x.Year == currentYear && x.FinancialItemId == entity.Id);
+
+            if (!budgetExists)
+            {
+                await budgetRepo.InsertAsync(new TrainingBudget
+                {
+                    Year = currentYear,
+                    FinancialItemId = entity.Id,
+                    TotalAmount = 0,
+                    SpentAmount = 0,
+                    AlertThreshold = 80
+                }, autoSave: true);
+            }
+        }
+
         return toDtoMapper.Map(entity);
     }
 

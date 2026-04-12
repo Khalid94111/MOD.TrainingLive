@@ -60,10 +60,27 @@ TrainingPlans (Status = Approved, Year = budget year)
 
 No schema changes — `TotalAmount` remains a `decimal` column. The change is behavioral (who writes to it).
 
-### Auto-Creation Rule
+### Auto-Creation Rules
 
-Budget records are **auto-created** when an annual plan is approved, if they don't already exist. One budget per parent FinancialItem per year per tenant.
+Budget records are auto-created in three scenarios. No manual "Create Budget" action exists.
 
+**Trigger 1: TD opens PAGE 2.4 for a new year**
+```
+On GetListAsync(year):
+  1. Check if any budgets exist for (TenantId, Year)
+  2. If none → get all active parent FinancialItems (ParentId == null, IsActive == true)
+  3. Create empty budget for each: TotalAmount = 0, SpentAmount = 0, AlertThreshold = 80
+  4. Return the list
+```
+
+**Trigger 2: New parent FinancialItem created**
+```
+On FinancialItemAppService.CreateAsync (when ParentId == null):
+  1. Create empty TrainingBudget for current year + this tenant
+  2. TotalAmount = 0, SpentAmount = 0, AlertThreshold = 80
+```
+
+**Trigger 3: Annual plan approved (TotalAmount calculation)**
 ```
 On plan approval:
   1. Get all PlanItemFinancialItems for this plan's items
@@ -74,6 +91,8 @@ On plan approval:
      c. Set AlertThreshold = 80 (default, if new record)
 ```
 
+**Deactivated parent FinancialItems:** Budget record is kept (has history). PAGE 2.4 still shows it if it has non-zero amounts. Stat cards only show active parents.
+
 ---
 
 ## Backend Changes
@@ -82,14 +101,14 @@ On plan approval:
 
 ```csharp
 // REMOVE these endpoints
-CreateAsync()   // Budgets are auto-created on plan approval
+CreateAsync()   // Budgets are auto-created (3 triggers above)
 DeleteAsync()   // Budgets should not be deleted manually
 ```
 
 ### Keep / Modify
 
 ```csharp
-// KEEP — read-only list
+// MODIFY — auto-creates missing budgets for the year, then returns list
 GetListAsync()  // Returns budgets with calculated Remaining
 
 // KEEP — read-only single
@@ -97,6 +116,71 @@ GetAsync()      // Returns single budget
 
 // MODIFY — only allows AlertThreshold update
 UpdateAsync()   // Only accepts AlertThreshold, ignores TotalAmount/SpentAmount
+```
+
+### Modify: TrainingBudgetAppService.GetListAsync
+
+```csharp
+public override async Task<PagedResultDto<TrainingBudgetDto>> GetListAsync(
+    TrainingBudgetGetListInput input)
+{
+    // Auto-create budgets for this year if none exist
+    var anyExist = await Repository.AnyAsync(
+        x => x.Year == input.Year);
+
+    if (!anyExist)
+    {
+        var parentItems = await financialItemRepository.GetListAsync(
+            x => x.ParentId == null && x.IsActive);
+
+        foreach (var parent in parentItems)
+        {
+            await Repository.InsertAsync(new TrainingBudget
+            {
+                Year = input.Year!.Value,
+                FinancialItemId = parent.Id,
+                TotalAmount = 0,
+                SpentAmount = 0,
+                AlertThreshold = 80
+            }, autoSave: true);
+        }
+    }
+
+    // Then return the list as normal
+    // ... existing GetListAsync logic with FinancialItem name resolution ...
+}
+```
+
+### Modify: FinancialItemAppService.CreateAsync (add hook)
+
+```csharp
+public override async Task<FinancialItemDto> CreateAsync(
+    CreateUpdateFinancialItemDto input)
+{
+    var entity = // ... existing create logic ...
+
+    // If this is a new parent item, auto-create budget for current year
+    if (input.ParentId == null)
+    {
+        var currentYear = DateTime.Now.Year;
+        var budgetExists = await budgetRepository.AnyAsync(
+            x => x.Year == currentYear && x.FinancialItemId == entity.Id);
+
+        if (!budgetExists)
+        {
+            await budgetRepository.InsertAsync(new TrainingBudget
+            {
+                Year = currentYear,
+                FinancialItemId = entity.Id,
+                TotalAmount = 0,
+                SpentAmount = 0,
+                AlertThreshold = 80
+            }, autoSave: true);
+        }
+    }
+
+    return MapToDto(entity);
+}
 ```
 
 ### New: UpdateAlertThresholdDto
@@ -338,8 +422,9 @@ export interface UpdateAlertThresholdDto {
 |------|--------|
 | Tables modified | 0 (behavior change only, no schema change) |
 | Endpoints removed | 2 (Create, Delete) |
-| Endpoints modified | 1 (Update — only AlertThreshold) |
+| Endpoints modified | 2 (Update — AlertThreshold only, GetList — auto-creates missing budgets) |
 | New backend service | 1 (BudgetRecalculationService) |
+| Modified backend service | 1 (FinancialItemAppService — auto-create budget on parent creation) |
 | Frontend pages modified | 1 (PAGE 2.4 → read-only dashboard) |
 | Phase 3 dependency | Plan approval must call BudgetRecalculationService |
 

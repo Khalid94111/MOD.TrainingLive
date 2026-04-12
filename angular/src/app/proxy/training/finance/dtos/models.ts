@@ -27,10 +27,6 @@ export interface CreateUpdateFinancialItemDto {
   isActive?: boolean;
 }
 
-export interface UpdateAlertThresholdDto {
-  alertThreshold: number;
-}
-
 export interface ExchangeRateDto extends EntityDto<string> {
   fromCurrency?: string;
   toCurrency?: string;
@@ -68,9 +64,14 @@ export interface TrainingBudgetDto extends EntityDto<string> {
   alertThreshold?: number;
   isOverThreshold?: boolean;
   spentPercent?: number;
+  isFinancialItemActive?: boolean;
 }
 
 export interface TrainingBudgetGetListInput extends PagedAndSortedResultRequestDto {
   year?: number | null;
   financialItemId?: string | null;
+}
+
+export interface UpdateAlertThresholdDto {
+  alertThreshold: number;
 }

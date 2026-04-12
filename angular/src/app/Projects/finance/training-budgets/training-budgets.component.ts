@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LocalizationPipe } from '@abp/ng.core';
 import { DxDataGridModule } from 'devextreme-angular/ui/data-grid';
@@ -41,6 +41,12 @@ export class TrainingBudgetsComponent implements OnInit {
   readonly l = inject(TrainingLocalizationHelper);
 
   budgets = signal<TrainingBudgetDto[]>([]);
+  activeBudgets = computed(() =>
+    this.budgets().filter(b => b.isFinancialItemActive)
+  );
+  visibleBudgets = computed(() =>
+    this.budgets().filter(b => b.isFinancialItemActive || (b.totalAmount ?? 0) > 0)
+  );
   selectedYear = signal<number>(new Date().getFullYear());
   isThresholdDialogVisible = signal(false);
 

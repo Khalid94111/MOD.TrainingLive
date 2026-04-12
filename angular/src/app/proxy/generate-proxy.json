@@ -7874,23 +7874,6 @@
                   }
                 },
                 {
-                  "name": "CreateAsync",
-                  "parametersOnMethod": [
-                    {
-                      "name": "input",
-                      "typeAsString": "MOD.Training.Training.Finance.Dtos.CreateUpdateTrainingBudgetDto, MOD.Training.Application.Contracts",
-                      "type": "MOD.Training.Training.Finance.Dtos.CreateUpdateTrainingBudgetDto",
-                      "typeSimple": "MOD.Training.Training.Finance.Dtos.CreateUpdateTrainingBudgetDto",
-                      "isOptional": false,
-                      "defaultValue": null
-                    }
-                  ],
-                  "returnValue": {
-                    "type": "MOD.Training.Training.Finance.Dtos.TrainingBudgetDto",
-                    "typeSimple": "MOD.Training.Training.Finance.Dtos.TrainingBudgetDto"
-                  }
-                },
-                {
                   "name": "UpdateAsync",
                   "parametersOnMethod": [
                     {
@@ -7903,9 +7886,9 @@
                     },
                     {
                       "name": "input",
-                      "typeAsString": "MOD.Training.Training.Finance.Dtos.CreateUpdateTrainingBudgetDto, MOD.Training.Application.Contracts",
-                      "type": "MOD.Training.Training.Finance.Dtos.CreateUpdateTrainingBudgetDto",
-                      "typeSimple": "MOD.Training.Training.Finance.Dtos.CreateUpdateTrainingBudgetDto",
+                      "typeAsString": "MOD.Training.Training.Finance.Dtos.UpdateAlertThresholdDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.Finance.Dtos.UpdateAlertThresholdDto",
+                      "typeSimple": "MOD.Training.Training.Finance.Dtos.UpdateAlertThresholdDto",
                       "isOptional": false,
                       "defaultValue": null
                     }
@@ -7913,23 +7896,6 @@
                   "returnValue": {
                     "type": "MOD.Training.Training.Finance.Dtos.TrainingBudgetDto",
                     "typeSimple": "MOD.Training.Training.Finance.Dtos.TrainingBudgetDto"
-                  }
-                },
-                {
-                  "name": "DeleteAsync",
-                  "parametersOnMethod": [
-                    {
-                      "name": "id",
-                      "typeAsString": "System.Guid, System.Private.CoreLib",
-                      "type": "System.Guid",
-                      "typeSimple": "string",
-                      "isOptional": false,
-                      "defaultValue": null
-                    }
-                  ],
-                  "returnValue": {
-                    "type": "System.Void",
-                    "typeSimple": "System.Void"
                   }
                 }
               ]
@@ -7971,7 +7937,7 @@
                 "typeSimple": "MOD.Training.Training.Finance.Dtos.TrainingBudgetDto"
               },
               "allowAnonymous": false,
-              "implementFrom": "Volo.Abp.Application.Services.IReadOnlyAppService<MOD.Training.Training.Finance.Dtos.TrainingBudgetDto,MOD.Training.Training.Finance.Dtos.TrainingBudgetDto,System.Guid,MOD.Training.Training.Finance.Dtos.TrainingBudgetGetListInput>"
+              "implementFrom": "MOD.Training.Training.Finance.ITrainingBudgetAppService"
             },
             "GetListAsyncByInput": {
               "uniqueName": "GetListAsyncByInput",
@@ -8056,44 +8022,7 @@
                 "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<MOD.Training.Training.Finance.Dtos.TrainingBudgetDto>"
               },
               "allowAnonymous": false,
-              "implementFrom": "Volo.Abp.Application.Services.IReadOnlyAppService<MOD.Training.Training.Finance.Dtos.TrainingBudgetDto,MOD.Training.Training.Finance.Dtos.TrainingBudgetDto,System.Guid,MOD.Training.Training.Finance.Dtos.TrainingBudgetGetListInput>"
-            },
-            "CreateAsyncByInput": {
-              "uniqueName": "CreateAsyncByInput",
-              "name": "CreateAsync",
-              "httpMethod": "POST",
-              "url": "api/app/training-budget",
-              "supportedVersions": [],
-              "parametersOnMethod": [
-                {
-                  "name": "input",
-                  "typeAsString": "MOD.Training.Training.Finance.Dtos.CreateUpdateTrainingBudgetDto, MOD.Training.Application.Contracts",
-                  "type": "MOD.Training.Training.Finance.Dtos.CreateUpdateTrainingBudgetDto",
-                  "typeSimple": "MOD.Training.Training.Finance.Dtos.CreateUpdateTrainingBudgetDto",
-                  "isOptional": false,
-                  "defaultValue": null
-                }
-              ],
-              "parameters": [
-                {
-                  "nameOnMethod": "input",
-                  "name": "input",
-                  "jsonName": null,
-                  "type": "MOD.Training.Training.Finance.Dtos.CreateUpdateTrainingBudgetDto",
-                  "typeSimple": "MOD.Training.Training.Finance.Dtos.CreateUpdateTrainingBudgetDto",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "Body",
-                  "descriptorName": ""
-                }
-              ],
-              "returnValue": {
-                "type": "MOD.Training.Training.Finance.Dtos.TrainingBudgetDto",
-                "typeSimple": "MOD.Training.Training.Finance.Dtos.TrainingBudgetDto"
-              },
-              "allowAnonymous": false,
-              "implementFrom": "Volo.Abp.Application.Services.ICreateAppService<MOD.Training.Training.Finance.Dtos.TrainingBudgetDto,MOD.Training.Training.Finance.Dtos.CreateUpdateTrainingBudgetDto>"
+              "implementFrom": "MOD.Training.Training.Finance.ITrainingBudgetAppService"
             },
             "UpdateAsyncByIdAndInput": {
               "uniqueName": "UpdateAsyncByIdAndInput",
@@ -8112,9 +8041,9 @@
                 },
                 {
                   "name": "input",
-                  "typeAsString": "MOD.Training.Training.Finance.Dtos.CreateUpdateTrainingBudgetDto, MOD.Training.Application.Contracts",
-                  "type": "MOD.Training.Training.Finance.Dtos.CreateUpdateTrainingBudgetDto",
-                  "typeSimple": "MOD.Training.Training.Finance.Dtos.CreateUpdateTrainingBudgetDto",
+                  "typeAsString": "MOD.Training.Training.Finance.Dtos.UpdateAlertThresholdDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.Finance.Dtos.UpdateAlertThresholdDto",
+                  "typeSimple": "MOD.Training.Training.Finance.Dtos.UpdateAlertThresholdDto",
                   "isOptional": false,
                   "defaultValue": null
                 }
@@ -8136,8 +8065,8 @@
                   "nameOnMethod": "input",
                   "name": "input",
                   "jsonName": null,
-                  "type": "MOD.Training.Training.Finance.Dtos.CreateUpdateTrainingBudgetDto",
-                  "typeSimple": "MOD.Training.Training.Finance.Dtos.CreateUpdateTrainingBudgetDto",
+                  "type": "MOD.Training.Training.Finance.Dtos.UpdateAlertThresholdDto",
+                  "typeSimple": "MOD.Training.Training.Finance.Dtos.UpdateAlertThresholdDto",
                   "isOptional": false,
                   "defaultValue": null,
                   "constraintTypes": null,
@@ -8150,44 +8079,7 @@
                 "typeSimple": "MOD.Training.Training.Finance.Dtos.TrainingBudgetDto"
               },
               "allowAnonymous": false,
-              "implementFrom": "Volo.Abp.Application.Services.IUpdateAppService<MOD.Training.Training.Finance.Dtos.TrainingBudgetDto,System.Guid,MOD.Training.Training.Finance.Dtos.CreateUpdateTrainingBudgetDto>"
-            },
-            "DeleteAsyncById": {
-              "uniqueName": "DeleteAsyncById",
-              "name": "DeleteAsync",
-              "httpMethod": "DELETE",
-              "url": "api/app/training-budget/{id}",
-              "supportedVersions": [],
-              "parametersOnMethod": [
-                {
-                  "name": "id",
-                  "typeAsString": "System.Guid, System.Private.CoreLib",
-                  "type": "System.Guid",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null
-                }
-              ],
-              "parameters": [
-                {
-                  "nameOnMethod": "id",
-                  "name": "id",
-                  "jsonName": null,
-                  "type": "System.Guid",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": [],
-                  "bindingSourceId": "Path",
-                  "descriptorName": ""
-                }
-              ],
-              "returnValue": {
-                "type": "System.Void",
-                "typeSimple": "System.Void"
-              },
-              "allowAnonymous": false,
-              "implementFrom": "Volo.Abp.Application.Services.IDeleteAppService<System.Guid>"
+              "implementFrom": "MOD.Training.Training.Finance.ITrainingBudgetAppService"
             }
           }
         },
@@ -24280,80 +24172,6 @@
         }
       ]
     },
-    "MOD.Training.Training.Finance.Dtos.CreateUpdateTrainingBudgetDto": {
-      "baseType": null,
-      "isEnum": false,
-      "enumNames": null,
-      "enumValues": null,
-      "genericArguments": null,
-      "properties": [
-        {
-          "name": "Year",
-          "jsonName": null,
-          "type": "System.Int32",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "FinancialItemId",
-          "jsonName": null,
-          "type": "System.Guid",
-          "typeSimple": "string",
-          "isRequired": true,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "TotalAmount",
-          "jsonName": null,
-          "type": "System.Decimal",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "SpentAmount",
-          "jsonName": null,
-          "type": "System.Decimal",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "AlertThreshold",
-          "jsonName": null,
-          "type": "System.Decimal",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        }
-      ]
-    },
     "MOD.Training.Training.Finance.Dtos.ExchangeRateDto": {
       "baseType": "Volo.Abp.Application.Dtos.EntityDto<System.Guid>",
       "isEnum": false,
@@ -24707,6 +24525,19 @@
           "maximum": null,
           "regex": null,
           "isNullable": false
+        },
+        {
+          "name": "IsFinancialItemActive",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
         }
       ]
     },
@@ -24742,6 +24573,28 @@
           "maximum": null,
           "regex": null,
           "isNullable": true
+        }
+      ]
+    },
+    "MOD.Training.Training.Finance.Dtos.UpdateAlertThresholdDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "AlertThreshold",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": "0",
+          "maximum": "100",
+          "regex": null,
+          "isNullable": false
         }
       ]
     },

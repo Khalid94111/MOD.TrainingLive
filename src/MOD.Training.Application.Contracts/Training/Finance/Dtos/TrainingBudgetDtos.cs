@@ -16,6 +16,7 @@ public class TrainingBudgetDto : EntityDto<Guid>
     public decimal AlertThreshold { get; set; }
     public bool IsOverThreshold { get; set; } // Computed: SpentPercent > AlertThreshold
     public decimal SpentPercent { get; set; } // Computed
+    public bool IsFinancialItemActive { get; set; }
 }
 
 public class UpdateAlertThresholdDto

@@ -9,7 +9,7 @@ import { Injectable, inject } from '@angular/core';
 export class TrainingBudgetService {
   private restService = inject(RestService);
   apiName = 'Default';
-
+  
 
   get = (id: string, config?: Partial<Rest.Config>) =>
     this.restService.request<any, TrainingBudgetDto>({
@@ -17,7 +17,7 @@ export class TrainingBudgetService {
       url: `/api/app/training-budget/${id}`,
     },
     { apiName: this.apiName,...config });
-
+  
 
   getList = (input: TrainingBudgetGetListInput, config?: Partial<Rest.Config>) =>
     this.restService.request<any, PagedResultDto<TrainingBudgetDto>>({
@@ -26,7 +26,7 @@ export class TrainingBudgetService {
       params: { year: input.year, financialItemId: input.financialItemId, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
     },
     { apiName: this.apiName,...config });
-
+  
 
   update = (id: string, input: UpdateAlertThresholdDto, config?: Partial<Rest.Config>) =>
     this.restService.request<any, TrainingBudgetDto>({

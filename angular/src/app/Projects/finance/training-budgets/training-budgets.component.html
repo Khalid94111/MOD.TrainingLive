@@ -17,7 +17,7 @@
   <div class="card-body-content">
     <!-- Dynamic Stat Cards: one per budget record -->
     <div class="stat-cards-grid">
-      @for (budget of budgets(); track budget.id; let i = $index) {
+      @for (budget of activeBudgets(); track budget.id; let i = $index) {
         @let palette = paletteFor(i);
         <div
           class="stat-card"
@@ -70,7 +70,7 @@
       }
     </div>
 
-    @if (budgets().length === 0) {
+    @if (activeBudgets().length === 0) {
       <div class="no-budget" style="padding: 40px; text-align: center;">
         {{ '::Training.BudgetAutoCalculated' | abpLocalization }}
       </div>
@@ -80,7 +80,7 @@
     <h3 class="grid-section-title">{{ '::Training.TrainingBudgets.DetailedTable' | abpLocalization }}</h3>
 
     <dx-data-grid
-      [dataSource]="budgets()"
+      [dataSource]="visibleBudgets()"
       [showBorders]="true"
       [showRowLines]="true"
       [columnAutoWidth]="true"
