@@ -101,7 +101,7 @@ export const TRAINING_ROUTE_PROVIDER = {
 // ─── Phase 2B: Centers ───
 // Centers parent menu (like Finance)
 {
-  path: '/training/centers',
+  path: '',
   name: '::Training.Menu.Centers',
   iconClass: 'bi bi-building',
   parentName: '::Training.Menu.Training',
@@ -128,6 +128,48 @@ export const TRAINING_ROUTE_PROVIDER = {
   layout: eLayoutType.application,
   requiredPolicy: 'Training.CenterPlans',
 },
+
+// ===== Phase 3: Annual Plans Group =====
+      {
+        path: '',
+        name: '::Training.Menu.Plans',
+        parentName: '::Training.Menu.Training',
+        order: 5,
+      },
+      {
+        path: '/training/plans',
+        name: '::Training.Menu.AnnualPlansList',
+        parentName: '::Training.Menu.Plans',
+        order: 1,
+        requiredPolicy: 'Training.TrainingPlan',
+      },
+
+      // ===== Phase 3: Nominations =====
+      {
+        path: '/training/nominations',
+        name: '::Training.Menu.NominationsList',
+        parentName: '::Training.Menu.Plans',
+        order: 2,
+        requiredPolicy: 'Training.Nomination',
+      },
+
+      // ===== Phase 3: Price Quotes =====
+      {
+        path: '/training/price-quotes',
+        name: '::Training.Menu.PriceQuotes',
+        parentName: '::Training.Menu.Plans',
+        order: 3,
+        requiredPolicy: 'Training.PriceQuote',
+      },
+
+      // ===== Phase 3: Training Providers =====
+      {
+        path: '/training/providers',
+        name: '::Training.Menu.Providers',
+        parentName: '::Training.Menu.Plans',
+        order: 4,
+        requiredPolicy: 'Training.TrainingProvider',
+      },
         // ── Phase 2 (uncomment when ready) ──
         // {
         //   path: '/training/finance/items',

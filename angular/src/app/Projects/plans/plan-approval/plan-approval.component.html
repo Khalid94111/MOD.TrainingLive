@@ -1,0 +1,149 @@
+<div class="page-container">
+  <div class="plan-header">
+    <div class="plan-info">
+      <h2>{{ '::Training.PlanApproval' | abpLocalization }}</h2>
+      @if (plan(); as p) {
+        <span class="plan-year">{{ p.year }}</span>
+      }
+    </div>
+    <div class="header-actions">
+      @if (showApproveButton) {
+        <dx-button
+          [text]="'::Training.ReturnPlan' | abpLocalization"
+          type="normal"
+          icon="undo"
+          (onClick)="onReturn()">
+        </dx-button>
+        <dx-button
+          [text]="'::Training.RejectPlan' | abpLocalization"
+          type="danger"
+          icon="close"
+          (onClick)="onReject()">
+        </dx-button>
+        <dx-button
+          [text]="approveButtonText"
+          type="success"
+          icon="check"
+          [disabled]="hasMissingCosts()"
+          (onClick)="onApprove()">
+        </dx-button>
+      }
+    </div>
+  </div>
+
+  @if (hasMissingCosts()) {
+    <div class="cost-warning">
+      {{ '::Training.CostGateWarning' | abpLocalization }}
+    </div>
+  }
+
+  <!-- Summary Cards -->
+  <div class="summary-cards">
+    <div class="summary-card">
+      <div class="card-value">{{ totalItems() }}</div>
+      <div class="card-label">{{ '::Training.ItemCount' | abpLocalization }}</div>
+    </div>
+    <div class="summary-card">
+      <div class="card-value">{{ totalEstimatedCost() | number:'1.3-3' }}</div>
+      <div class="card-label">{{ '::Training.TotalEstimatedCost' | abpLocalization }} (OMR)</div>
+    </div>
+    <div class="summary-card card-internal">
+      <div class="card-value">{{ internalCount() }}</div>
+      <div class="card-label">{{ '::Training.CourseType.Internal' | abpLocalization }}</div>
+    </div>
+    <div class="summary-card card-local">
+      <div class="card-value">{{ externalLocalCount() }}</div>
+      <div class="card-label">{{ '::Training.CourseType.ExternalLocal' | abpLocalization }}</div>
+    </div>
+    <div class="summary-card card-intl">
+      <div class="card-value">{{ externalIntlCount() }}</div>
+      <div class="card-label">{{ '::Training.CourseType.ExternalInternational' | abpLocalization }}</div>
+    </div>
+  </div>
+
+  <!-- Read-only Items Grid -->
+  <dx-data-grid
+    [dataSource]="items()"
+    [showBorders]="true"
+    [columnAutoWidth]="true"
+    [rowAlternationEnabled]="true"
+    keyExpr="id">
+
+    <dxi-column dataField="tenantCourseName"
+      [caption]="'::Training.Course' | abpLocalization"
+      [width]="200">
+    </dxi-column>
+
+    <dxi-column dataField="courseType"
+      [caption]="'::Training.CourseType' | abpLocalization"
+      [width]="130">
+    </dxi-column>
+
+    <dxi-column dataField="priority"
+      [caption]="'::Training.Priority' | abpLocalization"
+      [width]="60"
+      alignment="center">
+    </dxi-column>
+
+    <dxi-column dataField="preferredQuarter"
+      [caption]="'::Training.PreferredQuarter' | abpLocalization"
+      [width]="80">
+    </dxi-column>
+
+    <dxi-column dataField="capacity"
+      [caption]="'::Training.Capacity' | abpLocalization"
+      [width]="70"
+      alignment="center">
+    </dxi-column>
+
+    <dxi-column dataField="estimatedCost"
+      [caption]="'::Training.EstimatedCost' | abpLocalization"
+      [width]="120"
+      dataType="number"
+      format="#,##0.000"
+      cellTemplate="costCellTemplate">
+    </dxi-column>
+
+    <dxi-column dataField="fundingSource"
+      [caption]="'::Training.FundingSource' | abpLocalization"
+      [width]="150">
+    </dxi-column>
+
+    <dxi-column dataField="unitName"
+      caption="Unit"
+      [width]="120">
+    </dxi-column>
+
+    <div *dxTemplate="let cell of 'costCellTemplate'">
+      @if (cell.value && cell.value > 0) {
+        <span>{{ cell.value | number:'1.3-3' }}</span>
+      } @else if (cell.data.courseType !== 0) {
+        <span class="missing-cost">Missing</span>
+      } @else {
+        <span class="na-cost">N/A</span>
+      }
+    </div>
+
+  </dx-data-grid>
+
+  <!-- Reject Dialog -->
+  <dx-popup
+    [visible]="isRejectDialogVisible()"
+    [title]="'::Training.RejectPlan' | abpLocalization"
+    [showCloseButton]="true"
+    [width]="450"
+    [height]="250"
+    [toolbarItems]="rejectDialogToolbarItems"
+    (onHidden)="isRejectDialogVisible.set(false)">
+    <div class="dialog-form">
+      <div class="form-field">
+        <label>{{ '::Training.RejectionReason' | abpLocalization }}</label>
+        <dx-text-area
+          [value]="rejectReason()"
+          (onValueChanged)="updateRejectReason($event.value)"
+          [height]="80">
+        </dx-text-area>
+      </div>
+    </div>
+  </dx-popup>
+</div>

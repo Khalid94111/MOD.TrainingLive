@@ -1,0 +1,54 @@
+.page-container {
+  padding: 24px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+
+  h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+}
+
+.dialog-form {
+  padding: 16px;
+
+  .form-field {
+    margin-bottom: 14px;
+
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+  }
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-pending {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.badge-approved {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.badge-rejected {
+  background: #fecaca;
+  color: #b91c1c;
+}

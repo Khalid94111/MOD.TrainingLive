@@ -9,8 +9,7 @@ using MOD.Training.Training.Permissions;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
-using YourApp.Training;
-
+ 
 namespace MOD.Training.Training.CourseFields;
 
 [Authorize(TrainingPermissions.CourseFields.Default)]

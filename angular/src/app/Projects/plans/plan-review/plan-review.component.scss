@@ -1,0 +1,87 @@
+.page-container {
+  padding: 24px;
+}
+
+.plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+
+  h2 { margin: 0; font-size: 1.25rem; font-weight: 600; }
+}
+
+.plan-year {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #1e40af;
+  margin-inline-start: 10px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.review-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.section-items, .section-financials {
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #374151;
+  }
+}
+
+.financial-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.financial-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.empty-state {
+  padding: 32px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.875rem;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+}
+
+.dialog-form {
+  padding: 16px;
+
+  .form-field {
+    margin-bottom: 14px;
+
+    label {
+      display: block;
+      margin-bottom: 3px;
+      font-weight: 500;
+      font-size: 0.8rem;
+    }
+  }
+}
+
+.type-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.type-internal { background: #dbeafe; color: #1d4ed8; }
+.type-local { background: #d1fae5; color: #047857; }
+.type-intl { background: #ede9fe; color: #6d28d9; }

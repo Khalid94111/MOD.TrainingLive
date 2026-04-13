@@ -1,0 +1,138 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>{{ '::Training.TrainingProviders' | abpLocalization }}</h2>
+    @if (canCreate) {
+      <dx-button
+        [text]="'::Training.CreateProvider' | abpLocalization"
+        type="default"
+        icon="plus"
+        (onClick)="onAdd()">
+      </dx-button>
+    }
+  </div>
+
+  <dx-data-grid
+    [dataSource]="providers()"
+    [showBorders]="true"
+    [columnAutoWidth]="true"
+    [rowAlternationEnabled]="true"
+    keyExpr="id">
+
+    <dxi-column dataField="providerNameAr"
+      [caption]="'::Training.ProviderNameAr' | abpLocalization"
+      [width]="200">
+    </dxi-column>
+
+    <dxi-column dataField="providerNameEn"
+      [caption]="'::Training.ProviderNameEn' | abpLocalization"
+      [width]="200">
+    </dxi-column>
+
+    <dxi-column dataField="contactPerson"
+      [caption]="'::Training.ContactPerson' | abpLocalization"
+      [width]="150">
+    </dxi-column>
+
+    <dxi-column dataField="email"
+      [caption]="'::Training.Email' | abpLocalization"
+      [width]="180">
+    </dxi-column>
+
+    <dxi-column dataField="phone"
+      [caption]="'::Training.Phone' | abpLocalization"
+      [width]="120">
+    </dxi-column>
+
+    <dxi-column dataField="averageRating"
+      [caption]="'::Training.AverageRating' | abpLocalization"
+      [width]="80"
+      alignment="center"
+      dataType="number"
+      format="#.0">
+    </dxi-column>
+
+    <dxi-column dataField="isApproved"
+      [caption]="'::Training.IsApproved' | abpLocalization"
+      [width]="80"
+      dataType="boolean">
+    </dxi-column>
+
+    <dxi-column dataField="isActive"
+      [caption]="'::Training.IsActive' | abpLocalization"
+      [width]="80"
+      dataType="boolean">
+    </dxi-column>
+
+    <dxi-column
+      [caption]="'::Actions' | abpLocalization"
+      [width]="100"
+      cellTemplate="actionsTemplate"
+      [allowSorting]="false">
+    </dxi-column>
+
+    <div *dxTemplate="let cell of 'actionsTemplate'">
+      <dx-button icon="edit" stylingMode="text" (onClick)="onEdit(cell.data)"></dx-button>
+      <dx-button icon="trash" stylingMode="text" (onClick)="onDelete(cell.data.id)"></dx-button>
+    </div>
+
+  </dx-data-grid>
+
+  <!-- Create/Edit Dialog -->
+  <dx-popup
+    [visible]="isDialogVisible()"
+    [title]="dialogTitle"
+    [showCloseButton]="true"
+    [width]="550"
+    [height]="520"
+    [toolbarItems]="dialogToolbarItems"
+    (onHidden)="isDialogVisible.set(false)">
+    <div class="dialog-form">
+      <div class="form-row">
+        <div class="form-field flex-1">
+          <label>{{ '::Training.ProviderNameAr' | abpLocalization }} *</label>
+          <dx-text-box [value]="formData().providerNameAr" (onValueChanged)="updateNameAr($event.value)"></dx-text-box>
+        </div>
+        <div class="form-field flex-1">
+          <label>{{ '::Training.ProviderNameEn' | abpLocalization }} *</label>
+          <dx-text-box [value]="formData().providerNameEn" (onValueChanged)="updateNameEn($event.value)"></dx-text-box>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>{{ '::Training.ContactPerson' | abpLocalization }}</label>
+        <dx-text-box [value]="formData().contactPerson" (onValueChanged)="updateContactPerson($event.value)"></dx-text-box>
+      </div>
+      <div class="form-row">
+        <div class="form-field flex-1">
+          <label>{{ '::Training.Email' | abpLocalization }}</label>
+          <dx-text-box [value]="formData().email" (onValueChanged)="updateEmail($event.value)" mode="email"></dx-text-box>
+        </div>
+        <div class="form-field flex-1">
+          <label>{{ '::Training.Phone' | abpLocalization }}</label>
+          <dx-text-box [value]="formData().phone" (onValueChanged)="updatePhone($event.value)" mode="tel"></dx-text-box>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>{{ '::Training.Website' | abpLocalization }}</label>
+        <dx-text-box [value]="formData().website" (onValueChanged)="updateWebsite($event.value)" mode="url"></dx-text-box>
+      </div>
+      <div class="form-row">
+        <div class="form-field flex-1">
+          <dx-check-box
+            [text]="'::Training.IsApproved' | abpLocalization"
+            [value]="formData().isApproved"
+            (onValueChanged)="updateIsApproved($event.value)">
+          </dx-check-box>
+        </div>
+        <div class="form-field flex-1">
+          <dx-switch
+            [value]="formData().isActive"
+            (onValueChanged)="updateIsActive($event.value)">
+          </dx-switch>
+          <span class="switch-label">
+            @if (formData().isActive) { Active } @else { Inactive }
+          </span>
+        </div>
+      </div>
+    </div>
+  </dx-popup>
+</div>

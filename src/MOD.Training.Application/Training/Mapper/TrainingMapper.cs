@@ -6,7 +6,7 @@ using MOD.Training.Training.TenantCourses;
 using MOD.Training.Training.TenantCourses.Dtos;
 using Riok.Mapperly.Abstractions;
 
-namespace YourApp.Training;
+namespace MOD.Training.Training;
 
 /// <summary>
 /// Mapperly source-generated mapper. Replaces AutoMapper profile for ABP 10.x.

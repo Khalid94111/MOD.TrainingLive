@@ -5,6 +5,8 @@ using MOD.Training.Training;
 using MOD.Training.Training.Catalog;
 using MOD.Training.Training.Centers;
 using MOD.Training.Training.Finance;
+using MOD.Training.Training.Nominations;
+using MOD.Training.Training.Plans;
 using MOD.Training.Training.System;
 using MOD.Training.Training.TenantCourses;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
@@ -62,6 +64,22 @@ public class TrainingDbContext : AbpDbContext<TrainingDbContext>, ISaasDbContext
     public DbSet<TrainingCenterPlanItem> TrainingCenterPlanItems { get; set; }
     public DbSet<TrainingCenterPlanItemUnit> TrainingCenterPlanItemUnits { get; set; }
 
+// Plans
+public DbSet<TrainingPlan> TrainingPlans { get; set; }
+public DbSet<TrainingPlanItem> TrainingPlanItems { get; set; }
+public DbSet<PlanItemCondition> PlanItemConditions { get; set; }
+public DbSet<Course> Courses { get; set; }
+public DbSet<CourseSession> CourseSessions { get; set; }
+public DbSet<SessionCondition> SessionConditions { get; set; }
+
+// Finance (Phase 3 additions)
+public DbSet<PlanItemFinancialItem> PlanItemFinancialItems { get; set; }
+public DbSet<PriceQuote> PriceQuotes { get; set; }
+public DbSet<TrainingProvider> TrainingProviders { get; set; }
+
+// Nominations
+public DbSet<Nomination> Nominations { get; set; }
+public DbSet<NominationApproval> NominationApprovals { get; set; }
 
 
 

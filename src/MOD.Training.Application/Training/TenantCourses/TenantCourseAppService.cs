@@ -13,7 +13,6 @@ using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Users;
-using YourApp.Training;
 
 namespace MOD.Training.Training.TenantCourses;
 

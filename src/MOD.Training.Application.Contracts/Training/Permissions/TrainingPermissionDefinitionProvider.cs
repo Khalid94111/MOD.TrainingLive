@@ -1,6 +1,6 @@
+using MOD.Training.Training.Localization;
 using Volo.Abp.Authorization.Permissions;
 using Volo.Abp.Localization;
-using MOD.Training.Training.Localization;
 
 namespace MOD.Training.Training.Permissions;
 
@@ -28,7 +28,7 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
         tenantCourses.AddChild(TrainingPermissions.TenantCourses.Create, L("Permission:TenantCourses.Create"));
         tenantCourses.AddChild(TrainingPermissions.TenantCourses.Update, L("Permission:TenantCourses.Update"));
         tenantCourses.AddChild(TrainingPermissions.TenantCourses.Delete, L("Permission:TenantCourses.Delete"));
-        tenantCourses.AddChild(TrainingPermissions.TenantCourses.EditConditions,L("Permission:TenantCourses.EditConditions"));
+        tenantCourses.AddChild(TrainingPermissions.TenantCourses.EditConditions, L("Permission:TenantCourses.EditConditions"));
 
         var plans = group.AddPermission(TrainingPermissions.TrainingPlans.Default, L("Permission:TrainingPlans"));
         plans.AddChild(TrainingPermissions.TrainingPlans.Create, L("Permission:TrainingPlans.Create"));
@@ -172,7 +172,80 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
         centerPlanItemsPermission.AddChild(
             TrainingPermissions.CenterPlanItems.SetUnits,
             L("Permission:CenterPlanItems.SetUnits"));
+        // --- Phase 3: Annual Plans ---
+        var trainingPlanGroup = group.AddPermission(
+            TrainingPermissions.TrainingPlan.Default,
+            L("Permission:TrainingPlan"));
+        trainingPlanGroup.AddChild(
+            TrainingPermissions.TrainingPlan.Create, L("Permission:TrainingPlan.Create"));
+        trainingPlanGroup.AddChild(
+            TrainingPermissions.TrainingPlan.Update, L("Permission:TrainingPlan.Update"));
+        trainingPlanGroup.AddChild(
+            TrainingPermissions.TrainingPlan.Delete, L("Permission:TrainingPlan.Delete"));
+        trainingPlanGroup.AddChild(
+            TrainingPermissions.TrainingPlan.Submit, L("Permission:TrainingPlan.Submit"));
+        trainingPlanGroup.AddChild(
+            TrainingPermissions.TrainingPlan.Review, L("Permission:TrainingPlan.Review"));
+        trainingPlanGroup.AddChild(
+            TrainingPermissions.TrainingPlan.Approve, L("Permission:TrainingPlan.Approve"));
+        trainingPlanGroup.AddChild(
+            TrainingPermissions.TrainingPlan.FinalApprove, L("Permission:TrainingPlan.FinalApprove"));
 
+        var planItemGroup = group.AddPermission(
+            TrainingPermissions.TrainingPlanItem.Default,
+            L("Permission:TrainingPlanItem"));
+        planItemGroup.AddChild(
+            TrainingPermissions.TrainingPlanItem.Create, L("Permission:TrainingPlanItem.Create"));
+        planItemGroup.AddChild(
+            TrainingPermissions.TrainingPlanItem.Update, L("Permission:TrainingPlanItem.Update"));
+        planItemGroup.AddChild(
+            TrainingPermissions.TrainingPlanItem.Delete, L("Permission:TrainingPlanItem.Delete"));
+        planItemGroup.AddChild(
+            TrainingPermissions.TrainingPlanItem.AssignFinancials, L("Permission:TrainingPlanItem.AssignFinancials"));
+
+        // --- Phase 3: Nominations ---
+        var nominationGroup = group.AddPermission(
+            TrainingPermissions.Nomination.Default,
+            L("Permission:Nomination"));
+        nominationGroup.AddChild(
+            TrainingPermissions.Nomination.Create, L("Permission:Nomination.Create"));
+        nominationGroup.AddChild(
+            TrainingPermissions.Nomination.ApproveUGM, L("Permission:Nomination.ApproveUGM"));
+        nominationGroup.AddChild(
+            TrainingPermissions.Nomination.ApproveTD, L("Permission:Nomination.ApproveTD"));
+
+        // --- Phase 3: Price Quotes ---
+        var priceQuoteGroup = group.AddPermission(
+            TrainingPermissions.PriceQuote.Default,
+            L("Permission:PriceQuote"));
+        priceQuoteGroup.AddChild(
+            TrainingPermissions.PriceQuote.Create, L("Permission:PriceQuote.Create"));
+        priceQuoteGroup.AddChild(
+            TrainingPermissions.PriceQuote.Update, L("Permission:PriceQuote.Update"));
+        priceQuoteGroup.AddChild(
+            TrainingPermissions.PriceQuote.Delete, L("Permission:PriceQuote.Delete"));
+
+        // --- Phase 3: Training Providers ---
+        var providerGroup = group.AddPermission(
+            TrainingPermissions.TrainingProvider.Default,
+            L("Permission:TrainingProvider"));
+        providerGroup.AddChild(
+            TrainingPermissions.TrainingProvider.Create, L("Permission:TrainingProvider.Create"));
+        providerGroup.AddChild(
+            TrainingPermissions.TrainingProvider.Update, L("Permission:TrainingProvider.Update"));
+        providerGroup.AddChild(
+            TrainingPermissions.TrainingProvider.Delete, L("Permission:TrainingProvider.Delete"));
+
+        // --- Phase 3: Course Sessions ---
+        var sessionGroup = group.AddPermission(
+            TrainingPermissions.CourseSession.Default,
+            L("Permission:CourseSession"));
+        sessionGroup.AddChild(
+            TrainingPermissions.CourseSession.Create, L("Permission:CourseSession.Create"));
+        sessionGroup.AddChild(
+            TrainingPermissions.CourseSession.Update, L("Permission:CourseSession.Update"));
+        sessionGroup.AddChild(
+            TrainingPermissions.CourseSession.Delete, L("Permission:CourseSession.Delete"));
 
     }
 

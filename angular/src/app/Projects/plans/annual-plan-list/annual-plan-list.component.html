@@ -1,0 +1,132 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>{{ '::Training.TrainingPlans' | abpLocalization }}</h2>
+    @if (canCreate) {
+      <dx-button
+        [text]="'::Training.CreatePlan' | abpLocalization"
+        type="default"
+        icon="plus"
+        (onClick)="onAdd()">
+      </dx-button>
+    }
+  </div>
+
+  <dx-data-grid
+    [dataSource]="plans()"
+    [showBorders]="true"
+    [columnAutoWidth]="true"
+    [rowAlternationEnabled]="true"
+    keyExpr="id">
+
+    <dxi-column dataField="year"
+      [caption]="'::Training.PlanYear' | abpLocalization"
+      [width]="80"
+      alignment="center">
+    </dxi-column>
+
+    <dxi-column dataField="status"
+      [caption]="'::Training.PlanStatus' | abpLocalization"
+      [width]="130"
+      cellTemplate="statusTemplate">
+    </dxi-column>
+
+    <dxi-column dataField="openDate"
+      [caption]="'::Training.OpenDate' | abpLocalization"
+      dataType="date"
+      [width]="120">
+    </dxi-column>
+
+    <dxi-column dataField="closeDate"
+      [caption]="'::Training.CloseDate' | abpLocalization"
+      dataType="date"
+      [width]="120">
+    </dxi-column>
+
+    <dxi-column dataField="itemCount"
+      [caption]="'::Training.ItemCount' | abpLocalization"
+      [width]="80"
+      alignment="center">
+    </dxi-column>
+
+    <dxi-column
+      [caption]="'::Actions' | abpLocalization"
+      [width]="200"
+      cellTemplate="actionsTemplate"
+      [allowSorting]="false">
+    </dxi-column>
+
+    <!-- Status badge template -->
+    <div *dxTemplate="let cell of 'statusTemplate'">
+      <span class="status-badge" [ngClass]="getStatusBadgeClass(cell.value)">
+        {{ '::Training.PlanStatus.' + PlanStatus[cell.value] | abpLocalization }}
+      </span>
+    </div>
+
+    <!-- Actions template -->
+    <div *dxTemplate="let cell of 'actionsTemplate'">
+      @switch (cell.data.status) {
+        @case (0) {
+          <dx-button icon="edit" stylingMode="text" (onClick)="onEdit(cell.data)"></dx-button>
+          <dx-button icon="folder" stylingMode="text" hint="Open Window" (onClick)="onOpenWindow(cell.data.id)"></dx-button>
+          <dx-button icon="trash" stylingMode="text" (onClick)="onDelete(cell.data.id)"></dx-button>
+        }
+        @case (1) {
+          <dx-button icon="doc" stylingMode="text" hint="Entry" (onClick)="navigateToEntry(cell.data.id)"></dx-button>
+          <dx-button icon="close" stylingMode="text" hint="Close Window" (onClick)="onCloseWindow(cell.data.id)"></dx-button>
+        }
+        @case (2) {
+          <dx-button icon="search" stylingMode="text" hint="Review" (onClick)="navigateToReview(cell.data.id)"></dx-button>
+        }
+        @case (3) {
+          <dx-button icon="check" stylingMode="text" hint="Approve" (onClick)="navigateToApproval(cell.data.id)"></dx-button>
+        }
+        @case (4) {
+          <dx-button icon="check" stylingMode="text" hint="Final Approve" (onClick)="navigateToApproval(cell.data.id)"></dx-button>
+        }
+        @default {
+          <dx-button icon="search" stylingMode="text" hint="View" (onClick)="navigateToApproval(cell.data.id)"></dx-button>
+        }
+      }
+    </div>
+
+  </dx-data-grid>
+
+  <!-- Create/Edit Dialog -->
+  <dx-popup
+    [visible]="isDialogVisible()"
+    [title]="dialogTitle"
+    [showCloseButton]="true"
+    [width]="400"
+    [height]="300"
+    [toolbarItems]="dialogToolbarItems"
+    (onHidden)="isDialogVisible.set(false)">
+    <div class="dialog-form">
+      <div class="form-field">
+        <label>{{ '::Training.PlanYear' | abpLocalization }}</label>
+        <dx-number-box
+          [value]="formData().year"
+          (onValueChanged)="updateYear($event.value)"
+          [min]="2020"
+          [max]="2050"
+          [readOnly]="isEditMode()">
+        </dx-number-box>
+      </div>
+      <div class="form-field">
+        <label>{{ '::Training.OpenDate' | abpLocalization }}</label>
+        <dx-date-box
+          [value]="formData().openDate"
+          (onValueChanged)="updateOpenDate($event.value)"
+          type="date">
+        </dx-date-box>
+      </div>
+      <div class="form-field">
+        <label>{{ '::Training.CloseDate' | abpLocalization }}</label>
+        <dx-date-box
+          [value]="formData().closeDate"
+          (onValueChanged)="updateCloseDate($event.value)"
+          type="date">
+        </dx-date-box>
+      </div>
+    </div>
+  </dx-popup>
+</div>

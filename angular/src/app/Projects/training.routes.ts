@@ -91,7 +91,48 @@ export const TRAINING_ROUTES: Routes = [
         (m) => m.CenterPlansComponent
       ),
   },
+ // ===== Phase 3: Annual Plans =====
+  {
+    path: 'plans',
+    loadComponent: () =>
+      import('./plans/annual-plan-list/annual-plan-list.component').then(m => m.AnnualPlanListComponent),
+  },
+  {
+    path: 'plans/:planId/entry',
+    loadComponent: () =>
+      import('./plans/plan-entry/plan-entry.component').then(m => m.PlanEntryComponent),
+  },
+  {
+    path: 'plans/:planId/review',
+    loadComponent: () =>
+      import('./plans/plan-review/plan-review.component').then(m => m.PlanReviewComponent),
+  },
+  {
+    path: 'plans/:planId/approve',
+    loadComponent: () =>
+      import('./plans/plan-approval/plan-approval.component').then(m => m.PlanApprovalComponent),
+  },
 
+  // ===== Phase 3: Nominations =====
+  {
+    path: 'nominations',
+    loadComponent: () =>
+      import('./nominations/nomination-list/nomination-list.component').then(m => m.NominationListComponent),
+  },
+
+  // ===== Phase 3: Price Quotes =====
+  {
+    path: 'price-quotes',
+    loadComponent: () =>
+      import('./price-quotes/price-quote-list/price-quote-list.component').then(m => m.PriceQuoteListComponent),
+  },
+
+  // ===== Phase 3: Training Providers =====
+  {
+    path: 'providers',
+    loadComponent: () =>
+      import('./providers/provider-list/provider-list.component').then(m => m.ProviderListComponent),
+  },
 
       // Phase 2 (future)
       // { path: 'finance/items', loadComponent: () => import(...) },

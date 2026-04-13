@@ -1,0 +1,167 @@
+<div class="page-container">
+  <div class="page-header">
+    <h2>{{ '::Training.PriceQuotes' | abpLocalization }}</h2>
+    @if (canCreate) {
+      <dx-button
+        [text]="'::Training.CreatePriceQuote' | abpLocalization"
+        type="default"
+        icon="plus"
+        (onClick)="onAdd()">
+      </dx-button>
+    }
+  </div>
+
+  <dx-data-grid
+    [dataSource]="quotes()"
+    [showBorders]="true"
+    [columnAutoWidth]="true"
+    [rowAlternationEnabled]="true"
+    keyExpr="id">
+
+    <dxi-column dataField="courseName"
+      [caption]="'::Training.Course' | abpLocalization"
+      [width]="180">
+    </dxi-column>
+
+    <dxi-column dataField="providerName"
+      [caption]="'::Training.TrainingProvider' | abpLocalization"
+      [width]="180">
+    </dxi-column>
+
+    <dxi-column dataField="pricingType"
+      [caption]="'::Training.PricingType' | abpLocalization"
+      [width]="120"
+      cellTemplate="pricingTypeTemplate">
+    </dxi-column>
+
+    <dxi-column dataField="pricePerPerson"
+      [caption]="'::Training.PricePerPerson' | abpLocalization"
+      dataType="number"
+      format="#,##0.000"
+      [width]="120">
+    </dxi-column>
+
+    <dxi-column dataField="totalPrice"
+      [caption]="'::Training.TotalPrice' | abpLocalization"
+      dataType="number"
+      format="#,##0.000"
+      [width]="120">
+    </dxi-column>
+
+    <dxi-column dataField="participantsCount"
+      [caption]="'::Training.ParticipantsCount' | abpLocalization"
+      [width]="80"
+      alignment="center">
+    </dxi-column>
+
+    <dxi-column dataField="status"
+      [caption]="'::Training.PlanStatus' | abpLocalization"
+      [width]="100"
+      cellTemplate="statusTemplate">
+    </dxi-column>
+
+    <dxi-column
+      [caption]="'::Actions' | abpLocalization"
+      [width]="150"
+      cellTemplate="actionsTemplate"
+      [allowSorting]="false">
+    </dxi-column>
+
+    <div *dxTemplate="let cell of 'pricingTypeTemplate'">
+      @if (cell.value === 0) {
+        <span>{{ '::Training.PricingType.PerPerson' | abpLocalization }}</span>
+      } @else {
+        <span>{{ '::Training.PricingType.Total' | abpLocalization }}</span>
+      }
+    </div>
+
+    <div *dxTemplate="let cell of 'statusTemplate'">
+      @switch (cell.value) {
+        @case (0) { <span class="status-badge badge-pending">Pending</span> }
+        @case (1) { <span class="status-badge badge-approved">Approved</span> }
+        @case (2) { <span class="status-badge badge-rejected">Rejected</span> }
+      }
+    </div>
+
+    <div *dxTemplate="let cell of 'actionsTemplate'">
+      <dx-button icon="edit" stylingMode="text" (onClick)="onEdit(cell.data)"></dx-button>
+      @if (cell.data.status === 0) {
+        <dx-button icon="check" stylingMode="text" hint="Approve" (onClick)="onApprove(cell.data.id)"></dx-button>
+        <dx-button icon="close" stylingMode="text" hint="Reject" (onClick)="onReject(cell.data.id)"></dx-button>
+      }
+      <dx-button icon="trash" stylingMode="text" (onClick)="onDelete(cell.data.id)"></dx-button>
+    </div>
+
+  </dx-data-grid>
+
+  <!-- Create/Edit Dialog -->
+  <dx-popup
+    [visible]="isDialogVisible()"
+    [title]="dialogTitle"
+    [showCloseButton]="true"
+    [width]="500"
+    [height]="520"
+    [toolbarItems]="dialogToolbarItems"
+    (onHidden)="isDialogVisible.set(false)">
+    <div class="dialog-form">
+      <div class="form-field">
+        <label>{{ '::Training.Session' | abpLocalization }}</label>
+        <dx-select-box
+          [dataSource]="sessions()"
+          displayExpr="sessionCode"
+          valueExpr="id"
+          [value]="formData().sessionId"
+          (onValueChanged)="updateSessionId($event.value)"
+          [searchEnabled]="true">
+        </dx-select-box>
+      </div>
+      <div class="form-field">
+        <label>{{ '::Training.TrainingProvider' | abpLocalization }}</label>
+        <dx-select-box
+          [dataSource]="providers()"
+          displayExpr="providerNameAr"
+          valueExpr="id"
+          [value]="formData().providerId"
+          (onValueChanged)="updateProviderId($event.value)"
+          [searchEnabled]="true">
+        </dx-select-box>
+      </div>
+      <div class="form-field">
+        <label>{{ '::Training.PricingType' | abpLocalization }}</label>
+        <dx-radio-group
+          [items]="pricingTypes"
+          displayExpr="text"
+          valueExpr="value"
+          [value]="formData().pricingType"
+          (onValueChanged)="updatePricingType($event.value)"
+          layout="horizontal">
+        </dx-radio-group>
+      </div>
+      <div class="form-field">
+        <label>{{ '::Training.QuotedPrice' | abpLocalization }}</label>
+        <dx-number-box
+          [value]="formData().quotedPrice"
+          (onValueChanged)="updateQuotedPrice($event.value)"
+          format="#,##0.000"
+          [min]="0">
+        </dx-number-box>
+      </div>
+      <div class="form-field">
+        <label>{{ '::Training.ParticipantsCount' | abpLocalization }}</label>
+        <dx-number-box
+          [value]="formData().participantsCount"
+          (onValueChanged)="updateParticipantsCount($event.value)"
+          [min]="1">
+        </dx-number-box>
+      </div>
+      <div class="form-field">
+        <label>{{ '::Training.Notes' | abpLocalization }}</label>
+        <dx-text-area
+          [value]="formData().notes"
+          (onValueChanged)="updateNotes($event.value)"
+          [height]="60">
+        </dx-text-area>
+      </div>
+    </div>
+  </dx-popup>
+</div>

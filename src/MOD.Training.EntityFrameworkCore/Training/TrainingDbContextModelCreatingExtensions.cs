@@ -3,6 +3,8 @@ using MOD.Training.Training.Catalog;
 using MOD.Training.Training.Centers;
 using MOD.Training.Training.Consts;
 using MOD.Training.Training.Finance;
+using MOD.Training.Training.Nominations;
+using MOD.Training.Training.Plans;
 using MOD.Training.Training.System;
 using MOD.Training.Training.TenantCourses;
 using Volo.Abp;
@@ -24,6 +26,9 @@ public static class TrainingDbContextModelCreatingExtensions
         builder.ConfigureTenantCourses();
         builder.ConfigureTrainingSystem();
         builder.ConfigureFinance();
+        builder.ConfigurePlans();
+builder.ConfigureNominations();
+builder.ConfigureFinancePhase3();
     }
 
     private static void ConfigureCatalog(this ModelBuilder builder)
@@ -283,5 +288,201 @@ public static class TrainingDbContextModelCreatingExtensions
             b.HasIndex(x => new { x.PlanItemId, x.UnitId }).IsUnique();
         });
     }
+ public static void ConfigurePlans(this ModelBuilder builder)
+    {
+        builder.Entity<TrainingPlan>(b =>
+        {
+            b.ToTable(TrainingConsts.DbTablePrefix + "TrainingPlans", TrainingConsts.DbSchema);
+            b.ConfigureByConvention();
 
+            b.Property(x => x.Year).IsRequired();
+            b.Property(x => x.Status).IsRequired();
+
+            b.HasIndex(x => new { x.TenantId, x.Year }).IsUnique();
+        });
+
+        builder.Entity<TrainingPlanItem>(b =>
+        {
+            b.ToTable(TrainingConsts.DbTablePrefix + "TrainingPlanItems", TrainingConsts.DbSchema);
+            b.ConfigureByConvention();
+
+            b.Property(x => x.PlanId).IsRequired();
+            b.Property(x => x.TenantCourseId).IsRequired();
+            b.Property(x => x.CourseType).IsRequired();
+            b.Property(x => x.PreferredQuarter).IsRequired();
+            b.Property(x => x.Priority).IsRequired();
+            b.Property(x => x.OfficersCount).IsRequired();
+            b.Property(x => x.EnlistedCount).IsRequired();
+            b.Property(x => x.Capacity).IsRequired();
+            b.Property(x => x.Justification).IsRequired().HasMaxLength(TrainingConsts.MaxJustificationLength);
+            b.Property(x => x.DescriptionAr).HasMaxLength(TrainingConsts.MaxDescriptionLength);
+            b.Property(x => x.DescriptionEn).HasMaxLength(TrainingConsts.MaxDescriptionLength);
+            b.Property(x => x.ObjectivesAr).HasMaxLength(TrainingConsts.MaxObjectivesLength);
+            b.Property(x => x.ObjectivesEn).HasMaxLength(TrainingConsts.MaxObjectivesLength);
+            b.Property(x => x.EstimatedCost).HasColumnType("decimal(18,3)");
+            b.Property(x => x.FundingSource).HasMaxLength(TrainingConsts.MaxFundingSourceLength);
+            b.Property(x => x.SubmittedById).IsRequired();
+
+            b.HasOne(x => x.Plan).WithMany().HasForeignKey(x => x.PlanId).OnDelete(DeleteBehavior.Cascade);
+
+            b.HasIndex(x => x.PlanId);
+            b.HasIndex(x => x.TenantCourseId);
+        });
+
+        builder.Entity<PlanItemCondition>(b =>
+        {
+            b.ToTable(TrainingConsts.DbTablePrefix + "PlanItemConditions", TrainingConsts.DbSchema);
+            b.ConfigureByConvention();
+
+            b.Property(x => x.PlanItemId).IsRequired();
+            b.Property(x => x.ConditionType).IsRequired();
+            b.Property(x => x.ConditionValue).IsRequired().HasMaxLength(TrainingConsts.MaxConditionValueLength);
+
+            b.HasOne(x => x.PlanItem).WithMany().HasForeignKey(x => x.PlanItemId).OnDelete(DeleteBehavior.Cascade);
+
+            b.HasIndex(x => x.PlanItemId);
+        });
+
+        builder.Entity<Course>(b =>
+        {
+            b.ToTable(TrainingConsts.DbTablePrefix + "Courses", TrainingConsts.DbSchema);
+            b.ConfigureByConvention();
+
+            b.Property(x => x.TenantCourseId).IsRequired();
+            b.Property(x => x.CourseType).IsRequired();
+            b.Property(x => x.Status).IsRequired();
+
+            b.HasIndex(x => x.TenantCourseId);
+        });
+
+        builder.Entity<CourseSession>(b =>
+        {
+            b.ToTable(TrainingConsts.DbTablePrefix + "CourseSessions", TrainingConsts.DbSchema);
+            b.ConfigureByConvention();
+
+            b.Property(x => x.CourseId).IsRequired();
+            b.Property(x => x.SessionCode).IsRequired().HasMaxLength(TrainingConsts.MaxSessionCodeLength);
+            b.Property(x => x.StartDate).IsRequired();
+            b.Property(x => x.EndDate).IsRequired();
+            b.Property(x => x.Location).HasMaxLength(TrainingConsts.MaxLocationLength);
+            b.Property(x => x.Country).HasMaxLength(TrainingConsts.MaxLocationLength);
+            b.Property(x => x.MaxSeats).IsRequired();
+            b.Property(x => x.AvailableSeats).IsRequired();
+            b.Property(x => x.Cost).HasColumnType("decimal(18,3)");
+            b.Property(x => x.Status).IsRequired();
+            b.Property(x => x.CompletionStatus).IsRequired();
+
+            b.HasOne(x => x.Course).WithMany().HasForeignKey(x => x.CourseId).OnDelete(DeleteBehavior.Cascade);
+
+            b.HasIndex(x => x.CourseId);
+            b.HasIndex(x => x.SessionCode);
+        });
+
+        builder.Entity<SessionCondition>(b =>
+        {
+            b.ToTable(TrainingConsts.DbTablePrefix + "SessionConditions", TrainingConsts.DbSchema);
+            b.ConfigureByConvention();
+
+            b.Property(x => x.SessionId).IsRequired();
+            b.Property(x => x.ConditionType).IsRequired();
+            b.Property(x => x.ConditionValue).IsRequired().HasMaxLength(TrainingConsts.MaxConditionValueLength);
+
+            b.HasOne(x => x.Session).WithMany().HasForeignKey(x => x.SessionId).OnDelete(DeleteBehavior.Cascade);
+
+            b.HasIndex(x => x.SessionId);
+        });
+    }
+     public static void ConfigureNominations(this ModelBuilder builder)
+    {
+        builder.Entity<Nomination>(b =>
+        {
+            b.ToTable(TrainingConsts.DbTablePrefix + "Nominations", TrainingConsts.DbSchema);
+            b.ConfigureByConvention();
+
+            b.Property(x => x.SessionId).IsRequired();
+            b.Property(x => x.EmployeeId).IsRequired();
+            b.Property(x => x.NominatedById).IsRequired();
+            b.Property(x => x.Status).IsRequired();
+            b.Property(x => x.NominatedAt).IsRequired();
+            b.Property(x => x.ResultValue).HasMaxLength(TrainingConsts.MaxCodeLength);
+
+            b.HasOne(x => x.Session).WithMany().HasForeignKey(x => x.SessionId).OnDelete(DeleteBehavior.Restrict);
+
+            b.HasIndex(x => x.SessionId);
+            b.HasIndex(x => x.EmployeeId);
+            b.HasIndex(x => new { x.SessionId, x.EmployeeId }).IsUnique();
+        });
+
+        builder.Entity<NominationApproval>(b =>
+        {
+            b.ToTable(TrainingConsts.DbTablePrefix + "NominationApprovals", TrainingConsts.DbSchema);
+            b.ConfigureByConvention();
+
+            b.Property(x => x.NominationId).IsRequired();
+            b.Property(x => x.ApprovalLevel).IsRequired();
+            b.Property(x => x.Status).IsRequired();
+            b.Property(x => x.Notes).HasMaxLength(TrainingConsts.MaxNotesLength);
+
+            b.HasOne(x => x.Nomination).WithMany().HasForeignKey(x => x.NominationId).OnDelete(DeleteBehavior.Cascade);
+
+            b.HasIndex(x => x.NominationId);
+            b.HasIndex(x => new { x.NominationId, x.ApprovalLevel }).IsUnique();
+        });
+    }
+    public static void ConfigureFinancePhase3(this ModelBuilder builder)
+    {
+        builder.Entity<PlanItemFinancialItem>(b =>
+        {
+            b.ToTable(TrainingConsts.DbTablePrefix + "PlanItemFinancialItems", TrainingConsts.DbSchema);
+            b.ConfigureByConvention();
+
+            b.Property(x => x.PlanItemId).IsRequired();
+            b.Property(x => x.FinancialItemId).IsRequired();
+            b.Property(x => x.EstimatedAmountOMR).IsRequired().HasColumnType("decimal(18,3)");
+            b.Property(x => x.EstimatedAmountUSD).HasColumnType("decimal(18,2)");
+            b.Property(x => x.ActualAmountOMR).HasColumnType("decimal(18,3)");
+            b.Property(x => x.ActualAmountUSD).HasColumnType("decimal(18,2)");
+            b.Property(x => x.Notes).HasMaxLength(TrainingConsts.MaxNotesLength);
+
+            b.HasIndex(x => x.PlanItemId);
+            b.HasIndex(x => new { x.PlanItemId, x.FinancialItemId }).IsUnique();
+        });
+
+        builder.Entity<PriceQuote>(b =>
+        {
+            b.ToTable(TrainingConsts.DbTablePrefix + "PriceQuotes", TrainingConsts.DbSchema);
+            b.ConfigureByConvention();
+
+            b.Property(x => x.SessionId).IsRequired();
+            b.Property(x => x.ProviderId).IsRequired();
+            b.Property(x => x.PricingType).IsRequired();
+            b.Property(x => x.QuotedPrice).IsRequired().HasColumnType("decimal(18,3)");
+            b.Property(x => x.PricePerPerson).HasColumnType("decimal(18,3)");
+            b.Property(x => x.TotalPrice).HasColumnType("decimal(18,3)");
+            b.Property(x => x.ParticipantsCount).IsRequired();
+            b.Property(x => x.Status).IsRequired();
+            b.Property(x => x.Notes).HasMaxLength(TrainingConsts.MaxNotesLength);
+
+            b.HasOne(x => x.Provider).WithMany().HasForeignKey(x => x.ProviderId).OnDelete(DeleteBehavior.Restrict);
+            b.HasOne(x => x.Session).WithMany().HasForeignKey(x => x.SessionId).OnDelete(DeleteBehavior.Restrict);
+
+            b.HasIndex(x => x.SessionId);
+            b.HasIndex(x => x.ProviderId);
+        });
+
+        builder.Entity<TrainingProvider>(b =>
+        {
+            b.ToTable(TrainingConsts.DbTablePrefix + "TrainingProviders", TrainingConsts.DbSchema);
+            b.ConfigureByConvention();
+
+            b.Property(x => x.ProviderNameAr).IsRequired().HasMaxLength(TrainingConsts.MaxProviderNameLength);
+            b.Property(x => x.ProviderNameEn).IsRequired().HasMaxLength(TrainingConsts.MaxProviderNameLength);
+            b.Property(x => x.ContactPerson).HasMaxLength(TrainingConsts.MaxContactPersonLength);
+            b.Property(x => x.Email).HasMaxLength(TrainingConsts.MaxEmailLength);
+            b.Property(x => x.Phone).HasMaxLength(TrainingConsts.MaxPhoneLength);
+            b.Property(x => x.Address).HasMaxLength(TrainingConsts.MaxAddressLength);
+            b.Property(x => x.Website).HasMaxLength(TrainingConsts.MaxWebsiteLength);
+            b.Property(x => x.AverageRating).HasColumnType("decimal(3,2)");
+        });
+    }
 }

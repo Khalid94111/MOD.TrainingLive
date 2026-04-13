@@ -1,0 +1,297 @@
+<div class="page-container">
+  <!-- Top bar -->
+  <div class="plan-header">
+    <div class="plan-info">
+      <h2>{{ '::Training.TrainingPlanItem' | abpLocalization }}</h2>
+      @if (plan(); as p) {
+        <div class="plan-meta">
+          <span class="plan-year">{{ p.year }}</span>
+          <span class="status-badge" [ngClass]="'badge-' + p.status">
+            {{ '::Training.PlanStatus.' + PlanStatus[p.status] | abpLocalization }}
+          </span>
+          @if (p.openDate) {
+            <span class="date-range">{{ p.openDate | date:'shortDate' }} — {{ p.closeDate | date:'shortDate' }}</span>
+          }
+        </div>
+      }
+    </div>
+    @if (isWindowOpen) {
+      <dx-button
+        [text]="'::Training.AddPlanItem' | abpLocalization"
+        type="default"
+        icon="plus"
+        (onClick)="onAddItem()">
+      </dx-button>
+    }
+  </div>
+
+  @if (!isWindowOpen) {
+    <div class="info-banner">
+      {{ '::Training.SubmissionWindowClosed' | abpLocalization }}
+    </div>
+  }
+
+  <!-- Items Grid -->
+  <dx-data-grid
+    [dataSource]="items()"
+    [showBorders]="true"
+    [columnAutoWidth]="true"
+    [rowAlternationEnabled]="true"
+    keyExpr="id">
+
+    <dxi-column dataField="tenantCourseId"
+      [caption]="'::Training.Course' | abpLocalization"
+      [width]="200">
+      <dxo-lookup
+        [dataSource]="tenantCourses()"
+        valueExpr="id"
+        displayExpr="catalogCourseNameAr">
+      </dxo-lookup>
+    </dxi-column>
+
+    <dxi-column dataField="courseType"
+      [caption]="'::Training.CourseType' | abpLocalization"
+      [width]="130"
+      cellTemplate="courseTypeTemplate">
+    </dxi-column>
+
+    <dxi-column dataField="priority"
+      [caption]="'::Training.Priority' | abpLocalization"
+      [width]="60"
+      alignment="center">
+    </dxi-column>
+
+    <dxi-column dataField="preferredQuarter"
+      [caption]="'::Training.PreferredQuarter' | abpLocalization"
+      [width]="80"
+      cellTemplate="quarterTemplate">
+    </dxi-column>
+
+    <dxi-column dataField="officersCount"
+      [caption]="'::Training.OfficersCount' | abpLocalization"
+      [width]="70"
+      alignment="center">
+    </dxi-column>
+
+    <dxi-column dataField="enlistedCount"
+      [caption]="'::Training.EnlistedCount' | abpLocalization"
+      [width]="70"
+      alignment="center">
+    </dxi-column>
+
+    <dxi-column dataField="capacity"
+      [caption]="'::Training.Capacity' | abpLocalization"
+      [width]="70"
+      alignment="center">
+    </dxi-column>
+
+    <dxi-column
+      [caption]="'::Training.Duration' | abpLocalization"
+      [width]="130"
+      cellTemplate="durationTemplate"
+      [allowSorting]="false">
+    </dxi-column>
+
+    <dxi-column dataField="fundingSource"
+      [caption]="'::Training.FundingSource' | abpLocalization"
+      [width]="150">
+    </dxi-column>
+
+    <dxi-column
+      [caption]="'::Actions' | abpLocalization"
+      [width]="100"
+      cellTemplate="actionsTemplate"
+      [allowSorting]="false">
+    </dxi-column>
+
+    <div *dxTemplate="let cell of 'courseTypeTemplate'">
+      @switch (cell.value) {
+        @case (0) { <span class="type-badge type-internal">{{ '::Training.CourseType.Internal' | abpLocalization }}</span> }
+        @case (1) { <span class="type-badge type-local">{{ '::Training.CourseType.ExternalLocal' | abpLocalization }}</span> }
+        @case (2) { <span class="type-badge type-intl">{{ '::Training.CourseType.ExternalInternational' | abpLocalization }}</span> }
+      }
+    </div>
+
+    <div *dxTemplate="let cell of 'quarterTemplate'">
+      {{ '::Training.PreferredQuarter.Q' + cell.value | abpLocalization }}
+    </div>
+
+    <div *dxTemplate="let cell of 'durationTemplate'">
+      {{ getDurationText(cell.data) }}
+    </div>
+
+    <div *dxTemplate="let cell of 'actionsTemplate'">
+      @if (isWindowOpen) {
+        <dx-button icon="edit" stylingMode="text" (onClick)="onEditItem(cell.data)"></dx-button>
+        <dx-button icon="trash" stylingMode="text" (onClick)="onDeleteItem(cell.data.id)"></dx-button>
+      }
+    </div>
+
+  </dx-data-grid>
+
+  <!-- Add/Edit Plan Item Dialog -->
+  <dx-popup
+    [visible]="isDialogVisible()"
+    [title]="dialogTitle"
+    [showCloseButton]="true"
+    [width]="700"
+    [height]="680"
+    [toolbarItems]="dialogToolbarItems"
+    (onHidden)="isDialogVisible.set(false)">
+    <div class="dialog-form">
+      <div class="form-row">
+        <div class="form-field flex-2">
+          <label>{{ '::Training.Course' | abpLocalization }} *</label>
+          <dx-select-box
+            [dataSource]="tenantCourses()"
+            displayExpr="catalogCourseNameAr"
+            valueExpr="id"
+            [value]="formData().tenantCourseId"
+            (onValueChanged)="updateTenantCourseId($event.value)"
+            [searchEnabled]="true">
+          </dx-select-box>
+          <!-- <dx-select-box
+          [value]="formData().tenantCourseId"
+          (valueChange)="onTenantCourseChanged($event)"
+          [items]="tenantCourses()"
+          valueExpr="id"
+          displayExpr="catalogCourseNameAr"
+          [searchEnabled]="true"
+          [placeholder]="'::Training.Course' | abpLocalization"
+        ></dx-select-box> -->
+        </div>
+        <div class="form-field flex-1">
+          <label>{{ '::Training.CourseType' | abpLocalization }} *</label>
+          <dx-select-box
+            [dataSource]="courseTypes"
+            displayExpr="text"
+            valueExpr="value"
+            [value]="formData().courseType"
+            (onValueChanged)="updateCourseType($event.value)">
+          </dx-select-box>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field flex-1">
+          <label>{{ '::Training.Priority' | abpLocalization }} *</label>
+          <dx-number-box
+            [value]="formData().priority"
+            (onValueChanged)="updatePriority($event.value)"
+            [min]="1" [max]="5">
+          </dx-number-box>
+        </div>
+        <div class="form-field flex-1">
+          <label>{{ '::Training.PreferredQuarter' | abpLocalization }} *</label>
+          <dx-select-box
+            [dataSource]="quarters"
+            displayExpr="text"
+            valueExpr="value"
+            [value]="formData().preferredQuarter"
+            (onValueChanged)="updatePreferredQuarter($event.value)">
+          </dx-select-box>
+        </div>
+        <div class="form-field flex-1">
+          <label>{{ '::Training.OfficersCount' | abpLocalization }} *</label>
+          <dx-number-box
+            [value]="formData().officersCount"
+            (onValueChanged)="updateOfficersCount($event.value)"
+            [min]="0">
+          </dx-number-box>
+        </div>
+        <div class="form-field flex-1">
+          <label>{{ '::Training.EnlistedCount' | abpLocalization }} *</label>
+          <dx-number-box
+            [value]="formData().enlistedCount"
+            (onValueChanged)="updateEnlistedCount($event.value)"
+            [min]="0">
+          </dx-number-box>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label>{{ '::Training.Justification' | abpLocalization }} *</label>
+        <dx-text-area
+          [value]="formData().justification"
+          (onValueChanged)="updateJustification($event.value)"
+          [height]="60">
+        </dx-text-area>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field flex-1">
+          <label>{{ '::Training.Objectives' | abpLocalization }} (AR)</label>
+          <dx-text-area
+            [value]="formData().objectivesAr"
+            (onValueChanged)="updateObjectivesAr($event.value)"
+            [height]="50">
+          </dx-text-area>
+        </div>
+        <div class="form-field flex-1">
+          <label>{{ '::Training.Objectives' | abpLocalization }} (EN)</label>
+          <dx-text-area
+            [value]="formData().objectivesEn"
+            (onValueChanged)="updateObjectivesEn($event.value)"
+            [height]="50">
+          </dx-text-area>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field flex-1">
+          <label>{{ '::Training.DurationDays' | abpLocalization }}</label>
+          <dx-number-box
+            [value]="formData().durationDays"
+            (onValueChanged)="updateDurationDays($event.value)"
+            [min]="0" [max]="30">
+          </dx-number-box>
+        </div>
+        
+        <div class="form-field flex-1">
+          <label>{{ '::Training.DurationMonths' | abpLocalization }}</label>
+          <dx-number-box
+            [value]="formData().durationMonths"
+            (onValueChanged)="updateDurationMonths($event.value)"
+            [min]="0" [max]="11">
+          </dx-number-box>
+        </div>
+        <div class="form-field flex-1">
+          <label>{{ '::Training.DurationYears' | abpLocalization }}</label>
+          <dx-number-box
+            [value]="formData().durationYears"
+            (onValueChanged)="updateDurationYears($event.value)"
+            [min]="0">
+          </dx-number-box>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field flex-1">
+          <label>{{ '::Training.EstimatedDateFrom' | abpLocalization }}</label>
+          <dx-date-box
+            [value]="formData().estimatedDateFrom"
+            (onValueChanged)="updateEstimatedDateFrom($event.value)"
+            type="date">
+          </dx-date-box>
+        </div>
+        <div class="form-field flex-1">
+          <label>{{ '::Training.EstimatedDateTo' | abpLocalization }}</label>
+          <dx-date-box
+            [value]="formData().estimatedDateTo"
+            (onValueChanged)="updateEstimatedDateTo($event.value)"
+            type="date">
+          </dx-date-box>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label>{{ '::Training.FundingSource' | abpLocalization }}</label>
+        <dx-text-box
+          [value]="formData().fundingSource"
+          (onValueChanged)="updateFundingSource($event.value)"
+          placeholder="Nebras budget code">
+        </dx-text-box>
+      </div>
+    </div>
+  </dx-popup>
+</div>

@@ -31,4 +31,20 @@ public static class TrainingConsts
     public const int MaxNotesLength = 2000;
     public const int MaxFundingSourceLength = 256;
     public const int MaxJustificationLength = 1000;
+
+
+
+    // === Phase 3: Sessions ===
+    public const int MaxSessionCodeLength = 50;
+    public const int MaxLocationLength = 256;
+
+    // === Phase 3: Providers ===
+    public const int MaxProviderNameLength = 256;
+    public const int MaxContactPersonLength = 128;
+    public const int MaxEmailLength = 256;
+    public const int MaxPhoneLength = 50;
+    public const int MaxAddressLength = 500;
+    public const int MaxWebsiteLength = 256;
+    public const int MaxObjectivesLength = 256;
+ 
 }

@@ -4,5 +4,7 @@ import * as CourseFields from './course-fields';
 import * as CourseProposals from './course-proposals';
 import * as Enums from './enums';
 import * as Finance from './finance';
+import * as Nominations from './nominations';
+import * as Plans from './plans';
 import * as TenantCourses from './tenant-courses';
-export { Catalog, Centers, CourseFields, CourseProposals, Enums, Finance, TenantCourses };
+export { Catalog, Centers, CourseFields, CourseProposals, Enums, Finance, Nominations, Plans, TenantCourses };
