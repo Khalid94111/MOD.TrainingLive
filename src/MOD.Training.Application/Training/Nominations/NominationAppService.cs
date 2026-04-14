@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using MOD.Training.Training.Enums;
+using MOD.Training.Training.Managers;
 using MOD.Training.Training.Nominations.Dtos;
 using MOD.Training.Training.Permissions;
 using MOD.Training.Training.Plans;
@@ -19,6 +20,9 @@ public class NominationAppService(
     IRepository<Nomination, Guid> repository,
     IRepository<NominationApproval, Guid> approvalRepository,
     IRepository<CourseSession, Guid> sessionRepository,
+    EmployeeResolver employeeResolver,
+    CourseNameResolver courseNameResolver,
+    NominationConditionValidator conditionValidator,
     NominationToDtoMapper toDtoMapper,
     NominationApprovalToDtoMapper approvalToDtoMapper)
     : ApplicationService, INominationAppService
@@ -26,7 +30,9 @@ public class NominationAppService(
     public async Task<NominationDto> GetAsync(Guid id)
     {
         var entity = await repository.GetAsync(id);
-        return toDtoMapper.Map(entity);
+        var dto = toDtoMapper.Map(entity);
+        await EnrichDtoAsync(dto, entity);
+        return dto;
     }
 
     public async Task<PagedResultDto<NominationDto>> GetListAsync(NominationGetListInput input)
@@ -41,25 +47,64 @@ public class NominationAppService(
             queryable = queryable.Where(x => x.EmployeeId == input.EmployeeId.Value);
 
         var totalCount = await AsyncExecuter.CountAsync(queryable);
-
         queryable = queryable.OrderByDescending(x => x.NominatedAt);
         queryable = queryable.PageBy(input);
 
         var entities = await AsyncExecuter.ToListAsync(queryable);
-        var dtos = entities.Select(e => toDtoMapper.Map(e)).ToList();
 
-        // TODO: batch resolve EmployeeName, SessionCode, CourseName via HR + session lookups
+        // Batch resolve employee names
+        var employeeIds = entities.Select(x => x.EmployeeId).Distinct().ToList();
+        var nominatorUserIds = entities.Select(x => x.NominatedById).Distinct().ToList();
+        var sessionIds = entities.Select(x => x.SessionId).Distinct().ToList();
+
+        var employees = await employeeResolver.BatchResolveByIdsAsync(employeeIds);
+        var nominators = await employeeResolver.BatchResolveByUserIdsAsync(nominatorUserIds);
+
+        // Resolve session → course names
+        var sessionCourseMap = new Dictionary<Guid, (string code, string nameAr)>();
+        foreach (var sid in sessionIds)
+        {
+            var session = await sessionRepository.FindAsync(sid);
+            if (session != null)
+            {
+                var course = await courseNameResolver.ResolveAsync(session.CourseId);
+                // CourseSession.CourseId → Course.TenantCourseId → we need to go through Course entity
+                // For simplicity, store the session code
+                sessionCourseMap[sid] = (session.SessionCode, course?.NameAr ?? "");
+            }
+        }
+
+        var dtos = entities.Select(e =>
+        {
+            var dto = toDtoMapper.Map(e);
+
+            if (employees.TryGetValue(e.EmployeeId, out var emp))
+            {
+                dto.EmployeeName = emp.FullNameAr;
+            }
+
+            if (nominators.TryGetValue(e.NominatedById, out var nominator))
+            {
+                dto.NominatedByName = nominator.FullNameAr;
+            }
+
+            if (sessionCourseMap.TryGetValue(e.SessionId, out var sessionInfo))
+            {
+                dto.SessionCode = sessionInfo.code;
+                dto.CourseName = sessionInfo.nameAr;
+            }
+
+            return dto;
+        }).ToList();
 
         return new PagedResultDto<NominationDto>(totalCount, dtos);
     }
 
-    // UTM batch nominates (MOD-17)
     [Authorize(TrainingPermissions.Nomination.Create)]
     public async Task<List<NominationDto>> CreateBatchAsync(CreateNominationDto input)
     {
         var session = await sessionRepository.GetAsync(input.SessionId);
 
-        // Validate available seats
         if (session.AvailableSeats < input.EmployeeIds.Count)
             throw new Volo.Abp.BusinessException("Training:Nomination:SessionFull");
 
@@ -74,8 +119,15 @@ public class NominationAppService(
             if (alreadyNominated)
                 throw new Volo.Abp.BusinessException("Training:Nomination:AlreadyNominated");
 
-            // TODO: validate 9 conditions against employee HR data
-            // await ValidateConditionsAsync(input.SessionId, employeeId);
+            // Validate 9 conditions against employee HR data
+            var conditionResults = await conditionValidator.ValidateAsync(input.SessionId, employeeId);
+            var failedConditions = conditionResults.Where(r => !r.Passed).ToList();
+            if (failedConditions.Any())
+            {
+                var details = string.Join(" | ", failedConditions.Select(f => $"{f.ConditionTypeAr}: {f.Details}"));
+                throw new Volo.Abp.BusinessException("Training:Nomination:ConditionFailed")
+                    .WithData("Details", details);
+            }
 
             var nomination = new Nomination(
                 GuidGenerator.Create(),
@@ -83,19 +135,20 @@ public class NominationAppService(
                 employeeId,
                 CurrentUser.Id!.Value);
 
-            // Auto-approve level 1 (UTM) since UTM is the creator
+            // Auto-approve level 1 (UTM) since UTM is the creator (MOD-17)
             nomination.Status = NominationStatus.UTMApproved;
 
             await repository.InsertAsync(nomination, autoSave: true);
 
             // Create 3-level approval chain
             // Level 1: UTM — auto-approved
-            var utmApproval = new NominationApproval(
-                GuidGenerator.Create(), nomination.Id, 1);
-            utmApproval.ApprovedById = CurrentUser.Id;
-            utmApproval.Status = ApprovalStatus.Approved;
-            utmApproval.ActionDate = DateTime.Now;
-            await approvalRepository.InsertAsync(utmApproval, autoSave: true);
+            await approvalRepository.InsertAsync(new NominationApproval(
+                GuidGenerator.Create(), nomination.Id, 1)
+            {
+                ApprovedById = CurrentUser.Id,
+                Status = ApprovalStatus.Approved,
+                ActionDate = DateTime.Now,
+            }, autoSave: true);
 
             // Level 2: UGM — pending
             await approvalRepository.InsertAsync(
@@ -110,7 +163,9 @@ public class NominationAppService(
             // Decrement available seats
             session.AvailableSeats--;
 
-            results.Add(toDtoMapper.Map(nomination));
+            var dto = toDtoMapper.Map(nomination);
+            await EnrichDtoAsync(dto, nomination);
+            results.Add(dto);
         }
 
         await sessionRepository.UpdateAsync(session, autoSave: true);
@@ -118,22 +173,18 @@ public class NominationAppService(
         return results;
     }
 
-    // UGM or TD approves
     public async Task ApproveAsync(Guid id, ApproveRejectNominationDto input)
     {
         var nomination = await repository.GetAsync(id);
 
-        // Find the next pending approval level
         var approvalsQueryable = await approvalRepository.GetQueryableAsync();
         var pendingApproval = await AsyncExecuter.FirstOrDefaultAsync(
             approvalsQueryable
                 .Where(x => x.NominationId == id && x.Status == ApprovalStatus.Pending)
                 .OrderBy(x => x.ApprovalLevel));
 
-        if (pendingApproval == null)
-            return; // Already fully approved
+        if (pendingApproval == null) return;
 
-        // Authorize based on level
         if (pendingApproval.ApprovalLevel == 2)
             await AuthorizationService.CheckAsync(TrainingPermissions.Nomination.ApproveUGM);
         else if (pendingApproval.ApprovalLevel == 3)
@@ -145,7 +196,6 @@ public class NominationAppService(
         pendingApproval.Notes = input.Notes;
         await approvalRepository.UpdateAsync(pendingApproval, autoSave: true);
 
-        // Update nomination status
         nomination.Status = pendingApproval.ApprovalLevel switch
         {
             2 => NominationStatus.UGMApproved,
@@ -193,17 +243,42 @@ public class NominationAppService(
             queryable.Where(x => x.NominationId == nominationId)
                 .OrderBy(x => x.ApprovalLevel));
 
+        // Resolve approver names
+        var approverUserIds = approvals
+            .Where(a => a.ApprovedById.HasValue)
+            .Select(a => a.ApprovedById!.Value)
+            .Distinct().ToList();
+        var approvers = await employeeResolver.BatchResolveByUserIdsAsync(approverUserIds);
+
         return approvals.Select(a =>
         {
             var dto = approvalToDtoMapper.Map(a);
             dto.ApprovalLevelName = a.ApprovalLevel switch
             {
-                1 => "UTM",
-                2 => "UGM",
-                3 => "TD",
-                _ => $"Level {a.ApprovalLevel}"
+                1 => "مدير التدريب بالوحدة (UTM)",
+                2 => "المدير العام للوحدة (UGM)",
+                3 => "مدير التدريب (TD)",
+                _ => $"المستوى {a.ApprovalLevel}"
             };
+
+            if (a.ApprovedById.HasValue && approvers.TryGetValue(a.ApprovedById.Value, out var approver))
+            {
+                dto.ApprovedByName = approver.FullNameAr;
+            }
+
             return dto;
         }).ToList();
+    }
+
+    private async Task EnrichDtoAsync(NominationDto dto, Nomination entity)
+    {
+        var emp = await employeeResolver.GetByIdAsync(entity.EmployeeId);
+        if (emp != null) dto.EmployeeName = emp.FullNameAr;
+
+        var nominator = await employeeResolver.GetByUserIdAsync(entity.NominatedById);
+        if (nominator != null) dto.NominatedByName = nominator.FullNameAr;
+
+        var session = await sessionRepository.FindAsync(entity.SessionId);
+        if (session != null) dto.SessionCode = session.SessionCode;
     }
 }

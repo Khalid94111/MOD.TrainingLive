@@ -129,7 +129,9 @@ export const TRAINING_ROUTE_PROVIDER = {
   requiredPolicy: 'Training.CenterPlans',
 },
 
-// ===== Phase 3: Annual Plans Group =====
+  // ──────────────────────────────────
+      // Phase 3: Annual Plans Group
+      // ──────────────────────────────────
       {
         path: '',
         name: '::Training.Menu.Plans',
@@ -143,8 +145,6 @@ export const TRAINING_ROUTE_PROVIDER = {
         order: 1,
         requiredPolicy: 'Training.TrainingPlan',
       },
-
-      // ===== Phase 3: Nominations =====
       {
         path: '/training/nominations',
         name: '::Training.Menu.NominationsList',
@@ -152,8 +152,6 @@ export const TRAINING_ROUTE_PROVIDER = {
         order: 2,
         requiredPolicy: 'Training.Nomination',
       },
-
-      // ===== Phase 3: Price Quotes =====
       {
         path: '/training/price-quotes',
         name: '::Training.Menu.PriceQuotes',
@@ -161,8 +159,6 @@ export const TRAINING_ROUTE_PROVIDER = {
         order: 3,
         requiredPolicy: 'Training.PriceQuote',
       },
-
-      // ===== Phase 3: Training Providers =====
       {
         path: '/training/providers',
         name: '::Training.Menu.Providers',

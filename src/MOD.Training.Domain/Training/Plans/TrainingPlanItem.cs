@@ -2,7 +2,7 @@ using MOD.Training.Training.Enums;
 using System;
 using Volo.Abp.Domain.Entities.Auditing;
 using Volo.Abp.MultiTenancy;
-
+ 
 namespace MOD.Training.Training.Plans;
 
 public class TrainingPlanItem : FullAuditedEntity<Guid>, IMultiTenant
@@ -26,10 +26,10 @@ public class TrainingPlanItem : FullAuditedEntity<Guid>, IMultiTenant
     public int DurationDays { get; set; }
     public DateTime? EstimatedDateFrom { get; set; }
     public DateTime? EstimatedDateTo { get; set; }
-    public decimal? EstimatedCost { get; set; } // Entered by Staff during review
+    // EstimatedCost REMOVED — auto-calculated from SUM(PlanItemFinancialItem.EstimatedAmountOMR)
     public string? FundingSource { get; set; } // Casual only, free text
     public Guid SubmittedById { get; set; } // UTM user (MOD-17)
-    public Guid? UnitId { get; set; } // Auto from logged-in user's OrgUnit
+    public Guid? UnitId { get; set; } // Auto from Employee.MainUnitId
 
     public TrainingPlan? Plan { get; set; }
 

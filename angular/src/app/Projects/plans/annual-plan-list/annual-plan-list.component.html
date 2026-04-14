@@ -1,132 +1,143 @@
-<div class="page-container">
-  <div class="page-header">
-    <h2>{{ '::Training.TrainingPlans' | abpLocalization }}</h2>
+<div class="gtms-card">
+  <div class="gtms-card-header">
+    <div>
+      <h2 class="gtms-card-title">📋 الخطط السنوية</h2>
+      <p class="gtms-card-subtitle">إنشاء وإدارة خطط التدريب السنوية لكل جهة</p>
+    </div>
     @if (canCreate) {
-      <dx-button
-        [text]="'::Training.CreatePlan' | abpLocalization"
-        type="default"
-        icon="plus"
-        (onClick)="onAdd()">
-      </dx-button>
+      <button class="btn btn-primary" (click)="openCreateDialog()">
+        ➕ إنشاء خطة جديدة
+      </button>
     }
   </div>
 
-  <dx-data-grid
-    [dataSource]="plans()"
-    [showBorders]="true"
-    [columnAutoWidth]="true"
-    [rowAlternationEnabled]="true"
-    keyExpr="id">
-
-    <dxi-column dataField="year"
-      [caption]="'::Training.PlanYear' | abpLocalization"
-      [width]="80"
-      alignment="center">
-    </dxi-column>
-
-    <dxi-column dataField="status"
-      [caption]="'::Training.PlanStatus' | abpLocalization"
-      [width]="130"
-      cellTemplate="statusTemplate">
-    </dxi-column>
-
-    <dxi-column dataField="openDate"
-      [caption]="'::Training.OpenDate' | abpLocalization"
-      dataType="date"
-      [width]="120">
-    </dxi-column>
-
-    <dxi-column dataField="closeDate"
-      [caption]="'::Training.CloseDate' | abpLocalization"
-      dataType="date"
-      [width]="120">
-    </dxi-column>
-
-    <dxi-column dataField="itemCount"
-      [caption]="'::Training.ItemCount' | abpLocalization"
-      [width]="80"
-      alignment="center">
-    </dxi-column>
-
-    <dxi-column
-      [caption]="'::Actions' | abpLocalization"
-      [width]="200"
-      cellTemplate="actionsTemplate"
-      [allowSorting]="false">
-    </dxi-column>
-
-    <!-- Status badge template -->
-    <div *dxTemplate="let cell of 'statusTemplate'">
-      <span class="status-badge" [ngClass]="getStatusBadgeClass(cell.value)">
-        {{ '::Training.PlanStatus.' + PlanStatus[cell.value] | abpLocalization }}
-      </span>
-    </div>
-
-    <!-- Actions template -->
-    <div *dxTemplate="let cell of 'actionsTemplate'">
-      @switch (cell.data.status) {
-        @case (0) {
-          <dx-button icon="edit" stylingMode="text" (onClick)="onEdit(cell.data)"></dx-button>
-          <dx-button icon="folder" stylingMode="text" hint="Open Window" (onClick)="onOpenWindow(cell.data.id)"></dx-button>
-          <dx-button icon="trash" stylingMode="text" (onClick)="onDelete(cell.data.id)"></dx-button>
+  <!-- Table -->
+  <div class="gtms-table-wrap">
+    <table class="gtms-table">
+      <thead>
+        <tr>
+          <th class="center">السنة</th>
+          <th class="center">الحالة</th>
+          <th class="center">تاريخ الفتح</th>
+          <th class="center">تاريخ الإغلاق</th>
+          <th class="center">عدد البنود</th>
+          <th class="center">التكلفة المقدرة (ر.ع.)</th>
+          <th class="center">إجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (plan of plans(); track plan.id) {
+          <tr>
+            <td class="center cell-bold" style="font-size: 1.1rem; color: #1e40af;">{{ plan.year }}</td>
+            <td class="center">
+              <span class="badge" [class]="getStatusBadgeClass(plan.status)">
+                {{ getStatusText(plan.status) }}
+              </span>
+            </td>
+            <td class="center">{{ formatDate(plan.openDate) }}</td>
+            <td class="center">{{ formatDate(plan.closeDate) }}</td>
+            <td class="center">
+              <span class="badge badge-open">{{ plan.itemCount }}</span>
+            </td>
+            <td class="center cell-money">{{ formatCost(plan.totalEstimatedCost) }}</td>
+            <td class="center">
+              @switch (plan.status) {
+                @case (PlanStatus.Draft) {
+                  <button class="btn-icon" title="فتح نافذة الاستلام" (click)="onOpenWindow(plan.id)">📂</button>
+                  <button class="btn-icon" title="حذف" (click)="onDelete(plan.id)">🗑️</button>
+                }
+                @case (PlanStatus.Open) {
+                  <button class="btn-icon" title="إدخال البنود" (click)="navigateToEntry(plan.id)">📝</button>
+                  @if (canReview) {
+                    <button class="btn-icon" title="إغلاق النافذة" (click)="onCloseWindow(plan.id)">🔒</button>
+                  }
+                }
+                @case (PlanStatus.Submitted) {
+                  @if (canReview) {
+                    <button class="btn-icon" title="مراجعة" (click)="navigateToReview(plan.id)">🔍</button>
+                  }
+                }
+                @case (PlanStatus.UnderReview) {
+                  @if (canApprove) {
+                    <button class="btn-icon" title="اعتماد" (click)="navigateToApproval(plan.id)">✅</button>
+                  }
+                }
+                @case (PlanStatus.TDApproved) {
+                  @if (canFinalApprove) {
+                    <button class="btn-icon" title="الاعتماد النهائي" (click)="navigateToApproval(plan.id)">✅</button>
+                  } @else {
+                    <button class="btn-icon" title="عرض" (click)="navigateToApproval(plan.id)">👁️</button>
+                  }
+                }
+                @default {
+                  <button class="btn-icon" title="عرض" (click)="navigateToApproval(plan.id)">👁️</button>
+                }
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7">
+              <div class="empty-state">
+                <div class="empty-icon">📋</div>
+                لا توجد خطط تدريب بعد
+              </div>
+            </td>
+          </tr>
         }
-        @case (1) {
-          <dx-button icon="doc" stylingMode="text" hint="Entry" (onClick)="navigateToEntry(cell.data.id)"></dx-button>
-          <dx-button icon="close" stylingMode="text" hint="Close Window" (onClick)="onCloseWindow(cell.data.id)"></dx-button>
-        }
-        @case (2) {
-          <dx-button icon="search" stylingMode="text" hint="Review" (onClick)="navigateToReview(cell.data.id)"></dx-button>
-        }
-        @case (3) {
-          <dx-button icon="check" stylingMode="text" hint="Approve" (onClick)="navigateToApproval(cell.data.id)"></dx-button>
-        }
-        @case (4) {
-          <dx-button icon="check" stylingMode="text" hint="Final Approve" (onClick)="navigateToApproval(cell.data.id)"></dx-button>
-        }
-        @default {
-          <dx-button icon="search" stylingMode="text" hint="View" (onClick)="navigateToApproval(cell.data.id)"></dx-button>
-        }
-      }
-    </div>
+      </tbody>
+    </table>
+  </div>
 
-  </dx-data-grid>
-
-  <!-- Create/Edit Dialog -->
-  <dx-popup
-    [visible]="isDialogVisible()"
-    [title]="dialogTitle"
-    [showCloseButton]="true"
-    [width]="400"
-    [height]="300"
-    [toolbarItems]="dialogToolbarItems"
-    (onHidden)="isDialogVisible.set(false)">
-    <div class="dialog-form">
-      <div class="form-field">
-        <label>{{ '::Training.PlanYear' | abpLocalization }}</label>
-        <dx-number-box
-          [value]="formData().year"
-          (onValueChanged)="updateYear($event.value)"
-          [min]="2020"
-          [max]="2050"
-          [readOnly]="isEditMode()">
-        </dx-number-box>
-      </div>
-      <div class="form-field">
-        <label>{{ '::Training.OpenDate' | abpLocalization }}</label>
-        <dx-date-box
-          [value]="formData().openDate"
-          (onValueChanged)="updateOpenDate($event.value)"
-          type="date">
-        </dx-date-box>
-      </div>
-      <div class="form-field">
-        <label>{{ '::Training.CloseDate' | abpLocalization }}</label>
-        <dx-date-box
-          [value]="formData().closeDate"
-          (onValueChanged)="updateCloseDate($event.value)"
-          type="date">
-        </dx-date-box>
-      </div>
-    </div>
-  </dx-popup>
+  <!-- Workflow visualization -->
+  <div class="workflow-inline">
+    <span class="step-label badge badge-draft">1. مسودة (TD)</span>
+    <span class="step-arrow">←</span>
+    <span class="step-label badge badge-open">2. مفتوحة (UTM يدخل)</span>
+    <span class="step-arrow">←</span>
+    <span class="step-label badge badge-submitted">3. مُرسلة</span>
+    <span class="step-arrow">←</span>
+    <span class="step-label badge badge-review">4. مراجعة (Staff)</span>
+    <span class="step-arrow">←</span>
+    <span class="step-label badge badge-td-approved">5. اعتماد TD</span>
+    <span class="step-arrow">←</span>
+    <span class="step-label badge badge-th-approved">6. اعتماد TH</span>
+  </div>
 </div>
+
+<!-- Create Plan Dialog -->
+@if (isDialogOpen()) {
+  <div class="modal-backdrop" (click)="isDialogOpen.set(false)">
+    <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">➕ إنشاء خطة جديدة</h3>
+        <button class="modal-close" (click)="isDialogOpen.set(false)">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">السنة <span class="required">*</span></label>
+          <input type="number" class="form-input"
+            [value]="formYear()"
+            (input)="formYear.set(+$any($event.target).value)"
+            min="2020" max="2050">
+        </div>
+        <div class="form-group">
+          <label class="form-label">تاريخ الفتح</label>
+          <input type="date" class="form-input"
+            [value]="formOpenDate()"
+            (input)="formOpenDate.set($any($event.target).value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">تاريخ الإغلاق</label>
+          <input type="date" class="form-input"
+            [value]="formCloseDate()"
+            (input)="formCloseDate.set($any($event.target).value)">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" (click)="onSave()">💾 حفظ</button>
+        <button class="btn btn-ghost" (click)="isDialogOpen.set(false)">إلغاء</button>
+      </div>
+    </div>
+  </div>
+}

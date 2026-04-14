@@ -8,6 +8,14 @@ namespace MOD.Training.Training.Centers
 {
     public class CenterPlanWindow : FullAuditedAggregateRoot<Guid>, IMultiTenant
     {
+        public CenterPlanWindow(Guid id) : base(id)
+        {
+            
+        }
+        public CenterPlanWindow()
+        {
+            
+        }
         public Guid? TenantId { get; set; }
         public int Year { get; set; }
         public DateTime OpenDate { get; set; }

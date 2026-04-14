@@ -1221,6 +1221,110 @@ namespace MOD.Training.Migrations
                     b.ToTable("AppTrainingProviders", (string)null);
                 });
 
+            modelBuilder.Entity("MOD.Training.Training.Hr.Employee", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("DateOfBirth")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Education")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("FullNameAr")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("FullNameEn")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("JoinDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LanguageLevel")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("MainUnitId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("MedicalFitness")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Nationality")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("RankId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SecurityClearance")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ServiceNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MainUnitId");
+
+                    b.HasIndex("RankId");
+
+                    b.HasIndex("ServiceNumber");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("HrEmployees", (string)null);
+                });
+
+            modelBuilder.Entity("MOD.Training.Training.Hr.Rank", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("PersonnelType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("HrRanks", (string)null);
+                });
+
             modelBuilder.Entity("MOD.Training.Training.Nominations.Nomination", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1658,9 +1762,6 @@ namespace MOD.Training.Migrations
 
                     b.Property<int>("EnlistedCount")
                         .HasColumnType("int");
-
-                    b.Property<decimal?>("EstimatedCost")
-                        .HasColumnType("decimal(18,3)");
 
                     b.Property<DateTime?>("EstimatedDateFrom")
                         .HasColumnType("datetime2");
@@ -4248,6 +4349,17 @@ namespace MOD.Training.Migrations
                         .HasForeignKey("FinancialItemId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("MOD.Training.Training.Hr.Employee", b =>
+                {
+                    b.HasOne("MOD.Training.Training.Hr.Rank", "Rank")
+                        .WithMany()
+                        .HasForeignKey("RankId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Rank");
                 });
 
             modelBuilder.Entity("MOD.Training.Training.Nominations.Nomination", b =>

@@ -1,297 +1,211 @@
-<div class="page-container">
+<div class="gtms-card">
   <!-- Top bar -->
-  <div class="plan-header">
-    <div class="plan-info">
-      <h2>{{ '::Training.TrainingPlanItem' | abpLocalization }}</h2>
+  <div class="page-toolbar">
+    <div class="page-toolbar-title">
+      <h2 class="gtms-card-title">✏️ إدخال بنود الخطة — {{ plan()?.year }}</h2>
       @if (plan(); as p) {
-        <div class="plan-meta">
-          <span class="plan-year">{{ p.year }}</span>
-          <span class="status-badge" [ngClass]="'badge-' + p.status">
-            {{ '::Training.PlanStatus.' + PlanStatus[p.status] | abpLocalization }}
-          </span>
-          @if (p.openDate) {
-            <span class="date-range">{{ p.openDate | date:'shortDate' }} — {{ p.closeDate | date:'shortDate' }}</span>
-          }
-        </div>
+        <span class="badge" [class]="p.status === PlanStatus.Open ? 'badge-open' : 'badge-draft'">
+          {{ p.status === PlanStatus.Open ? 'مفتوحة' : 'مغلقة' }}
+        </span>
       }
     </div>
     @if (isWindowOpen) {
-      <dx-button
-        [text]="'::Training.AddPlanItem' | abpLocalization"
-        type="default"
-        icon="plus"
-        (onClick)="onAddItem()">
-      </dx-button>
+      <button class="btn btn-primary" (click)="openAddDialog()">➕ إضافة بند جديد</button>
     }
   </div>
 
+  @if (plan(); as p) {
+    <p class="page-meta">
+      📅 نافذة الاستلام: {{ formatDate(p.openDate) }} — {{ formatDate(p.closeDate) }}
+      &nbsp; | &nbsp; 👤 مدير التدريب بالوحدة (UTM)
+    </p>
+  }
+
   @if (!isWindowOpen) {
-    <div class="info-banner">
-      {{ '::Training.SubmissionWindowClosed' | abpLocalization }}
+    <div class="alert alert-warning">
+      <span class="alert-icon">🔒</span>
+      نافذة الاستلام مغلقة — لا يمكن إضافة أو تعديل البنود حالياً
     </div>
   }
 
-  <!-- Items Grid -->
-  <dx-data-grid
-    [dataSource]="items()"
-    [showBorders]="true"
-    [columnAutoWidth]="true"
-    [rowAlternationEnabled]="true"
-    keyExpr="id">
-
-    <dxi-column dataField="tenantCourseId"
-      [caption]="'::Training.Course' | abpLocalization"
-      [width]="200">
-      <dxo-lookup
-        [dataSource]="tenantCourses()"
-        valueExpr="id"
-        displayExpr="catalogCourseNameAr">
-      </dxo-lookup>
-    </dxi-column>
-
-    <dxi-column dataField="courseType"
-      [caption]="'::Training.CourseType' | abpLocalization"
-      [width]="130"
-      cellTemplate="courseTypeTemplate">
-    </dxi-column>
-
-    <dxi-column dataField="priority"
-      [caption]="'::Training.Priority' | abpLocalization"
-      [width]="60"
-      alignment="center">
-    </dxi-column>
-
-    <dxi-column dataField="preferredQuarter"
-      [caption]="'::Training.PreferredQuarter' | abpLocalization"
-      [width]="80"
-      cellTemplate="quarterTemplate">
-    </dxi-column>
-
-    <dxi-column dataField="officersCount"
-      [caption]="'::Training.OfficersCount' | abpLocalization"
-      [width]="70"
-      alignment="center">
-    </dxi-column>
-
-    <dxi-column dataField="enlistedCount"
-      [caption]="'::Training.EnlistedCount' | abpLocalization"
-      [width]="70"
-      alignment="center">
-    </dxi-column>
-
-    <dxi-column dataField="capacity"
-      [caption]="'::Training.Capacity' | abpLocalization"
-      [width]="70"
-      alignment="center">
-    </dxi-column>
-
-    <dxi-column
-      [caption]="'::Training.Duration' | abpLocalization"
-      [width]="130"
-      cellTemplate="durationTemplate"
-      [allowSorting]="false">
-    </dxi-column>
-
-    <dxi-column dataField="fundingSource"
-      [caption]="'::Training.FundingSource' | abpLocalization"
-      [width]="150">
-    </dxi-column>
-
-    <dxi-column
-      [caption]="'::Actions' | abpLocalization"
-      [width]="100"
-      cellTemplate="actionsTemplate"
-      [allowSorting]="false">
-    </dxi-column>
-
-    <div *dxTemplate="let cell of 'courseTypeTemplate'">
-      @switch (cell.value) {
-        @case (0) { <span class="type-badge type-internal">{{ '::Training.CourseType.Internal' | abpLocalization }}</span> }
-        @case (1) { <span class="type-badge type-local">{{ '::Training.CourseType.ExternalLocal' | abpLocalization }}</span> }
-        @case (2) { <span class="type-badge type-intl">{{ '::Training.CourseType.ExternalInternational' | abpLocalization }}</span> }
-      }
-    </div>
-
-    <div *dxTemplate="let cell of 'quarterTemplate'">
-      {{ '::Training.PreferredQuarter.Q' + cell.value | abpLocalization }}
-    </div>
-
-    <div *dxTemplate="let cell of 'durationTemplate'">
-      {{ getDurationText(cell.data) }}
-    </div>
-
-    <div *dxTemplate="let cell of 'actionsTemplate'">
-      @if (isWindowOpen) {
-        <dx-button icon="edit" stylingMode="text" (onClick)="onEditItem(cell.data)"></dx-button>
-        <dx-button icon="trash" stylingMode="text" (onClick)="onDeleteItem(cell.data.id)"></dx-button>
-      }
-    </div>
-
-  </dx-data-grid>
-
-  <!-- Add/Edit Plan Item Dialog -->
-  <dx-popup
-    [visible]="isDialogVisible()"
-    [title]="dialogTitle"
-    [showCloseButton]="true"
-    [width]="700"
-    [height]="680"
-    [toolbarItems]="dialogToolbarItems"
-    (onHidden)="isDialogVisible.set(false)">
-    <div class="dialog-form">
-      <div class="form-row">
-        <div class="form-field flex-2">
-          <label>{{ '::Training.Course' | abpLocalization }} *</label>
-          <dx-select-box
-            [dataSource]="tenantCourses()"
-            displayExpr="catalogCourseNameAr"
-            valueExpr="id"
-            [value]="formData().tenantCourseId"
-            (onValueChanged)="updateTenantCourseId($event.value)"
-            [searchEnabled]="true">
-          </dx-select-box>
-          <!-- <dx-select-box
-          [value]="formData().tenantCourseId"
-          (valueChange)="onTenantCourseChanged($event)"
-          [items]="tenantCourses()"
-          valueExpr="id"
-          displayExpr="catalogCourseNameAr"
-          [searchEnabled]="true"
-          [placeholder]="'::Training.Course' | abpLocalization"
-        ></dx-select-box> -->
-        </div>
-        <div class="form-field flex-1">
-          <label>{{ '::Training.CourseType' | abpLocalization }} *</label>
-          <dx-select-box
-            [dataSource]="courseTypes"
-            displayExpr="text"
-            valueExpr="value"
-            [value]="formData().courseType"
-            (onValueChanged)="updateCourseType($event.value)">
-          </dx-select-box>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-field flex-1">
-          <label>{{ '::Training.Priority' | abpLocalization }} *</label>
-          <dx-number-box
-            [value]="formData().priority"
-            (onValueChanged)="updatePriority($event.value)"
-            [min]="1" [max]="5">
-          </dx-number-box>
-        </div>
-        <div class="form-field flex-1">
-          <label>{{ '::Training.PreferredQuarter' | abpLocalization }} *</label>
-          <dx-select-box
-            [dataSource]="quarters"
-            displayExpr="text"
-            valueExpr="value"
-            [value]="formData().preferredQuarter"
-            (onValueChanged)="updatePreferredQuarter($event.value)">
-          </dx-select-box>
-        </div>
-        <div class="form-field flex-1">
-          <label>{{ '::Training.OfficersCount' | abpLocalization }} *</label>
-          <dx-number-box
-            [value]="formData().officersCount"
-            (onValueChanged)="updateOfficersCount($event.value)"
-            [min]="0">
-          </dx-number-box>
-        </div>
-        <div class="form-field flex-1">
-          <label>{{ '::Training.EnlistedCount' | abpLocalization }} *</label>
-          <dx-number-box
-            [value]="formData().enlistedCount"
-            (onValueChanged)="updateEnlistedCount($event.value)"
-            [min]="0">
-          </dx-number-box>
-        </div>
-      </div>
-
-      <div class="form-field">
-        <label>{{ '::Training.Justification' | abpLocalization }} *</label>
-        <dx-text-area
-          [value]="formData().justification"
-          (onValueChanged)="updateJustification($event.value)"
-          [height]="60">
-        </dx-text-area>
-      </div>
-
-      <div class="form-row">
-        <div class="form-field flex-1">
-          <label>{{ '::Training.Objectives' | abpLocalization }} (AR)</label>
-          <dx-text-area
-            [value]="formData().objectivesAr"
-            (onValueChanged)="updateObjectivesAr($event.value)"
-            [height]="50">
-          </dx-text-area>
-        </div>
-        <div class="form-field flex-1">
-          <label>{{ '::Training.Objectives' | abpLocalization }} (EN)</label>
-          <dx-text-area
-            [value]="formData().objectivesEn"
-            (onValueChanged)="updateObjectivesEn($event.value)"
-            [height]="50">
-          </dx-text-area>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-field flex-1">
-          <label>{{ '::Training.DurationDays' | abpLocalization }}</label>
-          <dx-number-box
-            [value]="formData().durationDays"
-            (onValueChanged)="updateDurationDays($event.value)"
-            [min]="0" [max]="30">
-          </dx-number-box>
-        </div>
-        
-        <div class="form-field flex-1">
-          <label>{{ '::Training.DurationMonths' | abpLocalization }}</label>
-          <dx-number-box
-            [value]="formData().durationMonths"
-            (onValueChanged)="updateDurationMonths($event.value)"
-            [min]="0" [max]="11">
-          </dx-number-box>
-        </div>
-        <div class="form-field flex-1">
-          <label>{{ '::Training.DurationYears' | abpLocalization }}</label>
-          <dx-number-box
-            [value]="formData().durationYears"
-            (onValueChanged)="updateDurationYears($event.value)"
-            [min]="0">
-          </dx-number-box>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-field flex-1">
-          <label>{{ '::Training.EstimatedDateFrom' | abpLocalization }}</label>
-          <dx-date-box
-            [value]="formData().estimatedDateFrom"
-            (onValueChanged)="updateEstimatedDateFrom($event.value)"
-            type="date">
-          </dx-date-box>
-        </div>
-        <div class="form-field flex-1">
-          <label>{{ '::Training.EstimatedDateTo' | abpLocalization }}</label>
-          <dx-date-box
-            [value]="formData().estimatedDateTo"
-            (onValueChanged)="updateEstimatedDateTo($event.value)"
-            type="date">
-          </dx-date-box>
-        </div>
-      </div>
-
-      <div class="form-field">
-        <label>{{ '::Training.FundingSource' | abpLocalization }}</label>
-        <dx-text-box
-          [value]="formData().fundingSource"
-          (onValueChanged)="updateFundingSource($event.value)"
-          placeholder="Nebras budget code">
-        </dx-text-box>
-      </div>
-    </div>
-  </dx-popup>
+  <!-- Items table -->
+  <div class="gtms-table-wrap">
+    <table class="gtms-table">
+      <thead>
+        <tr>
+          <th>الدورة</th>
+          <th class="center">النوع</th>
+          <th class="center">الأولوية</th>
+          <th class="center">الربع</th>
+          <th class="center">ضباط</th>
+          <th class="center">أفراد</th>
+          <th class="center">السعة</th>
+          <th>مصدر التمويل</th>
+          @if (isWindowOpen) { <th class="center">إجراءات</th> }
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of items(); track item.id) {
+          <tr>
+            <td>
+              <span class="cell-bold">{{ item.tenantCourseNameAr }}</span>
+              <span class="cell-sub">{{ item.tenantCourseNameEn }}</span>
+            </td>
+            <td class="center">
+              <span class="badge" [class]="getCourseTypeBadge(item.courseType)">{{ getCourseTypeText(item.courseType) }}</span>
+            </td>
+            <td class="center">
+              <span class="badge" [class]="'priority-' + item.priority">{{ item.priority }}</span>
+            </td>
+            <td class="center">Q{{ item.preferredQuarter }}</td>
+            <td class="center cell-bold">{{ item.officersCount }}</td>
+            <td class="center cell-bold">{{ item.enlistedCount }}</td>
+            <td class="center">
+              <span class="badge badge-open">{{ item.capacity }}</span>
+            </td>
+            <td style="font-size:0.8rem; color:#64748b;">{{ item.fundingSource || '—' }}</td>
+            @if (isWindowOpen) {
+              <td class="center">
+                <button class="btn-icon" title="تعديل" (click)="openEditDialog(item)">✏️</button>
+                <button class="btn-icon" title="حذف" (click)="onDelete(item.id)">🗑️</button>
+              </td>
+            }
+          </tr>
+        } @empty {
+          <tr>
+            <td [attr.colspan]="isWindowOpen ? 9 : 8">
+              <div class="empty-state">
+                <div class="empty-icon">📝</div>
+                لم يتم إضافة بنود بعد — اضغط "إضافة بند جديد"
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
 </div>
+
+<!-- Add/Edit Dialog -->
+@if (isDialogOpen()) {
+  <div class="modal-backdrop" (click)="isDialogOpen.set(false)">
+    <div class="modal-content modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">{{ dialogTitle }}</h3>
+        <button class="modal-close" (click)="isDialogOpen.set(false)">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Row 1: Course + Type -->
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label class="form-label">الدورة <span class="required">*</span></label>
+            <select class="form-input" [value]="fTenantCourseId()" (change)="fTenantCourseId.set($any($event.target).value); onCourseSelected()">
+              <option value="">اختر دورة...</option>
+              @for (tc of tenantCourses(); track tc.id) {
+                <option [value]="tc.id">{{ tc.courseNameAr }}</option>
+              }
+            </select>
+            <p class="form-hint">داخلية = من خطط المراكز المعتمدة | خارجية = جميع دورات الجهة</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">نوع الدورة <span class="required">*</span></label>
+            <select class="form-input" [value]="fCourseType()" (change)="fCourseType.set(+$any($event.target).value)">
+              <option [value]="0">داخلية</option>
+              <option [value]="1">خارجية محلية</option>
+              <option [value]="2">خارجية دولية</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Row 2: Priority, Quarter, Officers, Enlisted -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">الأولوية <span class="required">*</span></label>
+            <input type="number" class="form-input" min="1" max="5" [value]="fPriority()" (input)="fPriority.set(+$any($event.target).value)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">الربع المفضل <span class="required">*</span></label>
+            <select class="form-input" [value]="fPreferredQuarter()" (change)="fPreferredQuarter.set(+$any($event.target).value)">
+              <option [value]="1">الربع الأول</option>
+              <option [value]="2">الربع الثاني</option>
+              <option [value]="3">الربع الثالث</option>
+              <option [value]="4">الربع الرابع</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">عدد الضباط <span class="required">*</span></label>
+            <input type="number" class="form-input" min="0" [value]="fOfficersCount()" (input)="fOfficersCount.set(+$any($event.target).value)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">عدد الأفراد <span class="required">*</span></label>
+            <input type="number" class="form-input" min="0" [value]="fEnlistedCount()" (input)="fEnlistedCount.set(+$any($event.target).value)">
+          </div>
+        </div>
+
+        <!-- Justification -->
+        <div class="form-group">
+          <label class="form-label">المبرر <span class="required">*</span></label>
+          <textarea class="form-input" rows="2" placeholder="لماذا تحتاج الوحدة هذه الدورة..." [value]="fJustification()" (input)="fJustification.set($any($event.target).value)"></textarea>
+        </div>
+
+        <!-- Objectives -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">الأهداف (عربي)</label>
+            <textarea class="form-input" rows="2" [value]="fObjectivesAr()" (input)="fObjectivesAr.set($any($event.target).value)"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Objectives (EN)</label>
+            <textarea class="form-input" rows="2" [value]="fObjectivesEn()" (input)="fObjectivesEn.set($any($event.target).value)"></textarea>
+          </div>
+        </div>
+
+        <!-- Duration + Dates -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">سنوات</label>
+            <input type="number" class="form-input" min="0" [value]="fDurationYears()" (input)="fDurationYears.set(+$any($event.target).value)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">أشهر</label>
+            <input type="number" class="form-input" min="0" max="11" [value]="fDurationMonths()" (input)="fDurationMonths.set(+$any($event.target).value)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">أيام</label>
+            <input type="number" class="form-input" min="0" max="30" [value]="fDurationDays()" (input)="fDurationDays.set(+$any($event.target).value)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">بدء متوقع</label>
+            <input type="date" class="form-input" [value]="fEstimatedDateFrom()" (input)="fEstimatedDateFrom.set($any($event.target).value)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">انتهاء متوقع</label>
+            <input type="date" class="form-input" [value]="fEstimatedDateTo()" (input)="fEstimatedDateTo.set($any($event.target).value)">
+          </div>
+        </div>
+
+        <!-- Funding Source -->
+        <div class="form-group">
+          <label class="form-label">مصدر التمويل (كود نبراس)</label>
+          <input type="text" class="form-input" placeholder="NEB-2027-EXT-001" style="max-width:300px;" [value]="fFundingSource()" (input)="fFundingSource.set($any($event.target).value)">
+        </div>
+
+        <!-- Conditions (read-only) -->
+        @if (conditions().length > 0) {
+          <div class="conditions-panel">
+            <p class="panel-title">🔒 شروط الالتحاق (من دورات الجهة — للقراءة فقط)</p>
+            <div class="condition-tags">
+              @for (c of conditions(); track c.id) {
+                <span class="condition-tag">{{ getConditionTypeName(c.conditionType) }}: {{ c.conditionValue }}</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" (click)="onSave()">💾 حفظ</button>
+        <button class="btn btn-ghost" (click)="isDialogOpen.set(false)">إلغاء</button>
+      </div>
+    </div>
+  </div>
+}

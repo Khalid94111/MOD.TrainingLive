@@ -96,6 +96,7 @@ export interface TrainingPlanDto extends FullAuditedEntityDto<string> {
   openDate?: string | null;
   closeDate?: string | null;
   itemCount?: number;
+  totalEstimatedCost?: number;
 }
 
 export interface TrainingPlanGetListInput extends PagedAndSortedResultRequestDto {
@@ -105,7 +106,8 @@ export interface TrainingPlanGetListInput extends PagedAndSortedResultRequestDto
 export interface TrainingPlanItemDto extends FullAuditedEntityDto<string> {
   planId?: string;
   tenantCourseId?: string;
-  tenantCourseName?: string;
+  tenantCourseNameAr?: string;
+  tenantCourseNameEn?: string;
   courseType?: CourseType;
   preferredQuarter?: PreferredQuarter;
   priority?: number;
@@ -122,12 +124,14 @@ export interface TrainingPlanItemDto extends FullAuditedEntityDto<string> {
   durationDays?: number;
   estimatedDateFrom?: string | null;
   estimatedDateTo?: string | null;
-  estimatedCost?: number | null;
+  estimatedCost?: number;
   fundingSource?: string | null;
   submittedById?: string;
   submittedByName?: string;
+  submittedByRank?: string | null;
   unitId?: string | null;
   unitName?: string | null;
+  financialItemCount?: number;
 }
 
 export interface TrainingPlanItemGetListInput extends PagedAndSortedResultRequestDto {
@@ -135,8 +139,4 @@ export interface TrainingPlanItemGetListInput extends PagedAndSortedResultReques
   courseType?: CourseType | null;
   preferredQuarter?: PreferredQuarter | null;
   unitId?: string | null;
-}
-
-export interface UpdateEstimatedCostDto {
-  estimatedCost: number;
 }

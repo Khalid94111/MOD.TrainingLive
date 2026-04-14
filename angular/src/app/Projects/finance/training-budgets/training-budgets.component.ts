@@ -1,6 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LocalizationPipe } from '@abp/ng.core';
 import { DxDataGridModule } from 'devextreme-angular/ui/data-grid';
 import { DxPopupModule } from 'devextreme-angular/ui/popup';
 import { DxNumberBoxModule } from 'devextreme-angular/ui/number-box';
@@ -10,6 +9,7 @@ import { ToolbarItem } from 'devextreme/ui/popup';
 import { TrainingBudgetService } from '../../shared/services/finance-proxy.service';
 import { TrainingLocalizationHelper } from '../../shared';
 import { TrainingBudgetDto } from 'src/app/proxy/training/finance/dtos';
+import { LocalizationPipe } from '@abp/ng.core';
 
 interface BudgetCardPalette {
   colorClass: string;

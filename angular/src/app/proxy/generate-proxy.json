@@ -5844,188 +5844,6 @@
             }
           }
         },
-        "MOD.Training.Training.Centers.HrLookupAppService": {
-          "controllerName": "HrLookup",
-          "controllerGroupName": "HrLookup",
-          "isRemoteService": true,
-          "isIntegrationService": false,
-          "apiVersion": null,
-          "type": "MOD.Training.Training.Centers.HrLookupAppService",
-          "interfaces": [
-            {
-              "type": "MOD.Training.Training.Centers.IHrLookupAppService",
-              "name": "IHrLookupAppService",
-              "methods": [
-                {
-                  "name": "GetEmployeesAsync",
-                  "parametersOnMethod": [
-                    {
-                      "name": "serviceNumber",
-                      "typeAsString": "System.String, System.Private.CoreLib",
-                      "type": "System.String",
-                      "typeSimple": "string",
-                      "isOptional": false,
-                      "defaultValue": null
-                    },
-                    {
-                      "name": "orgUnitId",
-                      "typeAsString": "System.Guid, System.Private.CoreLib",
-                      "type": "System.Guid",
-                      "typeSimple": "string",
-                      "isOptional": false,
-                      "defaultValue": null
-                    }
-                  ],
-                  "returnValue": {
-                    "type": "System.Collections.Generic.List<MOD.Training.Training.Centers.Dtos.HrEmployeeLookupDto>",
-                    "typeSimple": "[MOD.Training.Training.Centers.Dtos.HrEmployeeLookupDto]"
-                  }
-                },
-                {
-                  "name": "GetPositionsAsync",
-                  "parametersOnMethod": [
-                    {
-                      "name": "name",
-                      "typeAsString": "System.String, System.Private.CoreLib",
-                      "type": "System.String",
-                      "typeSimple": "string",
-                      "isOptional": false,
-                      "defaultValue": null
-                    },
-                    {
-                      "name": "orgUnitId",
-                      "typeAsString": "System.Guid, System.Private.CoreLib",
-                      "type": "System.Guid",
-                      "typeSimple": "string",
-                      "isOptional": false,
-                      "defaultValue": null
-                    }
-                  ],
-                  "returnValue": {
-                    "type": "System.Collections.Generic.List<MOD.Training.Training.Centers.Dtos.HrPositionLookupDto>",
-                    "typeSimple": "[MOD.Training.Training.Centers.Dtos.HrPositionLookupDto]"
-                  }
-                }
-              ]
-            }
-          ],
-          "actions": {
-            "GetEmployeesAsyncByServiceNumberAndOrgUnitId": {
-              "uniqueName": "GetEmployeesAsyncByServiceNumberAndOrgUnitId",
-              "name": "GetEmployeesAsync",
-              "httpMethod": "GET",
-              "url": "api/app/hr-lookup/employees/{orgUnitId}",
-              "supportedVersions": [],
-              "parametersOnMethod": [
-                {
-                  "name": "serviceNumber",
-                  "typeAsString": "System.String, System.Private.CoreLib",
-                  "type": "System.String",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null
-                },
-                {
-                  "name": "orgUnitId",
-                  "typeAsString": "System.Guid, System.Private.CoreLib",
-                  "type": "System.Guid",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null
-                }
-              ],
-              "parameters": [
-                {
-                  "nameOnMethod": "serviceNumber",
-                  "name": "serviceNumber",
-                  "jsonName": null,
-                  "type": "System.String",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": ""
-                },
-                {
-                  "nameOnMethod": "orgUnitId",
-                  "name": "orgUnitId",
-                  "jsonName": null,
-                  "type": "System.Guid",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": [],
-                  "bindingSourceId": "Path",
-                  "descriptorName": ""
-                }
-              ],
-              "returnValue": {
-                "type": "System.Collections.Generic.List<MOD.Training.Training.Centers.Dtos.HrEmployeeLookupDto>",
-                "typeSimple": "[MOD.Training.Training.Centers.Dtos.HrEmployeeLookupDto]"
-              },
-              "allowAnonymous": false,
-              "implementFrom": "MOD.Training.Training.Centers.IHrLookupAppService"
-            },
-            "GetPositionsAsyncByNameAndOrgUnitId": {
-              "uniqueName": "GetPositionsAsyncByNameAndOrgUnitId",
-              "name": "GetPositionsAsync",
-              "httpMethod": "GET",
-              "url": "api/app/hr-lookup/positions/{orgUnitId}",
-              "supportedVersions": [],
-              "parametersOnMethod": [
-                {
-                  "name": "name",
-                  "typeAsString": "System.String, System.Private.CoreLib",
-                  "type": "System.String",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null
-                },
-                {
-                  "name": "orgUnitId",
-                  "typeAsString": "System.Guid, System.Private.CoreLib",
-                  "type": "System.Guid",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null
-                }
-              ],
-              "parameters": [
-                {
-                  "nameOnMethod": "name",
-                  "name": "name",
-                  "jsonName": null,
-                  "type": "System.String",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": ""
-                },
-                {
-                  "nameOnMethod": "orgUnitId",
-                  "name": "orgUnitId",
-                  "jsonName": null,
-                  "type": "System.Guid",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": [],
-                  "bindingSourceId": "Path",
-                  "descriptorName": ""
-                }
-              ],
-              "returnValue": {
-                "type": "System.Collections.Generic.List<MOD.Training.Training.Centers.Dtos.HrPositionLookupDto>",
-                "typeSimple": "[MOD.Training.Training.Centers.Dtos.HrPositionLookupDto]"
-              },
-              "allowAnonymous": false,
-              "implementFrom": "MOD.Training.Training.Centers.IHrLookupAppService"
-            }
-          }
-        },
         "MOD.Training.Training.Centers.TrainingCenterAppService": {
           "controllerName": "TrainingCenter",
           "controllerGroupName": "TrainingCenter",
@@ -8966,6 +8784,206 @@
             }
           }
         },
+        "MOD.Training.Training.HrIntegration.HrLookupAppService": {
+          "controllerName": "HrLookup",
+          "controllerGroupName": "HrLookup",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "MOD.Training.Training.HrIntegration.HrLookupAppService",
+          "interfaces": [
+            {
+              "type": "MOD.Training.Training.HrIntegration.IHrLookupAppService",
+              "name": "IHrLookupAppService",
+              "methods": [
+                {
+                  "name": "GetEmployeesByUnitAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "unitId",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Collections.Generic.List<MOD.Training.Training.HrIntegration.EmployeeLookupDto>",
+                    "typeSimple": "[MOD.Training.Training.HrIntegration.EmployeeLookupDto]"
+                  }
+                },
+                {
+                  "name": "GetByServiceNumberAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "serviceNumber",
+                      "typeAsString": "System.String, System.Private.CoreLib",
+                      "type": "System.String",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "orgUnitId",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.HrIntegration.EmployeeLookupDto",
+                    "typeSimple": "MOD.Training.Training.HrIntegration.EmployeeLookupDto"
+                  }
+                },
+                {
+                  "name": "GetAllRanksAsync",
+                  "parametersOnMethod": [],
+                  "returnValue": {
+                    "type": "System.Collections.Generic.List<MOD.Training.Training.HrIntegration.RankLookupDto>",
+                    "typeSimple": "[MOD.Training.Training.HrIntegration.RankLookupDto]"
+                  }
+                },
+                {
+                  "name": "GetCurrentEmployeeAsync",
+                  "parametersOnMethod": [],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.HrIntegration.EmployeeLookupDto",
+                    "typeSimple": "MOD.Training.Training.HrIntegration.EmployeeLookupDto"
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "GetEmployeesByUnitAsyncByUnitId": {
+              "uniqueName": "GetEmployeesByUnitAsyncByUnitId",
+              "name": "GetEmployeesByUnitAsync",
+              "httpMethod": "GET",
+              "url": "api/app/hr-lookup/employees-by-unit/{unitId}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "unitId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "unitId",
+                  "name": "unitId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Collections.Generic.List<MOD.Training.Training.HrIntegration.EmployeeLookupDto>",
+                "typeSimple": "[MOD.Training.Training.HrIntegration.EmployeeLookupDto]"
+              },
+              "allowAnonymous": null,
+              "implementFrom": "MOD.Training.Training.HrIntegration.IHrLookupAppService"
+            },
+            "GetByServiceNumberAsyncByServiceNumberAndOrgUnitId": {
+              "uniqueName": "GetByServiceNumberAsyncByServiceNumberAndOrgUnitId",
+              "name": "GetByServiceNumberAsync",
+              "httpMethod": "GET",
+              "url": "api/app/hr-lookup/by-service-number/{orgUnitId}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "serviceNumber",
+                  "typeAsString": "System.String, System.Private.CoreLib",
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "orgUnitId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "serviceNumber",
+                  "name": "serviceNumber",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "orgUnitId",
+                  "name": "orgUnitId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.HrIntegration.EmployeeLookupDto",
+                "typeSimple": "MOD.Training.Training.HrIntegration.EmployeeLookupDto"
+              },
+              "allowAnonymous": null,
+              "implementFrom": "MOD.Training.Training.HrIntegration.IHrLookupAppService"
+            },
+            "GetAllRanksAsync": {
+              "uniqueName": "GetAllRanksAsync",
+              "name": "GetAllRanksAsync",
+              "httpMethod": "GET",
+              "url": "api/app/hr-lookup/ranks",
+              "supportedVersions": [],
+              "parametersOnMethod": [],
+              "parameters": [],
+              "returnValue": {
+                "type": "System.Collections.Generic.List<MOD.Training.Training.HrIntegration.RankLookupDto>",
+                "typeSimple": "[MOD.Training.Training.HrIntegration.RankLookupDto]"
+              },
+              "allowAnonymous": null,
+              "implementFrom": "MOD.Training.Training.HrIntegration.IHrLookupAppService"
+            },
+            "GetCurrentEmployeeAsync": {
+              "uniqueName": "GetCurrentEmployeeAsync",
+              "name": "GetCurrentEmployeeAsync",
+              "httpMethod": "GET",
+              "url": "api/app/hr-lookup/current-employee",
+              "supportedVersions": [],
+              "parametersOnMethod": [],
+              "parameters": [],
+              "returnValue": {
+                "type": "MOD.Training.Training.HrIntegration.EmployeeLookupDto",
+                "typeSimple": "MOD.Training.Training.HrIntegration.EmployeeLookupDto"
+              },
+              "allowAnonymous": null,
+              "implementFrom": "MOD.Training.Training.HrIntegration.IHrLookupAppService"
+            }
+          }
+        },
         "MOD.Training.Training.Nominations.NominationAppService": {
           "controllerName": "Nomination",
           "controllerGroupName": "Nomination",
@@ -10903,31 +10921,6 @@
               "name": "ITrainingPlanItemAppService",
               "methods": [
                 {
-                  "name": "UpdateEstimatedCostAsync",
-                  "parametersOnMethod": [
-                    {
-                      "name": "id",
-                      "typeAsString": "System.Guid, System.Private.CoreLib",
-                      "type": "System.Guid",
-                      "typeSimple": "string",
-                      "isOptional": false,
-                      "defaultValue": null
-                    },
-                    {
-                      "name": "input",
-                      "typeAsString": "MOD.Training.Training.Plans.Dtos.UpdateEstimatedCostDto, MOD.Training.Application.Contracts",
-                      "type": "MOD.Training.Training.Plans.Dtos.UpdateEstimatedCostDto",
-                      "typeSimple": "MOD.Training.Training.Plans.Dtos.UpdateEstimatedCostDto",
-                      "isOptional": false,
-                      "defaultValue": null
-                    }
-                  ],
-                  "returnValue": {
-                    "type": "System.Void",
-                    "typeSimple": "System.Void"
-                  }
-                },
-                {
                   "name": "GetConditionsAsync",
                   "parametersOnMethod": [
                     {
@@ -11317,63 +11310,6 @@
               },
               "allowAnonymous": false,
               "implementFrom": "Volo.Abp.Application.Services.IDeleteAppService<System.Guid>"
-            },
-            "UpdateEstimatedCostAsyncByIdAndInput": {
-              "uniqueName": "UpdateEstimatedCostAsyncByIdAndInput",
-              "name": "UpdateEstimatedCostAsync",
-              "httpMethod": "PUT",
-              "url": "api/app/training-plan-item/{id}/estimated-cost",
-              "supportedVersions": [],
-              "parametersOnMethod": [
-                {
-                  "name": "id",
-                  "typeAsString": "System.Guid, System.Private.CoreLib",
-                  "type": "System.Guid",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null
-                },
-                {
-                  "name": "input",
-                  "typeAsString": "MOD.Training.Training.Plans.Dtos.UpdateEstimatedCostDto, MOD.Training.Application.Contracts",
-                  "type": "MOD.Training.Training.Plans.Dtos.UpdateEstimatedCostDto",
-                  "typeSimple": "MOD.Training.Training.Plans.Dtos.UpdateEstimatedCostDto",
-                  "isOptional": false,
-                  "defaultValue": null
-                }
-              ],
-              "parameters": [
-                {
-                  "nameOnMethod": "id",
-                  "name": "id",
-                  "jsonName": null,
-                  "type": "System.Guid",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": [],
-                  "bindingSourceId": "Path",
-                  "descriptorName": ""
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "input",
-                  "jsonName": null,
-                  "type": "MOD.Training.Training.Plans.Dtos.UpdateEstimatedCostDto",
-                  "typeSimple": "MOD.Training.Training.Plans.Dtos.UpdateEstimatedCostDto",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "Body",
-                  "descriptorName": ""
-                }
-              ],
-              "returnValue": {
-                "type": "System.Void",
-                "typeSimple": "System.Void"
-              },
-              "allowAnonymous": false,
-              "implementFrom": "MOD.Training.Training.Plans.ITrainingPlanItemAppService"
             },
             "GetConditionsAsyncByPlanItemId": {
               "uniqueName": "GetConditionsAsyncByPlanItemId",
@@ -26120,141 +26056,6 @@
         }
       ]
     },
-    "MOD.Training.Training.Centers.Dtos.HrEmployeeLookupDto": {
-      "baseType": null,
-      "isEnum": false,
-      "enumNames": null,
-      "enumValues": null,
-      "genericArguments": null,
-      "properties": [
-        {
-          "name": "EmployeeId",
-          "jsonName": null,
-          "type": "System.Guid",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "ServiceNumber",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "FullNameAr",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "FullNameEn",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "RankName",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": true
-        },
-        {
-          "name": "PositionName",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": true
-        }
-      ]
-    },
-    "MOD.Training.Training.Centers.Dtos.HrPositionLookupDto": {
-      "baseType": null,
-      "isEnum": false,
-      "enumNames": null,
-      "enumValues": null,
-      "genericArguments": null,
-      "properties": [
-        {
-          "name": "PositionId",
-          "jsonName": null,
-          "type": "System.Guid",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "PositionNameAr",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "PositionNameEn",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        }
-      ]
-    },
     "MOD.Training.Training.Centers.Dtos.SetCenterRoleAssignmentsDto": {
       "baseType": null,
       "isEnum": false,
@@ -28701,6 +28502,219 @@
         }
       ]
     },
+    "MOD.Training.Training.HrIntegration.EmployeeLookupDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Id",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "UserId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ServiceNumber",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "FullNameAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "FullNameEn",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "RankNameAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "RankNameEn",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "RankSortOrder",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "PersonnelType",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "MainUnitId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Training.HrIntegration.RankLookupDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Id",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "NameAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "NameEn",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "SortOrder",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "PersonnelType",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
     "MOD.Training.Training.Nominations.Dtos.ApproveRejectNominationDto": {
       "baseType": null,
       "isEnum": false,
@@ -30020,6 +30034,19 @@
           "maximum": null,
           "regex": null,
           "isNullable": false
+        },
+        {
+          "name": "TotalEstimatedCost",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
         }
       ]
     },
@@ -30079,7 +30106,20 @@
           "isNullable": false
         },
         {
-          "name": "TenantCourseName",
+          "name": "TenantCourseNameAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "TenantCourseNameEn",
           "jsonName": null,
           "type": "System.String",
           "typeSimple": "string",
@@ -30302,15 +30342,15 @@
         {
           "name": "EstimatedCost",
           "jsonName": null,
-          "type": "System.Decimal?",
-          "typeSimple": "number?",
+          "type": "System.Decimal",
+          "typeSimple": "number",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
           "minimum": null,
           "maximum": null,
           "regex": null,
-          "isNullable": true
+          "isNullable": false
         },
         {
           "name": "FundingSource",
@@ -30352,6 +30392,19 @@
           "isNullable": false
         },
         {
+          "name": "SubmittedByRank",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
           "name": "UnitId",
           "jsonName": null,
           "type": "System.Guid?",
@@ -30376,6 +30429,19 @@
           "maximum": null,
           "regex": null,
           "isNullable": true
+        },
+        {
+          "name": "FinancialItemCount",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
         }
       ]
     },
@@ -30437,28 +30503,6 @@
           "maximum": null,
           "regex": null,
           "isNullable": true
-        }
-      ]
-    },
-    "MOD.Training.Training.Plans.Dtos.UpdateEstimatedCostDto": {
-      "baseType": null,
-      "isEnum": false,
-      "enumNames": null,
-      "enumValues": null,
-      "genericArguments": null,
-      "properties": [
-        {
-          "name": "EstimatedCost",
-          "jsonName": null,
-          "type": "System.Decimal",
-          "typeSimple": "number",
-          "isRequired": true,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": "0",
-          "maximum": "1.7976931348623157E+308",
-          "regex": null,
-          "isNullable": false
         }
       ]
     },

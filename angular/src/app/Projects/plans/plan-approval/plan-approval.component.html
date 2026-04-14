@@ -1,149 +1,137 @@
-<div class="page-container">
-  <div class="plan-header">
-    <div class="plan-info">
-      <h2>{{ '::Training.PlanApproval' | abpLocalization }}</h2>
+<div class="gtms-card">
+  <!-- Header -->
+  <div class="page-toolbar">
+    <div class="page-toolbar-title">
+      <h2 class="gtms-card-title">✅ اعتماد الخطة — {{ plan()?.year }}</h2>
       @if (plan(); as p) {
-        <span class="plan-year">{{ p.year }}</span>
+        <span class="badge" [class]="getStatusBadgeClass(p.status)">{{ getStatusText(p.status) }}</span>
       }
     </div>
-    <div class="header-actions">
-      @if (showApproveButton) {
-        <dx-button
-          [text]="'::Training.ReturnPlan' | abpLocalization"
-          type="normal"
-          icon="undo"
-          (onClick)="onReturn()">
-        </dx-button>
-        <dx-button
-          [text]="'::Training.RejectPlan' | abpLocalization"
-          type="danger"
-          icon="close"
-          (onClick)="onReject()">
-        </dx-button>
-        <dx-button
-          [text]="approveButtonText"
-          type="success"
-          icon="check"
-          [disabled]="hasMissingCosts()"
-          (onClick)="onApprove()">
-        </dx-button>
-      }
-    </div>
+    @if (showActions) {
+      <div class="page-toolbar-actions">
+        <button class="btn btn-ghost" (click)="onReturn()">↩️ إعادة للموظف</button>
+        <button class="btn btn-danger" (click)="openRejectDialog()">❌ رفض</button>
+        <button class="btn btn-success"
+          [disabled]="itemsMissingCost() > 0"
+          [title]="itemsMissingCost() > 0 ? 'يجب إدخال التكلفة لجميع البنود الخارجية' : ''"
+          (click)="onApprove()">
+          {{ approveLabel }}
+        </button>
+      </div>
+    }
   </div>
 
-  @if (hasMissingCosts()) {
-    <div class="cost-warning">
-      {{ '::Training.CostGateWarning' | abpLocalization }}
+  <!-- Cost Gate Warning -->
+  @if (itemsMissingCost() > 0) {
+    <div class="alert alert-danger">
+      <span class="alert-icon">⚠️</span>
+      <div>
+        <strong>يجب إدخال التكلفة المقدرة لجميع البنود الخارجية قبل الاعتماد</strong>
+        <div style="font-size:0.78rem; margin-top:2px;">{{ itemsMissingCost() }} بند بدون تكلفة</div>
+      </div>
     </div>
   }
 
   <!-- Summary Cards -->
-  <div class="summary-cards">
-    <div class="summary-card">
-      <div class="card-value">{{ totalItems() }}</div>
-      <div class="card-label">{{ '::Training.ItemCount' | abpLocalization }}</div>
+  <div class="stat-cards">
+    <div class="stat-card">
+      <div class="stat-value">{{ totalItems() }}</div>
+      <div class="stat-label">إجمالي البنود</div>
     </div>
-    <div class="summary-card">
-      <div class="card-value">{{ totalEstimatedCost() | number:'1.3-3' }}</div>
-      <div class="card-label">{{ '::Training.TotalEstimatedCost' | abpLocalization }} (OMR)</div>
+    <div class="stat-card card-green">
+      <div class="stat-value">{{ formatCost(totalCost()) || '0.000' }}</div>
+      <div class="stat-label">التكلفة المقدرة (ر.ع.)</div>
     </div>
-    <div class="summary-card card-internal">
-      <div class="card-value">{{ internalCount() }}</div>
-      <div class="card-label">{{ '::Training.CourseType.Internal' | abpLocalization }}</div>
+    <div class="stat-card card-blue">
+      <div class="stat-value">{{ internalCount() }}</div>
+      <div class="stat-label">داخلية</div>
     </div>
-    <div class="summary-card card-local">
-      <div class="card-value">{{ externalLocalCount() }}</div>
-      <div class="card-label">{{ '::Training.CourseType.ExternalLocal' | abpLocalization }}</div>
+    <div class="stat-card card-green">
+      <div class="stat-value">{{ externalLocalCount() }}</div>
+      <div class="stat-label">خارجية محلية</div>
     </div>
-    <div class="summary-card card-intl">
-      <div class="card-value">{{ externalIntlCount() }}</div>
-      <div class="card-label">{{ '::Training.CourseType.ExternalInternational' | abpLocalization }}</div>
+    <div class="stat-card card-purple">
+      <div class="stat-value">{{ externalIntlCount() }}</div>
+      <div class="stat-label">خارجية دولية</div>
     </div>
   </div>
 
-  <!-- Read-only Items Grid -->
-  <dx-data-grid
-    [dataSource]="items()"
-    [showBorders]="true"
-    [columnAutoWidth]="true"
-    [rowAlternationEnabled]="true"
-    keyExpr="id">
+  <!-- Items Grid -->
+  <div class="gtms-table-wrap">
+    <table class="gtms-table">
+      <thead>
+        <tr>
+          <th>الدورة</th>
+          <th class="center">النوع</th>
+          <th class="center">الأولوية</th>
+          <th class="center">الربع</th>
+          <th class="center">السعة</th>
+          <th class="center">التكلفة المقدرة</th>
+          <th>مصدر التمويل</th>
+          <th class="center">الوحدة</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of items(); track item.id) {
+          <tr [class.warning-row]="isMissingCost(item)">
+            <td>
+              <span class="cell-bold" [style.color]="isMissingCost(item) ? '#dc2626' : ''">
+                @if (isMissingCost(item)) { ⚠️ }
+                {{ item.tenantCourseNameAr }}
+              </span>
+              <span class="cell-sub">{{ item.tenantCourseNameEn }}</span>
+            </td>
+            <td class="center">
+              <span class="badge" [class]="getCourseTypeBadge(item.courseType)">
+                {{ getCourseTypeText(item.courseType) }}
+              </span>
+            </td>
+            <td class="center">
+              <span class="badge" [class]="'priority-' + item.priority">{{ item.priority }}</span>
+            </td>
+            <td class="center">Q{{ item.preferredQuarter }}</td>
+            <td class="center cell-bold">{{ item.capacity }}</td>
+            <td class="center">
+              @if (item.courseType === 0) {
+                <span class="cell-na">N/A</span>
+              } @else if (isMissingCost(item)) {
+                <span class="cell-missing">⚠️ غير محدد</span>
+              } @else {
+                <span class="cell-money">{{ formatCost(item.estimatedCost) }}</span>
+              }
+            </td>
+            <td>{{ item.fundingSource || '—' }}</td>
+            <td class="center" style="font-size:0.8rem; color:#64748b;">{{ item.unitName || '—' }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📋</div>لا توجد بنود</div></td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
 
-    <dxi-column dataField="tenantCourseName"
-      [caption]="'::Training.Course' | abpLocalization"
-      [width]="200">
-    </dxi-column>
-
-    <dxi-column dataField="courseType"
-      [caption]="'::Training.CourseType' | abpLocalization"
-      [width]="130">
-    </dxi-column>
-
-    <dxi-column dataField="priority"
-      [caption]="'::Training.Priority' | abpLocalization"
-      [width]="60"
-      alignment="center">
-    </dxi-column>
-
-    <dxi-column dataField="preferredQuarter"
-      [caption]="'::Training.PreferredQuarter' | abpLocalization"
-      [width]="80">
-    </dxi-column>
-
-    <dxi-column dataField="capacity"
-      [caption]="'::Training.Capacity' | abpLocalization"
-      [width]="70"
-      alignment="center">
-    </dxi-column>
-
-    <dxi-column dataField="estimatedCost"
-      [caption]="'::Training.EstimatedCost' | abpLocalization"
-      [width]="120"
-      dataType="number"
-      format="#,##0.000"
-      cellTemplate="costCellTemplate">
-    </dxi-column>
-
-    <dxi-column dataField="fundingSource"
-      [caption]="'::Training.FundingSource' | abpLocalization"
-      [width]="150">
-    </dxi-column>
-
-    <dxi-column dataField="unitName"
-      caption="Unit"
-      [width]="120">
-    </dxi-column>
-
-    <div *dxTemplate="let cell of 'costCellTemplate'">
-      @if (cell.value && cell.value > 0) {
-        <span>{{ cell.value | number:'1.3-3' }}</span>
-      } @else if (cell.data.courseType !== 0) {
-        <span class="missing-cost">Missing</span>
-      } @else {
-        <span class="na-cost">N/A</span>
-      }
-    </div>
-
-  </dx-data-grid>
-
-  <!-- Reject Dialog -->
-  <dx-popup
-    [visible]="isRejectDialogVisible()"
-    [title]="'::Training.RejectPlan' | abpLocalization"
-    [showCloseButton]="true"
-    [width]="450"
-    [height]="250"
-    [toolbarItems]="rejectDialogToolbarItems"
-    (onHidden)="isRejectDialogVisible.set(false)">
-    <div class="dialog-form">
-      <div class="form-field">
-        <label>{{ '::Training.RejectionReason' | abpLocalization }}</label>
-        <dx-text-area
-          [value]="rejectReason()"
-          (onValueChanged)="updateRejectReason($event.value)"
-          [height]="80">
-        </dx-text-area>
+<!-- Reject Dialog -->
+@if (isRejectOpen()) {
+  <div class="modal-backdrop" (click)="isRejectOpen.set(false)">
+    <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">❌ رفض الخطة</h3>
+        <button class="modal-close" (click)="isRejectOpen.set(false)">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">سبب الرفض</label>
+          <textarea class="form-input" rows="3"
+            [value]="rejectReason()"
+            (input)="rejectReason.set($any($event.target).value)"
+            placeholder="أدخل سبب الرفض..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" (click)="onConfirmReject()">❌ تأكيد الرفض</button>
+        <button class="btn btn-ghost" (click)="isRejectOpen.set(false)">إلغاء</button>
       </div>
     </div>
-  </dx-popup>
-</div>
+  </div>
+}

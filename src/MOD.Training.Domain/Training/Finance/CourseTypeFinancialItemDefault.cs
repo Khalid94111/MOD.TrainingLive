@@ -7,6 +7,14 @@ namespace MOD.Training.Training.Finance;
 
 public class CourseTypeFinancialItemDefault : Entity<Guid>, IMultiTenant
 {
+    public CourseTypeFinancialItemDefault(Guid id) : base(id)
+    {
+        
+    }
+    public CourseTypeFinancialItemDefault()
+    {
+        
+    }
     public Guid? TenantId { get; set; }
     public CourseType CourseType { get; set; }
     public Guid FinancialItemId { get; set; }

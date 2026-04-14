@@ -8,6 +8,14 @@ namespace MOD.Training.Training.Centers
 {
     public class TrainingCenter : FullAuditedAggregateRoot<Guid>, IMultiTenant
     {
+        public TrainingCenter(Guid id) : base(id)
+        {
+            
+        }
+        public TrainingCenter()
+        {
+            
+        }
         public Guid? TenantId { get; set; }
         public Guid OrgUnitId { get; set; }
         public string CenterNameAr { get; set; } = null!;

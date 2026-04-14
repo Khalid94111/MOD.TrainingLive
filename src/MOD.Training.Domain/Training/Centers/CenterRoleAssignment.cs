@@ -1,4 +1,5 @@
-﻿using MOD.Training.Training.Enums;
+﻿using Microsoft.IdentityModel.Tokens.Experimental;
+using MOD.Training.Training.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -9,6 +10,14 @@ namespace MOD.Training.Training.Centers
 {
     public class CenterRoleAssignment : FullAuditedEntity<Guid>, IMultiTenant
     {
+        public CenterRoleAssignment(Guid id) : base(id)
+        {
+            
+        }
+        public CenterRoleAssignment()
+        {
+            
+        }
         public Guid? TenantId { get; set; }
         public Guid CenterId { get; set; }
         public CenterRoleType RoleType { get; set; }

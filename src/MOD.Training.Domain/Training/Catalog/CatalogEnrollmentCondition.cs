@@ -10,6 +10,14 @@ namespace MOD.Training.Training.Catalog;
 /// </summary>
 public class CatalogEnrollmentCondition : Entity<Guid>
 {
+    public CatalogEnrollmentCondition(Guid id) : base(id)
+    {
+        
+    }
+    public CatalogEnrollmentCondition()
+    {
+        
+    }
     public Guid CatalogCourseId { get; set; }
     public ConditionType ConditionType { get; set; }
 

@@ -8,6 +8,14 @@ namespace MOD.Training.Training.Centers
 {
     public class TrainingCenterPlanItem : FullAuditedEntity<Guid>
     {
+        public TrainingCenterPlanItem(Guid id) : base(id)
+        {
+            
+        }
+        public TrainingCenterPlanItem()
+        {
+            
+        }
         public Guid PlanId { get; set; }
         public Guid TenantCourseId { get; set; }
         public DateTime EstimatedStartDate { get; set; }

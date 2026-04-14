@@ -1,166 +1,125 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
-import { LocalizationPipe } from '@abp/ng.core';
-import {
-  DxDataGridModule, DxPopupModule, DxSelectBoxModule,
-  DxNumberBoxModule, DxTextBoxModule, DxButtonModule,
-} from 'devextreme-angular';
-import { ToolbarItem } from 'devextreme/ui/popup';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TrainingPlanService, TrainingPlanItemService, PlanItemFinancialItemService } from 'src/app/proxy/training/plans';
-import { TrainingPlanDto, TrainingPlanItemDto, PlanItemFinancialItemDto, CreateUpdatePlanItemFinancialItemDto } from 'src/app/proxy/training/plans/dtos';
- import { TrainingLocalizationHelper } from '../../shared';
+import { TrainingPlanDto, TrainingPlanItemDto, PlanItemFinancialItemDto } from 'src/app/proxy/training/plans/dtos';
+import { PlanStatus, TrainingLocalizationHelper } from '../../shared';
+
+
 
 @Component({
   standalone: true,
   selector: 'app-plan-review',
   templateUrl: './plan-review.component.html',
-  styleUrl: './plan-review.component.scss',
-  imports: [
-    CommonModule, LocalizationPipe,
-    DxDataGridModule, DxPopupModule, DxSelectBoxModule,
-    DxNumberBoxModule, DxTextBoxModule, DxButtonModule,
-  ],
+  styleUrls: ['./plan-review.component.scss', '../../shared/gtms-design.scss'],
+  imports: [CommonModule],
 })
 export class PlanReviewComponent implements OnInit {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private planService = inject(TrainingPlanService);
-  private planItemService = inject(TrainingPlanItemService);
-  private financialItemService = inject(PlanItemFinancialItemService);
-    private l = inject(TrainingLocalizationHelper);
-
+  private itemService = inject(TrainingPlanItemService);
+  private fiService = inject(PlanItemFinancialItemService);
+  l = inject(TrainingLocalizationHelper);
 
   planId = '';
   plan = signal<TrainingPlanDto | null>(null);
   items = signal<TrainingPlanItemDto[]>([]);
-  selectedPlanItemId = signal<string | null>(null);
+  selectedItemId = signal<string | null>(null);
   financialItems = signal<PlanItemFinancialItemDto[]>([]);
 
-  // Financial item assignment dialog
-  isFinancialDialogVisible = signal(false);
-  financialFormData = signal<CreateUpdatePlanItemFinancialItemDto>({
-    planItemId: '',
-    financialItemId: '',
-    estimatedAmountOMR: 0,
-  });
+  // Add financial item dialog
+  isAddFiOpen = signal(false);
+  fiFiId = signal('');
+  fiAmountOMR = signal(0);
+  fiAmountUSD = signal<number | undefined>(undefined);
+  fiNotes = signal('');
 
-  // Cost entry dialog
-  isCostDialogVisible = signal(false);
-  costValue = signal(0);
-  costItemId = signal<string | null>(null);
-
-  // TODO: load from FinancialItemService
+  // Available financial items for dropdown (loaded from FinancialItemService)
   availableFinancialItems = signal<any[]>([]);
 
-  financialDialogToolbarItems: ToolbarItem[] | undefined;
-  costDialogToolbarItems: ToolbarItem[] | undefined;
+  PlanStatus = PlanStatus;
+
+  get selectedItem(): TrainingPlanItemDto | undefined {
+    return this.items().find(i => i.id === this.selectedItemId());
+  }
+
+  get itemsMissingCost(): number {
+    return this.items().filter(i => i.courseType !== 0 && (!i.estimatedCost || i.estimatedCost <= 0)).length;
+  }
 
   ngOnInit(): void {
     this.planId = this.route.snapshot.paramMap.get('planId') ?? '';
-
-    this.financialDialogToolbarItems = [
-      {
-        widget: 'dxButton', location: 'after', toolbar: 'bottom',
-        options: { text: this.l.t('::Save'), type: 'default', onClick: () => this.onSaveFinancialItem() },
-      },
-      {
-        widget: 'dxButton', location: 'after', toolbar: 'bottom',
-        options: { text: this.l.t('::Cancel'), onClick: () => this.isFinancialDialogVisible.set(false) },
-      },
-    ];
-
-    this.costDialogToolbarItems = [
-      {
-        widget: 'dxButton', location: 'after', toolbar: 'bottom',
-        options: { text: this.l.t('::Save'), type: 'default', onClick: () => this.onSaveCost() },
-      },
-      {
-        widget: 'dxButton', location: 'after', toolbar: 'bottom',
-        options: { text: this.l.t('::Cancel'), onClick: () => this.isCostDialogVisible.set(false) },
-      },
-    ];
-
     this.loadPlan();
     this.loadItems();
   }
 
   async loadPlan(): Promise<void> {
-    const result = await firstValueFrom(this.planService.get(this.planId));
-    this.plan.set(result);
+    this.plan.set(await firstValueFrom(this.planService.get(this.planId)));
   }
 
   async loadItems(): Promise<void> {
-    const result = await firstValueFrom(
-      this.planItemService.getList({ planId: this.planId, maxResultCount: 500 })
-    );
-    this.items.set(result.items ?? []);
+    const r = await firstValueFrom(this.itemService.getList({ planId: this.planId, maxResultCount: 500 }));
+    this.items.set(r.items ?? []);
   }
 
-  async onItemRowClick(e: any): Promise<void> {
-    const planItemId = e.data.id as string;
-    this.selectedPlanItemId.set(planItemId);
-    await this.loadFinancialItems(planItemId);
+  async selectItem(itemId: string): Promise<void> {
+    this.selectedItemId.set(itemId);
+    await this.loadFinancialItems(itemId);
   }
 
-  async loadFinancialItems(planItemId: string): Promise<void> {
-    const result = await firstValueFrom(
-      this.financialItemService.getListByPlanItem(planItemId)
-    );
-    this.financialItems.set(result);
+  async loadFinancialItems(itemId: string): Promise<void> {
+    const r = await firstValueFrom(this.fiService.getListByPlanItem(itemId));
+    this.financialItems.set(r);
   }
 
-  onAddFinancialItem(): void {
-    const planItemId = this.selectedPlanItemId();
-    if (!planItemId) return;
-
-    this.financialFormData.set({
-      planItemId,
-      financialItemId: '',
-      estimatedAmountOMR: 0,
-    });
-    this.isFinancialDialogVisible.set(true);
+  // --- Financial item actions ---
+  openAddFiDialog(): void {
+    this.fiFiId.set('');
+    this.fiAmountOMR.set(0);
+    this.fiAmountUSD.set(undefined);
+    this.fiNotes.set('');
+    this.isAddFiOpen.set(true);
   }
 
-  async onSaveFinancialItem(): Promise<void> {
-    const data = this.financialFormData();
-    await firstValueFrom(this.financialItemService.create(data));
-    this.isFinancialDialogVisible.set(false);
-    if (this.selectedPlanItemId()) {
-      await this.loadFinancialItems(this.selectedPlanItemId()!);
-    }
+  async onSaveFi(): Promise<void> {
+    const itemId = this.selectedItemId();
+    if (!itemId) return;
+
+    await firstValueFrom(this.fiService.create({
+      planItemId: itemId,
+      financialItemId: this.fiFiId(),
+      estimatedAmountOMR: this.fiAmountOMR(),
+      estimatedAmountUSD: this.fiAmountUSD(),
+      notes: this.fiNotes() || undefined,
+    }));
+
+    this.isAddFiOpen.set(false);
+    await this.loadFinancialItems(itemId);
+    await this.loadItems(); // Refresh cost totals
   }
 
-  async onDeleteFinancialItem(id: string): Promise<void> {
-    await firstValueFrom(this.financialItemService.delete(id));
-    if (this.selectedPlanItemId()) {
-      await this.loadFinancialItems(this.selectedPlanItemId()!);
+  async onDeleteFi(id: string): Promise<void> {
+    await firstValueFrom(this.fiService.delete(id));
+    if (this.selectedItemId()) {
+      await this.loadFinancialItems(this.selectedItemId()!);
+      await this.loadItems();
     }
   }
 
   async onAutoFill(): Promise<void> {
-    const planItemId = this.selectedPlanItemId();
-    if (!planItemId) return;
-
-    await firstValueFrom(this.financialItemService.autoFillFromDefaults(planItemId));
-    await this.loadFinancialItems(planItemId);
-  }
-
-  onEditCost(item: TrainingPlanItemDto): void {
-    this.costItemId.set(item.id);
-    this.costValue.set(item.estimatedCost ?? 0);
-    this.isCostDialogVisible.set(true);
-  }
-
-  async onSaveCost(): Promise<void> {
-    const id = this.costItemId();
-    if (!id) return;
-
-    await firstValueFrom(
-      this.planItemService.updateEstimatedCost(id, { estimatedCost: this.costValue() })
-    );
-    this.isCostDialogVisible.set(false);
+    const itemId = this.selectedItemId();
+    if (!itemId) return;
+    await firstValueFrom(this.fiService.autoFillFromDefaults(itemId));
+    await this.loadFinancialItems(itemId);
     await this.loadItems();
+  }
+
+  // --- Workflow actions ---
+  async onCloseWindow(): Promise<void> {
+    await firstValueFrom(this.planService.closeSubmissionWindow(this.planId));
+    await this.loadPlan();
   }
 
   async onSubmitForReview(): Promise<void> {
@@ -168,28 +127,29 @@ export class PlanReviewComponent implements OnInit {
     await this.loadPlan();
   }
 
-  async onCloseWindow(): Promise<void> {
-    await firstValueFrom(this.planService.closeSubmissionWindow(this.planId));
-    await this.loadPlan();
+  // --- Helpers ---
+  isSelected(itemId: string): boolean {
+    return this.selectedItemId() === itemId;
   }
 
-  updateFinancialItemId(value: string): void {
-    this.financialFormData.update(f => ({ ...f, financialItemId: value }));
+  getCourseTypeBadge(t: number): string {
+    return ({ 0: 'badge-internal', 1: 'badge-ext-local', 2: 'badge-ext-intl' } as Record<number, string>)[t] ?? '';
   }
 
-  updateEstimatedAmountOMR(value: number): void {
-    this.financialFormData.update(f => ({ ...f, estimatedAmountOMR: value }));
+  getCourseTypeText(t: number): string {
+    return ({ 0: 'داخلية', 1: 'خارجية محلية', 2: 'خارجية دولية' } as Record<number, string>)[t] ?? '';
   }
 
-  updateEstimatedAmountUSD(value: number): void {
-    this.financialFormData.update(f => ({ ...f, estimatedAmountUSD: value }));
+  isMissingCost(item: TrainingPlanItemDto): boolean {
+    return item.courseType !== 0 && (!item.estimatedCost || item.estimatedCost <= 0);
   }
 
-  updateNotes(value: string): void {
-    this.financialFormData.update(f => ({ ...f, notes: value }));
+  formatCost(n?: number): string {
+    if (!n || n <= 0) return '';
+    return n.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
   }
 
-  updateCostValue(value: number): void {
-    this.costValue.set(value);
+  getFinancialTotal(): number {
+    return this.financialItems().reduce((s, i) => s + i.estimatedAmountOMR, 0);
   }
 }

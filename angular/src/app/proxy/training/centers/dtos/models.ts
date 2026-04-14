@@ -79,21 +79,6 @@ export interface CreateUpdateTrainingCenterDto {
   isActive?: boolean;
 }
 
-export interface HrEmployeeLookupDto {
-  employeeId?: string;
-  serviceNumber?: string;
-  fullNameAr?: string;
-  fullNameEn?: string;
-  rankName?: string | null;
-  positionName?: string | null;
-}
-
-export interface HrPositionLookupDto {
-  positionId?: string;
-  positionNameAr?: string;
-  positionNameEn?: string;
-}
-
 export interface SetCenterRoleAssignmentsDto {
   assignments: CenterRoleAssignmentInputDto[];
 }

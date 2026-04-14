@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using MOD.Training.Training;
 using MOD.Training.Training.Enums;
+using MOD.Training.Training.Managers;
 using MOD.Training.Training.Permissions;
 using MOD.Training.Training.Plans.Dtos;
 using Volo.Abp.Application.Dtos;
@@ -18,16 +18,16 @@ namespace MOD.Training.Training.Plans;
 public class TrainingPlanAppService(
     IRepository<TrainingPlan, Guid> repository,
     IRepository<TrainingPlanItem, Guid> planItemRepository,
-    TrainingPlanToDtoMapper toDtoMapper,
-    CreateUpdateTrainingPlanToEntityMapper toEntityMapper)
+    PlanItemCostCalculator costCalculator,
+    CourseNameResolver courseNameResolver,
+    TrainingPlanToDtoMapper toDtoMapper)
     : ApplicationService, ITrainingPlanAppService
 {
     public async Task<TrainingPlanDto> GetAsync(Guid id)
     {
         var entity = await repository.GetAsync(id);
         var dto = toDtoMapper.Map(entity);
-        dto.ItemCount = await AsyncExecuter.CountAsync(
-            (await planItemRepository.GetQueryableAsync()).Where(x => x.PlanId == id));
+        await EnrichPlanDtoAsync(dto, id);
         return dto;
     }
 
@@ -39,7 +39,6 @@ public class TrainingPlanAppService(
             queryable = queryable.Where(x => x.Year == input.Year.Value);
 
         var totalCount = await AsyncExecuter.CountAsync(queryable);
-
         queryable = queryable.OrderByDescending(x => x.Year);
         queryable = queryable.PageBy(input);
 
@@ -54,10 +53,25 @@ public class TrainingPlanAppService(
                 .Select(g => new { PlanId = g.Key, Count = g.Count() }));
         var countMap = itemCounts.ToDictionary(x => x.PlanId, x => x.Count);
 
+        // Batch load total costs per plan
+        var allPlanItemIds = await AsyncExecuter.ToListAsync(
+            itemQueryable.Where(x => planIds.Contains(x.PlanId))
+                .Select(x => new { x.Id, x.PlanId }));
+
+        var allItemIds = allPlanItemIds.Select(x => x.Id).ToList();
+        var allCosts = await costCalculator.BatchGetEstimatedCostsAsync(allItemIds);
+
+        var planCostMap = allPlanItemIds
+            .GroupBy(x => x.PlanId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Sum(pi => allCosts.GetValueOrDefault(pi.Id, 0)));
+
         var dtos = entities.Select(e =>
         {
             var dto = toDtoMapper.Map(e);
             dto.ItemCount = countMap.GetValueOrDefault(e.Id, 0);
+            dto.TotalEstimatedCost = planCostMap.GetValueOrDefault(e.Id, 0);
             return dto;
         }).ToList();
 
@@ -67,7 +81,6 @@ public class TrainingPlanAppService(
     [Authorize(TrainingPermissions.TrainingPlan.Create)]
     public async Task<TrainingPlanDto> CreateAsync(CreateUpdateTrainingPlanDto input)
     {
-        // Year uniqueness per tenant
         var exists = await AsyncExecuter.AnyAsync(
             (await repository.GetQueryableAsync()).Where(x => x.Year == input.Year));
         if (exists)
@@ -86,13 +99,11 @@ public class TrainingPlanAppService(
     public async Task<TrainingPlanDto> UpdateAsync(Guid id, CreateUpdateTrainingPlanDto input)
     {
         var entity = await repository.GetAsync(id);
-
         if (entity.Status != PlanStatus.Draft)
             throw new Volo.Abp.BusinessException("Training:TrainingPlan:NotInDraftStatus");
 
         entity.OpenDate = input.OpenDate;
         entity.CloseDate = input.CloseDate;
-
         await repository.UpdateAsync(entity, autoSave: true);
         return toDtoMapper.Map(entity);
     }
@@ -103,11 +114,9 @@ public class TrainingPlanAppService(
         var entity = await repository.GetAsync(id);
         if (entity.Status != PlanStatus.Draft)
             throw new Volo.Abp.BusinessException("Training:TrainingPlan:NotInDraftStatus");
-
         await repository.DeleteAsync(id);
     }
 
-    // Step 1: TD opens submission window
     [Authorize(TrainingPermissions.TrainingPlan.Create)]
     public async Task OpenSubmissionWindowAsync(Guid id)
     {
@@ -117,7 +126,6 @@ public class TrainingPlanAppService(
         await repository.UpdateAsync(entity, autoSave: true);
     }
 
-    // Step 4: Staff closes window
     [Authorize(TrainingPermissions.TrainingPlan.Review)]
     public async Task CloseSubmissionWindowAsync(Guid id)
     {
@@ -127,7 +135,6 @@ public class TrainingPlanAppService(
         await repository.UpdateAsync(entity, autoSave: true);
     }
 
-    // Step 4: Staff submits for review after assigning financials
     [Authorize(TrainingPermissions.TrainingPlan.Review)]
     public async Task SubmitForReviewAsync(Guid id)
     {
@@ -136,7 +143,6 @@ public class TrainingPlanAppService(
         await repository.UpdateAsync(entity, autoSave: true);
     }
 
-    // Step 5: TD approves (cost gate)
     [Authorize(TrainingPermissions.TrainingPlan.Approve)]
     public async Task ApproveAsync(Guid id)
     {
@@ -146,7 +152,6 @@ public class TrainingPlanAppService(
         await repository.UpdateAsync(entity, autoSave: true);
     }
 
-    // Step 6: TH final approval (cost gate)
     [Authorize(TrainingPermissions.TrainingPlan.FinalApprove)]
     public async Task FinalApproveAsync(Guid id)
     {
@@ -172,17 +177,37 @@ public class TrainingPlanAppService(
         await repository.UpdateAsync(entity, autoSave: true);
     }
 
+    /// <summary>
+    /// MOD-13: Cost gate — all external items must have financial items with amounts > 0.
+    /// Uses PlanItemCostCalculator instead of stored EstimatedCost field.
+    /// </summary>
     private async Task ValidateCostGateAsync(Guid planId)
     {
-        // MOD-13: all external items must have EstimatedCost > 0
         var itemQueryable = await planItemRepository.GetQueryableAsync();
-        var hasItemsWithoutCost = await AsyncExecuter.AnyAsync(
+        var externalItems = await AsyncExecuter.ToListAsync(
             itemQueryable.Where(x =>
                 x.PlanId == planId &&
-                x.CourseType != CourseType.Internal &&
-                (x.EstimatedCost == null || x.EstimatedCost <= 0)));
+                x.CourseType != CourseType.Internal));
 
-        if (hasItemsWithoutCost)
-            throw new Volo.Abp.BusinessException("Training:TrainingPlan:CostNotEntered");
+        var externalIds = externalItems.Select(x => x.Id).ToList();
+        var missingCost = await costCalculator.GetItemsMissingCostAsync(externalIds);
+
+        if (missingCost.Any())
+        {
+            throw new Volo.Abp.BusinessException("Training:TrainingPlan:CostNotEntered")
+                .WithData("Count", missingCost.Count);
+        }
+    }
+
+    private async Task EnrichPlanDtoAsync(TrainingPlanDto dto, Guid planId)
+    {
+        var itemQueryable = await planItemRepository.GetQueryableAsync();
+        dto.ItemCount = await AsyncExecuter.CountAsync(
+            itemQueryable.Where(x => x.PlanId == planId));
+
+        var itemIds = await AsyncExecuter.ToListAsync(
+            itemQueryable.Where(x => x.PlanId == planId).Select(x => x.Id));
+        var costs = await costCalculator.BatchGetEstimatedCostsAsync(itemIds);
+        dto.TotalEstimatedCost = costs.Values.Sum();
     }
 }

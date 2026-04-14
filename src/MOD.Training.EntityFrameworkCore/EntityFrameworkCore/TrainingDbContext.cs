@@ -4,7 +4,9 @@ using MOD.Training.Oranges;
 using MOD.Training.Training;
 using MOD.Training.Training.Catalog;
 using MOD.Training.Training.Centers;
+using MOD.Training.Training.Configurations;
 using MOD.Training.Training.Finance;
+using MOD.Training.Training.Hr;
 using MOD.Training.Training.Nominations;
 using MOD.Training.Training.Plans;
 using MOD.Training.Training.System;
@@ -81,7 +83,9 @@ public DbSet<TrainingProvider> TrainingProviders { get; set; }
 public DbSet<Nomination> Nominations { get; set; }
 public DbSet<NominationApproval> NominationApprovals { get; set; }
 
-
+    // In your DbContext class:
+    public DbSet<Rank> HrRanks { get; set; }
+    public DbSet<Employee> HrEmployees { get; set; }
 
 
     public DbSet<Orange> Oranges { get; set; } = null!;
@@ -145,7 +149,7 @@ public DbSet<NominationApproval> NominationApprovals { get; set; }
         builder.ConfigureGdpr();
         builder.ConfigureBlobStoring();
         builder.ConfigureTraining();
-
+        builder.ConfigureHrReadOnly(); // Must be called
 
         builder.Entity<Book>(b => {
             b.ToTable(TrainingConsts.DbTablePrefix + "Books", TrainingConsts.DbSchema);

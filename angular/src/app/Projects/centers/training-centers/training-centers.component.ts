@@ -16,11 +16,12 @@ import {
 import { ToolbarItem } from 'devextreme/ui/popup';
  
 import { createAbpStore } from '../../shared/helpers/create-abp-store';
-import { TrainingCenterService, HrLookupService } from 'src/app/proxy/training/centers';
+import { TrainingCenterService } from 'src/app/proxy/training/centers';
 import { CenterRoleAssignmentInputDto } from 'src/app/proxy/training/centers/dtos';
 import { CenterRoleType, CenterAssignmentType } from 'src/app/proxy/training/enums';
 import { TrainingLocalizationHelper } from '../../shared';
 import { OrganizationUnitService } from '@volo/abp.ng.identity/proxy';
+import { HrLookupService } from 'src/app/proxy/training/hr-integration';
 
 @Component({
   selector: 'app-training-centers',
@@ -235,22 +236,20 @@ tcoSearchResults = signal<Map<number, any>>(new Map());
   async searchTcmEmployee(serviceNumber: string): Promise<void> {
     const orgUnitId = this.formData().orgUnitId;
     if (!orgUnitId || !serviceNumber) return;
-    const results = await firstValueFrom(this.hrLookupService.getEmployees(serviceNumber, orgUnitId));
-    if (results.length > 0) {
-      const emp = results[0];
+    const emp = await firstValueFrom(this.hrLookupService.getByServiceNumber(serviceNumber, orgUnitId));
+    if (emp) {
       this.tcmSearchResult.set(emp);
-      this.tcmAssignment.update(a => ({ ...a, employeeId: emp.employeeId, serviceNumber: emp.serviceNumber }));
+      this.tcmAssignment.update(a => ({ ...a, employeeId: emp.id, serviceNumber: emp.serviceNumber }));
     }
   }
 async searchTcoEmployee(index: number, serviceNumber: string): Promise<void> {
   const orgUnitId = this.formData().orgUnitId;
   if (!orgUnitId || !serviceNumber) return;
-  const results = await firstValueFrom(this.hrLookupService.getEmployees(serviceNumber, orgUnitId));
-  if (results.length > 0) {
-    const emp = results[0];
+  const emp = await firstValueFrom(this.hrLookupService.getByServiceNumber(serviceNumber, orgUnitId));
+  if (emp) {
     this.tcoAssignments.update(list => {
       const u = [...list];
-      u[index] = { ...u[index], employeeId: emp.employeeId, serviceNumber: emp.serviceNumber };
+      u[index] = { ...u[index], employeeId: emp.id, serviceNumber: emp.serviceNumber };
       return u;
     });
     this.tcoSearchResults.update(m => {
@@ -264,12 +263,12 @@ async searchTcoEmployee(index: number, serviceNumber: string): Promise<void> {
 async searchTcoPosition(index: number, name: string): Promise<void> {
   const orgUnitId = this.formData().orgUnitId;
   if (!orgUnitId || !name) return;
-  const results = await firstValueFrom(this.hrLookupService.getPositions(name, orgUnitId));
+  const results = await firstValueFrom(this.hrLookupService.getEmployeesByUnit(orgUnitId));
   if (results.length > 0) {
     const pos = results[0];
     this.tcoAssignments.update(list => {
       const u = [...list];
-      u[index] = { ...u[index], positionId: pos.positionId };
+      u[index] = { ...u[index], positionId: pos.mainUnitId };
       return u;
     });
     this.tcoSearchResults.update(m => {

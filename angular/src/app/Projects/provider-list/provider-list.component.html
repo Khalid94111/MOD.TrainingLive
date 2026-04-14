@@ -1,0 +1,129 @@
+<div class="gtms-card">
+  <div class="gtms-card-header">
+    <div>
+      <h2 class="gtms-card-title">🏢 جهات التدريب</h2>
+      <p class="gtms-card-subtitle">إدارة جهات ومعاهد التدريب المعتمدة</p>
+    </div>
+    @if (canCreate) {
+      <button class="btn btn-primary" (click)="openAddDialog()">➕ إضافة جهة تدريب</button>
+    }
+  </div>
+
+  <div class="gtms-table-wrap">
+    <table class="gtms-table">
+      <thead>
+        <tr>
+          <th>اسم الجهة (عربي)</th>
+          <th>Provider Name (EN)</th>
+          <th>جهة الاتصال</th>
+          <th>البريد الإلكتروني</th>
+          <th class="center">الهاتف</th>
+          <th class="center">التقييم</th>
+          <th class="center">معتمد</th>
+          <th class="center">الحالة</th>
+          <th class="center">إجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of providers(); track p.id) {
+          <tr>
+            <td class="cell-bold">{{ p.providerNameAr }}</td>
+            <td>{{ p.providerNameEn }}</td>
+            <td>{{ p.contactPerson || '—' }}</td>
+            <td style="font-size:0.8rem;">{{ p.email || '—' }}</td>
+            <td class="center" style="font-size:0.8rem;">{{ p.phone || '—' }}</td>
+            <td class="center">
+              <span style="color:#f59e0b; font-weight:700;">⭐ {{ p.averageRating.toFixed(1) }}</span>
+              <span class="cell-sub">({{ p.totalRatings }})</span>
+            </td>
+            <td class="center">
+              @if (p.isApproved) {
+                <span class="badge badge-approved">معتمد</span>
+              } @else {
+                <span class="badge badge-pending">غير معتمد</span>
+              }
+            </td>
+            <td class="center">
+              @if (p.isActive) {
+                <span class="badge badge-approved">نشط</span>
+              } @else {
+                <span class="badge badge-draft">غير نشط</span>
+              }
+            </td>
+            <td class="center">
+              <button class="btn-icon" title="تعديل" (click)="openEditDialog(p)">✏️</button>
+              <button class="btn-icon" title="حذف" (click)="onDelete(p.id)">🗑️</button>
+            </td>
+          </tr>
+        } @empty {
+          <tr><td colspan="9"><div class="empty-state"><div class="empty-icon">🏢</div>لا توجد جهات تدريب بعد</div></td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Create/Edit Dialog -->
+@if (isDialogOpen()) {
+  <div class="modal-backdrop" (click)="isDialogOpen.set(false)">
+    <div class="modal-content modal-md" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">{{ dialogTitle }}</h3>
+        <button class="modal-close" (click)="isDialogOpen.set(false)">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">اسم الجهة (عربي) <span class="required">*</span></label>
+            <input type="text" class="form-input" [value]="fNameAr()" (input)="fNameAr.set($any($event.target).value)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Provider Name (EN) <span class="required">*</span></label>
+            <input type="text" class="form-input" [value]="fNameEn()" (input)="fNameEn.set($any($event.target).value)">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">جهة الاتصال</label>
+          <input type="text" class="form-input" [value]="fContact()" (input)="fContact.set($any($event.target).value)">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">البريد الإلكتروني</label>
+            <input type="email" class="form-input" [value]="fEmail()" (input)="fEmail.set($any($event.target).value)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">الهاتف</label>
+            <input type="tel" class="form-input" [value]="fPhone()" (input)="fPhone.set($any($event.target).value)">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">الموقع الإلكتروني</label>
+          <input type="url" class="form-input" placeholder="https://..." [value]="fWebsite()" (input)="fWebsite.set($any($event.target).value)">
+        </div>
+        <div class="form-row" style="margin-top:10px;">
+          <div class="form-group">
+            <label class="checkbox-wrap">
+              <input type="checkbox" [checked]="fIsApproved()" (change)="fIsApproved.set($any($event.target).checked)">
+              معتمد
+            </label>
+          </div>
+          <div class="form-group">
+            <div class="toggle-wrap">
+              <label class="toggle-switch">
+                <input type="checkbox" [checked]="fIsActive()" (change)="fIsActive.set($any($event.target).checked)">
+                <span class="toggle-slider"></span>
+              </label>
+              <span class="toggle-label">
+                @if (fIsActive()) { نشط } @else { غير نشط }
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" (click)="onSave()">💾 حفظ</button>
+        <button class="btn btn-ghost" (click)="isDialogOpen.set(false)">إلغاء</button>
+      </div>
+    </div>
+  </div>
+}

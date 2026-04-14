@@ -6,6 +6,14 @@ namespace MOD.Training.Training.Finance;
 
 public class TrainingBudget : FullAuditedEntity<Guid>, IMultiTenant
 {
+    public TrainingBudget(Guid id) : base(id)
+    {
+        
+    }
+    public TrainingBudget()
+    {
+        
+    }
     public Guid? TenantId { get; set; }
     public int Year { get; set; }
     public Guid FinancialItemId { get; set; }

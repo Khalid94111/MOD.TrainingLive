@@ -10,6 +10,14 @@ namespace MOD.Training.Training.Catalog;
 /// </summary>
 public class CourseCatalog : FullAuditedAggregateRoot<Guid>
 {
+    public CourseCatalog(Guid id) : base(id)
+    {
+
+    }
+    public CourseCatalog()
+    {
+        
+    }
     public string CourseNameAr { get; set; } = null!;
     public string CourseNameEn { get; set; } = null!;
     public string? DescriptionAr { get; set; }

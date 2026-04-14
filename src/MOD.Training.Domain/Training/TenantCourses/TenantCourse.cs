@@ -13,6 +13,14 @@ namespace MOD.Training.Training.TenantCourses;
 /// </summary>
 public class TenantCourse : FullAuditedEntity<Guid>, IMultiTenant
 {
+    public TenantCourse(Guid id) : base(id)
+    {
+        
+    }
+    public TenantCourse()
+    {
+        
+    }
     public Guid? TenantId { get; set; }
 
     /// <summary>

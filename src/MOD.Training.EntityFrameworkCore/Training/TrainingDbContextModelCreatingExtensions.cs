@@ -319,7 +319,7 @@ builder.ConfigureFinancePhase3();
             b.Property(x => x.DescriptionEn).HasMaxLength(TrainingConsts.MaxDescriptionLength);
             b.Property(x => x.ObjectivesAr).HasMaxLength(TrainingConsts.MaxObjectivesLength);
             b.Property(x => x.ObjectivesEn).HasMaxLength(TrainingConsts.MaxObjectivesLength);
-            b.Property(x => x.EstimatedCost).HasColumnType("decimal(18,3)");
+            //b.Property(x => x.EstimatedCost).HasColumnType("decimal(18,3)");
             b.Property(x => x.FundingSource).HasMaxLength(TrainingConsts.MaxFundingSourceLength);
             b.Property(x => x.SubmittedById).IsRequired();
 

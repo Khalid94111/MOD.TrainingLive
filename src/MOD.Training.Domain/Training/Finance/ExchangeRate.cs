@@ -5,6 +5,14 @@ namespace MOD.Training.Training.Finance;
 
 public class ExchangeRate : Entity<Guid>
 {
+    public ExchangeRate(Guid id) : base(id)
+    {
+        
+    }
+    public ExchangeRate()
+    {
+        
+    }
     public string FromCurrency { get; set; } = "USD";
     public string ToCurrency { get; set; } = "OMR";
     public decimal Rate { get; set; }

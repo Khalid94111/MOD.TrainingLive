@@ -1,167 +1,251 @@
-<div class="page-container">
-  <div class="page-header">
-    <h2>{{ '::Training.Nominations' | abpLocalization }}</h2>
+<div class="gtms-card">
+  <div class="gtms-card-header">
+    <div>
+      <h2 class="gtms-card-title">👥 الترشيحات</h2>
+      <p class="gtms-card-subtitle">ترشيح الموظفين للدورات المعتمدة — 3 مستويات اعتماد (UTM → UGM → TD)</p>
+    </div>
     @if (canCreate) {
-      <dx-button
-        [text]="'::Training.CreateNomination' | abpLocalization"
-        type="default"
-        icon="plus"
-        (onClick)="onAdd()">
-      </dx-button>
+      <button class="btn btn-primary" (click)="openCreateDialog()">
+        ➕ ترشيح موظفين
+      </button>
     }
   </div>
 
-  <dx-data-grid
-    [dataSource]="nominations()"
-    [showBorders]="true"
-    [columnAutoWidth]="true"
-    [rowAlternationEnabled]="true"
-    keyExpr="id"
-    (onRowExpanding)="onRowExpanding($event)">
-
-    <dxo-master-detail [enabled]="true" template="approvalDetail"></dxo-master-detail>
-
-    <dxi-column dataField="employeeName"
-      [caption]="'::Training.Employee' | abpLocalization"
-      [width]="200">
-    </dxi-column>
-
-    <dxi-column dataField="courseName"
-      [caption]="'::Training.Course' | abpLocalization"
-      [width]="180">
-    </dxi-column>
-
-    <dxi-column dataField="sessionCode"
-      [caption]="'::Training.Session' | abpLocalization"
-      [width]="100">
-    </dxi-column>
-
-    <dxi-column dataField="status"
-      [caption]="'::Training.PlanStatus' | abpLocalization"
-      [width]="120"
-      cellTemplate="statusTemplate">
-    </dxi-column>
-
-    <dxi-column dataField="nominatedByName"
-      [caption]="'::Training.NominatedBy' | abpLocalization"
-      [width]="150">
-    </dxi-column>
-
-    <dxi-column dataField="nominatedAt"
-      [caption]="'::Training.NominatedAt' | abpLocalization"
-      dataType="date"
-      [width]="120">
-    </dxi-column>
-
-    <dxi-column
-      [caption]="'::Actions' | abpLocalization"
-      [width]="120"
-      cellTemplate="actionsTemplate"
-      [allowSorting]="false">
-    </dxi-column>
-
-    <!-- Status badge -->
-    <div *dxTemplate="let cell of 'statusTemplate'">
-      <span class="status-badge" [ngClass]="getStatusBadgeClass(cell.value)">
-        {{ '::Training.NominationStatus.' + NominationStatus[cell.value] | abpLocalization }}
-      </span>
-    </div>
-
-    <!-- Actions -->
-    <div *dxTemplate="let cell of 'actionsTemplate'">
-      @if (canApproveNomination(cell.data)) {
-        <dx-button icon="check" stylingMode="text" hint="Approve" (onClick)="onApprove(cell.data.id)"></dx-button>
-        <dx-button icon="close" stylingMode="text" hint="Reject" (onClick)="onReject(cell.data.id)"></dx-button>
+  <!-- Filters -->
+  <div class="filter-bar">
+    <select class="form-input" (change)="filterSessionId.set($any($event.target).value); loadNominations()">
+      <option value="">جميع الجلسات</option>
+      @for (session of sessions(); track session.id) {
+        <option [value]="session.id">{{ session.sessionCode }} — {{ session.courseName }}</option>
       }
-    </div>
+    </select>
+    <select class="form-input" (change)="filterStatus.set($any($event.target).value); loadNominations()">
+      <option value="">جميع الحالات</option>
+      <option value="0">مرشح</option>
+      <option value="1">معتمد UTM</option>
+      <option value="2">معتمد UGM</option>
+      <option value="3">معتمد TD</option>
+      <option value="4">مرفوض</option>
+    </select>
+  </div>
 
-    <!-- Master-detail: approval chain -->
-    <div *dxTemplate="let detail of 'approvalDetail'">
-      <div class="approval-chain">
-        <h4>{{ '::Training.ApprovalChain' | abpLocalization }}</h4>
-        <dx-data-grid
-          [dataSource]="getApprovalChain(detail.data.id)"
-          [showBorders]="true"
-          [columnAutoWidth]="true"
-          keyExpr="id">
+  <!-- Nominations Table -->
+  <div class="gtms-table-wrap">
+    <table class="gtms-table">
+      <thead>
+        <tr>
+          <th style="width:30px"></th>
+          <th>الموظف</th>
+          <th>الدورة</th>
+          <th class="center">الجلسة</th>
+          <th class="center">الحالة</th>
+          <th>مرشح بواسطة</th>
+          <th class="center">التاريخ</th>
+          <th class="center">إجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (nom of nominations(); track nom.id) {
+          <!-- Main row -->
+          <tr class="expand-row" (click)="toggleExpand(nom.id)">
+            <td class="center">
+              <span class="expand-arrow" [class.open]="isExpanded(nom.id)">▶</span>
+            </td>
+            <td>
+              <span class="cell-bold">{{ nom.employeeName }}</span>
+            </td>
+            <td>{{ nom.courseName }}</td>
+            <td class="center">{{ nom.sessionCode }}</td>
+            <td class="center">
+              <span class="badge" [class]="getStatusClass(nom.status)">
+                {{ getStatusText(nom.status) }}
+              </span>
+            </td>
+            <td>{{ nom.nominatedByName }}</td>
+            <td class="center">{{ formatDate(nom.nominatedAt) }}</td>
+            <td class="center" (click)="$event.stopPropagation()">
+              @if (canActOn(nom)) {
+                <button class="btn-icon" title="اعتماد" (click)="onApprove(nom.id)">✅</button>
+                <button class="btn-icon" title="رفض" (click)="openRejectDialog(nom.id)">❌</button>
+              }
+            </td>
+          </tr>
 
-          <dxi-column dataField="approvalLevel"
-            caption="#"
-            [width]="40"
-            alignment="center">
-          </dxi-column>
+          <!-- Approval chain (expanded) -->
+          @if (isExpanded(nom.id)) {
+            <tr>
+              <td></td>
+              <td colspan="7">
+                <div class="approval-chain">
+                  <p style="font-size:0.82rem; font-weight:700; color:#1e40af; margin-bottom:10px;">🔗 سلسلة الاعتماد</p>
+                  @for (step of getChain(nom.id); track step.id) {
+                    <div class="approval-step">
+                      <div class="step-circle" [class]="getApprovalStepClass(step.status)">
+                        {{ getApprovalStepIcon(step.status) }}
+                      </div>
+                      <div class="step-info">
+                        <div class="step-role">{{ step.approvalLevelName }}</div>
+                        <div class="step-meta">
+                          @if (step.approvedByName) {
+                            {{ step.approvedByName }} — {{ formatDate(step.actionDate) }}
+                          } @else {
+                            بانتظار...
+                          }
+                          @if (step.notes) {
+                            <span style="color:#b45309"> | {{ step.notes }}</span>
+                          }
+                        </div>
+                      </div>
+                      <span class="badge" [class]="getApprovalStepClass(step.status) === 'step-done' ? 'badge-approved' : getApprovalStepClass(step.status) === 'step-rejected' ? 'badge-rejected' : 'badge-pending'">
+                        @switch (step.status) {
+                          @case (0) { قيد الانتظار }
+                          @case (1) { معتمد }
+                          @case (2) { مرفوض }
+                        }
+                      </span>
+                    </div>
+                  } @empty {
+                    <p style="color:#94a3b8; font-size:0.82rem;">جاري التحميل...</p>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        } @empty {
+          <tr>
+            <td colspan="8">
+              <div class="empty-state">
+                <div class="empty-icon">👥</div>
+                لا توجد ترشيحات بعد
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>
 
-          <dxi-column dataField="approvalLevelName"
-            [caption]="'::Training.ApprovalLevel' | abpLocalization"
-            [width]="100">
-          </dxi-column>
+<!-- Create Nomination Dialog -->
+@if (isCreateOpen()) {
+  <div class="modal-backdrop" (click)="isCreateOpen.set(false)">
+    <div class="modal-content modal-lg" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">➕ ترشيح موظفين جدد</h3>
+        <button class="modal-close" (click)="isCreateOpen.set(false)">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Session select -->
+        <div class="form-group">
+          <label class="form-label">الجلسة <span class="required">*</span></label>
+          <select class="form-input"
+            [value]="selectedSessionId()"
+            (change)="selectedSessionId.set($any($event.target).value); onSessionSelected()">
+            <option value="">اختر جلسة...</option>
+            @for (s of sessions(); track s.id) {
+              <option [value]="s.id">
+                {{ s.sessionCode }} — {{ s.courseName }} ({{ s.availableSeats }} مقعد متاح)
+              </option>
+            }
+          </select>
+        </div>
 
-          <dxi-column dataField="status"
-            [caption]="'::Training.PlanStatus' | abpLocalization"
-            [width]="100"
-            cellTemplate="approvalStatusTpl">
-          </dxi-column>
+        @if (getSelectedSession(); as session) {
+          <div class="alert alert-info" style="margin-bottom:14px;">
+            <span class="alert-icon">ℹ️</span>
+            <div>
+              <strong>{{ session.courseName }}</strong> |
+              {{ formatDate(session.startDate) }} — {{ formatDate(session.endDate) }} |
+              📍 {{ session.location }} |
+              💺 {{ session.availableSeats }} مقعد متاح من {{ session.maxSeats }}
+            </div>
+          </div>
+        }
 
-          <dxi-column dataField="approvedByName"
-            [caption]="'::Training.NominatedBy' | abpLocalization"
-            [width]="150">
-          </dxi-column>
+        <!-- Employee multi-select -->
+        @if (selectedSessionId()) {
+          <div class="form-group">
+            <label class="form-label">الموظفون <span class="required">*</span></label>
+            <p class="form-hint">⚡ الشروط تُفحص تلقائياً عند الترشيح — اختر موظفاً أو أكثر</p>
 
-          <dxi-column dataField="actionDate"
-            caption="Date"
-            dataType="date"
-            [width]="120">
-          </dxi-column>
+            <div class="gtms-table-wrap" style="max-height: 300px; overflow-y: auto;">
+              <table class="gtms-table">
+                <thead>
+                  <tr>
+                    <th style="width:40px" class="center">✓</th>
+                    <th>الاسم</th>
+                    <th class="center">الرتبة</th>
+                    <th class="center">الرقم العسكري</th>
+                    <th class="center">النوع</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (emp of employees(); track emp.id) {
+                    <tr (click)="toggleEmployee(emp.id)"
+                      [style.background]="isEmployeeSelected(emp.id) ? '#eff6ff' : ''">
+                      <td class="center">
+                        <input type="checkbox" [checked]="isEmployeeSelected(emp.id)" (click)="$event.stopPropagation()">
+                      </td>
+                      <td class="cell-bold">{{ emp.fullNameAr }}</td>
+                      <td class="center">
+                        <span class="badge" [class]="emp.personnelType === 'Officer' ? 'badge-open' : 'badge-draft'">
+                          {{ emp.rankNameAr }}
+                        </span>
+                      </td>
+                      <td class="center">{{ emp.serviceNumber }}</td>
+                      <td class="center">
+                        @if (emp.personnelType === 'Officer') { ضابط } @else { فرد }
+                      </td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="5" style="text-align:center; color:#94a3b8; padding:20px;">لا يوجد موظفون في هذه الوحدة</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
 
-          <dxi-column dataField="notes"
-            caption="Notes"
-            [width]="200">
-          </dxi-column>
-
-          <div *dxTemplate="let cell of 'approvalStatusTpl'">
-            @switch (cell.value) {
-              @case (0) { <span class="status-badge badge-nominated">Pending</span> }
-              @case (1) { <span class="status-badge badge-td">Approved</span> }
-              @case (2) { <span class="status-badge badge-rejected">Rejected</span> }
+            @if (selectedEmployeeIds().length > 0) {
+              <div class="alert alert-success" style="margin-top:10px;">
+                <span class="alert-icon">✅</span>
+                تم اختيار {{ selectedEmployeeIds().length }} موظف للترشيح
+              </div>
             }
           </div>
-        </dx-data-grid>
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary"
+          [disabled]="!selectedSessionId() || selectedEmployeeIds().length === 0"
+          (click)="onSubmitNominations()">
+          📤 ترشيح {{ selectedEmployeeIds().length }} موظف
+        </button>
+        <button class="btn btn-ghost" (click)="isCreateOpen.set(false)">إلغاء</button>
       </div>
     </div>
+  </div>
+}
 
-  </dx-data-grid>
-
-  <!-- Create Nomination Dialog -->
-  <dx-popup
-    [visible]="isCreateDialogVisible()"
-    [title]="'::Training.NominateEmployees' | abpLocalization"
-    [showCloseButton]="true"
-    [width]="500"
-    [height]="350"
-    [toolbarItems]="createDialogToolbarItems"
-    (onHidden)="isCreateDialogVisible.set(false)">
-    <div class="dialog-form">
-      <div class="form-field">
-        <label>{{ '::Training.Session' | abpLocalization }}</label>
-        <dx-select-box
-          [dataSource]="sessions()"
-          displayExpr="sessionCode"
-          valueExpr="id"
-          [value]="formData().sessionId"
-          (onValueChanged)="updateSessionId($event.value)"
-          [searchEnabled]="true">
-        </dx-select-box>
+<!-- Reject Dialog -->
+@if (isRejectOpen()) {
+  <div class="modal-backdrop" (click)="isRejectOpen.set(false)">
+    <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">❌ رفض الترشيح</h3>
+        <button class="modal-close" (click)="isRejectOpen.set(false)">✕</button>
       </div>
-      <div class="form-field">
-        <label>{{ '::Training.Employee' | abpLocalization }}</label>
-        <!-- TODO: replace with employee lookup from HR -->
-        <dx-tag-box
-          [value]="formData().employeeIds"
-          (onValueChanged)="updateEmployeeIds($event.value)"
-          [searchEnabled]="true"
-          placeholder="Select employees...">
-        </dx-tag-box>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">سبب الرفض</label>
+          <textarea class="form-input" rows="3"
+            [value]="rejectNotes()"
+            (input)="rejectNotes.set($any($event.target).value)"
+            placeholder="أدخل سبب رفض الترشيح..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" (click)="onConfirmReject()">❌ تأكيد الرفض</button>
+        <button class="btn btn-ghost" (click)="isRejectOpen.set(false)">إلغاء</button>
       </div>
     </div>
-  </dx-popup>
-</div>
+  </div>
+}

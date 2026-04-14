@@ -1,103 +1,82 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
-import { LocalizationPipe, PermissionService } from '@abp/ng.core';
-import { DxDataGridModule, DxPopupModule, DxNumberBoxModule, DxDateBoxModule, DxButtonModule } from 'devextreme-angular';
-import { ToolbarItem } from 'devextreme/ui/popup';
+import {  PermissionService } from '@abp/ng.core';
+import { Router } from '@angular/router';
 import { TrainingPlanService } from 'src/app/proxy/training/plans';
 import { TrainingPlanDto, CreateUpdateTrainingPlanDto } from 'src/app/proxy/training/plans/dtos';
 import { PlanStatus, TrainingLocalizationHelper } from '../../shared';
  
+
 @Component({
   standalone: true,
   selector: 'app-annual-plan-list',
   templateUrl: './annual-plan-list.component.html',
-  styleUrl: './annual-plan-list.component.scss',
-  imports: [CommonModule, LocalizationPipe, DxDataGridModule, DxPopupModule, DxNumberBoxModule, DxDateBoxModule, DxButtonModule],
+  styleUrls: ['./annual-plan-list.component.scss', '../../shared/gtms-design.scss'],
+  imports: [CommonModule],
 })
 export class AnnualPlanListComponent implements OnInit {
   private planService = inject(TrainingPlanService);
   private permissionService = inject(PermissionService);
-  private l = inject(TrainingLocalizationHelper);
-
-  readonly PlanStatus = PlanStatus;
-
+  private router = inject(Router);
+  l = inject(TrainingLocalizationHelper);
 
   plans = signal<TrainingPlanDto[]>([]);
-  totalCount = signal(0);
-  isDialogVisible = signal(false);
+  isDialogOpen = signal(false);
   isEditMode = signal(false);
   selectedPlanId = signal<string | null>(null);
 
-  formData = signal<CreateUpdateTrainingPlanDto>({
-    year: new Date().getFullYear() + 1,
-  });
+  formYear = signal(new Date().getFullYear() + 1);
+  formOpenDate = signal('');
+  formCloseDate = signal('');
 
-  canCreate: boolean = false;
-  canApprove: boolean = false;
+  canCreate = false;
+  canReview = false;
+  canApprove = false;
+  canFinalApprove = false;
 
-  dialogToolbarItems: ToolbarItem[] | undefined;
-
-  get dialogTitle(): string {
-    return this.isEditMode() ? this.l.t('::Training.TrainingPlan') : this.l.t('::Training.CreatePlan');
-  }
+  PlanStatus = PlanStatus;
 
   ngOnInit(): void {
     this.canCreate = this.permissionService.getGrantedPolicy('Training.TrainingPlan.Create');
+    this.canReview = this.permissionService.getGrantedPolicy('Training.TrainingPlan.Review');
     this.canApprove = this.permissionService.getGrantedPolicy('Training.TrainingPlan.Approve');
- 
-    this.dialogToolbarItems = [
-      {
-        widget: 'dxButton', location: 'after', toolbar: 'bottom',
-        options: { text: this.l.t('::Save'), type: 'default', onClick: () => this.onSave() },
-      },
-      {
-        widget: 'dxButton', location: 'after', toolbar: 'bottom',
-        options: { text: this.l.t('::Cancel'), onClick: () => this.isDialogVisible.set(false) },
-      },
-    ];
-
+    this.canFinalApprove = this.permissionService.getGrantedPolicy('Training.TrainingPlan.FinalApprove');
     this.loadPlans();
   }
 
   async loadPlans(): Promise<void> {
-    const result = await firstValueFrom(
-      this.planService.getList({ maxResultCount: 100 })
-    );
+    const result = await firstValueFrom(this.planService.getList({ maxResultCount: 100 }));
     this.plans.set(result.items ?? []);
-    this.totalCount.set(result.totalCount);
   }
 
-  onAdd(): void {
+  openCreateDialog(): void {
     this.isEditMode.set(false);
     this.selectedPlanId.set(null);
-    this.formData.set({ year: new Date().getFullYear() + 1 });
-    this.isDialogVisible.set(true);
-  }
-
-  onEdit(plan: TrainingPlanDto): void {
-    this.isEditMode.set(true);
-    this.selectedPlanId.set(plan.id);
-    this.formData.set({
-      year: plan.year,
-      openDate: plan.openDate,
-      closeDate: plan.closeDate,
-    });
-    this.isDialogVisible.set(true);
+    this.formYear.set(new Date().getFullYear() + 1);
+    this.formOpenDate.set('');
+    this.formCloseDate.set('');
+    this.isDialogOpen.set(true);
   }
 
   async onSave(): Promise<void> {
-    const data = this.formData();
+    const data: CreateUpdateTrainingPlanDto = {
+      year: this.formYear(),
+      openDate: this.formOpenDate() || undefined,
+      closeDate: this.formCloseDate() || undefined,
+    };
+
     if (this.isEditMode() && this.selectedPlanId()) {
       await firstValueFrom(this.planService.update(this.selectedPlanId()!, data));
     } else {
       await firstValueFrom(this.planService.create(data));
     }
-    this.isDialogVisible.set(false);
+    this.isDialogOpen.set(false);
     await this.loadPlans();
   }
 
   async onDelete(id: string): Promise<void> {
+    if (!confirm('هل أنت متأكد من حذف هذه الخطة؟')) return;
     await firstValueFrom(this.planService.delete(id));
     await this.loadPlans();
   }
@@ -112,50 +91,47 @@ export class AnnualPlanListComponent implements OnInit {
     await this.loadPlans();
   }
 
-  async onApprove(id: string): Promise<void> {
-    await firstValueFrom(this.planService.approve(id));
-    await this.loadPlans();
+  navigateToEntry(planId: string): void {
+    this.router.navigate(['/training/plans', planId, 'entry']);
   }
 
-  async onFinalApprove(id: string): Promise<void> {
-    await firstValueFrom(this.planService.finalApprove(id));
-    await this.loadPlans();
+  navigateToReview(planId: string): void {
+    this.router.navigate(['/training/plans', planId, 'review']);
+  }
+
+  navigateToApproval(planId: string): void {
+    this.router.navigate(['/training/plans', planId, 'approve']);
   }
 
   getStatusBadgeClass(status: PlanStatus): string {
-    const map: Record<number, string> = {
+    return ({
       [PlanStatus.Draft]: 'badge-draft',
       [PlanStatus.Open]: 'badge-open',
       [PlanStatus.Submitted]: 'badge-submitted',
       [PlanStatus.UnderReview]: 'badge-review',
-      [PlanStatus.TDApproved]: 'badge-approved',
-      [PlanStatus.THApproved]: 'badge-final',
-    };
-    return map[status] ?? 'badge-draft';
+      [PlanStatus.TDApproved]: 'badge-td-approved',
+      [PlanStatus.THApproved]: 'badge-th-approved',
+    } as Record<number, string>)[status] ?? 'badge-draft';
   }
 
-  updateYear(value: number): void {
-    this.formData.update(f => ({ ...f, year: value }));
+  getStatusText(status: PlanStatus): string {
+    return ({
+      [PlanStatus.Draft]: 'مسودة',
+      [PlanStatus.Open]: 'مفتوحة',
+      [PlanStatus.Submitted]: 'مُرسلة',
+      [PlanStatus.UnderReview]: 'قيد المراجعة',
+      [PlanStatus.TDApproved]: 'معتمدة TD',
+      [PlanStatus.THApproved]: 'معتمدة نهائياً',
+    } as Record<number, string>)[status] ?? '';
   }
 
-  updateOpenDate(value: string): void {
-    this.formData.update(f => ({ ...f, openDate: value }));
+  formatDate(date?: string): string {
+    if (!date) return '—';
+    return new Date(date).toLocaleDateString('ar-OM');
   }
 
-  updateCloseDate(value: string): void {
-    this.formData.update(f => ({ ...f, closeDate: value }));
-  }
-
-  navigateToEntry(planId: string): void {
-    // Navigate to plan entry page
-    window.location.href = `/training/plans/${planId}/entry`;
-  }
-
-  navigateToReview(planId: string): void {
-    window.location.href = `/training/plans/${planId}/review`;
-  }
-
-  navigateToApproval(planId: string): void {
-    window.location.href = `/training/plans/${planId}/approve`;
+  formatCost(cost: number): string {
+    if (!cost) return '—';
+    return cost.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
   }
 }

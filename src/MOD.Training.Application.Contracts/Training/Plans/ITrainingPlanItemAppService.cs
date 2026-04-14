@@ -13,6 +13,5 @@ public interface ITrainingPlanItemAppService : ICrudAppService<
     TrainingPlanItemGetListInput,
     CreateUpdateTrainingPlanItemDto>
 {
-    Task UpdateEstimatedCostAsync(Guid id, UpdateEstimatedCostDto input);
-    Task<List<PlanItemConditionDto>> GetConditionsAsync(Guid planItemId);
+     Task<List<PlanItemConditionDto>> GetConditionsAsync(Guid planItemId);
 }

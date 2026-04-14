@@ -9,6 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Training\NewFolder\**" />
+    <EmbeddedResource Remove="Training\NewFolder\**" />
+    <None Remove="Training\NewFolder\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\MOD.Training.Domain.Shared\MOD.Training.Domain.Shared.csproj" />
   </ItemGroup>
 
@@ -33,10 +39,6 @@
     <PackageReference Include="Volo.Abp.TextTemplateManagement.Domain" Version="10.1.1" />
     <PackageReference Include="Volo.Abp.Gdpr.Domain" Version="10.1.1" />
 
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Training\NewFolder\" />
   </ItemGroup>
 
 </Project>

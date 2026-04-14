@@ -11,6 +11,14 @@ namespace MOD.Training.Training.Catalog;
 /// </summary>
 public class CourseProposal : FullAuditedEntity<Guid>, IMultiTenant
 {
+    public CourseProposal(Guid id) : base(id)
+    {
+        
+    }
+    public CourseProposal()
+    {
+        
+    }
     public Guid? TenantId { get; set; }
 
     public string CourseNameAr { get; set; } = null!;

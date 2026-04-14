@@ -1,4 +1,4 @@
-import type { CreateUpdateTrainingPlanItemDto, PlanItemConditionDto, TrainingPlanItemDto, TrainingPlanItemGetListInput, UpdateEstimatedCostDto } from './dtos/models';
+import type { CreateUpdateTrainingPlanItemDto, PlanItemConditionDto, TrainingPlanItemDto, TrainingPlanItemGetListInput } from './dtos/models';
 import { RestService, Rest } from '@abp/ng.core';
 import type { PagedResultDto } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
@@ -57,15 +57,6 @@ export class TrainingPlanItemService {
     this.restService.request<any, TrainingPlanItemDto>({
       method: 'PUT',
       url: `/api/app/training-plan-item/${id}`,
-      body: input,
-    },
-    { apiName: this.apiName,...config });
-  
-
-  updateEstimatedCost = (id: string, input: UpdateEstimatedCostDto, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, void>({
-      method: 'PUT',
-      url: `/api/app/training-plan-item/${id}/estimated-cost`,
       body: input,
     },
     { apiName: this.apiName,...config });

@@ -91,7 +91,8 @@ export const TRAINING_ROUTES: Routes = [
         (m) => m.CenterPlansComponent
       ),
   },
- // ===== Phase 3: Annual Plans =====
+
+  // ===== Phase 3: Annual Plans =====
   {
     path: 'plans',
     loadComponent: () =>
@@ -133,7 +134,6 @@ export const TRAINING_ROUTES: Routes = [
     loadComponent: () =>
       import('./providers/provider-list/provider-list.component').then(m => m.ProviderListComponent),
   },
-
       // Phase 2 (future)
       // { path: 'finance/items', loadComponent: () => import(...) },
       // { path: 'finance/defaults', loadComponent: () => import(...) },

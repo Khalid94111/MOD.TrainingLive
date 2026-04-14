@@ -11,6 +11,14 @@ namespace MOD.Training.Training.TenantCourses;
 /// </summary>
 public class TenantCourseCondition : Entity<Guid>
 {
+    public TenantCourseCondition(Guid id) : base(id)
+    {
+        
+    }
+    public TenantCourseCondition()
+    {
+        
+    }
     public Guid TenantCourseId { get; set; }
     public ConditionType ConditionType { get; set; }
     public string ConditionValue { get; set; } = null!;
