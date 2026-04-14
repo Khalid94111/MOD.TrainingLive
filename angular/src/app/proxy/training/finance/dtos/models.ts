@@ -9,6 +9,9 @@ export interface CourseTypeFinancialItemDefaultDto extends EntityDto<string> {
   financialItemNameAr?: string;
   financialItemNameEn?: string;
   sortOrder?: number;
+  parentNameAr?: string;
+  parentNameEn?: string;
+  financialItemCode?: string;
 }
 
 export interface CreateCourseTypeFinancialItemDefaultDto {
@@ -74,6 +77,16 @@ export interface FinancialItemDto extends EntityDto<string> {
 export interface FinancialItemGetListInput extends PagedAndSortedResultRequestDto {
   filter?: string | null;
   isActive?: boolean | null;
+}
+
+export interface FinancialItemSubItemDto {
+  id?: string;
+  nameAr?: string;
+  nameEn?: string;
+  code?: string;
+  parentId?: string;
+  parentNameAr?: string;
+  parentNameEn?: string;
 }
 
 export interface PriceQuoteDto extends FullAuditedEntityDto<string> {

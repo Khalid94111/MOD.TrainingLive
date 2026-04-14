@@ -72,10 +72,7 @@ export class FinancialItemService {
 export class CourseTypeFinancialDefaultService {
   private readonly proxy = inject(CourseTypeDefaultProxy);
 
-  getList(courseType: CourseType): Promise<CourseTypeFinancialItemDefaultDto[]> {
-    return firstValueFrom(this.proxy.getList(courseType));
-  }
-
+  
   create(input: CreateCourseTypeFinancialItemDefaultDto): Promise<CourseTypeFinancialItemDefaultDto> {
     return firstValueFrom(this.proxy.create(input));
   }

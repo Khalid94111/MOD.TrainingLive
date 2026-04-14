@@ -6876,8 +6876,8 @@
                     }
                   ],
                   "returnValue": {
-                    "type": "System.Collections.Generic.List<MOD.Training.Training.Finance.Dtos.CourseTypeFinancialItemDefaultDto>",
-                    "typeSimple": "[MOD.Training.Training.Finance.Dtos.CourseTypeFinancialItemDefaultDto]"
+                    "type": "Volo.Abp.Application.Dtos.ListResultDto<MOD.Training.Training.Finance.Dtos.CourseTypeFinancialItemDefaultDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.ListResultDto<MOD.Training.Training.Finance.Dtos.CourseTypeFinancialItemDefaultDto>"
                   }
                 },
                 {
@@ -6905,6 +6905,23 @@
                       "typeAsString": "System.Guid, System.Private.CoreLib",
                       "type": "System.Guid",
                       "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
+                  }
+                },
+                {
+                  "name": "UpdateSortOrderAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Shared.UpdateSortOrderInput, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Shared.UpdateSortOrderInput",
+                      "typeSimple": "MOD.Training.Shared.UpdateSortOrderInput",
                       "isOptional": false,
                       "defaultValue": null
                     }
@@ -6949,8 +6966,8 @@
                 }
               ],
               "returnValue": {
-                "type": "System.Collections.Generic.List<MOD.Training.Training.Finance.Dtos.CourseTypeFinancialItemDefaultDto>",
-                "typeSimple": "[MOD.Training.Training.Finance.Dtos.CourseTypeFinancialItemDefaultDto]"
+                "type": "Volo.Abp.Application.Dtos.ListResultDto<MOD.Training.Training.Finance.Dtos.CourseTypeFinancialItemDefaultDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.ListResultDto<MOD.Training.Training.Finance.Dtos.CourseTypeFinancialItemDefaultDto>"
               },
               "allowAnonymous": false,
               "implementFrom": "MOD.Training.Training.Finance.ICourseTypeFinancialDefaultAppService"
@@ -7019,6 +7036,43 @@
                   "defaultValue": null,
                   "constraintTypes": [],
                   "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.Finance.ICourseTypeFinancialDefaultAppService"
+            },
+            "UpdateSortOrderAsyncByInput": {
+              "uniqueName": "UpdateSortOrderAsyncByInput",
+              "name": "UpdateSortOrderAsync",
+              "httpMethod": "PUT",
+              "url": "api/app/course-type-financial-default/sort-order",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Shared.UpdateSortOrderInput, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Shared.UpdateSortOrderInput",
+                  "typeSimple": "MOD.Training.Shared.UpdateSortOrderInput",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "MOD.Training.Shared.UpdateSortOrderInput",
+                  "typeSimple": "MOD.Training.Shared.UpdateSortOrderInput",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
                   "descriptorName": ""
                 }
               ],
@@ -7274,8 +7328,8 @@
                   "name": "GetSubItemsAsync",
                   "parametersOnMethod": [],
                   "returnValue": {
-                    "type": "System.Collections.Generic.List<MOD.Training.Training.Finance.Dtos.FinancialItemDto>",
-                    "typeSimple": "[MOD.Training.Training.Finance.Dtos.FinancialItemDto]"
+                    "type": "System.Collections.Generic.List<MOD.Training.Training.Finance.Dtos.FinancialItemSubItemDto>",
+                    "typeSimple": "[MOD.Training.Training.Finance.Dtos.FinancialItemSubItemDto]"
                   }
                 },
                 {
@@ -7637,8 +7691,8 @@
               "parametersOnMethod": [],
               "parameters": [],
               "returnValue": {
-                "type": "System.Collections.Generic.List<MOD.Training.Training.Finance.Dtos.FinancialItemDto>",
-                "typeSimple": "[MOD.Training.Training.Finance.Dtos.FinancialItemDto]"
+                "type": "System.Collections.Generic.List<MOD.Training.Training.Finance.Dtos.FinancialItemSubItemDto>",
+                "typeSimple": "[MOD.Training.Training.Finance.Dtos.FinancialItemSubItemDto]"
               },
               "allowAnonymous": false,
               "implementFrom": "MOD.Training.Training.Finance.IFinancialItemAppService"
@@ -24842,6 +24896,63 @@
     }
   },
   "types": {
+    "MOD.Training.Shared.SortOrderItem": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Id",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "SortOrder",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Shared.UpdateSortOrderInput": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Items",
+          "jsonName": null,
+          "type": "[MOD.Training.Shared.SortOrderItem]",
+          "typeSimple": "[MOD.Training.Shared.SortOrderItem]",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
     "MOD.Training.Training.Catalog.Dtos.CatalogEnrollmentConditionDto": {
       "baseType": "Volo.Abp.Application.Dtos.EntityDto<System.Guid>",
       "isEnum": false,
@@ -27303,6 +27414,45 @@
           "maximum": null,
           "regex": null,
           "isNullable": false
+        },
+        {
+          "name": "ParentNameAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ParentNameEn",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "FinancialItemCode",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
         }
       ]
     },
@@ -27877,6 +28027,106 @@
           "maximum": null,
           "regex": null,
           "isNullable": true
+        }
+      ]
+    },
+    "MOD.Training.Training.Finance.Dtos.FinancialItemSubItemDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Id",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "NameAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "NameEn",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Code",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ParentId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ParentNameAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ParentNameEn",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
         }
       ]
     },

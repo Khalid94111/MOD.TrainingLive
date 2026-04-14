@@ -125,14 +125,38 @@ public class FinancialItemAppService(
         await financialItemRepo.DeleteAsync(id);
     }
 
-    public async Task<List<FinancialItemDto>> GetSubItemsAsync()
-    {
-        var queryable = await financialItemRepo.GetQueryableAsync();
-        var subItems = await AsyncExecuter.ToListAsync(
-            queryable.Where(x => x.ParentId != null && x.IsActive)
-                     .OrderBy(x => x.NameAr));
 
-        return subItems.Select(toDtoMapper.Map).ToList();
+    /// <summary>
+    /// Returns active sub-items (ParentId != null) with parent name for UI grouping.
+    /// Used by PAGE 2.2 "Add Financial Item" grouped dropdown.
+    /// </summary>
+    [Authorize(TrainingPermissions.FinancialItems.Default)]
+    public async Task<List<FinancialItemSubItemDto>> GetSubItemsAsync()
+    {
+        // Get all active items in one query
+        var allItems = await financialItemRepo.GetListAsync(x => x.IsActive);
+
+        // Build parent lookup
+        var parentMap = allItems
+            .Where(x => x.ParentId == null)
+            .ToDictionary(x => x.Id);
+
+        // Map sub-items with parent names
+        return allItems
+            .Where(x => x.ParentId != null && parentMap.ContainsKey(x.ParentId.Value))
+            .OrderBy(x => parentMap[x.ParentId!.Value].NameAr)
+            .ThenBy(x => x.NameAr)
+            .Select(x => new FinancialItemSubItemDto
+            {
+                Id = x.Id,
+                NameAr = x.NameAr,
+                NameEn = x.NameEn,
+                Code = x.Code,
+                ParentId = x.ParentId!.Value,
+                ParentNameAr = parentMap[x.ParentId!.Value].NameAr,
+                ParentNameEn = parentMap[x.ParentId!.Value].NameEn
+            })
+            .ToList();
     }
 
     private static string GenerateCode(string nameAr)
@@ -146,4 +170,6 @@ public class FinancialItemAppService(
 
         return string.Join(".", letters);
     }
+
+     
 }

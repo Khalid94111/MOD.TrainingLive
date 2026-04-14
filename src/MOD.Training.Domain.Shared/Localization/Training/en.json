@@ -445,21 +445,21 @@
     "Training.ApprovedAt": "Approved Date",
     "Training.CourseCount": "Course Count",
     "Training.SubmitForApproval": "Submit for Approval",
- 
+
     "Training.Return": "Return for Revision",
     "Training.NoActions": "No actions",
     "Training.AllCenters": "All Centers",
 
     // --- Center Plan Items ---
     "Training.PlanItems": "Plan Items",
- 
+
     "Training.AddCourseToPlan": "Add Course to Plan",
     "Training.BeneficiaryType": "Beneficiary Type",
     "Training.BeneficiaryType.Internal": "Internal",
     "Training.BeneficiaryType.Shared": "Shared",
     "Training.EstimatedStartDate": "Estimated Start Date",
     "Training.EstimatedEndDate": "Estimated End Date",
- 
+
     "Training.Objective": "Objective",
     "Training.BatchNumber": "Batch",
     "Training.BeneficiaryUnits": "Beneficiary Units",
@@ -470,7 +470,7 @@
     // --- Course Conditions (MOD-21) ---
     "Training.CourseConditions": "Course Conditions",
     "Training.EditConditionsWarning": "Editing conditions affects all plans using this course",
- 
+
     // --- Statuses ---
     "Training.CenterPlanStatus.Draft": "Draft",
     "Training.CenterPlanStatus.Submitted": "Submitted",
@@ -519,7 +519,7 @@
     "Training.Menu.Centers": "Training Centers",
     "Training.Menu.TrainingCenters": "Centers Management",
     "Training.Menu.CenterPlans": "Center Plans",
-        "Training.Menu.Plans": "Annual Plans",
+    "Training.Menu.Plans": "Annual Plans",
     "Training.Menu.AnnualPlansList": "Plans List",
     "Training.Menu.PlanEntry": "Plan Entry",
     "Training.Menu.PlanReview": "Plan Review",
@@ -532,7 +532,7 @@
 
     "Training.TrainingPlan": "Training Plan",
     "Training.TrainingPlans": "Training Plans",
- 
+
     "Training.PlanYear": "Plan Year",
     "Training.PlanStatus": "Plan Status",
     "Training.OpenDate": "Open Date",
@@ -558,7 +558,7 @@
     "Training.PreferredQuarter.Q4": "Q4",
     "Training.OfficersCount": "Officers Count",
     "Training.EnlistedCount": "Enlisted Count",
- 
+
     "Training.Justification": "Justification",
     "Training.Objectives": "Objectives",
     "Training.DurationYears": "Duration (Years)",
@@ -595,7 +595,7 @@
     "Training.Session": "Session",
     "Training.NominatedBy": "Nominated By",
     "Training.NominatedAt": "Nominated At",
- 
+
 
     "Training.NominationStatus.Nominated": "Nominated",
     "Training.NominationStatus.UTMApproved": "UTM Approved",
@@ -608,7 +608,7 @@
     "Training.ApprovalChain": "Approval Chain",
     "Training.ApproveNomination": "Approve",
     "Training.RejectNomination": "Reject",
- 
+
     "Training.ConditionCheckFailed": "Condition check failed for this employee",
 
     "Training.AttendanceStatus.Attended": "Attended",
@@ -716,6 +716,8 @@
     "Training:Nomination:SessionFull": "Session has no available seats",
     "Training:PriceQuote:NotFound": "Price quote not found",
     "Training:TrainingProvider:NotFound": "Training provider not found",
-    "Training:CourseSession:NotFound": "Course session not found"
-  }
+    "Training:CourseSession:NotFound": "Course session not found",
+    "Training.CourseTypeDefaults.ParentGroup": "Category",
+    "Training.CourseTypeDefaults.SelectItem": "Select a financial item...",
+   }
 }

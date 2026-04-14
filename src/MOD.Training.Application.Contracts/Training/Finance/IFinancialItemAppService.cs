@@ -13,5 +13,5 @@ public interface IFinancialItemAppService : ICrudAppService<
     FinancialItemGetListInput,
     CreateUpdateFinancialItemDto>
 {
-    Task<List<FinancialItemDto>> GetSubItemsAsync();
+    Task<List<FinancialItemSubItemDto>> GetSubItemsAsync();
 }

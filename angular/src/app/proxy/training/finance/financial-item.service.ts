@@ -1,4 +1,4 @@
-import type { CreateUpdateFinancialItemDto, FinancialItemDto, FinancialItemGetListInput } from './dtos/models';
+import type { CreateUpdateFinancialItemDto, FinancialItemDto, FinancialItemGetListInput, FinancialItemSubItemDto } from './dtos/models';
 import { RestService, Rest } from '@abp/ng.core';
 import type { PagedResultDto } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
@@ -46,7 +46,7 @@ export class FinancialItemService {
   
 
   getSubItems = (config?: Partial<Rest.Config>) =>
-    this.restService.request<any, FinancialItemDto[]>({
+    this.restService.request<any, FinancialItemSubItemDto[]>({
       method: 'GET',
       url: '/api/app/financial-item/sub-items',
     },

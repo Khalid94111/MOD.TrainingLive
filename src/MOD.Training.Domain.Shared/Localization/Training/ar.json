@@ -394,19 +394,19 @@
     "Training.ApprovedAt": "تاريخ الاعتماد",
     "Training.CourseCount": "عدد الدورات",
     "Training.SubmitForApproval": "إرسال للاعتماد",
-     "Training.Return": "إعادة للمراجعة",
+    "Training.Return": "إعادة للمراجعة",
     "Training.NoActions": "لا إجراءات",
     "Training.AllCenters": "جميع المراكز",
 
     // --- Center Plan Items ---
     "Training.PlanItems": "بنود الخطة",
-      "Training.AddCourseToPlan": "إضافة دورة للخطة",
+    "Training.AddCourseToPlan": "إضافة دورة للخطة",
     "Training.BeneficiaryType": "نوع المستفيدين",
     "Training.BeneficiaryType.Internal": "داخلي",
     "Training.BeneficiaryType.Shared": "مشترك",
     "Training.EstimatedStartDate": "تاريخ البدء المتوقع",
     "Training.EstimatedEndDate": "تاريخ الانتهاء المتوقع",
-      "Training.Objective": "الهدف",
+    "Training.Objective": "الهدف",
     "Training.BatchNumber": "الدفعة",
     "Training.BeneficiaryUnits": "الوحدات المستفيدة",
     "Training.SelectBeneficiaryUnits": "اختر الوحدات المستفيدة (شجرة تنظيمية)",
@@ -416,7 +416,7 @@
     // --- Course Conditions (MOD-21) ---
     "Training.CourseConditions": "شروط الدورة",
     "Training.EditConditionsWarning": "تعديل الشروط يؤثر على جميع الخطط التي تستخدم هذه الدورة",
- 
+
     // --- Statuses ---
     "Training.CenterPlanStatus.Draft": "مسودة",
     "Training.CenterPlanStatus.Submitted": "مرسل",
@@ -479,7 +479,7 @@
 
     "Training.TrainingPlan": "خطة التدريب",
     "Training.TrainingPlans": "خطط التدريب",
- 
+
     "Training.PlanYear": "سنة الخطة",
     "Training.PlanStatus": "حالة الخطة",
     "Training.OpenDate": "تاريخ الفتح",
@@ -505,7 +505,7 @@
     "Training.PreferredQuarter.Q4": "الربع الرابع",
     "Training.OfficersCount": "عدد الضباط",
     "Training.EnlistedCount": "عدد الأفراد",
- 
+
     "Training.Justification": "المبرر",
     "Training.Objectives": "الأهداف",
     "Training.DurationYears": "المدة (سنوات)",
@@ -542,7 +542,7 @@
     "Training.Session": "الجلسة",
     "Training.NominatedBy": "مرشح بواسطة",
     "Training.NominatedAt": "تاريخ الترشيح",
- 
+
 
     "Training.NominationStatus.Nominated": "مرشح",
     "Training.NominationStatus.UTMApproved": "معتمد من مدير التدريب بالوحدة",
@@ -555,7 +555,7 @@
     "Training.ApprovalChain": "سلسلة الاعتماد",
     "Training.ApproveNomination": "اعتماد",
     "Training.RejectNomination": "رفض",
- 
+
     "Training.ConditionCheckFailed": "الموظف لا يستوفي شروط الالتحاق",
 
     "Training.AttendanceStatus.Attended": "حضر",
@@ -575,7 +575,7 @@
     "Training.SessionCode": "رمز الجلسة",
     "Training.StartDate": "تاريخ البدء",
     "Training.EndDate": "تاريخ الانتهاء",
-     "Training.Country": "الدولة",
+    "Training.Country": "الدولة",
     "Training.MaxSeats": "الحد الأقصى للمقاعد",
     "Training.AvailableSeats": "المقاعد المتاحة",
     "Training.SessionCost": "تكلفة الجلسة",
@@ -663,8 +663,10 @@
     "Training:Nomination:SessionFull": "لا توجد مقاعد متاحة في الجلسة",
     "Training:PriceQuote:NotFound": "عرض السعر غير موجود",
     "Training:TrainingProvider:NotFound": "جهة التدريب غير موجودة",
-    "Training:CourseSession:NotFound": "انعقاد الدورة غير موجود"
+    "Training:CourseSession:NotFound": "انعقاد الدورة غير موجود",
 
 
-  }
+    "Training.CourseTypeDefaults.ParentGroup": "التصنيف",
+    "Training.CourseTypeDefaults.SelectItem": "اختر بنداً مالياً...",
+   }
 }
