@@ -140,3 +140,11 @@ export interface TrainingPlanItemGetListInput extends PagedAndSortedResultReques
   preferredQuarter?: PreferredQuarter | null;
   unitId?: string | null;
 }
+
+export interface UpdateAmountDto {
+  estimatedAmountOMR?: number;
+}
+
+export interface UpdateNotesDto {
+  notes?: string | null;
+}

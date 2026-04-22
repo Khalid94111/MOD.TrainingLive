@@ -20,6 +20,7 @@ public class TrainingPlanAppService(
     IRepository<TrainingPlanItem, Guid> planItemRepository,
     PlanItemCostCalculator costCalculator,
     CourseNameResolver courseNameResolver,
+     BudgetRecalculatorManager budgetRecalculator,
     TrainingPlanToDtoMapper toDtoMapper)
     : ApplicationService, ITrainingPlanAppService
 {
@@ -151,15 +152,23 @@ public class TrainingPlanAppService(
         entity.Status = PlanStatus.TDApproved;
         await repository.UpdateAsync(entity, autoSave: true);
     }
-
     [Authorize(TrainingPermissions.TrainingPlan.FinalApprove)]
     public async Task FinalApproveAsync(Guid id)
     {
         var entity = await repository.GetAsync(id);
+
+        // Cost gate check
         await ValidateCostGateAsync(id);
+
+        // Approve
         entity.Status = PlanStatus.THApproved;
         await repository.UpdateAsync(entity, autoSave: true);
+
+        // Recalculate budgets from approved plan items
+        await budgetRecalculator.RecalculateAsync(id, entity.Year);
     }
+
+
 
     [Authorize(TrainingPermissions.TrainingPlan.Approve)]
     public async Task RejectAsync(Guid id, string? reason)

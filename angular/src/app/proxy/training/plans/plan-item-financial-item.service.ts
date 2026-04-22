@@ -1,4 +1,4 @@
-import type { CreateUpdatePlanItemFinancialItemDto, PlanItemFinancialItemDto } from './dtos/models';
+import type { CreateUpdatePlanItemFinancialItemDto, PlanItemFinancialItemDto, UpdateAmountDto, UpdateNotesDto } from './dtos/models';
 import { RestService, Rest } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
 
@@ -47,6 +47,24 @@ export class PlanItemFinancialItemService {
     this.restService.request<any, PlanItemFinancialItemDto>({
       method: 'PUT',
       url: `/api/app/plan-item-financial-item/${id}`,
+      body: input,
+    },
+    { apiName: this.apiName,...config });
+  
+
+  updateAmount = (id: string, input: UpdateAmountDto, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, PlanItemFinancialItemDto>({
+      method: 'PUT',
+      url: `/api/app/plan-item-financial-item/${id}/amount`,
+      body: input,
+    },
+    { apiName: this.apiName,...config });
+  
+
+  updateNotes = (id: string, input: UpdateNotesDto, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, void>({
+      method: 'PUT',
+      url: `/api/app/plan-item-financial-item/${id}/notes`,
       body: input,
     },
     { apiName: this.apiName,...config });

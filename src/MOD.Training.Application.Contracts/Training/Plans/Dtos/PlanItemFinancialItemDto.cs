@@ -14,3 +14,12 @@ public class PlanItemFinancialItemDto : FullAuditedEntityDto<Guid>
     public decimal? ActualAmountUSD { get; set; }
     public string? Notes { get; set; }
 }
+public class UpdateAmountDto
+{
+    public decimal EstimatedAmountOMR { get; set; }
+}
+
+public class UpdateNotesDto
+{
+    public string? Notes { get; set; }
+}

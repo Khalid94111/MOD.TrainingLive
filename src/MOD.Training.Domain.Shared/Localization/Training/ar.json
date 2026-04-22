@@ -668,5 +668,50 @@
 
     "Training.CourseTypeDefaults.ParentGroup": "التصنيف",
     "Training.CourseTypeDefaults.SelectItem": "اختر بنداً مالياً...",
-   }
+
+    "Training.PlanReview.Title": "مراجعة الخطة",
+    "Training.PlanReview.CloseWindow": "إغلاق نافذة الاستلام",
+    "Training.PlanReview.SubmitToTD": "إحالة لمدير التدريب",
+    "Training.PlanReview.RoleDescription": "الموظف المختص (Staff) — مراجعة جميع بنود الوحدات + تعيين البنود المالية",
+    "Training.PlanReview.ItemsMissingCostWarning": "بند خارجي بدون بنود مالية — يجب التعيين قبل الإحالة",
+    "Training.PlanReview.ConsolidatedItems": "بنود الخطة الموحدة (اضغط على بند لتعيين البنود المالية)",
+    "Training.PlanReview.EnterCost": "أدخل التكلفة",
+    "Training.PlanReview.NoItems": "لا توجد بنود في الخطة",
+    "Training.PlanReview.SelectItemHint": "اختر بنداً من الجدول أعلاه لعرض وتعيين البنود المالية",
+    "Training.PlanReview.FinancialItems": "البنود المالية",
+    "Training.PlanReview.AutoFill": "تعبئة تلقائية من الإعدادات",
+    "Training.PlanReview.AddFinancialItem": "إضافة بند مالي",
+    "Training.PlanReview.NoFinancialItems": "لا توجد بنود مالية — اضغط \"تعبئة تلقائية\" أو \"إضافة بند\"",
+    "Training.PlanReview.SelectFinancialItem": "اختر بنداً مالياً...",
+
+    "Training.PlanItem.Course": "الدورة",
+    "Training.PlanItem.CourseType": "النوع",
+    "Training.PlanItem.Priority": "الأولوية",
+    "Training.PlanItem.Capacity": "السعة",
+    "Training.PlanItem.EstimatedCost": "التكلفة المقدرة",
+    "Training.PlanItem.FinancialItemCount": "بنود مالية",
+    "Training.PlanItem.Unit": "الوحدة",
+
+
+
+    "Training.FinancialItem.Name": "البند المالي",
+    "Training.FinancialItem.AmountOMR": "المبلغ (ر.ع.)",
+    "Training.FinancialItem.AmountUSD": "المبلغ ($)",
+    "Training.FinancialItem.Notes": "ملاحظات",
+    "Training.FinancialItem.NotesPlaceholder": "ملاحظات...",
+    "Training.FinancialItem.USDAutoCalcHint": "يُحسب تلقائياً من سعر الصرف",
+
+    "Training.Common.Total": "الإجمالي",
+    "Training.PlanItem.Officers": "ضباط",
+    "Training.PlanItem.Enlisted": "أفراد",
+    "Training.PlanItem.SubmittedBy": "مقدم الطلب",
+    "Training.PlanItem.Justification": "المبرر",
+    "Training.PlanItem.Quarter": "الربع المفضل",
+    "Training.PlanItem.Duration": "المدة",
+    "Training.PlanItem.EstimatedDates": "التواريخ المتوقعة",
+    "Training.PlanItem.FundingSource": "مصدر التمويل",
+    "Training.PlanItem.Objectives": "الأهداف",
+    "Training.PlanItem.Description": "الوصف",
+    "Training.PlanItem.Conditions": "شروط الالتحاق"
+  }
 }

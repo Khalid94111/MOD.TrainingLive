@@ -1,1 +1,73 @@
 @import '../../shared/gtms-design';
+
+// ═══ Item rows ═══
+.item-row {
+  cursor: pointer; transition: background 0.15s;
+  &:hover { background: #f8fafc; }
+  &.item-expanded { background: #eff6ff; border-inline-end: 3px solid #3b82f6; }
+  &.warning-row { background: #fef2f2; }
+  &.warning-row.item-expanded { background: #fef2f2; border-inline-end: 3px solid #ef4444; }
+}
+
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #e2e8f0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.detail-row { background: transparent !important; &:hover { background: transparent !important; } }
+.inline-detail-wrap { padding: 0 8px 12px; animation: expandIn 0.25s ease; }
+@keyframes expandIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+// ═══ Course detail card ═══
+.course-detail-card {
+  background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
+  border: 1px solid #fde68a; border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+}
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; @media (max-width: 768px) { grid-template-columns: 1fr; } }
+.detail-section { display: flex; flex-direction: column; gap: 6px; }
+.detail-field { display: flex; flex-direction: column; gap: 1px; }
+.detail-label { font-size: 0.7rem; font-weight: 700; color: #92400e; opacity: 0.75; }
+.detail-value { font-size: 0.82rem; color: #451a03; font-weight: 600; }
+.detail-value-sub { font-size: 0.72rem; color: #a16207; }
+.detail-value-text { font-weight: 400; line-height: 1.4; font-size: 0.8rem; }
+.funding-code { font-family: 'Courier New', monospace; background: #fef3c7; padding: 2px 6px; border-radius: 4px; font-size: 0.78rem; }
+.detail-row-inline { display: flex; gap: 10px; flex-wrap: wrap; }
+.detail-mini { display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,0.6); border-radius: 8px; padding: 6px 12px; min-width: 60px; }
+.detail-number { font-size: 1.1rem; font-weight: 800; color: #92400e; &.highlight { color: #1d4ed8; } }
+.conditions-inline { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 10px; padding-top: 8px; border-top: 1px solid #fde68a; }
+.conditions-label { font-size: 0.75rem; font-weight: 700; color: #92400e; }
+
+// ═══ Read-only financial panel ═══
+.financial-panel-readonly {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.fi-header-readonly {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+}
+
+.fi-title { font-size: 0.9rem; font-weight: 700; color: #0369a1; }
+
+.fi-total-badge {
+  background: #0369a1;
+  color: white;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.fi-table {
+  width: 100%; border-collapse: collapse; font-size: 0.82rem;
+  th { padding: 6px 10px; text-align: right; font-weight: 600; color: #0369a1; background: #e0f2fe; font-size: 0.75rem; }
+  th.center, td.center { text-align: center; }
+  td { padding: 6px 10px; border-bottom: 1px solid #e0f2fe; }
+  .fi-name { font-weight: 600; color: #1e293b; }
+  .fi-amount { font-weight: 700; color: #047857; font-variant-numeric: tabular-nums; }
+  .fi-usd { color: #64748b; font-size: 0.78rem; }
+  .fi-notes { color: #64748b; font-size: 0.78rem; }
+}
+
+.fi-total-row { background: #e0f2fe; font-weight: 700; color: #0369a1; }

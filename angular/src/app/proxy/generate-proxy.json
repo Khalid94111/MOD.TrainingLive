@@ -10173,6 +10173,120 @@
               },
               "allowAnonymous": false,
               "implementFrom": "MOD.Training.Training.Plans.IPlanItemFinancialItemAppService"
+            },
+            "UpdateAmountAsyncByIdAndInput": {
+              "uniqueName": "UpdateAmountAsyncByIdAndInput",
+              "name": "UpdateAmountAsync",
+              "httpMethod": "PUT",
+              "url": "api/app/plan-item-financial-item/{id}/amount",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.Plans.Dtos.UpdateAmountDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.Plans.Dtos.UpdateAmountDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.UpdateAmountDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.Plans.Dtos.UpdateAmountDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.UpdateAmountDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.Plans.Dtos.PlanItemFinancialItemDto",
+                "typeSimple": "MOD.Training.Training.Plans.Dtos.PlanItemFinancialItemDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.Plans.PlanItemFinancialItemAppService"
+            },
+            "UpdateNotesAsyncByIdAndInput": {
+              "uniqueName": "UpdateNotesAsyncByIdAndInput",
+              "name": "UpdateNotesAsync",
+              "httpMethod": "PUT",
+              "url": "api/app/plan-item-financial-item/{id}/notes",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.Plans.Dtos.UpdateNotesDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.Plans.Dtos.UpdateNotesDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.UpdateNotesDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.Plans.Dtos.UpdateNotesDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.UpdateNotesDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.Plans.PlanItemFinancialItemAppService"
             }
           }
         },
@@ -30746,6 +30860,50 @@
           "jsonName": null,
           "type": "System.Guid?",
           "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        }
+      ]
+    },
+    "MOD.Training.Training.Plans.Dtos.UpdateAmountDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "EstimatedAmountOMR",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Training.Plans.Dtos.UpdateNotesDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Notes",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,

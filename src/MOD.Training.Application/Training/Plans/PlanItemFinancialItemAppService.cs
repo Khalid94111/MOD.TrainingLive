@@ -18,6 +18,7 @@ public class PlanItemFinancialItemAppService(
     IRepository<TrainingPlanItem, Guid> planItemRepository,
     IRepository<FinancialItem, Guid> financialItemRepository,
     IRepository<CourseTypeFinancialItemDefault, Guid> defaultsRepository,
+    IRepository<ExchangeRate,Guid> exchangeRate,
     PlanItemFinancialItemToDtoMapper toDtoMapper)
     : ApplicationService, IPlanItemFinancialItemAppService
 {
@@ -103,4 +104,44 @@ public class PlanItemFinancialItemAppService(
                 autoSave: true);
         }
     }
+
+    /// <summary>
+    /// Updates the estimated OMR amount for a single financial item.
+    /// Auto-calculates USD from the active exchange rate.
+    /// Called on input blur from the inline editable table.
+    /// </summary>
+    [Authorize(TrainingPermissions.TrainingPlanItem.Update)]
+    public async Task<PlanItemFinancialItemDto> UpdateAmountAsync(Guid id, UpdateAmountDto input)
+    {
+        var entity = await repository.GetAsync(id);
+        entity.EstimatedAmountOMR = input.EstimatedAmountOMR;
+
+        // Auto-calculate USD from OMR using active exchange rate
+        var rateQueryable = await exchangeRate.GetQueryableAsync();
+        var rate = await AsyncExecuter.FirstOrDefaultAsync(
+            rateQueryable
+                .Where(r => r.FromCurrency == "USD" && r.ToCurrency == "OMR" && r.IsActive)
+                .OrderByDescending(r => r.SetAt));
+
+        if (rate != null && rate.Rate > 0)
+        {
+            entity.EstimatedAmountUSD = Math.Round(input.EstimatedAmountOMR / rate.Rate, 2);
+        }
+
+        await repository.UpdateAsync(entity, autoSave: true);
+        return toDtoMapper.Map(entity);
+    }
+
+    /// <summary>
+    /// Updates only the notes field for a single financial item.
+    /// Called on input blur from the inline editable table.
+    /// </summary>
+    [Authorize(TrainingPermissions.TrainingPlanItem.Update)]
+    public async Task UpdateNotesAsync(Guid id, UpdateNotesDto input)
+    {
+        var entity = await repository.GetAsync(id);
+        entity.Notes = input.Notes;
+        await repository.UpdateAsync(entity, autoSave: true);
+    }
+
 }

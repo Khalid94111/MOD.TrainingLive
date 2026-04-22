@@ -1,27 +1,23 @@
 <div class="gtms-card">
-  <!-- Header -->
+  <!-- ═══ HEADER ═══ -->
   <div class="page-toolbar">
     <div class="page-toolbar-title">
       <h2 class="gtms-card-title">✅ اعتماد الخطة — {{ plan()?.year }}</h2>
-      @if (plan(); as p) {
-        <span class="badge" [class]="getStatusBadgeClass(p.status)">{{ getStatusText(p.status) }}</span>
-      }
+      @if (plan(); as p) { <span class="badge" [class]="getStatusBadge(p.status)">{{ getStatusText(p.status) }}</span> }
     </div>
     @if (showActions) {
       <div class="page-toolbar-actions">
-        <button class="btn btn-ghost" (click)="onReturn()">↩️ إعادة للموظف</button>
-        <button class="btn btn-danger" (click)="openRejectDialog()">❌ رفض</button>
-        <button class="btn btn-success"
+        <button class="btn btn-ghost btn-sm" (click)="onReturn()">↩️ إعادة للموظف</button>
+        <button class="btn btn-danger btn-sm" (click)="openRejectDialog()">❌ رفض</button>
+        <button class="btn btn-success btn-sm"
           [disabled]="itemsMissingCost() > 0"
           [title]="itemsMissingCost() > 0 ? 'يجب إدخال التكلفة لجميع البنود الخارجية' : ''"
-          (click)="onApprove()">
-          {{ approveLabel }}
-        </button>
+          (click)="onApprove()">{{ approveLabel }}</button>
       </div>
     }
   </div>
 
-  <!-- Cost Gate Warning -->
+  <!-- Cost gate warning -->
   @if (itemsMissingCost() > 0) {
     <div class="alert alert-danger">
       <span class="alert-icon">⚠️</span>
@@ -32,40 +28,27 @@
     </div>
   }
 
-  <!-- Summary Cards -->
+  <!-- ═══ STATS ═══ -->
   <div class="stat-cards">
-    <div class="stat-card">
-      <div class="stat-value">{{ totalItems() }}</div>
-      <div class="stat-label">إجمالي البنود</div>
-    </div>
-    <div class="stat-card card-green">
-      <div class="stat-value">{{ formatCost(totalCost()) || '0.000' }}</div>
-      <div class="stat-label">التكلفة المقدرة (ر.ع.)</div>
-    </div>
-    <div class="stat-card card-blue">
-      <div class="stat-value">{{ internalCount() }}</div>
-      <div class="stat-label">داخلية</div>
-    </div>
-    <div class="stat-card card-green">
-      <div class="stat-value">{{ externalLocalCount() }}</div>
-      <div class="stat-label">خارجية محلية</div>
-    </div>
-    <div class="stat-card card-purple">
-      <div class="stat-value">{{ externalIntlCount() }}</div>
-      <div class="stat-label">خارجية دولية</div>
-    </div>
+    <div class="stat-card"><div class="stat-value">{{ totalItems() }}</div><div class="stat-label">إجمالي البنود</div></div>
+    <div class="stat-card card-green"><div class="stat-value">{{ formatCost(totalCost()) || '0' }}</div><div class="stat-label">التكلفة المقدرة (ر.ع.)</div></div>
+    <div class="stat-card card-blue"><div class="stat-value">{{ internalCount() }}</div><div class="stat-label">داخلية</div></div>
+    <div class="stat-card card-green"><div class="stat-value">{{ extLocalCount() }}</div><div class="stat-label">خارجية محلية</div></div>
+    <div class="stat-card card-purple"><div class="stat-value">{{ extIntlCount() }}</div><div class="stat-label">خارجية دولية</div></div>
   </div>
 
-  <!-- Items Grid -->
+  <!-- ═══ ITEMS TABLE WITH INLINE EXPAND ═══ -->
   <div class="gtms-table-wrap">
     <table class="gtms-table">
       <thead>
         <tr>
+          <th style="width:30px"></th>
           <th>الدورة</th>
           <th class="center">النوع</th>
           <th class="center">الأولوية</th>
-          <th class="center">الربع</th>
-          <th class="center">السعة</th>
+          <th class="center">ضباط</th>
+          <th class="center">أفراد</th>
+          <th class="center">سعة</th>
           <th class="center">التكلفة المقدرة</th>
           <th>مصدر التمويل</th>
           <th class="center">الوحدة</th>
@@ -73,7 +56,15 @@
       </thead>
       <tbody>
         @for (item of items(); track item.id) {
-          <tr [class.warning-row]="isMissingCost(item)">
+          <!-- Main row -->
+          <tr class="item-row"
+              [class.item-expanded]="isItemExpanded(item.id)"
+              [class.warning-row]="isMissingCost(item)"
+              (click)="toggleItemDetail(item.id)">
+            <td class="center">
+              @if (isItemLoading(item.id)) { <span class="spinner"></span> }
+              @else { <span class="expand-arrow" [class.open]="isItemExpanded(item.id)">▶</span> }
+            </td>
             <td>
               <span class="cell-bold" [style.color]="isMissingCost(item) ? '#dc2626' : ''">
                 @if (isMissingCost(item)) { ⚠️ }
@@ -81,30 +72,124 @@
               </span>
               <span class="cell-sub">{{ item.tenantCourseNameEn }}</span>
             </td>
+            <td class="center"><span class="badge" [class]="getCourseTypeBadge(item.courseType)">{{ getCourseTypeText(item.courseType) }}</span></td>
+            <td class="center"><span class="badge" [class]="'priority-' + item.priority">{{ item.priority }}</span></td>
+            <td class="center cell-bold">{{ item.officersCount }}</td>
+            <td class="center cell-bold">{{ item.enlistedCount }}</td>
+            <td class="center"><span class="badge badge-open">{{ item.capacity }}</span></td>
             <td class="center">
-              <span class="badge" [class]="getCourseTypeBadge(item.courseType)">
-                {{ getCourseTypeText(item.courseType) }}
-              </span>
+              @if (item.courseType === 0) { <span class="cell-na">N/A</span> }
+              @else if (isMissingCost(item)) { <span class="cell-missing">⚠️ غير محدد</span> }
+              @else { <span class="cell-money">{{ formatCost(item.estimatedCost) }}</span> }
             </td>
-            <td class="center">
-              <span class="badge" [class]="'priority-' + item.priority">{{ item.priority }}</span>
-            </td>
-            <td class="center">Q{{ item.preferredQuarter }}</td>
-            <td class="center cell-bold">{{ item.capacity }}</td>
-            <td class="center">
-              @if (item.courseType === 0) {
-                <span class="cell-na">N/A</span>
-              } @else if (isMissingCost(item)) {
-                <span class="cell-missing">⚠️ غير محدد</span>
-              } @else {
-                <span class="cell-money">{{ formatCost(item.estimatedCost) }}</span>
-              }
-            </td>
-            <td>{{ item.fundingSource || '—' }}</td>
-            <td class="center" style="font-size:0.8rem; color:#64748b;">{{ item.unitName || '—' }}</td>
+            <td style="font-size:0.78rem; color:#64748b;">{{ item.fundingSource || '—' }}</td>
+            <td class="center" style="font-size:0.78rem; color:#64748b;">{{ item.unitName || '—' }}</td>
           </tr>
+
+          <!-- ══ INLINE EXPANDED: Read-only detail + financial ══ -->
+          @if (isItemExpanded(item.id)) {
+            <tr class="detail-row">
+              <td colspan="10">
+                <div class="inline-detail-wrap">
+
+                  <!-- Course detail (read-only) -->
+                  <div class="course-detail-card">
+                    <div class="detail-grid">
+                      <div class="detail-section">
+                        <div class="detail-field">
+                          <span class="detail-label">👤 مقدم الطلب</span>
+                          <span class="detail-value">{{ item.submittedByName }}</span>
+                          @if (item.submittedByRank) { <span class="detail-value-sub">{{ item.submittedByRank }}</span> }
+                        </div>
+                        <div class="detail-field">
+                          <span class="detail-label">🏢 الوحدة</span>
+                          <span class="detail-value">{{ item.unitName || '—' }}</span>
+                        </div>
+                        <div class="detail-field">
+                          <span class="detail-label">📝 المبرر</span>
+                          <span class="detail-value detail-value-text">{{ item.justification }}</span>
+                        </div>
+                      </div>
+                      <div class="detail-section">
+                        <div class="detail-row-inline">
+                          <div class="detail-mini"><span class="detail-label">🎖️ ضباط</span><span class="detail-number">{{ item.officersCount }}</span></div>
+                          <div class="detail-mini"><span class="detail-label">👥 أفراد</span><span class="detail-number">{{ item.enlistedCount }}</span></div>
+                          <div class="detail-mini"><span class="detail-label">📊 سعة</span><span class="detail-number highlight">{{ item.capacity }}</span></div>
+                        </div>
+                        <div class="detail-field"><span class="detail-label">📅 الربع</span><span class="detail-value">{{ getQuarterText(item.preferredQuarter) }}</span></div>
+                        <div class="detail-field"><span class="detail-label">⏱️ المدة</span><span class="detail-value">{{ getDurationText(item) }}</span></div>
+                        <div class="detail-field"><span class="detail-label">📆 التواريخ</span><span class="detail-value">{{ formatDate(item.estimatedDateFrom) }} — {{ formatDate(item.estimatedDateTo) }}</span></div>
+                        @if (item.fundingSource) {
+                          <div class="detail-field"><span class="detail-label">💳 مصدر التمويل</span><span class="detail-value funding-code">{{ item.fundingSource }}</span></div>
+                        }
+                      </div>
+                      <div class="detail-section">
+                        @if (item.objectivesAr) { <div class="detail-field"><span class="detail-label">🎯 الأهداف</span><span class="detail-value detail-value-text">{{ item.objectivesAr }}</span></div> }
+                        @if (item.descriptionAr) { <div class="detail-field"><span class="detail-label">📄 الوصف</span><span class="detail-value detail-value-text">{{ item.descriptionAr }}</span></div> }
+                      </div>
+                    </div>
+
+                    @if (getConditionsFor(item.id).length > 0) {
+                      <div class="conditions-inline">
+                        <span class="conditions-label">🔒 شروط الالتحاق:</span>
+                        @for (c of getConditionsFor(item.id); track c.id) {
+                          <span class="condition-tag">{{ getConditionTypeName(c.conditionType) }}: {{ c.conditionValue }}</span>
+                        }
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Financial items (READ-ONLY — no inputs, no buttons) -->
+                  @if (item.courseType !== 0 && getFinancialItemsFor(item.id).length > 0) {
+                    <div class="financial-panel-readonly">
+                      <div class="fi-header-readonly">
+                        <span class="fi-title">💰 البنود المالية ({{ getFinancialItemsFor(item.id).length }} بند)</span>
+                        <span class="fi-total-badge">{{ formatCost(getFinancialTotalFor(item.id)) }} ر.ع.</span>
+                      </div>
+                      <table class="fi-table">
+                        <thead>
+                          <tr>
+                            <th>البند المالي</th>
+                            <th class="center">المبلغ (ر.ع.)</th>
+                            <th class="center">المبلغ ($)</th>
+                            <th>ملاحظات</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (fi of getFinancialItemsFor(item.id); track fi.id) {
+                            <tr>
+                              <td class="fi-name">{{ fi.financialItemName }}</td>
+                              <td class="center fi-amount">{{ formatCost(fi.estimatedAmountOMR) }}</td>
+                              <td class="center fi-usd">{{ formatCost(fi.estimatedAmountUSD) || '—' }}</td>
+                              <td class="fi-notes">{{ fi.notes || '—' }}</td>
+                            </tr>
+                          }
+                        </tbody>
+                        <tfoot>
+                          <tr class="fi-total-row">
+                            <td>الإجمالي</td>
+                            <td class="center">{{ formatCost(getFinancialTotalFor(item.id)) }}</td>
+                            <td class="center fi-usd">{{ formatCost(getFinancialTotalUSDFor(item.id)) }}</td>
+                            <td></td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  }
+
+                  @if (item.courseType !== 0 && getFinancialItemsFor(item.id).length === 0) {
+                    <div class="alert alert-danger" style="margin:0;">
+                      <span class="alert-icon">⚠️</span>
+                      لم يتم تعيين بنود مالية لهذا البند — يجب إعادته للموظف المختص
+                    </div>
+                  }
+
+                </div>
+              </td>
+            </tr>
+          }
         } @empty {
-          <tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📋</div>لا توجد بنود</div></td></tr>
+          <tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📋</div>لا توجد بنود</div></td></tr>
         }
       </tbody>
     </table>
@@ -122,10 +207,7 @@
       <div class="modal-body">
         <div class="form-group">
           <label class="form-label">سبب الرفض</label>
-          <textarea class="form-input" rows="3"
-            [value]="rejectReason()"
-            (input)="rejectReason.set($any($event.target).value)"
-            placeholder="أدخل سبب الرفض..."></textarea>
+          <textarea class="form-input" rows="3" [value]="rejectReason()" (input)="rejectReason.set($any($event.target).value)" placeholder="أدخل سبب الرفض..."></textarea>
         </div>
       </div>
       <div class="modal-footer">

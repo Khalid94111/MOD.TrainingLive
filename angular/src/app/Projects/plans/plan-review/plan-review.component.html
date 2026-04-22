@@ -1,154 +1,286 @@
 <div class="gtms-card">
-  <!-- Header -->
+  <!-- ═══ HEADER ═══ -->
   <div class="page-toolbar">
     <div class="page-toolbar-title">
       <h2 class="gtms-card-title">🔍 مراجعة الخطة — {{ plan()?.year }}</h2>
       @if (plan(); as p) {
-        <span class="badge" [class]="p.status === PlanStatus.Submitted ? 'badge-submitted' : 'badge-review'">
-          {{ p.status === PlanStatus.Submitted ? 'مُرسلة' : 'قيد المراجعة' }}
+        <span class="badge" [class]="p.status === PlanStatus.Submitted ? 'badge-submitted' : p.status === PlanStatus.UnderReview ? 'badge-review' : 'badge-open'">
+          @switch (p.status) { @case (PlanStatus.Open) { مفتوحة } @case (PlanStatus.Submitted) { مُرسلة } @case (PlanStatus.UnderReview) { قيد المراجعة } }
         </span>
       }
     </div>
     <div class="page-toolbar-actions">
-      @if (plan()?.status === PlanStatus.Open || plan()?.status === PlanStatus.Submitted) {
+      @if (plan()?.status === PlanStatus.Open) {
         <button class="btn btn-warning btn-sm" (click)="onCloseWindow()">🔒 إغلاق نافذة الاستلام</button>
       }
-      <button class="btn btn-primary btn-sm" (click)="onSubmitForReview()">📤 إحالة لمدير التدريب</button>
+      @if (plan()?.status === PlanStatus.Submitted) {
+        <button class="btn btn-primary btn-sm" [disabled]="itemsMissingCostCount() > 0" (click)="onSubmitForReview()">📤 إحالة لمدير التدريب</button>
+      }
     </div>
   </div>
 
-  <p class="page-meta">👤 الموظف المختص (Staff) — مراجعة جميع بنود الوحدات + تعيين البنود المالية</p>
+  <!-- ═══ STATS ═══ -->
+  <div class="stat-cards">
+    <div class="stat-card"><div class="stat-value">{{ totalItems() }}</div><div class="stat-label">إجمالي البنود</div></div>
+    <div class="stat-card card-green"><div class="stat-value">{{ itemsWithCostCount() }}</div><div class="stat-label">مكتمل التكلفة</div></div>
+    <div class="stat-card card-amber"><div class="stat-value">{{ itemsMissingCostCount() }}</div><div class="stat-label">بدون تكلفة</div></div>
+    <div class="stat-card card-blue"><div class="stat-value">{{ formatCost(totalCost()) || '0' }}</div><div class="stat-label">الإجمالي (ر.ع.)</div></div>
+    <div class="stat-card"><div class="stat-value">{{ unitGroups().length }}</div><div class="stat-label">وحدات</div></div>
+  </div>
 
-  @if (itemsMissingCost > 0) {
-    <div class="alert alert-warning">
-      <span class="alert-icon">⚠️</span>
-      {{ itemsMissingCost }} بند خارجي بدون بنود مالية — يجب التعيين قبل الإحالة
-    </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-track"><div class="progress-bar-fill" [style.width.%]="completionPercent()"></div></div>
+    <span class="progress-bar-label">{{ completionPercent() }}% مكتمل</span>
+  </div>
+
+  <!-- ═══ FILTERS ═══ -->
+  <div class="filter-bar">
+    <select class="form-input" (change)="filterUnit.set($any($event.target).value)">
+      <option value="">جميع الوحدات ({{ uniqueUnits().length }})</option>
+      @for (u of uniqueUnits(); track u.id) { <option [value]="u.id">{{ u.name }}</option> }
+    </select>
+    <select class="form-input" (change)="filterCourseType.set($any($event.target).value)">
+      <option value="">جميع الأنواع</option>
+      <option value="0">داخلية</option><option value="1">خارجية محلية</option><option value="2">خارجية دولية</option>
+    </select>
+    <select class="form-input" (change)="filterCostStatus.set($any($event.target).value)">
+      <option value="">حالة التكلفة: الكل</option>
+      <option value="missing">⚠️ بدون تكلفة</option><option value="assigned">✅ مكتمل</option>
+    </select>
+    @if (itemsMissingCostCount() > 0) {
+      <button class="btn btn-danger btn-sm" (click)="jumpToNextMissing()">⚡ التالي بدون تكلفة</button>
+    }
+    <button class="btn btn-ghost btn-sm" (click)="expandAll()">📂 فتح الكل</button>
+    <button class="btn btn-ghost btn-sm" (click)="collapseAll()">📁 إغلاق الكل</button>
+  </div>
+
+  @if (batchFilling()) {
+    <div class="alert alert-info"><span class="alert-icon">⏳</span> جاري التعبئة التلقائية... {{ batchProgress() }}</div>
   }
 
-  <!-- Section A: Consolidated Items -->
-  <h3 style="font-size:0.95rem; font-weight:700; color:#475569; margin-bottom:10px;">
-    📊 بنود الخطة الموحدة (اضغط على بند لتعيين البنود المالية)
-  </h3>
-
-  <div class="gtms-table-wrap" style="margin-bottom:20px;">
-    <table class="gtms-table">
-      <thead>
-        <tr>
-                    <th>الوحدة</th>
-
-          <th>الدورة</th>
-          <th class="center">النوع</th>
-          <th class="center">الأولوية</th>
-          <th class="center">السعة</th>
-          <th class="center">التكلفة المقدرة</th>
-          <th class="center">بنود مالية</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (item of items(); track item.id) {
-          <tr [class.selected]="isSelected(item.id)"
-              [class.warning-row]="isMissingCost(item)"
-              style="cursor:pointer;"
-              (click)="selectItem(item.id)">
-            <td style="font-size:0.8rem; color:#64748b;">{{ item.unitName || '—' }}</td>
-
-            <td>
-              <span class="cell-bold">{{ item.tenantCourseNameAr }}</span>
-              <span class="cell-sub">{{ item.submittedByName }} — {{ item.submittedByRank }}</span>
-            </td>
-            <td class="center">
-              <span class="badge" [class]="getCourseTypeBadge(item.courseType)">{{ getCourseTypeText(item.courseType) }}</span>
-            </td>
-            <td class="center">
-              <span class="badge" [class]="'priority-' + item.priority">{{ item.priority }}</span>
-            </td>
-            <td class="center cell-bold">{{ item.capacity }}</td>
-            <td class="center">
-              @if (item.courseType === 0) {
-                <span class="cell-na">— (داخلية)</span>
-              } @else if (isMissingCost(item)) {
-                <button class="btn btn-danger btn-sm" (click)="selectItem(item.id); $event.stopPropagation()">⚠️ أدخل التكلفة</button>
-              } @else {
-                <span class="cell-money">{{ formatCost(item.estimatedCost) }}</span>
-              }
-            </td>
-            <td class="center">
-              @if (item.financialItemCount > 0) {
-                <span class="badge badge-approved">{{ item.financialItemCount }}</span>
-              } @else if (item.courseType !== 0) {
-                <span class="badge badge-rejected">0</span>
-              } @else {
-                <span class="cell-na">—</span>
-              }
-            </td>
-          </tr>
-        } @empty {
-          <tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📋</div>لا توجد بنود</div></td></tr>
-        }
-      </tbody>
-    </table>
-  </div>
-
-  <!-- Section B: Financial Items for selected plan item -->
-  @if (!selectedItemId()) {
-    <div class="empty-state">
-      <div class="empty-icon">👆</div>
-      اختر بنداً من الجدول أعلاه لعرض وتعيين البنود المالية
-    </div>
-  } @else {
-    <div class="financial-panel">
-      <div class="panel-header">
-        <h3 class="panel-title">💰 البنود المالية — {{ selectedItem?.tenantCourseNameAr }}</h3>
-        <div style="display:flex; gap:6px;">
-          <button class="btn btn-outline btn-sm" (click)="onAutoFill()">🔄 تعبئة تلقائية من الإعدادات</button>
-          <button class="btn btn-outline btn-sm" (click)="openAddFiDialog()">➕ إضافة بند</button>
-        </div>
+  <!-- ═══ UNIT ACCORDIONS ═══ -->
+  @for (group of unitGroups(); track group.unitId) {
+    <!-- Unit header -->
+    <div class="unit-header" [class.unit-complete]="group.isComplete" (click)="toggleUnit(group.unitId)">
+      <div class="unit-header-right">
+        <span class="expand-arrow" [class.open]="isUnitExpanded(group.unitId)">▶</span>
+        <span class="unit-icon">🏢</span>
+        <span class="unit-name">{{ group.unitName }}</span>
       </div>
+      <div class="unit-header-stats">
+        <span class="unit-stat">{{ group.totalItems }} بند</span>
+        @if (group.itemsMissingCost > 0) {
+          <span class="badge badge-rejected">{{ group.itemsMissingCost }} بدون تكلفة</span>
+        } @else {
+          <span class="badge badge-approved">✓ مكتمل</span>
+        }
+        @if (group.totalCost > 0) { <span class="unit-cost">{{ formatCost(group.totalCost) }} ر.ع.</span> }
+      </div>
+    </div>
 
-      <div class="gtms-table-wrap">
+    @if (isUnitExpanded(group.unitId)) {
+      <div class="unit-items">
+        <!-- Per-unit toolbar -->
+        <div class="unit-toolbar">
+          <div class="unit-toolbar-right">
+            <select class="form-input form-input-sm" (change)="setUnitCostFilter(group.unitId, $any($event.target).value)">
+              <option value="">الكل ({{ group.totalItems }})</option>
+              <option value="missing">⚠️ بدون تكلفة ({{ group.itemsMissingCost }})</option>
+              <option value="assigned">✅ مكتمل ({{ group.itemsWithCost }})</option>
+            </select>
+            <span class="unit-page-info">صفحة {{ getUnitPage(group.unitId) + 1 }} من {{ getTotalPages(group.allItems, group.unitId) }}</span>
+          </div>
+          @if (group.itemsMissingCost > 0) {
+            <button class="btn btn-outline btn-sm" [disabled]="batchFilling()" (click)="batchAutoFillUnit(group.unitId, group.allItems); $event.stopPropagation()">
+              🔄 تعبئة تلقائية للوحدة ({{ group.itemsMissingCost }})
+            </button>
+          }
+        </div>
+
+        <!-- Items table -->
         <table class="gtms-table">
           <thead>
-            <tr style="background:#dbeafe;">
-              <th>البند المالي</th>
-              <th class="center">المبلغ المقدر (ر.ع.)</th>
-              <th class="center">المبلغ المقدر ($)</th>
-              <th>ملاحظات</th>
-              <th class="center" style="width:50px;">حذف</th>
+            <tr>
+              <th style="width:30px"></th>
+              <th>الدورة</th>
+              <th class="center">النوع</th>
+              <th class="center">أولوية</th>
+              <th class="center">ضباط</th>
+              <th class="center">أفراد</th>
+              <th class="center">سعة</th>
+              <th class="center">التكلفة</th>
+              <th class="center">بنود مالية</th>
             </tr>
           </thead>
           <tbody>
-            @for (fi of financialItems(); track fi.id) {
-              <tr>
-                <td class="cell-bold">{{ fi.financialItemName }}</td>
-                <td class="center cell-money">{{ formatCost(fi.estimatedAmountOMR) }}</td>
-                <td class="center" style="color:#64748b;">{{ formatCost(fi.estimatedAmountUSD) }}</td>
-                <td style="font-size:0.8rem; color:#64748b;">{{ fi.notes || '—' }}</td>
+            @for (item of getPagedItems(group.allItems, group.unitId); track item.id) {
+              <!-- ── Main row (click to expand) ── -->
+              <tr [id]="'item-' + item.id"
+                  class="item-row"
+                  [class.item-expanded]="isItemExpanded(item.id)"
+                  [class.warning-row]="isMissingCost(item)"
+                  (click)="toggleItemDetail(item.id)">
                 <td class="center">
-                  <button class="btn-icon" (click)="onDeleteFi(fi.id)">🗑️</button>
+                  @if (isItemLoading(item.id)) {
+                    <span class="spinner"></span>
+                  } @else {
+                    <span class="expand-arrow" [class.open]="isItemExpanded(item.id)">▶</span>
+                  }
+                </td>
+                <td>
+                  <span class="cell-bold">{{ item.tenantCourseNameAr }}</span>
+                  <span class="cell-sub">{{ item.tenantCourseNameEn }}</span>
+                </td>
+                <td class="center"><span class="badge" [class]="getCourseTypeBadge(item.courseType)">{{ getCourseTypeText(item.courseType) }}</span></td>
+                <td class="center"><span class="badge" [class]="'priority-' + item.priority">{{ item.priority }}</span></td>
+                <td class="center cell-bold">{{ item.officersCount }}</td>
+                <td class="center cell-bold">{{ item.enlistedCount }}</td>
+                <td class="center"><span class="badge badge-open">{{ item.capacity }}</span></td>
+                <td class="center">
+                  @if (item.courseType === 0) { <span class="cell-na">—</span> }
+                  @else if (isMissingCost(item)) { <span class="cell-missing">⚠️</span> }
+                  @else { <span class="cell-money">{{ formatCost(item.estimatedCost) }}</span> }
+                </td>
+                <td class="center">
+                  @if (item.financialItemCount > 0) { <span class="badge badge-approved">{{ item.financialItemCount }}</span> }
+                  @else if (item.courseType !== 0) { <span class="badge badge-rejected">0</span> }
+                  @else { <span class="cell-na">—</span> }
                 </td>
               </tr>
+
+              <!-- ══════════════════════════════════════════════════ -->
+              <!-- ── INLINE EXPANDED: Course Detail + Financial ── -->
+              <!-- ══════════════════════════════════════════════════ -->
+              @if (isItemExpanded(item.id)) {
+                <tr class="detail-row">
+                  <td colspan="9">
+                    <div class="inline-detail-wrap">
+
+                      <!-- ── Course Detail ── -->
+                      <div class="course-detail-card">
+                        <div class="detail-grid">
+                          <div class="detail-section">
+                            <div class="detail-field">
+                              <span class="detail-label">👤 مقدم الطلب</span>
+                              <span class="detail-value">{{ item.submittedByName }}</span>
+                              @if (item.submittedByRank) { <span class="detail-value-sub">{{ item.submittedByRank }}</span> }
+                            </div>
+                            <div class="detail-field">
+                              <span class="detail-label">📝 المبرر</span>
+                              <span class="detail-value detail-value-text">{{ item.justification }}</span>
+                            </div>
+                          </div>
+                          <div class="detail-section">
+                            <div class="detail-row-inline">
+                              <div class="detail-mini"><span class="detail-label">🎖️ ضباط</span><span class="detail-number">{{ item.officersCount }}</span></div>
+                              <div class="detail-mini"><span class="detail-label">👥 أفراد</span><span class="detail-number">{{ item.enlistedCount }}</span></div>
+                              <div class="detail-mini"><span class="detail-label">📊 سعة</span><span class="detail-number highlight">{{ item.capacity }}</span></div>
+                            </div>
+                            <div class="detail-field"><span class="detail-label">📅 الربع</span><span class="detail-value">{{ getQuarterText(item.preferredQuarter) }}</span></div>
+                            <div class="detail-field"><span class="detail-label">⏱️ المدة</span><span class="detail-value">{{ getDurationText(item) }}</span></div>
+                            <div class="detail-field"><span class="detail-label">📆 التواريخ</span><span class="detail-value">{{ formatDate(item.estimatedDateFrom) }} — {{ formatDate(item.estimatedDateTo) }}</span></div>
+                          </div>
+                          <div class="detail-section">
+                            @if (item.objectivesAr) { <div class="detail-field"><span class="detail-label">🎯 الأهداف</span><span class="detail-value detail-value-text">{{ item.objectivesAr }}</span></div> }
+                            @if (item.descriptionAr) { <div class="detail-field"><span class="detail-label">📄 الوصف</span><span class="detail-value detail-value-text">{{ item.descriptionAr }}</span></div> }
+                            @if (item.fundingSource) { <div class="detail-field"><span class="detail-label">💳 مصدر التمويل</span><span class="detail-value funding-code">{{ item.fundingSource }}</span></div> }
+                          </div>
+                        </div>
+
+                        @if (getConditionsFor(item.id).length > 0) {
+                          <div class="conditions-inline">
+                            <span class="conditions-label">🔒 شروط الالتحاق:</span>
+                            @for (c of getConditionsFor(item.id); track c.id) {
+                              <span class="condition-tag">{{ getConditionTypeName(c.conditionType) }}: {{ c.conditionValue }}</span>
+                            }
+                          </div>
+                        }
+                      </div>
+
+                      <!-- ── Financial Items ── -->
+                      <div class="financial-panel-inline">
+                        <div class="fi-header">
+                          <span class="fi-title">💰 البنود المالية</span>
+                          <div class="fi-actions">
+                            <button class="btn btn-outline btn-sm" (click)="onAutoFill(item.id); $event.stopPropagation()">🔄 تعبئة تلقائية</button>
+                            <button class="btn btn-outline btn-sm" (click)="openAddFiDialog(item.id); $event.stopPropagation()">➕ إضافة</button>
+                          </div>
+                        </div>
+
+                        @if (getFinancialItemsFor(item.id).length === 0) {
+                          <div class="fi-empty">لا توجد بنود مالية — اضغط "تعبئة تلقائية" أو "إضافة"</div>
+                        } @else {
+                          <table class="fi-table">
+                            <thead>
+                              <tr>
+                                <th>البند المالي</th>
+                                <th class="center" style="width:140px;">المبلغ (ر.ع.)</th>
+                                <th class="center" style="width:110px;">المبلغ ($)</th>
+                                <th style="width:180px;">ملاحظات</th>
+                                <th class="center" style="width:40px;"></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              @for (fi of getFinancialItemsFor(item.id); track fi.id) {
+                                <tr>
+                                  <td class="fi-name">{{ fi.financialItemName }}</td>
+                                  <td class="center">
+                                    <input type="number" class="form-input inline-amount" [value]="fi.estimatedAmountOMR"
+                                      min="0" step="0.001" placeholder="0.000"
+                                      (click)="$event.stopPropagation()"
+                                      (blur)="onAmountChanged(fi.id, +$any($event.target).value, item.id)">
+                                  </td>
+                                  <td class="center fi-usd">{{ formatCost(fi.estimatedAmountUSD) || '—' }}</td>
+                                  <td>
+                                    <input type="text" class="form-input inline-notes" [value]="fi.notes || ''" placeholder="ملاحظات..."
+                                      (click)="$event.stopPropagation()"
+                                      (blur)="onNotesChanged(fi.id, $any($event.target).value)">
+                                  </td>
+                                  <td class="center">
+                                    <button class="btn-icon btn-icon-sm" (click)="onDeleteFi(fi.id, item.id); $event.stopPropagation()">🗑️</button>
+                                  </td>
+                                </tr>
+                              }
+                            </tbody>
+                            <tfoot>
+                              <tr class="fi-total-row">
+                                <td>الإجمالي</td>
+                                <td class="center">{{ formatCost(getFinancialTotalFor(item.id)) }}</td>
+                                <td class="center fi-usd">{{ formatCost(getFinancialTotalUSDFor(item.id)) }}</td>
+                                <td colspan="2"></td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                        }
+                      </div>
+
+                    </div>
+                  </td>
+                </tr>
+              }
             } @empty {
-              <tr>
-                <td colspan="5" style="text-align:center; padding:20px; color:#94a3b8;">
-                  لا توجد بنود مالية — اضغط "تعبئة تلقائية" أو "إضافة بند"
-                </td>
-              </tr>
+              <tr><td colspan="9" style="text-align:center; padding:16px; color:#94a3b8;">لا توجد بنود مطابقة</td></tr>
             }
           </tbody>
-          @if (financialItems().length > 0) {
-            <tfoot>
-              <tr style="background:#dbeafe; font-weight:700; color:#1e40af;">
-                <td>الإجمالي</td>
-                <td class="center">{{ formatCost(getFinancialTotal()) }}</td>
-                <td class="center" style="color:#64748b;">—</td>
-                <td colspan="2"></td>
-              </tr>
-            </tfoot>
-          }
         </table>
+
+        <!-- Pagination -->
+        @if (getTotalPages(group.allItems, group.unitId) > 1) {
+          <div class="pagination">
+            <button class="page-btn" [disabled]="getUnitPage(group.unitId) === 0"
+              (click)="setUnitPage(group.unitId, getUnitPage(group.unitId) - 1)">→ السابق</button>
+            @for (p of getPageArray(getTotalPages(group.allItems, group.unitId)); track p) {
+              <button class="page-btn" [class.active]="getUnitPage(group.unitId) === p"
+                (click)="setUnitPage(group.unitId, p)">{{ p + 1 }}</button>
+            }
+            <button class="page-btn" [disabled]="getUnitPage(group.unitId) >= getTotalPages(group.allItems, group.unitId) - 1"
+              (click)="setUnitPage(group.unitId, getUnitPage(group.unitId) + 1)">التالي ←</button>
+          </div>
+        }
       </div>
-    </div>
+    }
+  } @empty {
+    <div class="empty-state"><div class="empty-icon">📋</div>لا توجد بنود مطابقة للفلتر</div>
   }
 </div>
 
@@ -165,31 +297,25 @@
           <label class="form-label">البند المالي <span class="required">*</span></label>
           <select class="form-input" [value]="fiFiId()" (change)="fiFiId.set($any($event.target).value)">
             <option value="">اختر بنداً مالياً...</option>
-            @for (fi of availableFinancialItems(); track fi.id) {
-              <option [value]="fi.id">{{ fi.nameAr }} ({{ fi.code }})</option>
+            @for (group of groupedFinancialItems(); track group.parentCode) {
+              <optgroup [label]="group.parentNameAr + ' (' + group.parentCode + ')'">
+                @for (fi of group.children; track fi.id) {
+                  <option [value]="fi.id">{{ fi.nameAr }} ({{ fi.code }})</option>
+                }
+              </optgroup>
             }
           </select>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">المبلغ المقدر (ر.ع.) <span class="required">*</span></label>
-            <input type="number" class="form-input" min="0" step="0.001"
-              [value]="fiAmountOMR()"
-              (input)="fiAmountOMR.set(+$any($event.target).value)">
+            <label class="form-label">المبلغ (ر.ع.) <span class="required">*</span></label>
+            <input type="number" class="form-input" min="0" step="0.001" [value]="fiAmountOMR()" (input)="fiAmountOMR.set(+$any($event.target).value)">
+            <p class="form-hint">يُحسب $ تلقائياً من سعر الصرف</p>
           </div>
           <div class="form-group">
-            <label class="form-label">المبلغ المقدر ($)</label>
-            <input type="number" class="form-input" min="0" step="0.01"
-              [value]="fiAmountUSD()"
-              (input)="fiAmountUSD.set(+$any($event.target).value)">
-            <p class="form-hint">يُحسب تلقائياً من سعر الصرف إذا تُرك فارغاً</p>
+            <label class="form-label">ملاحظات</label>
+            <input type="text" class="form-input" [value]="fiNotes()" (input)="fiNotes.set($any($event.target).value)">
           </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">ملاحظات</label>
-          <input type="text" class="form-input"
-            [value]="fiNotes()"
-            (input)="fiNotes.set($any($event.target).value)">
         </div>
       </div>
       <div class="modal-footer">

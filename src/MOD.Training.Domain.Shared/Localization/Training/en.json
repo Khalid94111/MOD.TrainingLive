@@ -719,5 +719,49 @@
     "Training:CourseSession:NotFound": "Course session not found",
     "Training.CourseTypeDefaults.ParentGroup": "Category",
     "Training.CourseTypeDefaults.SelectItem": "Select a financial item...",
-   }
+    "Training.PlanReview.Title": "Plan Review",
+    "Training.PlanReview.CloseWindow": "Close Submission Window",
+    "Training.PlanReview.SubmitToTD": "Submit to Training Director",
+    "Training.PlanReview.RoleDescription": "Training Directorate Staff — Review all unit items + assign financial items",
+    "Training.PlanReview.ItemsMissingCostWarning": "external item(s) without financial items — must assign before submission",
+    "Training.PlanReview.ConsolidatedItems": "Consolidated Plan Items (click item to assign financial items)",
+    "Training.PlanReview.EnterCost": "Enter cost",
+    "Training.PlanReview.NoItems": "No plan items yet",
+    "Training.PlanReview.SelectItemHint": "Select an item from the table above to view and assign financial items",
+    "Training.PlanReview.FinancialItems": "Financial Items",
+    "Training.PlanReview.AutoFill": "Auto-fill from Defaults",
+    "Training.PlanReview.AddFinancialItem": "Add Financial Item",
+    "Training.PlanReview.NoFinancialItems": "No financial items — click \"Auto-fill from Defaults\" or \"Add Financial Item\"",
+    "Training.PlanReview.SelectFinancialItem": "Select a financial item...",
+
+    "Training.PlanItem.Course": "Course",
+    "Training.PlanItem.CourseType": "Type",
+    "Training.PlanItem.Priority": "Priority",
+    "Training.PlanItem.Capacity": "Capacity",
+    "Training.PlanItem.EstimatedCost": "Estimated Cost",
+    "Training.PlanItem.FinancialItemCount": "Financial Items",
+    "Training.PlanItem.Unit": "Unit",
+
+
+
+    "Training.FinancialItem.Name": "Financial Item",
+    "Training.FinancialItem.AmountOMR": "Amount (OMR)",
+    "Training.FinancialItem.AmountUSD": "Amount (USD)",
+    "Training.FinancialItem.Notes": "Notes",
+    "Training.FinancialItem.NotesPlaceholder": "Notes...",
+    "Training.FinancialItem.USDAutoCalcHint": "USD auto-calculated from exchange rate",
+
+    "Training.Common.Total": "Total",
+    "Training.PlanItem.Officers": "Officers",
+    "Training.PlanItem.Enlisted": "Enlisted",
+    "Training.PlanItem.SubmittedBy": "Submitted By",
+    "Training.PlanItem.Justification": "Justification",
+    "Training.PlanItem.Quarter": "Preferred Quarter",
+    "Training.PlanItem.Duration": "Duration",
+    "Training.PlanItem.EstimatedDates": "Estimated Dates",
+    "Training.PlanItem.FundingSource": "Funding Source",
+    "Training.PlanItem.Objectives": "Objectives",
+    "Training.PlanItem.Description": "Description",
+    "Training.PlanItem.Conditions": "Enrollment Conditions"
+  }
 }

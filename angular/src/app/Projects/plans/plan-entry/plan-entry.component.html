@@ -1,5 +1,5 @@
 <div class="gtms-card">
-  <!-- Top bar -->
+  <!-- Header -->
   <div class="page-toolbar">
     <div class="page-toolbar-title">
       <h2 class="gtms-card-title">✏️ إدخال بنود الخطة — {{ plan()?.year }}</h2>
@@ -15,24 +15,19 @@
   </div>
 
   @if (plan(); as p) {
-    <p class="page-meta">
-      📅 نافذة الاستلام: {{ formatDate(p.openDate) }} — {{ formatDate(p.closeDate) }}
-      &nbsp; | &nbsp; 👤 مدير التدريب بالوحدة (UTM)
-    </p>
+    <p class="page-meta">📅 نافذة الاستلام: {{ formatDate(p.openDate) }} — {{ formatDate(p.closeDate) }} &nbsp;|&nbsp; 👤 مدير التدريب بالوحدة (UTM)</p>
   }
 
   @if (!isWindowOpen) {
-    <div class="alert alert-warning">
-      <span class="alert-icon">🔒</span>
-      نافذة الاستلام مغلقة — لا يمكن إضافة أو تعديل البنود حالياً
-    </div>
+    <div class="alert alert-warning"><span class="alert-icon">🔒</span> نافذة الاستلام مغلقة — لا يمكن إضافة أو تعديل البنود حالياً</div>
   }
 
-  <!-- Items table -->
+  <!-- Items table with inline expand -->
   <div class="gtms-table-wrap">
     <table class="gtms-table">
       <thead>
         <tr>
+          <th style="width:30px"></th>
           <th>الدورة</th>
           <th class="center">النوع</th>
           <th class="center">الأولوية</th>
@@ -46,38 +41,98 @@
       </thead>
       <tbody>
         @for (item of items(); track item.id) {
-          <tr>
+          <!-- Main row -->
+          <tr class="item-row"
+              [class.item-expanded]="isItemExpanded(item.id)"
+              (click)="toggleItemDetail(item.id)">
+            <td class="center">
+              @if (isItemLoading(item.id)) { <span class="spinner"></span> }
+              @else { <span class="expand-arrow" [class.open]="isItemExpanded(item.id)">▶</span> }
+            </td>
             <td>
               <span class="cell-bold">{{ item.tenantCourseNameAr }}</span>
               <span class="cell-sub">{{ item.tenantCourseNameEn }}</span>
             </td>
-            <td class="center">
-              <span class="badge" [class]="getCourseTypeBadge(item.courseType)">{{ getCourseTypeText(item.courseType) }}</span>
-            </td>
-            <td class="center">
-              <span class="badge" [class]="'priority-' + item.priority">{{ item.priority }}</span>
-            </td>
+            <td class="center"><span class="badge" [class]="getCourseTypeBadge(item.courseType)">{{ getCourseTypeText(item.courseType) }}</span></td>
+            <td class="center"><span class="badge" [class]="'priority-' + item.priority">{{ item.priority }}</span></td>
             <td class="center">Q{{ item.preferredQuarter }}</td>
             <td class="center cell-bold">{{ item.officersCount }}</td>
             <td class="center cell-bold">{{ item.enlistedCount }}</td>
-            <td class="center">
-              <span class="badge badge-open">{{ item.capacity }}</span>
-            </td>
+            <td class="center"><span class="badge badge-open">{{ item.capacity }}</span></td>
             <td style="font-size:0.8rem; color:#64748b;">{{ item.fundingSource || '—' }}</td>
             @if (isWindowOpen) {
-              <td class="center">
-                <button class="btn-icon" title="تعديل" (click)="openEditDialog(item)">✏️</button>
-                <button class="btn-icon" title="حذف" (click)="onDelete(item.id)">🗑️</button>
+              <td class="center" (click)="$event.stopPropagation()">
+                <button class="btn-icon" title="تعديل" (click)="openEditDialog(item, $event)">✏️</button>
+                <button class="btn-icon" title="حذف" (click)="onDelete(item.id, $event)">🗑️</button>
               </td>
             }
           </tr>
+
+          <!-- ══ INLINE EXPANDED: Course detail only ══ -->
+          @if (isItemExpanded(item.id)) {
+            <tr class="detail-row">
+              <td [attr.colspan]="isWindowOpen ? 10 : 9">
+                <div class="inline-detail-wrap">
+                  <div class="course-detail-card">
+                    <div class="detail-grid">
+                      <!-- Col 1: Submitter + Justification -->
+                      <div class="detail-section">
+                        <div class="detail-field">
+                          <span class="detail-label">👤 مقدم الطلب</span>
+                          <span class="detail-value">{{ item.submittedByName }}</span>
+                          @if (item.submittedByRank) { <span class="detail-value-sub">{{ item.submittedByRank }}</span> }
+                        </div>
+                        <div class="detail-field">
+                          <span class="detail-label">🏢 الوحدة</span>
+                          <span class="detail-value">{{ item.unitName || '—' }}</span>
+                        </div>
+                        <div class="detail-field">
+                          <span class="detail-label">📝 المبرر</span>
+                          <span class="detail-value detail-value-text">{{ item.justification }}</span>
+                        </div>
+                      </div>
+
+                      <!-- Col 2: Numbers + Timing -->
+                      <div class="detail-section">
+                        <div class="detail-row-inline">
+                          <div class="detail-mini"><span class="detail-label">🎖️ ضباط</span><span class="detail-number">{{ item.officersCount }}</span></div>
+                          <div class="detail-mini"><span class="detail-label">👥 أفراد</span><span class="detail-number">{{ item.enlistedCount }}</span></div>
+                          <div class="detail-mini"><span class="detail-label">📊 سعة</span><span class="detail-number highlight">{{ item.capacity }}</span></div>
+                        </div>
+                        <div class="detail-field"><span class="detail-label">📅 الربع المفضل</span><span class="detail-value">{{ getQuarterText(item.preferredQuarter) }}</span></div>
+                        <div class="detail-field"><span class="detail-label">⏱️ المدة</span><span class="detail-value">{{ getDurationText(item) }}</span></div>
+                        <div class="detail-field"><span class="detail-label">📆 التواريخ المتوقعة</span><span class="detail-value">{{ formatDate(item.estimatedDateFrom) }} — {{ formatDate(item.estimatedDateTo) }}</span></div>
+                        @if (item.fundingSource) {
+                          <div class="detail-field"><span class="detail-label">💳 مصدر التمويل</span><span class="detail-value funding-code">{{ item.fundingSource }}</span></div>
+                        }
+                      </div>
+
+                      <!-- Col 3: Objectives + Description -->
+                      <div class="detail-section">
+                        @if (item.objectivesAr) { <div class="detail-field"><span class="detail-label">🎯 الأهداف</span><span class="detail-value detail-value-text">{{ item.objectivesAr }}</span></div> }
+                        @if (item.objectivesEn) { <div class="detail-field"><span class="detail-label">🎯 Objectives</span><span class="detail-value detail-value-text" style="direction:ltr; text-align:left;">{{ item.objectivesEn }}</span></div> }
+                        @if (item.descriptionAr) { <div class="detail-field"><span class="detail-label">📄 الوصف</span><span class="detail-value detail-value-text">{{ item.descriptionAr }}</span></div> }
+                      </div>
+                    </div>
+
+                    <!-- Conditions (read-only) -->
+                    @if (getConditionsFor(item.id).length > 0) {
+                      <div class="conditions-inline">
+                        <span class="conditions-label">🔒 شروط الالتحاق (من دورات الجهة):</span>
+                        @for (c of getConditionsFor(item.id); track c.id) {
+                          <span class="condition-tag">{{ getConditionTypeName(c.conditionType) }}: {{ c.conditionValue }}</span>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+              </td>
+            </tr>
+          }
         } @empty {
           <tr>
-            <td [attr.colspan]="isWindowOpen ? 9 : 8">
-              <div class="empty-state">
-                <div class="empty-icon">📝</div>
-                لم يتم إضافة بنود بعد — اضغط "إضافة بند جديد"
-              </div>
+            <td [attr.colspan]="isWindowOpen ? 10 : 9">
+              <div class="empty-state"><div class="empty-icon">📝</div>لم يتم إضافة بنود بعد — اضغط "إضافة بند جديد"</div>
             </td>
           </tr>
         }
@@ -86,7 +141,7 @@
   </div>
 </div>
 
-<!-- Add/Edit Dialog -->
+<!-- ═══ Add/Edit Dialog ═══ -->
 @if (isDialogOpen()) {
   <div class="modal-backdrop" (click)="isDialogOpen.set(false)">
     <div class="modal-content modal-lg" (click)="$event.stopPropagation()">
@@ -95,107 +150,54 @@
         <button class="modal-close" (click)="isDialogOpen.set(false)">✕</button>
       </div>
       <div class="modal-body">
-        <!-- Row 1: Course + Type -->
+        <!-- Row 1 -->
         <div class="form-row">
           <div class="form-group flex-2">
             <label class="form-label">الدورة <span class="required">*</span></label>
             <select class="form-input" [value]="fTenantCourseId()" (change)="fTenantCourseId.set($any($event.target).value); onCourseSelected()">
               <option value="">اختر دورة...</option>
-              @for (tc of tenantCourses(); track tc.id) {
-                <option [value]="tc.id">{{ tc.courseNameAr }}</option>
-              }
+              @for (tc of tenantCourses(); track tc.id) { <option [value]="tc.id">{{ tc.courseNameAr }}</option> }
             </select>
             <p class="form-hint">داخلية = من خطط المراكز المعتمدة | خارجية = جميع دورات الجهة</p>
           </div>
           <div class="form-group">
             <label class="form-label">نوع الدورة <span class="required">*</span></label>
             <select class="form-input" [value]="fCourseType()" (change)="fCourseType.set(+$any($event.target).value)">
-              <option [value]="0">داخلية</option>
-              <option [value]="1">خارجية محلية</option>
-              <option [value]="2">خارجية دولية</option>
+              <option [value]="0">داخلية</option><option [value]="1">خارجية محلية</option><option [value]="2">خارجية دولية</option>
             </select>
           </div>
         </div>
-
-        <!-- Row 2: Priority, Quarter, Officers, Enlisted -->
+        <!-- Row 2 -->
         <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">الأولوية <span class="required">*</span></label>
-            <input type="number" class="form-input" min="1" max="5" [value]="fPriority()" (input)="fPriority.set(+$any($event.target).value)">
-          </div>
-          <div class="form-group">
-            <label class="form-label">الربع المفضل <span class="required">*</span></label>
-            <select class="form-input" [value]="fPreferredQuarter()" (change)="fPreferredQuarter.set(+$any($event.target).value)">
-              <option [value]="1">الربع الأول</option>
-              <option [value]="2">الربع الثاني</option>
-              <option [value]="3">الربع الثالث</option>
-              <option [value]="4">الربع الرابع</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">عدد الضباط <span class="required">*</span></label>
-            <input type="number" class="form-input" min="0" [value]="fOfficersCount()" (input)="fOfficersCount.set(+$any($event.target).value)">
-          </div>
-          <div class="form-group">
-            <label class="form-label">عدد الأفراد <span class="required">*</span></label>
-            <input type="number" class="form-input" min="0" [value]="fEnlistedCount()" (input)="fEnlistedCount.set(+$any($event.target).value)">
-          </div>
+          <div class="form-group"><label class="form-label">الأولوية <span class="required">*</span></label><input type="number" class="form-input" min="1" max="5" [value]="fPriority()" (input)="fPriority.set(+$any($event.target).value)"></div>
+          <div class="form-group"><label class="form-label">الربع المفضل <span class="required">*</span></label><select class="form-input" [value]="fPreferredQuarter()" (change)="fPreferredQuarter.set(+$any($event.target).value)"><option [value]="1">الربع الأول</option><option [value]="2">الربع الثاني</option><option [value]="3">الربع الثالث</option><option [value]="4">الربع الرابع</option></select></div>
+          <div class="form-group"><label class="form-label">عدد الضباط <span class="required">*</span></label><input type="number" class="form-input" min="0" [value]="fOfficersCount()" (input)="fOfficersCount.set(+$any($event.target).value)"></div>
+          <div class="form-group"><label class="form-label">عدد الأفراد <span class="required">*</span></label><input type="number" class="form-input" min="0" [value]="fEnlistedCount()" (input)="fEnlistedCount.set(+$any($event.target).value)"></div>
         </div>
-
         <!-- Justification -->
-        <div class="form-group">
-          <label class="form-label">المبرر <span class="required">*</span></label>
-          <textarea class="form-input" rows="2" placeholder="لماذا تحتاج الوحدة هذه الدورة..." [value]="fJustification()" (input)="fJustification.set($any($event.target).value)"></textarea>
-        </div>
-
+        <div class="form-group"><label class="form-label">المبرر <span class="required">*</span></label><textarea class="form-input" rows="2" placeholder="لماذا تحتاج الوحدة هذه الدورة..." [value]="fJustification()" (input)="fJustification.set($any($event.target).value)"></textarea></div>
         <!-- Objectives -->
         <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">الأهداف (عربي)</label>
-            <textarea class="form-input" rows="2" [value]="fObjectivesAr()" (input)="fObjectivesAr.set($any($event.target).value)"></textarea>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Objectives (EN)</label>
-            <textarea class="form-input" rows="2" [value]="fObjectivesEn()" (input)="fObjectivesEn.set($any($event.target).value)"></textarea>
-          </div>
+          <div class="form-group"><label class="form-label">الأهداف (عربي)</label><textarea class="form-input" rows="2" [value]="fObjectivesAr()" (input)="fObjectivesAr.set($any($event.target).value)"></textarea></div>
+          <div class="form-group"><label class="form-label">Objectives (EN)</label><textarea class="form-input" rows="2" [value]="fObjectivesEn()" (input)="fObjectivesEn.set($any($event.target).value)"></textarea></div>
         </div>
-
-        <!-- Duration + Dates -->
+        <!-- Duration -->
         <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">سنوات</label>
-            <input type="number" class="form-input" min="0" [value]="fDurationYears()" (input)="fDurationYears.set(+$any($event.target).value)">
-          </div>
-          <div class="form-group">
-            <label class="form-label">أشهر</label>
-            <input type="number" class="form-input" min="0" max="11" [value]="fDurationMonths()" (input)="fDurationMonths.set(+$any($event.target).value)">
-          </div>
-          <div class="form-group">
-            <label class="form-label">أيام</label>
-            <input type="number" class="form-input" min="0" max="30" [value]="fDurationDays()" (input)="fDurationDays.set(+$any($event.target).value)">
-          </div>
-          <div class="form-group">
-            <label class="form-label">بدء متوقع</label>
-            <input type="date" class="form-input" [value]="fEstimatedDateFrom()" (input)="fEstimatedDateFrom.set($any($event.target).value)">
-          </div>
-          <div class="form-group">
-            <label class="form-label">انتهاء متوقع</label>
-            <input type="date" class="form-input" [value]="fEstimatedDateTo()" (input)="fEstimatedDateTo.set($any($event.target).value)">
-          </div>
+          <div class="form-group"><label class="form-label">سنوات</label><input type="number" class="form-input" min="0" [value]="fDurationYears()" (input)="fDurationYears.set(+$any($event.target).value)"></div>
+          <div class="form-group"><label class="form-label">أشهر</label><input type="number" class="form-input" min="0" max="11" [value]="fDurationMonths()" (input)="fDurationMonths.set(+$any($event.target).value)"></div>
+          <div class="form-group"><label class="form-label">أيام</label><input type="number" class="form-input" min="0" max="30" [value]="fDurationDays()" (input)="fDurationDays.set(+$any($event.target).value)"></div>
+          <div class="form-group"><label class="form-label">بدء متوقع</label><input type="date" class="form-input" [value]="fEstimatedDateFrom()" (input)="fEstimatedDateFrom.set($any($event.target).value)"></div>
+          <div class="form-group"><label class="form-label">انتهاء متوقع</label><input type="date" class="form-input" [value]="fEstimatedDateTo()" (input)="fEstimatedDateTo.set($any($event.target).value)"></div>
         </div>
+        <!-- Funding -->
+        <div class="form-group"><label class="form-label">مصدر التمويل (كود نبراس)</label><input type="text" class="form-input" placeholder="NEB-2027-EXT-001" style="max-width:300px;" [value]="fFundingSource()" (input)="fFundingSource.set($any($event.target).value)"></div>
 
-        <!-- Funding Source -->
-        <div class="form-group">
-          <label class="form-label">مصدر التمويل (كود نبراس)</label>
-          <input type="text" class="form-input" placeholder="NEB-2027-EXT-001" style="max-width:300px;" [value]="fFundingSource()" (input)="fFundingSource.set($any($event.target).value)">
-        </div>
-
-        <!-- Conditions (read-only) -->
-        @if (conditions().length > 0) {
-          <div class="conditions-panel">
-            <p class="panel-title">🔒 شروط الالتحاق (من دورات الجهة — للقراءة فقط)</p>
+        <!-- Conditions preview (from selected tenant course) -->
+        @if (dialogConditions().length > 0) {
+          <div class="conditions-panel" style="margin-top:12px;">
+            <p class="panel-title">🔒 شروط الالتحاق (من دورات الجهة — ستُنسخ تلقائياً)</p>
             <div class="condition-tags">
-              @for (c of conditions(); track c.id) {
+              @for (c of dialogConditions(); track $index) {
                 <span class="condition-tag">{{ getConditionTypeName(c.conditionType) }}: {{ c.conditionValue }}</span>
               }
             </div>
