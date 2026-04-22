@@ -25,9 +25,10 @@ export interface NominationApprovalDto extends CreationAuditedEntityDto<string> 
 }
 
 export interface NominationDto extends FullAuditedEntityDto<string> {
-  sessionId?: string;
+  sessionId?: string | null;
   sessionCode?: string;
   courseName?: string;
+  planItemId?: string;
   employeeId?: string;
   employeeName?: string;
   nominatedById?: string;
@@ -38,10 +39,17 @@ export interface NominationDto extends FullAuditedEntityDto<string> {
   attendanceStatus?: AttendanceStatus | null;
   resultType?: ResultType | null;
   resultValue?: string | null;
+  isReturned?: boolean;
+  lastReturnNoteId?: string | null;
 }
 
 export interface NominationGetListInput extends PagedAndSortedResultRequestDto {
+  planItemId?: string | null;
   sessionId?: string | null;
   status?: NominationStatus | null;
   employeeId?: string | null;
+}
+
+export interface ReplaceNominationDto {
+  newEmployeeId: string;
 }

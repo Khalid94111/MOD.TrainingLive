@@ -1,7 +1,8 @@
-import type { ApproveRejectNominationDto, CreateNominationDto, NominationApprovalDto, NominationDto, NominationGetListInput } from './dtos/models';
+import type { ApproveRejectNominationDto, CreateNominationDto, NominationApprovalDto, NominationDto, NominationGetListInput, ReplaceNominationDto } from './dtos/models';
 import { RestService, Rest } from '@abp/ng.core';
 import type { PagedResultDto } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
+import type { ReturnReasonDto } from '../plans/dtos/models';
 
 @Injectable({
   providedIn: 'root',
@@ -49,7 +50,7 @@ export class NominationService {
     this.restService.request<any, PagedResultDto<NominationDto>>({
       method: 'GET',
       url: '/api/app/nomination',
-      params: { sessionId: input.sessionId, status: input.status, employeeId: input.employeeId, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
+      params: { planItemId: input.planItemId, sessionId: input.sessionId, status: input.status, employeeId: input.employeeId, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
     },
     { apiName: this.apiName,...config });
   
@@ -58,6 +59,24 @@ export class NominationService {
     this.restService.request<any, void>({
       method: 'POST',
       url: `/api/app/nomination/${id}/reject`,
+      body: input,
+    },
+    { apiName: this.apiName,...config });
+  
+
+  replace = (id: string, input: ReplaceNominationDto, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, NominationDto>({
+      method: 'POST',
+      url: `/api/app/nomination/${id}/replace`,
+      body: input,
+    },
+    { apiName: this.apiName,...config });
+  
+
+  return = (id: string, input: ReturnReasonDto, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, void>({
+      method: 'POST',
+      url: `/api/app/nomination/${id}/return`,
       body: input,
     },
     { apiName: this.apiName,...config });

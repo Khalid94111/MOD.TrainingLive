@@ -1,25 +1,45 @@
 <div class="gtms-card">
-  <!-- ═══ HEADER ═══ -->
+  <!-- HEADER -->
   <div class="page-toolbar">
     <div class="page-toolbar-title">
       <h2 class="gtms-card-title">🔍 مراجعة الخطة — {{ plan()?.year }}</h2>
       @if (plan(); as p) {
-        <span class="badge" [class]="p.status === PlanStatus.Submitted ? 'badge-submitted' : p.status === PlanStatus.UnderReview ? 'badge-review' : 'badge-open'">
-          @switch (p.status) { @case (PlanStatus.Open) { مفتوحة } @case (PlanStatus.Submitted) { مُرسلة } @case (PlanStatus.UnderReview) { قيد المراجعة } }
-        </span>
+        <span class="badge" [class]="statusBadgeClass(p.status)">{{ statusText(p.status) }}</span>
+        @if (returnedItemsCount() > 0 || returnedNominationsCount() > 0) {
+          <span class="badge badge-submitted returned-counter">
+            ⚠️ {{ returnedItemsCount() }} بند + {{ returnedNominationsCount() }} ترشيح مُعاد
+          </span>
+        }
       }
     </div>
     <div class="page-toolbar-actions">
+      <button class="btn btn-ghost" (click)="openPlanNotes()" title="ملاحظات الخطة">💬 ملاحظات</button>
+      @if (plan()?.status === PlanStatus.UnderReview) {
+        <button class="btn btn-warning btn-sm" (click)="openReturnPlanModal()">🔙 إعادة الخطة</button>
+        <button class="btn btn-success"
+                [disabled]="!canStaffApprove() || approving()"
+                [title]="!canStaffApprove() ? 'يجب معالجة كل البنود بدون تكلفة والبنود/الترشيحات المُعادة أولاً' : ''"
+                (click)="onStaffApprove()">
+          @if (approving()) { جارٍ الاعتماد… } @else { ✓ اعتماد الخطة }
+        </button>
+      }
       @if (plan()?.status === PlanStatus.Open) {
         <button class="btn btn-warning btn-sm" (click)="onCloseWindow()">🔒 إغلاق نافذة الاستلام</button>
-      }
-      @if (plan()?.status === PlanStatus.Submitted) {
-        <button class="btn btn-primary btn-sm" [disabled]="itemsMissingCostCount() > 0" (click)="onSubmitForReview()">📤 إحالة لمدير التدريب</button>
       }
     </div>
   </div>
 
-  <!-- ═══ STATS ═══ -->
+  @if (approveError()) {
+    <div class="alert alert-danger"><span class="alert-icon">⚠️</span>{{ approveError() }}</div>
+  }
+  @if (hasUnresolvedReturns()) {
+    <div class="alert alert-warning">
+      <span class="alert-icon">🔙</span>
+      لا يمكن الاعتماد — يوجد بنود/ترشيحات مُعادة يجب حلها أولاً
+    </div>
+  }
+
+  <!-- STATS -->
   <div class="stat-cards">
     <div class="stat-card"><div class="stat-value">{{ totalItems() }}</div><div class="stat-label">إجمالي البنود</div></div>
     <div class="stat-card card-green"><div class="stat-value">{{ itemsWithCostCount() }}</div><div class="stat-label">مكتمل التكلفة</div></div>
@@ -33,7 +53,7 @@
     <span class="progress-bar-label">{{ completionPercent() }}% مكتمل</span>
   </div>
 
-  <!-- ═══ FILTERS ═══ -->
+  <!-- FILTERS -->
   <div class="filter-bar">
     <select class="form-input" (change)="filterUnit.set($any($event.target).value)">
       <option value="">جميع الوحدات ({{ uniqueUnits().length }})</option>
@@ -58,12 +78,11 @@
     <div class="alert alert-info"><span class="alert-icon">⏳</span> جاري التعبئة التلقائية... {{ batchProgress() }}</div>
   }
 
-  <!-- ═══ UNIT ACCORDIONS ═══ -->
+  <!-- UNIT ACCORDIONS -->
   @for (group of unitGroups(); track group.unitId) {
-    <!-- Unit header -->
     <div class="unit-header" [class.unit-complete]="group.isComplete" (click)="toggleUnit(group.unitId)">
       <div class="unit-header-right">
-        <span class="expand-arrow" [class.open]="isUnitExpanded(group.unitId)">▶</span>
+        <span class="expand-arrow" [class.open]="isUnitExpanded(group.unitId)">▸</span>
         <span class="unit-icon">🏢</span>
         <span class="unit-name">{{ group.unitName }}</span>
       </div>
@@ -80,7 +99,6 @@
 
     @if (isUnitExpanded(group.unitId)) {
       <div class="unit-items">
-        <!-- Per-unit toolbar -->
         <div class="unit-toolbar">
           <div class="unit-toolbar-right">
             <select class="form-input form-input-sm" (change)="setUnitCostFilter(group.unitId, $any($event.target).value)">
@@ -97,7 +115,6 @@
           }
         </div>
 
-        <!-- Items table -->
         <table class="gtms-table">
           <thead>
             <tr>
@@ -105,61 +122,64 @@
               <th>الدورة</th>
               <th class="center">النوع</th>
               <th class="center">أولوية</th>
-              <th class="center">ضباط</th>
-              <th class="center">أفراد</th>
-              <th class="center">سعة</th>
-              <th class="center">التكلفة</th>
+              <th class="center">👥 مرشحون</th>
+              <th class="center">💰 التكلفة</th>
               <th class="center">بنود مالية</th>
+              <th class="center">الحالة</th>
+              <th class="center">إجراءات</th>
             </tr>
           </thead>
           <tbody>
-            @for (item of getPagedItems(group.allItems, group.unitId); track item.id) {
-              <!-- ── Main row (click to expand) ── -->
+            @for (item of getPagedItems(group.allItems, group.unitId); track trackById($index, item)) {
               <tr [id]="'item-' + item.id"
                   class="item-row"
-                  [class.item-expanded]="isItemExpanded(item.id)"
+                  [class.item-expanded]="isItemExpanded(item.id!)"
                   [class.warning-row]="isMissingCost(item)"
-                  (click)="toggleItemDetail(item.id)">
+                  [class.item-returned]="item.isReturned"
+                  (click)="toggleItemDetail(item.id!)">
                 <td class="center">
-                  @if (isItemLoading(item.id)) {
-                    <span class="spinner"></span>
-                  } @else {
-                    <span class="expand-arrow" [class.open]="isItemExpanded(item.id)">▶</span>
-                  }
+                  @if (isItemLoading(item.id!)) { <span class="spinner"></span> }
+                  @else { <span class="expand-arrow" [class.open]="isItemExpanded(item.id!)">▸</span> }
                 </td>
                 <td>
                   <span class="cell-bold">{{ item.tenantCourseNameAr }}</span>
-                  <span class="cell-sub">{{ item.tenantCourseNameEn }}</span>
+                  @if (item.tenantCourseNameEn) { <span class="cell-sub">{{ item.tenantCourseNameEn }}</span> }
+                  @if (item.isReturned) { <span class="return-inline-badge">⚠️ مُعاد</span> }
                 </td>
                 <td class="center"><span class="badge" [class]="getCourseTypeBadge(item.courseType)">{{ getCourseTypeText(item.courseType) }}</span></td>
                 <td class="center"><span class="badge" [class]="'priority-' + item.priority">{{ item.priority }}</span></td>
-                <td class="center cell-bold">{{ item.officersCount }}</td>
-                <td class="center cell-bold">{{ item.enlistedCount }}</td>
-                <td class="center"><span class="badge badge-open">{{ item.capacity }}</span></td>
+                <td class="center cell-bold"><span class="nominees-pill">👥 {{ item.nomineesCount ?? 0 }}</span></td>
                 <td class="center">
                   @if (item.courseType === 0) { <span class="cell-na">—</span> }
                   @else if (isMissingCost(item)) { <span class="cell-missing">⚠️</span> }
                   @else { <span class="cell-money">{{ formatCost(item.estimatedCost) }}</span> }
                 </td>
                 <td class="center">
-                  @if (item.financialItemCount > 0) { <span class="badge badge-approved">{{ item.financialItemCount }}</span> }
+                  @if ((item.financialItemCount ?? 0) > 0) { <span class="badge badge-approved">{{ item.financialItemCount }}</span> }
                   @else if (item.courseType !== 0) { <span class="badge badge-rejected">0</span> }
                   @else { <span class="cell-na">—</span> }
                 </td>
+                <td class="center">
+                  @if (item.isReturned) { <span class="badge badge-submitted">🔙 مُعاد</span> }
+                  @else { <span class="badge badge-open">—</span> }
+                </td>
+                <td class="center" (click)="$event.stopPropagation()">
+                  <button class="btn-icon" title="ملاحظات البند" (click)="openItemNotes(item, $event)">💬</button>
+                  @if (plan()?.status === PlanStatus.UnderReview && !item.isReturned) {
+                    <button class="btn-icon" title="إعادة البند" (click)="openReturnItemModal(item, $event)">🔙</button>
+                  }
+                </td>
               </tr>
 
-              <!-- ══════════════════════════════════════════════════ -->
-              <!-- ── INLINE EXPANDED: Course Detail + Financial ── -->
-              <!-- ══════════════════════════════════════════════════ -->
-              @if (isItemExpanded(item.id)) {
+              <!-- EXPANDED -->
+              @if (isItemExpanded(item.id!)) {
                 <tr class="detail-row">
                   <td colspan="9">
                     <div class="inline-detail-wrap">
-
-                      <!-- ── Course Detail ── -->
-                      <div class="course-detail-card">
-                        <div class="detail-grid">
-                          <div class="detail-section">
+                      <div class="detail-grid-v6">
+                        <!-- Course card -->
+                        <div class="course-detail-card">
+                          <div class="detail-section-v6">
                             <div class="detail-field">
                               <span class="detail-label">👤 مقدم الطلب</span>
                               <span class="detail-value">{{ item.submittedByName }}</span>
@@ -169,91 +189,182 @@
                               <span class="detail-label">📝 المبرر</span>
                               <span class="detail-value detail-value-text">{{ item.justification }}</span>
                             </div>
-                          </div>
-                          <div class="detail-section">
-                            <div class="detail-row-inline">
-                              <div class="detail-mini"><span class="detail-label">🎖️ ضباط</span><span class="detail-number">{{ item.officersCount }}</span></div>
-                              <div class="detail-mini"><span class="detail-label">👥 أفراد</span><span class="detail-number">{{ item.enlistedCount }}</span></div>
-                              <div class="detail-mini"><span class="detail-label">📊 سعة</span><span class="detail-number highlight">{{ item.capacity }}</span></div>
+                            <div class="detail-field">
+                              <span class="detail-label">⏱️ المدة</span>
+                              <span class="detail-value">{{ getDurationText(item) }}</span>
                             </div>
-                            <div class="detail-field"><span class="detail-label">📅 الربع</span><span class="detail-value">{{ getQuarterText(item.preferredQuarter) }}</span></div>
-                            <div class="detail-field"><span class="detail-label">⏱️ المدة</span><span class="detail-value">{{ getDurationText(item) }}</span></div>
-                            <div class="detail-field"><span class="detail-label">📆 التواريخ</span><span class="detail-value">{{ formatDate(item.estimatedDateFrom) }} — {{ formatDate(item.estimatedDateTo) }}</span></div>
-                          </div>
-                          <div class="detail-section">
+                            <div class="detail-field">
+                              <span class="detail-label">📅 الربع</span>
+                              <span class="detail-value">{{ getQuarterText(item.preferredQuarter) }}</span>
+                            </div>
+                            <div class="detail-field">
+                              <span class="detail-label">📆 التواريخ</span>
+                              <span class="detail-value">{{ formatDate(item.estimatedDateFrom) }} — {{ formatDate(item.estimatedDateTo) }}</span>
+                            </div>
                             @if (item.objectivesAr) { <div class="detail-field"><span class="detail-label">🎯 الأهداف</span><span class="detail-value detail-value-text">{{ item.objectivesAr }}</span></div> }
-                            @if (item.descriptionAr) { <div class="detail-field"><span class="detail-label">📄 الوصف</span><span class="detail-value detail-value-text">{{ item.descriptionAr }}</span></div> }
                             @if (item.fundingSource) { <div class="detail-field"><span class="detail-label">💳 مصدر التمويل</span><span class="detail-value funding-code">{{ item.fundingSource }}</span></div> }
                           </div>
+
+                          @if (getConditionsFor(item.id!).length > 0) {
+                            <div class="conditions-inline">
+                              <span class="conditions-label">🔒 شروط:</span>
+                              @for (c of getConditionsFor(item.id!); track c.id) {
+                                <span class="condition-tag">{{ getConditionTypeName(c.conditionType) }}: {{ c.conditionValue }}</span>
+                              }
+                            </div>
+                          }
+
+                          @if (plan()?.status === PlanStatus.UnderReview && !item.isReturned) {
+                            <div class="card-actions">
+                              <button class="btn btn-warning btn-sm" (click)="openReturnItemModal(item, $event)">🔙 إعادة هذا البند</button>
+                            </div>
+                          }
                         </div>
 
-                        @if (getConditionsFor(item.id).length > 0) {
-                          <div class="conditions-inline">
-                            <span class="conditions-label">🔒 شروط الالتحاق:</span>
-                            @for (c of getConditionsFor(item.id); track c.id) {
-                              <span class="condition-tag">{{ getConditionTypeName(c.conditionType) }}: {{ c.conditionValue }}</span>
-                            }
+                        <!-- Financial items panel -->
+                        <div class="financial-panel-v6">
+                          <div class="fi-header">
+                            <span class="fi-title">💰 البنود المالية</span>
+                            <div class="fi-actions">
+                              <button class="btn btn-outline btn-sm" (click)="onAutoFill(item.id!); $event.stopPropagation()">🔄 تعبئة تلقائية</button>
+                              <button class="btn btn-outline btn-sm" (click)="openAddFiDialog(item.id!); $event.stopPropagation()">➕ إضافة</button>
+                            </div>
                           </div>
-                        }
+
+                          @if (getFinancialItemsFor(item.id!).length === 0) {
+                            <div class="fi-empty">لا توجد بنود مالية — اضغط "تعبئة تلقائية" أو "إضافة"</div>
+                          } @else {
+                            @for (pifi of getFinancialItemsFor(item.id!); track pifi.id) {
+                              <div class="pifi-card">
+                                <div class="pifi-head">
+                                  <div class="pifi-head-left">
+                                    <span class="pifi-name">{{ pifi.financialItemName }}</span>
+                                    @if (isPerDay(pifi.financialItemId)) {
+                                      <span class="pifi-flag flag-day">🗓️ يومي</span>
+                                    }
+                                    @if (isPerNominee(pifi.financialItemId)) {
+                                      <span class="pifi-flag flag-nom">👤 لكل مرشح</span>
+                                    }
+                                  </div>
+                                  <div class="pifi-head-right">
+                                    <span class="pifi-total">∑ {{ formatCost(pifi.estimatedAmountOMR) || '0' }} ر.ع</span>
+                                    <button class="btn-icon btn-icon-sm" (click)="onDeleteFi(pifi.id!, item.id!); $event.stopPropagation()" title="حذف">🗑️</button>
+                                  </div>
+                                </div>
+
+                                @if (isPerNominee(pifi.financialItemId)) {
+                                  <!-- Per-rank breakdown -->
+                                  @if (getRanksFor(pifi.id!).length === 0) {
+                                    <div class="ranks-empty">⚠️ لا توجد رتب — أضف مرشحين أو أعد التعبئة التلقائية</div>
+                                  } @else {
+                                    <table class="ranks-table">
+                                      <thead>
+                                        <tr>
+                                          <th>الرتبة</th>
+                                          <th class="center">عدد</th>
+                                          <th class="center">المعدل</th>
+                                          @if (isPerDay(pifi.financialItemId)) { <th class="center">× أيام</th> }
+                                          <th class="center">المجموع الفرعي</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        @for (rb of getRanksFor(pifi.id!); track rb.id) {
+                                          <tr [class.rate-flash]="flashingRankId() === rb.id">
+                                            <td><span class="rank-badge">🎖️ {{ rb.rankNameAr ?? '—' }}</span></td>
+                                            <td class="center cell-bold">{{ rb.nomineeCount }}</td>
+                                            <td class="center">
+                                              <input type="number" class="form-input inline-rate"
+                                                     [value]="rb.ratePerUnitOMR"
+                                                     min="0" step="0.001"
+                                                     (click)="$event.stopPropagation()"
+                                                     (blur)="onRateChanged(rb, $any($event.target).value, item.id!)">
+                                            </td>
+                                            @if (isPerDay(pifi.financialItemId)) {
+                                              <td class="center cell-sub-text">
+                                                {{ computeEffectiveDays(item, pifi.financialItemId) }}
+                                                @if (getExtraDays(pifi.financialItemId).before || getExtraDays(pifi.financialItemId).after) {
+                                                  <span class="days-breakdown">
+                                                    = {{ item.durationDays }} + {{ getExtraDays(pifi.financialItemId).before }} + {{ getExtraDays(pifi.financialItemId).after }}
+                                                  </span>
+                                                }
+                                              </td>
+                                            }
+                                            <td class="center cell-money">{{ formatCost(rb.subtotalOMR) }}</td>
+                                          </tr>
+                                        }
+                                      </tbody>
+                                    </table>
+                                  }
+                                } @else {
+                                  <div class="single-amount-row">
+                                    <label class="form-label">المبلغ (ر.ع)</label>
+                                    <input type="number" class="form-input inline-amount"
+                                           [value]="pifi.estimatedAmountOMR"
+                                           min="0" step="0.001"
+                                           (click)="$event.stopPropagation()"
+                                           (blur)="onAmountChanged(pifi.id!, +$any($event.target).value, item.id!)">
+                                  </div>
+                                }
+
+                                <div class="pifi-notes">
+                                  <input type="text" class="form-input inline-notes"
+                                         [value]="pifi.notes || ''"
+                                         placeholder="ملاحظات على البند المالي…"
+                                         (click)="$event.stopPropagation()"
+                                         (blur)="onNotesChanged(pifi.id!, $any($event.target).value)">
+                                </div>
+                              </div>
+                            }
+
+                            <div class="grand-total-row">
+                              <span>الإجمالي العام</span>
+                              <span class="grand-total-value">{{ formatCost(getFinancialTotalFor(item.id!)) }} ر.ع</span>
+                            </div>
+                          }
+                        </div>
                       </div>
 
-                      <!-- ── Financial Items ── -->
-                      <div class="financial-panel-inline">
-                        <div class="fi-header">
-                          <span class="fi-title">💰 البنود المالية</span>
-                          <div class="fi-actions">
-                            <button class="btn btn-outline btn-sm" (click)="onAutoFill(item.id); $event.stopPropagation()">🔄 تعبئة تلقائية</button>
-                            <button class="btn btn-outline btn-sm" (click)="openAddFiDialog(item.id); $event.stopPropagation()">➕ إضافة</button>
-                          </div>
+                      <!-- Nominees sub-table -->
+                      <div class="nominees-subtable-wrap">
+                        <div class="sub-header">
+                          <span class="sub-title">👥 المرشحون ({{ getNominationsFor(item.id!).length }})</span>
                         </div>
-
-                        @if (getFinancialItemsFor(item.id).length === 0) {
-                          <div class="fi-empty">لا توجد بنود مالية — اضغط "تعبئة تلقائية" أو "إضافة"</div>
+                        @if (getNominationsFor(item.id!).length === 0) {
+                          <div class="nominees-empty">لا يوجد مرشحون</div>
                         } @else {
-                          <table class="fi-table">
+                          <table class="nominees-table">
                             <thead>
                               <tr>
-                                <th>البند المالي</th>
-                                <th class="center" style="width:140px;">المبلغ (ر.ع.)</th>
-                                <th class="center" style="width:110px;">المبلغ ($)</th>
-                                <th style="width:180px;">ملاحظات</th>
-                                <th class="center" style="width:40px;"></th>
+                                <th>المرشح</th>
+                                <th>الحالة</th>
+                                <th class="center">إجراءات</th>
                               </tr>
                             </thead>
                             <tbody>
-                              @for (fi of getFinancialItemsFor(item.id); track fi.id) {
-                                <tr>
-                                  <td class="fi-name">{{ fi.financialItemName }}</td>
-                                  <td class="center">
-                                    <input type="number" class="form-input inline-amount" [value]="fi.estimatedAmountOMR"
-                                      min="0" step="0.001" placeholder="0.000"
-                                      (click)="$event.stopPropagation()"
-                                      (blur)="onAmountChanged(fi.id, +$any($event.target).value, item.id)">
-                                  </td>
-                                  <td class="center fi-usd">{{ formatCost(fi.estimatedAmountUSD) || '—' }}</td>
+                              @for (n of getNominationsFor(item.id!); track n.id) {
+                                <tr [class.nom-returned]="n.isReturned">
                                   <td>
-                                    <input type="text" class="form-input inline-notes" [value]="fi.notes || ''" placeholder="ملاحظات..."
-                                      (click)="$event.stopPropagation()"
-                                      (blur)="onNotesChanged(fi.id, $any($event.target).value)">
+                                    <span class="cell-bold">{{ n.employeeName ?? '—' }}</span>
+                                  </td>
+                                  <td>
+                                    @if (n.isReturned) {
+                                      <span class="badge badge-submitted">🔙 مُعاد</span>
+                                    } @else {
+                                      <span class="badge badge-open">عادي</span>
+                                    }
                                   </td>
                                   <td class="center">
-                                    <button class="btn-icon btn-icon-sm" (click)="onDeleteFi(fi.id, item.id); $event.stopPropagation()">🗑️</button>
+                                    <button class="btn-icon btn-icon-sm" title="ملاحظات" (click)="openNominationNotes(n, $event)">💬</button>
+                                    @if (plan()?.status === PlanStatus.UnderReview && !n.isReturned) {
+                                      <button class="btn-icon btn-icon-sm" title="إعادة الترشيح" (click)="openReturnNominationModal(n, $event)">🔙</button>
+                                    }
                                   </td>
                                 </tr>
                               }
                             </tbody>
-                            <tfoot>
-                              <tr class="fi-total-row">
-                                <td>الإجمالي</td>
-                                <td class="center">{{ formatCost(getFinancialTotalFor(item.id)) }}</td>
-                                <td class="center fi-usd">{{ formatCost(getFinancialTotalUSDFor(item.id)) }}</td>
-                                <td colspan="2"></td>
-                              </tr>
-                            </tfoot>
                           </table>
                         }
                       </div>
-
                     </div>
                   </td>
                 </tr>
@@ -264,7 +375,6 @@
           </tbody>
         </table>
 
-        <!-- Pagination -->
         @if (getTotalPages(group.allItems, group.unitId) > 1) {
           <div class="pagination">
             <button class="page-btn" [disabled]="getUnitPage(group.unitId) === 0"
@@ -286,8 +396,8 @@
 
 <!-- Add Financial Item Dialog -->
 @if (isAddFiOpen()) {
-  <div class="modal-backdrop" (click)="isAddFiOpen.set(false)">
-    <div class="modal-content modal-md" (click)="$event.stopPropagation()">
+  <div class="modal-backdrop" (click)="$event.target === $event.currentTarget ? isAddFiOpen.set(false) : null">
+    <div class="modal-content modal-md">
       <div class="modal-header">
         <h3 class="modal-title">➕ إضافة بند مالي</h3>
         <button class="modal-close" (click)="isAddFiOpen.set(false)">✕</button>
@@ -310,7 +420,6 @@
           <div class="form-group">
             <label class="form-label">المبلغ (ر.ع.) <span class="required">*</span></label>
             <input type="number" class="form-input" min="0" step="0.001" [value]="fiAmountOMR()" (input)="fiAmountOMR.set(+$any($event.target).value)">
-            <p class="form-hint">يُحسب $ تلقائياً من سعر الصرف</p>
           </div>
           <div class="form-group">
             <label class="form-label">ملاحظات</label>
@@ -319,9 +428,29 @@
         </div>
       </div>
       <div class="modal-footer">
+        <button class="btn btn-outline" (click)="isAddFiOpen.set(false)">إلغاء</button>
         <button class="btn btn-primary" (click)="onSaveFi()">💾 حفظ</button>
-        <button class="btn btn-ghost" (click)="isAddFiOpen.set(false)">إلغاء</button>
       </div>
     </div>
   </div>
 }
+
+<!-- Return modal -->
+<gtms-return-modal
+  [isOpen]="returnModalOpen()"
+  [entityType]="returnModalEntityType()"
+  [entityId]="returnModalEntityId()"
+  [title]="returnModalTitle()"
+  [subtitle]="returnModalSubtitle()"
+  (confirmed)="onReturnConfirmed()"
+  (cancelled)="onReturnCancelled()">
+</gtms-return-modal>
+
+<!-- Notes drawer -->
+<gtms-notes-drawer
+  [isOpen]="notesOpen()"
+  [entityType]="notesEntityType()"
+  [entityId]="notesEntityId()"
+  [title]="notesTitle()"
+  (closeDrawer)="closeNotes()">
+</gtms-notes-drawer>

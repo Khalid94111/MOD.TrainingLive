@@ -1,0 +1,82 @@
+:host { display: contents; }
+
+.return-backdrop { z-index: 1300; }
+
+.return-modal {
+  box-shadow: 0 24px 60px rgba(217, 119, 6, 0.18);
+}
+
+.return-header {
+  background: linear-gradient(135deg, #fffbeb, #ffffff);
+  border-bottom: 1px solid #fcd34d;
+}
+
+.header-text {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.return-icon {
+  font-size: 1.8rem;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+}
+
+.modal-subtitle {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  margin-top: 3px;
+}
+
+.info-banner {
+  display: flex;
+  gap: 10px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e3a8a;
+  padding: 12px 14px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.info-banner strong { display: block; font-weight: 700; }
+
+.info-banner .info-icon { font-size: 1.2rem; flex-shrink: 0; }
+
+.info-sub { font-size: 0.76rem; color: #3730a3; margin-top: 3px; }
+
+.reason-input {
+  min-height: 110px;
+  resize: vertical;
+  font-family: 'Tajawal', sans-serif;
+}
+
+.input-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+  font-size: 0.72rem;
+}
+
+.char-count {
+  color: #94a3b8;
+  font-variant-numeric: tabular-nums;
+}
+
+.char-count.over { color: #dc2626; font-weight: 700; }
+
+.return-footer {
+  justify-content: flex-end;
+  background: #fafafa;
+}

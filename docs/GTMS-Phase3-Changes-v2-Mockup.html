@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTMS — Phase 3 Changes v2 — Design Mockup</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 'tajawal': ['Tajawal', 'sans-serif'] },
+                    colors: {
+                        primary: { 50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8',800:'#1e40af',900:'#1e3a8a' },
+                        success: { 50:'#f0fdf4',100:'#dcfce7',500:'#22c55e',600:'#16a34a',700:'#15803d' },
+                        warning: { 50:'#fffbeb',100:'#fef3c7',500:'#f59e0b',600:'#d97706' },
+                        danger: { 50:'#fef2f2',100:'#fee2e2',500:'#ef4444',600:'#dc2626' },
+                        purple: { 50:'#faf5ff',100:'#f3e8ff',500:'#a855f7',600:'#9333ea' },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { font-family: 'Tajawal', sans-serif; }
+        body { background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); min-height: 100vh; }
+        .card { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .btn-primary { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); transition: all 0.3s; color: white; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.4); }
+        .btn-success { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; }
+        .btn-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; }
+        .btn-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; }
+        .btn-amber { background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%); color: white; }
+        .input-field { border: 2px solid #e2e8f0; border-radius: 10px; transition: all 0.3s; }
+        .input-field:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); outline: none; }
+        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .status-draft { background: #f1f5f9; color: #64748b; }
+        .status-open { background: #dbeafe; color: #2563eb; }
+        .status-submitted { background: #fef3c7; color: #d97706; }
+        .status-review { background: #e0e7ff; color: #4338ca; }
+        .status-returned { background: #fef3c7; color: #b45309; border: 2px solid #fbbf24; }
+        .status-td-approved { background: #dcfce7; color: #16a34a; }
+        .status-th-approved { background: #065f46; color: #ffffff; }
+        .status-pending { background: #fef3c7; color: #d97706; }
+        .status-approved { background: #dcfce7; color: #16a34a; }
+        .status-rejected { background: #fee2e2; color: #dc2626; }
+        .table-row { transition: all 0.2s; }
+        .table-row:hover { background: #f8fafc; cursor: pointer; }
+        .screen { display: none; }
+        .screen.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(4px); } to { opacity:1; transform: translateY(0); } }
+        .tab-btn { padding: 12px 20px; border-bottom: 3px solid transparent; transition: all 0.3s; cursor: pointer; white-space: nowrap; }
+        .tab-btn.active { border-bottom-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
+        .tab-btn:hover { background: #f1f5f9; }
+        .phase-badge { background: linear-gradient(135deg,#f59e0b,#b45309); color:white; padding:2px 10px; border-radius:10px; font-size:11px; font-weight:bold; }
+        .chg-badge { background:#f59e0b; color:white; padding:2px 8px; border-radius:6px; font-size:10px; font-weight:bold; }
+        .rank-pill { background:#e0e7ff; color:#4338ca; padding:2px 8px; border-radius:8px; font-size:11px; font-weight:600; }
+        .stat-card { background: white; border-radius: 14px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .selected-row { background: #eff6ff !important; border-right: 4px solid #3b82f6; }
+        .detail-row { background: linear-gradient(180deg, #f8fafc 0%, #eff6ff 100%); border-right: 4px solid #3b82f6; }
+        .course-detail-card { background: white; border: 1px solid #dbeafe; border-radius: 12px; padding: 16px; }
+        .financial-panel-inline { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 12px; padding: 16px; }
+        .nominee-chip { background:#eff6ff; border:1.5px solid #bfdbfe; padding:6px 10px; border-radius:20px; display:inline-flex; align-items:center; gap:8px; font-size:13px; }
+        .nominee-chip .remove { color:#dc2626; cursor:pointer; font-weight:700; padding: 0 2px; }
+        .returned-banner { background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 2px solid #fbbf24; border-radius: 14px; padding: 14px 18px; }
+        .note-card { background:white; border:1px solid #e2e8f0; border-radius:10px; padding:12px; }
+        .note-card.return-reason { border-color:#fbbf24; background:#fffbeb; }
+        .role-pill { font-size:10px; padding:2px 8px; border-radius:6px; font-weight:700; }
+        .role-staff { background:#e0e7ff; color:#4338ca; }
+        .role-td { background:#fef3c7; color:#b45309; }
+        .role-th { background:#065f46; color:white; }
+        .role-utm { background:#dbeafe; color:#2563eb; }
+        .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 40; }
+        .drawer-overlay.open { display: block; animation: fadeIn 0.2s; }
+        .drawer { display: none; position: fixed; top: 0; left: 0; width: 440px; height: 100vh; background: white; box-shadow: -4px 0 24px rgba(0,0,0,0.15); z-index: 50; overflow-y: auto; }
+        .drawer.open { display: block; animation: slideIn 0.25s ease; }
+        @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 60; align-items: center; justify-content: center; }
+        .modal-overlay.open { display: flex; animation: fadeIn 0.2s; }
+        .modal-box { background: white; border-radius: 18px; padding: 24px; max-width: 520px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+        .kbd { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 1px 6px; font-family: monospace; font-size: 11px; }
+        .arrow-down { font-size: 10px; margin-right: 4px; transition: transform 0.2s; }
+        .arrow-down.open { transform: rotate(-90deg); }
+        .new-marker { background: #fef3c7; border-right: 3px solid #f59e0b; padding-right: 6px; }
+        /* State diagram */
+        .sm-node { background: white; border: 2px solid #cbd5e1; border-radius: 12px; padding: 10px 16px; text-align: center; font-weight: 600; font-size: 13px; min-width: 150px; }
+        .sm-node.start { border-color: #64748b; background: #f8fafc; color: #475569; }
+        .sm-node.open { border-color: #3b82f6; background: #eff6ff; color: #1d4ed8; }
+        .sm-node.review { border-color: #6366f1; background: #eef2ff; color: #4338ca; }
+        .sm-node.returned { border-color: #f59e0b; background: #fffbeb; color: #b45309; }
+        .sm-node.approved { border-color: #22c55e; background: #f0fdf4; color: #16a34a; }
+        .sm-node.final { border-color: #065f46; background: #065f46; color: white; }
+        .sm-edge { color: #94a3b8; font-size: 11px; font-weight: 600; }
+        .sm-edge.return { color: #d97706; }
+    </style>
+</head>
+<body class="font-tajawal p-6">
+
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-amber-900 mb-1">
+            🔧 GTMS — Phase 3 Changes v2
+            <span class="phase-badge text-sm">CHG-01 → CHG-07</span>
+        </h1>
+        <p class="text-gray-500 text-sm">Decisions locked + Per-day/Per-nominee rates + Item/Nomination-level return — April 20, 2026</p>
+
+        <div class="flex flex-wrap gap-2 mt-5 overflow-x-auto">
+            <button onclick="showScreen('state-machine')" class="tab-btn active rounded-t-lg font-medium text-sm">🔄 دورة العمل</button>
+            <button onclick="showScreen('financial-items')" class="tab-btn rounded-t-lg font-medium text-sm">🏦 2.1 البنود المالية v2 <span class="chg-badge">CHG-02·03</span></button>
+            <button onclick="showScreen('plan-entry')" class="tab-btn rounded-t-lg font-medium text-sm">✏️ 3.2 إدخال البنود v3 <span class="chg-badge">CHG-01·06</span></button>
+            <button onclick="showScreen('plan-review')" class="tab-btn rounded-t-lg font-medium text-sm">🔍 3.3 مراجعة الخطة v6 <span class="chg-badge">CHG-04·05</span></button>
+            <button onclick="showScreen('plan-approval')" class="tab-btn rounded-t-lg font-medium text-sm">✅ 3.4 اعتماد الخطة v3 <span class="chg-badge">CHG-05</span></button>
+            <button onclick="showScreen('returned-view')" class="tab-btn rounded-t-lg font-medium text-sm">🔙 خطة مُعادة (UTM) <span class="chg-badge">CHG-06</span></button>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB: STATE MACHINE -->
+    <!-- ============================================================ -->
+    <div id="state-machine" class="screen active">
+        <div class="card p-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-1">🔄 دورة العمل الجديدة — Workflow State Machine</h2>
+            <p class="text-gray-500 text-sm mb-6">إضافة حالة <b class="text-amber-700">"مُعادة للمُنشئ"</b> مع إمكانية الإعادة من 3 مستويات</p>
+
+            <div class="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-8 mb-6 overflow-x-auto">
+                <div class="flex flex-col items-center gap-3 min-w-[900px]">
+                    <!-- Row 1: main forward path -->
+                    <div class="flex items-center gap-3 flex-wrap justify-center">
+                        <div class="sm-node start">1. مسودة<br><span class="text-xs font-normal text-gray-400">Draft (TD)</span></div>
+                        <span class="sm-edge">← فتح →</span>
+                        <div class="sm-node open">2. مفتوحة<br><span class="text-xs font-normal opacity-70">Open (UTM)</span></div>
+                        <span class="sm-edge">← إرسال →</span>
+                        <div class="sm-node review">3. قيد المراجعة<br><span class="text-xs font-normal opacity-70">UnderReview (Staff)</span></div>
+                    </div>
+                    <div class="text-2xl text-gray-400">↓</div>
+                    <div class="flex items-center gap-3 flex-wrap justify-center">
+                        <div class="sm-node approved">4. مُعتمدة TD<br><span class="text-xs font-normal opacity-70">TDApproved</span></div>
+                        <span class="sm-edge">← اعتماد نهائي →</span>
+                        <div class="sm-node final">5. مُعتمدة نهائياً<br><span class="text-xs font-normal opacity-80">THApproved</span></div>
+                    </div>
+
+                    <!-- Return arrows -->
+                    <div class="mt-6 p-5 border-2 border-dashed border-amber-400 rounded-xl bg-amber-50 w-full">
+                        <p class="text-center text-amber-900 font-bold mb-4 text-sm">🔙 Return-to-Creator — يمكن الإعادة من أي من هذه المستويات</p>
+                        <div class="flex items-center justify-center gap-3 flex-wrap">
+                            <span class="sm-edge return">من UnderReview</span>
+                            <span class="text-amber-600">↘</span>
+                            <span class="sm-edge return">من TDApproved</span>
+                            <span class="text-amber-600">↘</span>
+                            <div class="sm-node returned">🔙 مُعادة للمُنشئ<br><span class="text-xs font-normal opacity-70">ReturnedToCreator (UTM)</span></div>
+                            <span class="text-amber-600">↗</span>
+                            <span class="sm-edge return">إعادة إرسال → UnderReview</span>
+                        </div>
+                        <p class="text-center text-xs text-amber-800 mt-3">في حالة "مُعادة": UTM يقدر يعدل الخطة + البنود + الترشيحات + يعيد الإرسال</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key rules -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <div class="text-amber-700 font-bold mb-2 text-sm">🔙 متى نقدر نرجّع؟</div>
+                    <ul class="text-xs text-gray-700 space-y-1 list-disc pr-4">
+                        <li>Staff من شاشة المراجعة</li>
+                        <li>TD من شاشة الاعتماد</li>
+                        <li>TH قبل الاعتماد النهائي</li>
+                        <li>لا يمكن بعد THApproved (BudgetRecalculator ران بالفعل)</li>
+                    </ul>
+                </div>
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div class="text-blue-700 font-bold mb-2 text-sm">✏️ ما الذي يمكن تعديله؟</div>
+                    <ul class="text-xs text-gray-700 space-y-1 list-disc pr-4">
+                        <li>في Open أو ReturnedToCreator فقط</li>
+                        <li>الخطة: التواريخ فقط (TD)</li>
+                        <li>البنود: كل الحقول (UTM)</li>
+                        <li>الترشيحات: إضافة/حذف مرشحين (UTM)</li>
+                    </ul>
+                </div>
+                <div class="bg-purple-50 border border-purple-200 rounded-xl p-4">
+                    <div class="text-purple-700 font-bold mb-2 text-sm">📝 الملاحظات</div>
+                    <ul class="text-xs text-gray-700 space-y-1 list-disc pr-4">
+                        <li>يمكن إضافة ملاحظات على أي مستوى (خطة/بند/ترشيح)</li>
+                        <li>Append-only — لا تعديل ولا حذف</li>
+                        <li>سبب الإعادة يُحفظ كملاحظة مُعلّمة</li>
+                        <li>UTM يشاهد جميع الملاحظات على خطته</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Schema changes -->
+            <h3 class="text-lg font-bold text-gray-800 mb-3">🗄️ تغييرات قاعدة البيانات</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-white border-2 border-green-200 rounded-xl p-4">
+                    <div class="font-bold text-green-700 mb-2 text-sm">➕ جدول جديد: TrnFinancialItemRankAmounts</div>
+                    <div class="text-xs text-gray-600 font-mono bg-gray-50 p-3 rounded">
+                        Id, TenantId, <span class="text-purple-600">FinancialItemId</span>, <span class="text-purple-600">RankId</span>, AmountOMR<br>
+                        <span class="text-gray-400">Unique: (FinancialItemId, RankId) — إعدادات عامة</span>
+                    </div>
+                </div>
+                <div class="bg-white border-2 border-green-200 rounded-xl p-4">
+                    <div class="font-bold text-green-700 mb-2 text-sm">➕ جدول جديد: TrnPlanItemFinancialItemRanks <span class="chg-badge">CHG-03·07</span></div>
+                    <div class="text-xs text-gray-600 font-mono bg-gray-50 p-3 rounded">
+                        Id, TenantId, <span class="text-purple-600">PlanItemFinancialItemId</span>, <span class="text-purple-600">RankId</span>,<br>
+                        NomineeCount, RatePerUnitOMR, SubtotalOMR<br>
+                        <span class="text-gray-400">قابل للتعديل — خاص ببند الخطة</span>
+                    </div>
+                </div>
+                <div class="bg-white border-2 border-green-200 rounded-xl p-4">
+                    <div class="font-bold text-green-700 mb-2 text-sm">➕ جدول جديد: TrnPlanNotes</div>
+                    <div class="text-xs text-gray-600 font-mono bg-gray-50 p-3 rounded">
+                        Id, TenantId, <span class="text-purple-600">EntityType</span> (Plan/Item/Nomination), EntityId,<br>
+                        Note, AuthorRole, IsReturnReason, CreatorId, CreationTime
+                    </div>
+                </div>
+                <div class="bg-white border-2 border-blue-200 rounded-xl p-4">
+                    <div class="font-bold text-blue-700 mb-2 text-sm">✏️ تعديل: FinancialItem <span class="chg-badge">CHG-02·07</span></div>
+                    <div class="text-xs text-gray-600 font-mono bg-gray-50 p-3 rounded">
+                        + DefaultAmountOMR (decimal)<br>
+                        + <b>IsPerDay (bool)</b><br>
+                        + <b>IsPerNominee (bool)</b><br>
+                        + <b>ExtraDaysBefore (int)</b> ✈️<br>
+                        + <b>ExtraDaysAfter (int)</b> ✈️
+                    </div>
+                </div>
+                <div class="bg-white border-2 border-blue-200 rounded-xl p-4">
+                    <div class="font-bold text-blue-700 mb-2 text-sm">✏️ تعديل: TrainingPlan.Status enum</div>
+                    <div class="text-xs text-gray-600 font-mono bg-gray-50 p-3 rounded">
+                        + <span class="bg-amber-100 text-amber-800 px-1 rounded">ReturnedToCreator = 4</span>
+                    </div>
+                </div>
+                <div class="bg-white border-2 border-blue-200 rounded-xl p-4">
+                    <div class="font-bold text-blue-700 mb-2 text-sm">✏️ تعديل: TrainingPlanItem</div>
+                    <div class="text-xs text-gray-600 font-mono bg-gray-50 p-3 rounded">
+                        − NomineesCount (مشتق)<br>
+                        + <b>IsReturned (bool)</b><br>
+                        + LastReturnNoteId (Guid?)
+                    </div>
+                </div>
+                <div class="bg-white border-2 border-blue-200 rounded-xl p-4">
+                    <div class="font-bold text-blue-700 mb-2 text-sm">✏️ تعديل: Nomination</div>
+                    <div class="text-xs text-gray-600 font-mono bg-gray-50 p-3 rounded">
+                        + <b>IsReturned (bool)</b><br>
+                        + LastReturnNoteId (Guid?)
+                    </div>
+                </div>
+                <div class="bg-white border-2 border-red-200 rounded-xl p-4">
+                    <div class="font-bold text-red-700 mb-2 text-sm">🗑️ Drop: NominationApproval <span class="chg-badge">Q1</span></div>
+                    <div class="text-xs text-gray-600 font-mono bg-gray-50 p-3 rounded">
+                        الجدول يبقى للسجلات التاريخية، لكن سلسلة اعتماد UGM/TD للترشيحات تم إلغاؤها بالكامل
+                    </div>
+                </div>
+                <div class="bg-white border-2 border-purple-200 rounded-xl p-4">
+                    <div class="font-bold text-purple-700 mb-2 text-sm">🛠️ Domain Service محدث</div>
+                    <div class="text-xs text-gray-600 font-mono bg-gray-50 p-3 rounded">
+                        FinancialItemDefaultResolver<br>
+                        (itemId, rankId, courseDays, nomineeCount)<br>
+                        effectiveDays = IsPerDay ?<br>
+                        &nbsp;&nbsp;(courseDays + ExtraBefore + ExtraAfter) : 1<br>
+                        → rate × effectiveDays × (IsPerNominee ? count : 1)
+                    </div>
+                </div>
+            </div>
+
+            <!-- Decisions locked -->
+            <div class="mt-6 bg-green-50 border-2 border-green-200 rounded-xl p-5">
+                <h3 class="text-green-700 font-bold mb-3 text-sm">✅ قرارات مُقفلة (الجولة 1)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                    <div class="bg-white rounded-lg p-3 border border-green-200">
+                        <b class="text-green-700">Q1 ✓ إلغاء اعتماد الترشيحات</b>
+                        <div class="text-xs text-gray-600 mt-1">PAGE 3.5 = قراءة فقط. NominationApproval متوقف عن الكتابة.</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-green-200">
+                        <b class="text-green-700">Q2 ✓ تعديل لكل رتبة</b>
+                        <div class="text-xs text-gray-600 mt-1">Staff يعدل المبلغ لكل رتبة على حدة لبند الخطة — جدول PlanItemFinancialItemRanks.</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-green-200">
+                        <b class="text-green-700">Q3 ✓ إعادة جزئية في v1</b>
+                        <div class="text-xs text-gray-600 mt-1">إعادة على مستوى: الخطة كاملة / بند واحد / ترشيح واحد. الخطة تبقى UnderReview.</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-green-200">
+                        <b class="text-green-700">Q4 ✓ الملاحظات للجميع</b>
+                        <div class="text-xs text-gray-600 mt-1">UTM يشاهد كل ملاحظات Staff/TD/TH على خطته.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHG-07 highlight -->
+            <div class="mt-4 bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-xl p-5">
+                <h3 class="text-amber-800 font-bold mb-3 text-sm">🆕 CHG-07 — حسابات يومية + لكل مرشح + أيام السفر</h3>
+                <p class="text-sm text-gray-700 mb-3">بعض البنود (كبدل السفر) يومية — مبلغ الرتبة × (أيام الدورة + يوم سفر + يوم عودة) × عدد المرشحين.</p>
+                <div class="bg-white rounded-lg p-3 text-xs font-mono border border-amber-200">
+                    <div class="text-amber-900 font-bold mb-1">مثال: بدل سفر عقيد = 50 ر.ع/يوم، دورة 5 أيام، +1 قبل +1 بعد، 1 مرشح</div>
+                    <div class="text-gray-700">effectiveDays = 5 + 1 + 1 = <b>7 يوم</b></div>
+                    <div class="text-gray-700">subtotal = 50 × 7 × 1 = <b class="text-success-700">350 ر.ع</b></div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3 text-xs">
+                    <div class="bg-white rounded p-2 border border-gray-200"><b>✗ ✗</b> ثابت (رسوم دورة)</div>
+                    <div class="bg-white rounded p-2 border border-gray-200"><b>✗ ✓</b> لكل مرشح (ملابس)</div>
+                    <div class="bg-white rounded p-2 border border-gray-200"><b>✓ ✗</b> يومي (قاعة)</div>
+                    <div class="bg-amber-100 rounded p-2 border border-amber-300"><b>✓ ✓</b> يومي + لكل مرشح (سفر/إقامة)</div>
+                </div>
+                <div class="mt-3 bg-amber-100 border border-amber-300 rounded-lg p-3">
+                    <div class="text-xs text-amber-900">✈️ <b>الأيام الإضافية تُضبط لكل بند مالي على حدة:</b> بدل السفر = +1/+1، إيجار قاعة = 0/0، بدل ملابس = لا يهم (ليس يومي).</div>
+                </div>
+            </div>
+
+            <!-- Final sanity checks -->
+            <div class="mt-6 bg-red-50 border-2 border-red-200 rounded-xl p-5">
+                <h3 class="text-red-700 font-bold mb-3 text-sm">❓ فحوصات نهائية قبل البرمجة</h3>
+                <ol class="text-sm text-gray-800 space-y-2 list-decimal pr-5">
+                    <li><b>تأكيد:</b> تعديل Staff للمبلغ في Plan Review يؤثر على بند الخطة فقط، مش الإعدادات العامة؟</li>
+                    <li><b>الأيام:</b> هل يمكن لـ Staff تعديل عدد الأيام في البند المالي (مثلاً الدورة 14 يوم لكن السفر 10 أيام فقط)؟</li>
+                    <li><b>مرشح جديد:</b> لو UTM أضاف مرشح بعد الإعادة، يتم إنشاء صف رتبة جديد تلقائياً بالمبلغ الافتراضي؟</li>
+                    <li><b>حظر الاعتماد:</b> TD/TH لا يقدرا يعتمدا لو فيه أي PlanItem.IsReturned أو Nomination.IsReturned = true (Staff يشوف banner أحمر)؟</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB: FINANCIAL ITEMS v2 (CHG-02 + CHG-03) -->
+    <!-- ============================================================ -->
+    <div id="financial-items" class="screen">
+        <div class="card p-6">
+            <div class="flex justify-between items-center mb-5">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">🏦 البنود المالية — Financial Items v2</h2>
+                    <p class="text-gray-500 text-sm mt-1">إضافة المبلغ الافتراضي + مبالغ خاصة لبعض الرتب</p>
+                </div>
+                <button class="btn-primary px-5 py-2.5 rounded-xl font-medium text-sm">➕ بند جديد</button>
+            </div>
+
+            <div class="grid grid-cols-4 gap-3 mb-5">
+                <div class="stat-card"><div class="text-xs text-gray-500">إجمالي البنود</div><div class="text-2xl font-bold text-primary-700">12</div></div>
+                <div class="stat-card"><div class="text-xs text-gray-500">بنود رئيسية</div><div class="text-2xl font-bold text-purple-600">3</div></div>
+                <div class="stat-card"><div class="text-xs text-gray-500">بنود فرعية</div><div class="text-2xl font-bold text-success-600">9</div></div>
+                <div class="stat-card"><div class="text-xs text-gray-500"><span class="chg-badge">CHG-03</span> بمبالغ رتب</div><div class="text-2xl font-bold text-amber-600">4</div></div>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-gray-50 text-gray-600">
+                            <th class="text-right p-3">الاسم</th>
+                            <th class="text-center p-3">الرمز</th>
+                            <th class="text-center p-3 new-marker">🗓️ يومي؟ <span class="chg-badge">CHG-07</span></th>
+                            <th class="text-center p-3 new-marker">👤 لكل مرشح؟ <span class="chg-badge">CHG-07</span></th>
+                            <th class="text-center p-3 new-marker">✈️ أيام إضافية <span class="chg-badge">جديد</span></th>
+                            <th class="text-center p-3 new-marker">💰 المبلغ الافتراضي <span class="chg-badge">CHG-02</span></th>
+                            <th class="text-center p-3 new-marker">👥 مبالغ رتب <span class="chg-badge">CHG-03</span></th>
+                            <th class="text-center p-3">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="table-row border-b" onclick="toggleExpand(this,'fi-travel')">
+                            <td class="p-3 font-semibold">
+                                <span class="arrow-down" id="arr-fi-travel">▼</span>
+                                بدل السفر (Travel Allowance)
+                            </td>
+                            <td class="text-center p-3 text-gray-500">TRV-001</td>
+                            <td class="text-center p-3"><span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">✓ نعم</span></td>
+                            <td class="text-center p-3"><span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">✓ نعم</span></td>
+                            <td class="text-center p-3"><span class="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1 rounded">+1 / +1</span></td>
+                            <td class="text-center p-3 font-bold text-success-700">50 ر.ع<span class="text-xs font-normal">/يوم</span></td>
+                            <td class="text-center p-3"><span class="rank-pill">3 رتب مخصصة</span></td>
+                            <td class="text-center p-3">
+                                <button class="text-primary-600 ml-2">✏️</button>
+                                <button class="text-red-500">🗑️</button>
+                            </td>
+                        </tr>
+                        <tr id="fi-travel" class="hidden detail-row border-b">
+                            <td colspan="8" class="p-5">
+                                <div class="bg-white rounded-xl p-5 border border-amber-200">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <h4 class="font-bold text-amber-800">👥 المبالغ حسب الرتبة — Rank Overrides <span class="chg-badge">CHG-03</span></h4>
+                                        <button class="btn-warning px-4 py-2 rounded-lg text-xs">➕ إضافة مبلغ لرتبة</button>
+                                    </div>
+                                    <div class="text-xs text-gray-500 mb-3">المبلغ لكل رتبة <b>لكل يوم لكل مرشح</b> (لأن البند يومي + لكل مرشح). إذا لم تُضف الرتبة، يُستخدم المبلغ الافتراضي (50 ر.ع/يوم).</div>
+                                    <table class="w-full text-sm bg-gray-50 rounded-lg">
+                                        <thead>
+                                            <tr class="text-gray-600 text-xs">
+                                                <th class="text-right p-3">الرتبة</th>
+                                                <th class="text-center p-3">المبلغ/يوم/مرشح (ر.ع)</th>
+                                                <th class="text-center p-3">إجراءات</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr class="border-t border-gray-200">
+                                                <td class="p-3">عقيد (Colonel)</td>
+                                                <td class="text-center p-3 font-bold">100</td>
+                                                <td class="text-center p-3"><button class="text-primary-600 ml-2">✏️</button><button class="text-red-500">🗑️</button></td>
+                                            </tr>
+                                            <tr class="border-t border-gray-200">
+                                                <td class="p-3">ملازم أول (First Lieutenant)</td>
+                                                <td class="text-center p-3 font-bold">50</td>
+                                                <td class="text-center p-3"><button class="text-primary-600 ml-2">✏️</button><button class="text-red-500">🗑️</button></td>
+                                            </tr>
+                                            <tr class="border-t border-gray-200">
+                                                <td class="p-3">جندي أول (Private First Class)</td>
+                                                <td class="text-center p-3 font-bold">30</td>
+                                                <td class="text-center p-3"><button class="text-primary-600 ml-2">✏️</button><button class="text-red-500">🗑️</button></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+
+                                    <!-- Example calculation -->
+                                    <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                        <div class="text-xs font-bold text-blue-800 mb-2">🧮 مثال الحساب: دورة 5 أيام + يوم سفر قبل + يوم سفر بعد = 7 أيام، 3 مرشحين</div>
+                                        <div class="text-xs text-blue-700 font-mono">
+                                            عقيد: 100 × (5 + 1 + 1) × 1 = <b>700 ر.ع</b><br>
+                                            ملازم أول: 50 × 7 × 1 = <b>350 ر.ع</b><br>
+                                            جندي أول: 30 × 7 × 1 = <b>210 ر.ع</b><br>
+                                            <b class="text-blue-900">المجموع: 1,260 ر.ع</b>
+                                        </div>
+                                        <div class="text-xs text-amber-700 mt-2 pt-2 border-t border-blue-100">
+                                            ✈️ <b>الأيام الإضافية:</b> 1 قبل (للسفر) + 1 بعد (للعودة) = يُضافا تلقائياً لكل البنود المالية اليومية
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="table-row border-b">
+                            <td class="p-3 font-semibold">رسوم الدورة (Course Fees)</td>
+                            <td class="text-center p-3 text-gray-500">CRS-001</td>
+                            <td class="text-center p-3"><span class="bg-gray-100 text-gray-500 text-xs font-bold px-2 py-1 rounded">✗ لا</span></td>
+                            <td class="text-center p-3"><span class="bg-gray-100 text-gray-500 text-xs font-bold px-2 py-1 rounded">✗ لا</span></td>
+                            <td class="text-center p-3 text-gray-400 text-xs">—</td>
+                            <td class="text-center p-3 font-bold text-success-700">0 ر.ع</td>
+                            <td class="text-center p-3"><span class="text-xs text-gray-400">(مبلغ ثابت يدوي)</span></td>
+                            <td class="text-center p-3"><button class="text-primary-600 ml-2">✏️</button><button class="text-red-500">🗑️</button></td>
+                        </tr>
+                        <tr class="table-row border-b">
+                            <td class="p-3 font-semibold">بدل إقامة (Accommodation)</td>
+                            <td class="text-center p-3 text-gray-500">ACM-001</td>
+                            <td class="text-center p-3"><span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">✓ نعم</span></td>
+                            <td class="text-center p-3"><span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">✓ نعم</span></td>
+                            <td class="text-center p-3"><span class="bg-gray-100 text-gray-500 text-xs font-bold px-2 py-1 rounded">0 / 0</span></td>
+                            <td class="text-center p-3 font-bold text-success-700">100 ر.ع<span class="text-xs font-normal">/يوم</span></td>
+                            <td class="text-center p-3"><span class="rank-pill">2 رتب مخصصة</span></td>
+                            <td class="text-center p-3"><button class="text-primary-600 ml-2">✏️</button><button class="text-red-500">🗑️</button></td>
+                        </tr>
+                        <tr class="table-row border-b">
+                            <td class="p-3 font-semibold">بدل ملابس (Clothing Allowance)</td>
+                            <td class="text-center p-3 text-gray-500">CLT-001</td>
+                            <td class="text-center p-3"><span class="bg-gray-100 text-gray-500 text-xs font-bold px-2 py-1 rounded">✗ لا</span></td>
+                            <td class="text-center p-3"><span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">✓ نعم</span></td>
+                            <td class="text-center p-3 text-gray-400 text-xs">—</td>
+                            <td class="text-center p-3 font-bold text-success-700">75 ر.ع</td>
+                            <td class="text-center p-3"><span class="text-xs text-gray-400">لا توجد</span></td>
+                            <td class="text-center p-3"><button class="text-primary-600 ml-2">✏️</button><button class="text-red-500">🗑️</button></td>
+                        </tr>
+                        <tr class="table-row border-b">
+                            <td class="p-3 font-semibold">إيجار قاعة (Venue Rental)</td>
+                            <td class="text-center p-3 text-gray-500">VEN-001</td>
+                            <td class="text-center p-3"><span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">✓ نعم</span></td>
+                            <td class="text-center p-3"><span class="bg-gray-100 text-gray-500 text-xs font-bold px-2 py-1 rounded">✗ لا</span></td>
+                            <td class="text-center p-3"><span class="bg-gray-100 text-gray-500 text-xs font-bold px-2 py-1 rounded">0 / 0</span></td>
+                            <td class="text-center p-3 font-bold text-success-700">200 ر.ع<span class="text-xs font-normal">/يوم</span></td>
+                            <td class="text-center p-3"><span class="text-xs text-gray-400">لا توجد</span></td>
+                            <td class="text-center p-3"><button class="text-primary-600 ml-2">✏️</button><button class="text-red-500">🗑️</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Matrix explanation -->
+            <div class="mt-5 bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <h4 class="font-bold text-blue-800 mb-3 text-sm">🧩 مصفوفة حساب البنود المالية (CHG-07) — مع الأيام الإضافية</h4>
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="text-blue-900">
+                            <th class="text-center p-2">🗓️ يومي؟</th>
+                            <th class="text-center p-2">👤 لكل مرشح؟</th>
+                            <th class="text-right p-2">مثال</th>
+                            <th class="text-right p-2">الصيغة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-t border-blue-200">
+                            <td class="text-center p-2">✗</td><td class="text-center p-2">✗</td>
+                            <td class="p-2">رسوم الدورة (مبلغ ثابت)</td>
+                            <td class="p-2 font-mono text-blue-700">= amount</td>
+                        </tr>
+                        <tr class="border-t border-blue-200">
+                            <td class="text-center p-2">✗</td><td class="text-center p-2">✓</td>
+                            <td class="p-2">بدل ملابس</td>
+                            <td class="p-2 font-mono text-blue-700">= amount × nominees</td>
+                        </tr>
+                        <tr class="border-t border-blue-200">
+                            <td class="text-center p-2">✓</td><td class="text-center p-2">✗</td>
+                            <td class="p-2">إيجار قاعة</td>
+                            <td class="p-2 font-mono text-blue-700">= amount × (days + before + after)</td>
+                        </tr>
+                        <tr class="border-t border-blue-200 bg-amber-50">
+                            <td class="text-center p-2">✓</td><td class="text-center p-2">✓</td>
+                            <td class="p-2 font-bold">بدل السفر / إقامة</td>
+                            <td class="p-2 font-mono text-blue-700 font-bold">= rate × (days + before + after) × nominees</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="mt-3 bg-white border border-amber-200 rounded-lg p-3">
+                    <div class="text-xs font-bold text-amber-800 mb-1">✈️ الأيام الإضافية (ExtraDaysBefore / ExtraDaysAfter)</div>
+                    <div class="text-xs text-gray-700">
+                        بعض البنود مثل <b>بدل السفر</b> تُغطي أيام إضافية قبل وبعد الدورة لأن المرشح يحتاج يوم للسفر ويوم للعودة.
+                        <br>مثال: دورة 5 أيام + 1 قبل + 1 بعد = <b>7 أيام مدفوعة</b>.
+                        <br>تُضبط هذه الأيام لكل بند مالي على حدة (0 للبنود التي لا تحتاج أيام سفر).
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB: PLAN ENTRY v3 (CHG-01: Nominations mandatory) -->
+    <!-- ============================================================ -->
+    <div id="plan-entry" class="screen">
+        <div class="card p-6">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">✏️ إدخال بنود الخطة v3 — UTM</h2>
+                    <p class="text-gray-500 text-sm mt-1">خطة 2027 — القوات البرية — <span class="status-badge status-open">مفتوحة</span></p>
+                </div>
+                <div class="flex gap-2">
+                    <button class="btn-primary px-5 py-2.5 rounded-xl text-sm">➕ إضافة بند</button>
+                    <button class="bg-gray-100 text-gray-700 px-4 py-2.5 rounded-xl text-sm">📝 ملاحظات الخطة</button>
+                    <button class="btn-success px-5 py-2.5 rounded-xl text-sm">📤 إرسال للمراجعة</button>
+                </div>
+            </div>
+
+            <!-- Grid (summary) -->
+            <div class="bg-gray-50 rounded-xl p-4 mb-5">
+                <div class="flex gap-6 text-sm">
+                    <div><span class="text-gray-500">عدد البنود:</span> <b class="text-primary-700">4</b></div>
+                    <div><span class="text-gray-500">إجمالي المرشحين:</span> <b class="text-primary-700">12</b></div>
+                    <div><span class="text-gray-500">بنود بدون مرشحين:</span> <b class="text-red-600">0</b> ✅</div>
+                </div>
+            </div>
+
+            <!-- Add Item Dialog — KEY NEW DESIGN -->
+            <div class="border-4 border-dashed border-primary-300 rounded-2xl p-6 bg-primary-50">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="text-xl">➕</span>
+                    <h3 class="text-lg font-bold text-primary-800">إضافة بند جديد في الخطة</h3>
+                    <span class="chg-badge mr-auto">CHG-01 — الترشيحات إلزامية</span>
+                </div>
+
+                <!-- Section A: Course Info -->
+                <div class="bg-white rounded-xl p-5 mb-4 border border-gray-200">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="bg-primary-600 text-white text-xs font-bold px-2 py-1 rounded">القسم 1</span>
+                        <h4 class="font-bold text-gray-800">📚 بيانات الدورة</h4>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div><label class="text-xs text-gray-600 mb-1 block">الدورة *</label><select class="input-field w-full px-3 py-2 text-sm"><option>Leadership Advanced Course</option></select></div>
+                        <div><label class="text-xs text-gray-600 mb-1 block">النوع *</label><select class="input-field w-full px-3 py-2 text-sm"><option>خارجية دولية</option></select></div>
+                        <div><label class="text-xs text-gray-600 mb-1 block">الأولوية *</label><select class="input-field w-full px-3 py-2 text-sm"><option>عالية</option></select></div>
+                        <div class="md:col-span-3"><label class="text-xs text-gray-600 mb-1 block">المبرر *</label><textarea class="input-field w-full px-3 py-2 text-sm" rows="2">تطوير المهارات القيادية للضباط الأقدم...</textarea></div>
+                        <div><label class="text-xs text-gray-600 mb-1 block">المدة (أيام) *</label><input type="number" class="input-field w-full px-3 py-2 text-sm" value="14"></div>
+                        <div><label class="text-xs text-gray-600 mb-1 block">من تاريخ *</label><input type="date" class="input-field w-full px-3 py-2 text-sm" value="2027-03-15"></div>
+                        <div><label class="text-xs text-gray-600 mb-1 block">إلى تاريخ *</label><input type="date" class="input-field w-full px-3 py-2 text-sm" value="2027-03-28"></div>
+                    </div>
+                </div>
+
+                <!-- Section B: NEW — Nominees REQUIRED -->
+                <div class="bg-white rounded-xl p-5 mb-4 border-2 border-amber-300 shadow-sm">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="bg-amber-600 text-white text-xs font-bold px-2 py-1 rounded">القسم 2</span>
+                        <h4 class="font-bold text-gray-800">👥 المرشحين للدورة</h4>
+                        <span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded">مطلوب — 1 على الأقل</span>
+                        <span class="chg-badge mr-auto">CHG-01</span>
+                    </div>
+
+                    <!-- Employee search + multi-select -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="text-xs text-gray-600 mb-1 block">ابحث عن موظف (بالاسم أو الرقم العسكري)</label>
+                            <input type="text" placeholder="🔍 ابحث هنا..." class="input-field w-full px-3 py-2 text-sm" value="أحمد">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-600 mb-1 block">التصفية بالوحدة</label>
+                            <select class="input-field w-full px-3 py-2 text-sm">
+                                <option>كل وحداتي</option>
+                                <option>اللواء الأول</option>
+                                <option>الكتيبة الثالثة</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Search results -->
+                    <div class="bg-gray-50 rounded-lg p-3 mb-4 max-h-40 overflow-y-auto">
+                        <div class="flex items-center justify-between p-2 hover:bg-white rounded cursor-pointer">
+                            <div class="flex items-center gap-3">
+                                <input type="checkbox" class="w-4 h-4">
+                                <span class="font-semibold text-sm">أحمد بن سالم الراشدي</span>
+                                <span class="rank-pill">ملازم أول</span>
+                                <span class="text-xs text-gray-500">الكتيبة الأولى</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-2 hover:bg-white rounded cursor-pointer">
+                            <div class="flex items-center gap-3">
+                                <input type="checkbox" class="w-4 h-4" checked>
+                                <span class="font-semibold text-sm">أحمد بن خالد البلوشي</span>
+                                <span class="rank-pill">نقيب</span>
+                                <span class="text-xs text-gray-500">اللواء الأول</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between p-2 hover:bg-white rounded cursor-pointer">
+                            <div class="flex items-center gap-3">
+                                <input type="checkbox" class="w-4 h-4">
+                                <span class="font-semibold text-sm">أحمد بن محمد الحارثي</span>
+                                <span class="rank-pill">عقيد</span>
+                                <span class="text-xs text-gray-500">المقر الرئيسي</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selected nominees -->
+                    <div class="mb-3">
+                        <div class="text-xs text-gray-600 mb-2">المرشحون المختارون — 3 موظفين:</div>
+                        <div class="flex flex-wrap gap-2">
+                            <div class="nominee-chip">
+                                <span class="font-semibold">محمد بن علي العبري</span>
+                                <span class="rank-pill">عقيد</span>
+                                <span class="remove">✕</span>
+                            </div>
+                            <div class="nominee-chip">
+                                <span class="font-semibold">أحمد بن خالد البلوشي</span>
+                                <span class="rank-pill">نقيب</span>
+                                <span class="remove">✕</span>
+                            </div>
+                            <div class="nominee-chip">
+                                <span class="font-semibold">سالم بن ناصر الغافري</span>
+                                <span class="rank-pill">ملازم أول</span>
+                                <span class="remove">✕</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Condition validation warning (if any) -->
+                    <div class="mt-3 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                        <div class="text-xs text-amber-800 font-semibold mb-1">⚠️ تحقق من الشروط (NominationConditionValidator)</div>
+                        <div class="text-xs text-amber-700">عند الضغط على "حفظ" سيتم التحقق من 9 شروط تلقائياً لكل مرشح (العمر، سنوات الخدمة، الرتبة، اللغة، إلخ). الأخطاء ستظهر باللغة العربية.</div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex justify-end gap-2">
+                    <button class="bg-gray-200 text-gray-700 px-5 py-2.5 rounded-xl text-sm">إلغاء</button>
+                    <button class="btn-success px-6 py-2.5 rounded-xl text-sm font-bold">💾 حفظ البند + التحقق من الشروط</button>
+                </div>
+            </div>
+
+            <!-- Existing items list preview -->
+            <div class="mt-6">
+                <h3 class="font-bold text-gray-700 mb-3 text-sm">📋 بنود الخطة الحالية</h3>
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-gray-50 text-gray-600">
+                            <th class="text-right p-3">الدورة</th>
+                            <th class="text-center p-3">النوع</th>
+                            <th class="text-center p-3">المدة</th>
+                            <th class="text-center p-3">المرشحون</th>
+                            <th class="text-center p-3">إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="table-row border-b">
+                            <td class="p-3 font-semibold">Leadership Advanced Course</td>
+                            <td class="text-center p-3"><span class="status-badge bg-purple-100 text-purple-700">خارجية دولية</span></td>
+                            <td class="text-center p-3">14 يوم</td>
+                            <td class="text-center p-3"><span class="bg-green-100 text-green-700 px-2 py-1 rounded font-bold text-xs">3 ✅</span></td>
+                            <td class="text-center p-3"><button class="text-primary-600 ml-1">✏️</button><button class="text-red-500">🗑️</button></td>
+                        </tr>
+                        <tr class="table-row border-b">
+                            <td class="p-3 font-semibold">Strategic Planning Workshop</td>
+                            <td class="text-center p-3"><span class="status-badge bg-blue-100 text-blue-700">داخلية</span></td>
+                            <td class="text-center p-3">5 أيام</td>
+                            <td class="text-center p-3"><span class="bg-green-100 text-green-700 px-2 py-1 rounded font-bold text-xs">5 ✅</span></td>
+                            <td class="text-center p-3"><button class="text-primary-600 ml-1">✏️</button><button class="text-red-500">🗑️</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB: PLAN REVIEW v6 (CHG-04 + CHG-05) -->
+    <!-- ============================================================ -->
+    <div id="plan-review" class="screen">
+        <div class="card p-6">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">🔍 مراجعة الخطة v6 — Training Directorate Staff</h2>
+                    <p class="text-gray-500 text-sm mt-1">خطة 2027 — القوات البرية — <span class="status-badge status-review">قيد المراجعة</span></p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="openDrawer()" class="bg-purple-100 text-purple-700 px-4 py-2.5 rounded-xl text-sm font-medium">📝 ملاحظات (5)</button>
+                    <button onclick="openReturnModal()" class="btn-amber px-5 py-2.5 rounded-xl text-sm font-bold">🔙 إعادة للمُنشئ</button>
+                    <button class="btn-success px-6 py-2.5 rounded-xl text-sm font-bold">✅ اعتماد وإرسال لـ TD</button>
+                </div>
+            </div>
+
+            <!-- Progress stats -->
+            <div class="grid grid-cols-4 gap-3 mb-5">
+                <div class="stat-card"><div class="text-xs text-gray-500">إجمالي البنود</div><div class="text-2xl font-bold text-primary-700">42</div></div>
+                <div class="stat-card"><div class="text-xs text-gray-500">بنود مكتملة</div><div class="text-2xl font-bold text-success-600">38 / 42</div><div class="w-full bg-gray-200 rounded-full h-1.5 mt-2"><div class="bg-success-500 h-1.5 rounded-full" style="width:90%"></div></div></div>
+                <div class="stat-card"><div class="text-xs text-gray-500">بنود ناقصة التكاليف</div><div class="text-2xl font-bold text-amber-600">4</div><button class="text-xs text-amber-600 font-bold mt-1">→ الانتقال للتالي</button></div>
+                <div class="stat-card"><div class="text-xs text-gray-500">التكلفة الإجمالية</div><div class="text-2xl font-bold text-purple-600">48,500 <span class="text-sm font-normal">ر.ع</span></div></div>
+            </div>
+
+            <!-- Items table -->
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-gray-50 text-gray-600">
+                        <th class="text-right p-3">الدورة</th>
+                        <th class="text-center p-3">النوع</th>
+                        <th class="text-center p-3">المرشحون</th>
+                        <th class="text-center p-3">التكلفة (ر.ع)</th>
+                        <th class="text-center p-3">ملاحظات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Selected item row -->
+                    <tr class="selected-row border-b" onclick="return false;">
+                        <td class="p-3 font-semibold">
+                            <span class="arrow-down open">▼</span>
+                            Leadership Advanced Course
+                        </td>
+                        <td class="text-center p-3"><span class="status-badge bg-purple-100 text-purple-700">خارجية دولية</span></td>
+                        <td class="text-center p-3">
+                            <div class="flex justify-center gap-1">
+                                <span class="rank-pill">عقيد×1</span>
+                                <span class="rank-pill">نقيب×1</span>
+                                <span class="rank-pill">ملازم×1</span>
+                            </div>
+                        </td>
+                        <td class="text-center p-3 font-bold text-success-700">3,250</td>
+                        <td class="text-center p-3"><span class="bg-purple-100 text-purple-700 px-2 py-1 rounded font-bold text-xs">2 📝</span></td>
+                    </tr>
+
+                    <!-- EXPANDED DETAIL ROW -->
+                    <tr class="detail-row border-b">
+                        <td colspan="5" class="p-5">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <!-- Course detail card -->
+                                <div class="course-detail-card">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <h4 class="font-bold text-gray-800 text-sm">📚 تفاصيل الدورة</h4>
+                                        <button class="btn-amber px-3 py-1.5 rounded-lg text-xs font-bold">🔙 إعادة هذا البند فقط</button>
+                                    </div>
+                                    <div class="space-y-2 text-xs text-gray-600">
+                                        <div><b class="text-gray-700">المُنشئ:</b> UTM — اللواء الأول</div>
+                                        <div><b class="text-gray-700">المبرر:</b> تطوير المهارات القيادية للضباط الأقدم...</div>
+                                        <div><b class="text-gray-700">المدة:</b> <span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold">14 يوم</span> (2027/03/15 — 2027/03/28)</div>
+                                        <div><b class="text-gray-700">الأولوية:</b> <span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">عالية</span></div>
+                                        <div class="pt-2 border-t">
+                                            <b class="text-gray-700">الشروط المنسوخة:</b>
+                                            <div class="mt-1 flex flex-wrap gap-1">
+                                                <span class="bg-amber-50 border border-amber-300 text-amber-800 px-2 py-1 rounded text-xs">خبرة ≥ 5 سنوات</span>
+                                                <span class="bg-amber-50 border border-amber-300 text-amber-800 px-2 py-1 rounded text-xs">لغة إنجليزية ≥ B2</span>
+                                                <span class="bg-amber-50 border border-amber-300 text-amber-800 px-2 py-1 rounded text-xs">رتبة ≥ ملازم</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Financial items panel — editable per-rank rates -->
+                                <div class="financial-panel-inline">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <h4 class="font-bold text-amber-800 text-sm">💰 البنود المالية <span class="chg-badge">CHG-04·07</span></h4>
+                                        <button class="btn-warning px-3 py-1.5 rounded-lg text-xs">➕ إضافة بند</button>
+                                    </div>
+
+                                    <!-- Travel allowance — editable per-rank rates, per-day + per-nominee + extra days -->
+                                    <div class="bg-white rounded-lg mb-3 border border-amber-200">
+                                        <div class="flex justify-between items-center p-3 border-b border-amber-100 bg-amber-50 rounded-t-lg">
+                                            <div class="flex items-center gap-2">
+                                                <span class="arrow-down open">▼</span>
+                                                <b class="text-sm">بدل السفر</b>
+                                                <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded">يومي</span>
+                                                <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded">لكل مرشح</span>
+                                                <span class="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-0.5 rounded" title="1 يوم قبل + 1 يوم بعد">✈️ +1/+1</span>
+                                            </div>
+                                            <b class="text-success-700">4,800 ر.ع</b>
+                                        </div>
+                                        <div class="p-3">
+                                            <div class="text-xs text-gray-500 mb-2">
+                                                المبالغ قابلة للتعديل لهذا البند فقط — لن تؤثر على الإعدادات العامة <span class="chg-badge">CHG-03</span>
+                                                <br>✈️ <b>الأيام الفعالة:</b> 14 دورة + 1 سفر + 1 عودة = <b class="text-amber-700">16 يوم</b>
+                                            </div>
+                                            <table class="w-full text-xs">
+                                                <thead>
+                                                    <tr class="text-gray-600">
+                                                        <th class="text-right p-2">الرتبة</th>
+                                                        <th class="text-center p-2">العدد</th>
+                                                        <th class="text-center p-2">المبلغ/يوم (ر.ع)</th>
+                                                        <th class="text-center p-2">الأيام الفعالة</th>
+                                                        <th class="text-center p-2">المجموع</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr class="border-t border-gray-100">
+                                                        <td class="p-2">عقيد</td>
+                                                        <td class="text-center p-2">1</td>
+                                                        <td class="text-center p-2"><input type="number" value="100" class="input-field w-16 px-2 py-0.5 text-center text-xs font-bold"></td>
+                                                        <td class="text-center p-2"><b>16</b> <span class="text-gray-400">(14+2)</span></td>
+                                                        <td class="text-center p-2 font-bold text-success-700">1,600</td>
+                                                    </tr>
+                                                    <tr class="border-t border-gray-100">
+                                                        <td class="p-2">نقيب</td>
+                                                        <td class="text-center p-2">1</td>
+                                                        <td class="text-center p-2"><input type="number" value="70" class="input-field w-16 px-2 py-0.5 text-center text-xs font-bold"></td>
+                                                        <td class="text-center p-2"><b>16</b> <span class="text-gray-400">(14+2)</span></td>
+                                                        <td class="text-center p-2 font-bold text-success-700">1,120</td>
+                                                    </tr>
+                                                    <tr class="border-t border-gray-100">
+                                                        <td class="p-2">ملازم أول</td>
+                                                        <td class="text-center p-2">1</td>
+                                                        <td class="text-center p-2"><input type="number" value="50" class="input-field w-16 px-2 py-0.5 text-center text-xs font-bold"></td>
+                                                        <td class="text-center p-2"><b>16</b> <span class="text-gray-400">(14+2)</span></td>
+                                                        <td class="text-center p-2 font-bold text-success-700">800</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            <div class="mt-2 pt-2 border-t">
+                                                <label class="text-xs text-gray-600">ملاحظات Staff:</label>
+                                                <input type="text" class="input-field w-full px-2 py-1 text-xs mt-1" placeholder="أضف ملاحظة...">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Accommodation — rank breakdown + per-day -->
+                                    <div class="bg-white rounded-lg mb-3 border border-amber-200">
+                                        <div class="flex justify-between items-center p-3 border-b border-amber-100 bg-amber-50 rounded-t-lg">
+                                            <div class="flex items-center gap-2">
+                                                <span class="arrow-down open">▼</span>
+                                                <b class="text-sm">بدل الإقامة</b>
+                                                <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded">يومي</span>
+                                                <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded">لكل مرشح</span>
+                                            </div>
+                                            <b class="text-success-700">4,200 ر.ع</b>
+                                        </div>
+                                        <div class="p-3">
+                                            <table class="w-full text-xs">
+                                                <thead>
+                                                    <tr class="text-gray-600">
+                                                        <th class="text-right p-2">الرتبة</th>
+                                                        <th class="text-center p-2">العدد</th>
+                                                        <th class="text-center p-2">المبلغ/يوم</th>
+                                                        <th class="text-center p-2">الأيام</th>
+                                                        <th class="text-center p-2">المجموع</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr class="border-t border-gray-100">
+                                                        <td class="p-2">عقيد</td><td class="text-center p-2">1</td>
+                                                        <td class="text-center p-2"><input type="number" value="120" class="input-field w-16 px-2 py-0.5 text-center text-xs font-bold"></td>
+                                                        <td class="text-center p-2">14</td><td class="text-center p-2 font-bold text-success-700">1,680</td>
+                                                    </tr>
+                                                    <tr class="border-t border-gray-100">
+                                                        <td class="p-2">نقيب</td><td class="text-center p-2">1</td>
+                                                        <td class="text-center p-2"><input type="number" value="100" class="input-field w-16 px-2 py-0.5 text-center text-xs font-bold"></td>
+                                                        <td class="text-center p-2">14</td><td class="text-center p-2 font-bold text-success-700">1,400</td>
+                                                    </tr>
+                                                    <tr class="border-t border-gray-100">
+                                                        <td class="p-2">ملازم أول</td><td class="text-center p-2">1</td>
+                                                        <td class="text-center p-2"><input type="number" value="80" class="input-field w-16 px-2 py-0.5 text-center text-xs font-bold"></td>
+                                                        <td class="text-center p-2">14</td><td class="text-center p-2 font-bold text-success-700">1,120</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <!-- Course fees — flat -->
+                                    <div class="bg-white rounded-lg mb-3 border border-amber-200 p-3">
+                                        <div class="flex justify-between items-center">
+                                            <div class="flex items-center gap-2">
+                                                <b class="text-sm">رسوم الدورة</b>
+                                                <span class="bg-gray-100 text-gray-500 text-xs font-bold px-2 py-0.5 rounded">ثابت</span>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <input type="number" value="2000" class="input-field px-2 py-1 text-sm w-24 text-center">
+                                                <span class="text-xs">ر.ع</span>
+                                            </div>
+                                        </div>
+                                        <div class="text-xs text-gray-500 mt-2">لا يعتمد على الرتبة أو الأيام أو المرشحين</div>
+                                    </div>
+
+                                    <!-- Clothing — per-nominee not per-day -->
+                                    <div class="bg-white rounded-lg mb-3 border border-amber-200">
+                                        <div class="flex justify-between items-center p-3 border-b border-amber-100 bg-amber-50 rounded-t-lg">
+                                            <div class="flex items-center gap-2">
+                                                <span class="arrow-down open">▼</span>
+                                                <b class="text-sm">بدل ملابس</b>
+                                                <span class="bg-gray-100 text-gray-500 text-xs font-bold px-2 py-0.5 rounded">غير يومي</span>
+                                                <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded">لكل مرشح</span>
+                                            </div>
+                                            <b class="text-success-700">225 ر.ع</b>
+                                        </div>
+                                        <div class="p-3">
+                                            <table class="w-full text-xs">
+                                                <thead>
+                                                    <tr class="text-gray-600">
+                                                        <th class="text-right p-2">الرتبة</th>
+                                                        <th class="text-center p-2">العدد</th>
+                                                        <th class="text-center p-2">المبلغ/مرشح</th>
+                                                        <th class="text-center p-2">المجموع</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr class="border-t border-gray-100"><td class="p-2">عقيد</td><td class="text-center p-2">1</td><td class="text-center p-2"><input type="number" value="75" class="input-field w-16 px-2 py-0.5 text-center text-xs"></td><td class="text-center p-2 font-bold">75</td></tr>
+                                                    <tr class="border-t border-gray-100"><td class="p-2">نقيب</td><td class="text-center p-2">1</td><td class="text-center p-2"><input type="number" value="75" class="input-field w-16 px-2 py-0.5 text-center text-xs"></td><td class="text-center p-2 font-bold">75</td></tr>
+                                                    <tr class="border-t border-gray-100"><td class="p-2">ملازم أول</td><td class="text-center p-2">1</td><td class="text-center p-2"><input type="number" value="75" class="input-field w-16 px-2 py-0.5 text-center text-xs"></td><td class="text-center p-2 font-bold">75</td></tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    <!-- Total -->
+                                    <div class="bg-primary-600 text-white rounded-lg p-3 flex justify-between items-center">
+                                        <b class="text-sm">المجموع الكلي</b>
+                                        <b class="text-lg">11,225 ر.ع</b>
+                                    </div>
+
+                                    <!-- Action: note on this plan item -->
+                                    <div class="mt-3 flex gap-2">
+                                        <button class="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg text-xs font-medium flex-1">📝 إضافة ملاحظة على البند</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Nominees sub-section with nomination-level return -->
+                            <div class="mt-4 bg-white rounded-xl p-4 border border-gray-200">
+                                <div class="flex justify-between items-center mb-3">
+                                    <h4 class="font-bold text-gray-800 text-sm">👥 المرشحون في هذا البند</h4>
+                                    <span class="text-xs text-gray-500">يمكن إعادة مرشح معين للـ UTM لاستبداله <span class="chg-badge">CHG-05</span></span>
+                                </div>
+                                <table class="w-full text-xs">
+                                    <thead><tr class="text-gray-600"><th class="text-right p-2">الاسم</th><th class="text-center p-2">الرتبة</th><th class="text-center p-2">الوحدة</th><th class="text-center p-2">الشروط</th><th class="text-center p-2">ملاحظات</th><th class="text-center p-2">إجراءات</th></tr></thead>
+                                    <tbody>
+                                        <tr class="border-t"><td class="p-2">محمد بن علي العبري</td><td class="text-center"><span class="rank-pill">عقيد</span></td><td class="text-center p-2 text-gray-600">اللواء الأول</td><td class="text-center">✅</td><td class="text-center"><button class="text-purple-600">📝</button></td><td class="text-center"><button class="text-amber-600 text-xs font-bold">🔙 إعادة</button></td></tr>
+                                        <tr class="border-t"><td class="p-2">أحمد بن خالد البلوشي</td><td class="text-center"><span class="rank-pill">نقيب</span></td><td class="text-center p-2 text-gray-600">اللواء الأول</td><td class="text-center">✅</td><td class="text-center"><button class="text-purple-600">📝</button></td><td class="text-center"><button class="text-amber-600 text-xs font-bold">🔙 إعادة</button></td></tr>
+                                        <tr class="border-t"><td class="p-2">سالم بن ناصر الغافري</td><td class="text-center"><span class="rank-pill">ملازم أول</span></td><td class="text-center p-2 text-gray-600">الكتيبة الثالثة</td><td class="text-center">✅</td><td class="text-center"><button class="text-purple-600">📝</button></td><td class="text-center"><button class="text-amber-600 text-xs font-bold">🔙 إعادة</button></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Other items -->
+                    <tr class="table-row border-b">
+                        <td class="p-3 font-semibold">▶ Strategic Planning Workshop</td>
+                        <td class="text-center p-3"><span class="status-badge bg-blue-100 text-blue-700">داخلية</span></td>
+                        <td class="text-center p-3">5 مرشحين</td>
+                        <td class="text-center p-3 font-bold text-success-700">1,850</td>
+                        <td class="text-center p-3"><span class="text-gray-400 text-xs">—</span></td>
+                    </tr>
+                    <tr class="table-row border-b">
+                        <td class="p-3 font-semibold">▶ Cyber Security Fundamentals</td>
+                        <td class="text-center p-3"><span class="status-badge bg-green-100 text-green-700">خارجية محلية</span></td>
+                        <td class="text-center p-3">8 مرشحين</td>
+                        <td class="text-center p-3 font-bold text-red-600">ناقص ⚠️</td>
+                        <td class="text-center p-3"><span class="text-gray-400 text-xs">—</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB: PLAN APPROVAL v3 (CHG-05) -->
+    <!-- ============================================================ -->
+    <div id="plan-approval" class="screen">
+        <div class="card p-6">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">✅ اعتماد الخطة v3 — Training Director</h2>
+                    <p class="text-gray-500 text-sm mt-1">خطة 2027 — القوات البرية — <span class="status-badge status-td-approved">بانتظار اعتماد TD</span></p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="openDrawer()" class="bg-purple-100 text-purple-700 px-4 py-2.5 rounded-xl text-sm font-medium">📝 ملاحظات (5)</button>
+                    <button onclick="openReturnModal()" class="btn-amber px-5 py-2.5 rounded-xl text-sm font-bold">🔙 إعادة للمُنشئ</button>
+                    <button class="btn-danger px-5 py-2.5 rounded-xl text-sm">✕ رفض</button>
+                    <button class="btn-success px-6 py-2.5 rounded-xl text-sm font-bold">✅ اعتماد وإرسال لـ TH</button>
+                </div>
+            </div>
+
+            <!-- Cost summary -->
+            <div class="grid grid-cols-4 gap-3 mb-5">
+                <div class="stat-card"><div class="text-xs text-gray-500">إجمالي البنود</div><div class="text-2xl font-bold text-primary-700">42</div></div>
+                <div class="stat-card"><div class="text-xs text-gray-500">التكلفة الإجمالية</div><div class="text-2xl font-bold text-purple-600">48,500</div><div class="text-xs text-gray-500">ر.ع</div></div>
+                <div class="stat-card"><div class="text-xs text-gray-500">إجمالي المرشحين</div><div class="text-2xl font-bold text-success-600">126</div></div>
+                <div class="stat-card"><div class="text-xs text-gray-500">الميزانية المتاحة</div><div class="text-2xl font-bold text-amber-600">55,000</div><div class="text-xs text-success-600">✓ كافية</div></div>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                <div class="text-sm text-blue-800">
+                    <b>ℹ️ مراجعة TD:</b> يمكنك عرض جميع البنود والمبالغ والمرشحين (قراءة فقط). عند الاعتماد، سيتم تحديث <b>TrainingBudget.TotalAmount</b> تلقائياً.
+                    <br>عند الاعتماد عند مرحلة TH سيتم تشغيل <code class="kbd">BudgetRecalculator</code>.
+                </div>
+            </div>
+
+            <!-- Items table (simplified, read-only) -->
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-gray-50 text-gray-600">
+                        <th class="text-right p-3">الدورة</th>
+                        <th class="text-center p-3">النوع</th>
+                        <th class="text-center p-3">المرشحون</th>
+                        <th class="text-center p-3">التكلفة</th>
+                        <th class="text-center p-3">ملاحظات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="table-row border-b">
+                        <td class="p-3 font-semibold">Leadership Advanced Course</td>
+                        <td class="text-center p-3"><span class="status-badge bg-purple-100 text-purple-700">خارجية دولية</span></td>
+                        <td class="text-center p-3">3</td>
+                        <td class="text-center p-3 font-bold">3,250 ر.ع</td>
+                        <td class="text-center p-3"><span class="bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-bold">2 📝</span></td>
+                    </tr>
+                    <tr class="table-row border-b">
+                        <td class="p-3 font-semibold">Strategic Planning Workshop</td>
+                        <td class="text-center p-3"><span class="status-badge bg-blue-100 text-blue-700">داخلية</span></td>
+                        <td class="text-center p-3">5</td>
+                        <td class="text-center p-3 font-bold">1,850 ر.ع</td>
+                        <td class="text-center p-3 text-gray-400">—</td>
+                    </tr>
+                    <tr class="table-row border-b">
+                        <td class="p-3 font-semibold">Cyber Security Fundamentals</td>
+                        <td class="text-center p-3"><span class="status-badge bg-green-100 text-green-700">خارجية محلية</span></td>
+                        <td class="text-center p-3">8</td>
+                        <td class="text-center p-3 font-bold">6,400 ر.ع</td>
+                        <td class="text-center p-3 text-gray-400">—</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB: RETURNED VIEW (UTM, CHG-06) -->
+    <!-- ============================================================ -->
+    <div id="returned-view" class="screen">
+        <div class="card p-6">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">📋 خطة مُعادة للتعديل — UTM View</h2>
+                    <p class="text-gray-500 text-sm mt-1">خطة 2027 — القوات البرية — <span class="status-badge status-returned">🔙 مُعادة للمُنشئ</span></p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="openDrawer()" class="bg-purple-100 text-purple-700 px-4 py-2.5 rounded-xl text-sm font-medium">📝 ملاحظات (5)</button>
+                    <button class="btn-success px-6 py-2.5 rounded-xl text-sm font-bold">📤 إعادة إرسال بعد التعديل</button>
+                </div>
+            </div>
+
+            <!-- RETURN BANNER -->
+            <div class="returned-banner mb-5">
+                <div class="flex items-start gap-3">
+                    <span class="text-3xl">🔙</span>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-amber-900 mb-1">الخطة مُعادة للتعديل من Training Directorate Staff</h3>
+                        <p class="text-sm text-amber-800 mb-2">
+                            <b>السبب:</b> "البند الثاني (Strategic Planning Workshop) يحتاج مراجعة عدد المرشحين — لدينا حد أقصى 3 في هذه الدورة. رجاءً أيضاً إضافة ملازم من الكتيبة الثانية للبند الأول."
+                        </p>
+                        <div class="text-xs text-amber-700">
+                            <span class="role-pill role-staff">Staff</span>
+                            بواسطة: فاطمة بنت محمد — 2026/04/18 14:32
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Editable items (CHG-06) -->
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                <div class="text-sm text-blue-800">
+                    <b>✏️ يمكنك الآن التعديل:</b> الخطة + البنود + الترشيحات. بعد الانتهاء اضغط "إعادة إرسال" لترجع الخطة إلى Staff للمراجعة.
+                </div>
+            </div>
+
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-gray-50 text-gray-600">
+                        <th class="text-right p-3">الدورة</th>
+                        <th class="text-center p-3">النوع</th>
+                        <th class="text-center p-3">المرشحون</th>
+                        <th class="text-center p-3">التكلفة</th>
+                        <th class="text-center p-3">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="table-row border-b">
+                        <td class="p-3 font-semibold">Leadership Advanced Course</td>
+                        <td class="text-center p-3"><span class="status-badge bg-purple-100 text-purple-700">خارجية دولية</span></td>
+                        <td class="text-center p-3"><span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">3 ✅</span></td>
+                        <td class="text-center p-3 font-bold text-success-700">3,250 ر.ع</td>
+                        <td class="text-center p-3"><button class="text-primary-600 ml-1">✏️ تعديل</button><button class="text-red-500">🗑️</button></td>
+                    </tr>
+                    <tr class="table-row border-b bg-amber-50">
+                        <td class="p-3 font-semibold">
+                            Strategic Planning Workshop
+                            <span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold mr-2">⚠️ يحتاج تعديل</span>
+                        </td>
+                        <td class="text-center p-3"><span class="status-badge bg-blue-100 text-blue-700">داخلية</span></td>
+                        <td class="text-center p-3"><span class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs font-bold">5</span></td>
+                        <td class="text-center p-3 font-bold text-success-700">1,850 ر.ع</td>
+                        <td class="text-center p-3"><button class="btn-warning px-3 py-1 rounded text-xs font-bold">✏️ تعديل الآن</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- NOTES DRAWER (shared across screens) -->
+    <!-- ============================================================ -->
+    <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+    <div class="drawer" id="notesDrawer">
+        <div class="sticky top-0 bg-white border-b border-gray-200 p-5 flex justify-between items-center">
+            <div>
+                <h3 class="text-lg font-bold text-gray-800">📝 الملاحظات</h3>
+                <p class="text-xs text-gray-500">5 ملاحظات على خطة 2027</p>
+            </div>
+            <button onclick="closeDrawer()" class="text-2xl text-gray-400 hover:text-gray-700">✕</button>
+        </div>
+
+        <!-- Scope tabs -->
+        <div class="flex border-b border-gray-200 p-2 gap-1">
+            <button class="px-3 py-1.5 rounded-lg bg-primary-100 text-primary-700 text-xs font-bold">على الخطة (2)</button>
+            <button class="px-3 py-1.5 rounded-lg text-gray-500 text-xs">على البنود (2)</button>
+            <button class="px-3 py-1.5 rounded-lg text-gray-500 text-xs">على الترشيحات (1)</button>
+        </div>
+
+        <div class="p-5 space-y-3">
+            <!-- Return reason note -->
+            <div class="note-card return-reason">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="role-pill role-staff">Staff</span>
+                    <span class="text-xs text-amber-800 font-bold">🔙 سبب الإعادة</span>
+                    <span class="text-xs text-gray-500 mr-auto">2026/04/18 14:32</span>
+                </div>
+                <div class="text-sm text-gray-700">البند الثاني (Strategic Planning Workshop) يحتاج مراجعة عدد المرشحين — لدينا حد أقصى 3 في هذه الدورة.</div>
+                <div class="text-xs text-gray-500 mt-1">— فاطمة بنت محمد</div>
+            </div>
+
+            <!-- Regular note TD -->
+            <div class="note-card">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="role-pill role-td">TD</span>
+                    <span class="text-xs text-gray-500 mr-auto">2026/04/15 10:15</span>
+                </div>
+                <div class="text-sm text-gray-700">الميزانية تبدو متوازنة، لكن يجب مراجعة توزيع بنود السفر بين اللواءين.</div>
+                <div class="text-xs text-gray-500 mt-1">— د. سالم الحارثي</div>
+            </div>
+
+            <!-- UTM reply -->
+            <div class="note-card">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="role-pill role-utm">UTM</span>
+                    <span class="text-xs text-gray-500 mr-auto">2026/04/14 16:40</span>
+                </div>
+                <div class="text-sm text-gray-700">تم إضافة جميع البنود المطلوبة من القيادة. الأولويات معتمدة من القائد.</div>
+                <div class="text-xs text-gray-500 mt-1">— علي بن سيف</div>
+            </div>
+        </div>
+
+        <!-- Add note -->
+        <div class="sticky bottom-0 bg-white border-t border-gray-200 p-4">
+            <textarea class="input-field w-full px-3 py-2 text-sm mb-2" rows="2" placeholder="أضف ملاحظة..."></textarea>
+            <button class="btn-primary w-full py-2 rounded-lg text-sm font-bold">➕ إضافة ملاحظة</button>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- RETURN MODAL -->
+    <!-- ============================================================ -->
+    <div class="modal-overlay" id="returnModal" onclick="if(event.target===this)closeReturnModal()">
+        <div class="modal-box">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="text-3xl">🔙</span>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800">إعادة الخطة للمُنشئ</h3>
+                    <p class="text-xs text-gray-500">الخطة ستعود لحالة "مُعادة للمُنشئ" وUTM سيقدر يعدل</p>
+                </div>
+            </div>
+
+            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                <p class="text-xs text-amber-800">⚠️ سبب الإعادة مطلوب — سيُحفظ كملاحظة دائمة ويُرسل إشعار لـ UTM.</p>
+            </div>
+
+            <label class="text-sm font-bold text-gray-700 mb-1 block">سبب الإعادة *</label>
+            <textarea class="input-field w-full px-3 py-2 text-sm" rows="4" placeholder="اكتب سبب الإعادة بوضوح..."></textarea>
+
+            <div class="flex justify-end gap-2 mt-4">
+                <button onclick="closeReturnModal()" class="bg-gray-200 text-gray-700 px-5 py-2.5 rounded-xl text-sm">إلغاء</button>
+                <button class="btn-amber px-5 py-2.5 rounded-xl text-sm font-bold">🔙 تأكيد الإعادة</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            event.target.closest('.tab-btn').classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        function toggleExpand(row, detailId) {
+            const detail = document.getElementById(detailId);
+            const arrow = document.getElementById('arr-' + detailId);
+            if (detail.classList.contains('hidden')) {
+                detail.classList.remove('hidden');
+                if (arrow) arrow.classList.add('open');
+            } else {
+                detail.classList.add('hidden');
+                if (arrow) arrow.classList.remove('open');
+            }
+        }
+
+        function openDrawer() {
+            document.getElementById('drawerOverlay').classList.add('open');
+            document.getElementById('notesDrawer').classList.add('open');
+        }
+        function closeDrawer() {
+            document.getElementById('drawerOverlay').classList.remove('open');
+            document.getElementById('notesDrawer').classList.remove('open');
+        }
+        function openReturnModal() {
+            document.getElementById('returnModal').classList.add('open');
+        }
+        function closeReturnModal() {
+            document.getElementById('returnModal').classList.remove('open');
+        }
+    </script>
+
+</body>
+</html>

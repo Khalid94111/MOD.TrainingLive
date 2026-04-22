@@ -7699,6 +7699,322 @@
             }
           }
         },
+        "MOD.Training.Training.Finance.FinancialItemRankAmountAppService": {
+          "controllerName": "FinancialItemRankAmount",
+          "controllerGroupName": "FinancialItemRankAmount",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "MOD.Training.Training.Finance.FinancialItemRankAmountAppService",
+          "interfaces": [
+            {
+              "type": "MOD.Training.Training.Finance.IFinancialItemRankAmountAppService",
+              "name": "IFinancialItemRankAmountAppService",
+              "methods": [
+                {
+                  "name": "GetAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.Finance.Dtos.FinancialItemRankAmountDto",
+                    "typeSimple": "MOD.Training.Training.Finance.Dtos.FinancialItemRankAmountDto"
+                  }
+                },
+                {
+                  "name": "GetByFinancialItemAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "financialItemId",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Collections.Generic.List<MOD.Training.Training.Finance.Dtos.FinancialItemRankAmountDto>",
+                    "typeSimple": "[MOD.Training.Training.Finance.Dtos.FinancialItemRankAmountDto]"
+                  }
+                },
+                {
+                  "name": "CreateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.Finance.Dtos.CreateUpdateFinancialItemRankAmountDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.Finance.Dtos.CreateUpdateFinancialItemRankAmountDto",
+                      "typeSimple": "MOD.Training.Training.Finance.Dtos.CreateUpdateFinancialItemRankAmountDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.Finance.Dtos.FinancialItemRankAmountDto",
+                    "typeSimple": "MOD.Training.Training.Finance.Dtos.FinancialItemRankAmountDto"
+                  }
+                },
+                {
+                  "name": "UpdateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.Finance.Dtos.CreateUpdateFinancialItemRankAmountDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.Finance.Dtos.CreateUpdateFinancialItemRankAmountDto",
+                      "typeSimple": "MOD.Training.Training.Finance.Dtos.CreateUpdateFinancialItemRankAmountDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.Finance.Dtos.FinancialItemRankAmountDto",
+                    "typeSimple": "MOD.Training.Training.Finance.Dtos.FinancialItemRankAmountDto"
+                  }
+                },
+                {
+                  "name": "DeleteAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "GetAsyncById": {
+              "uniqueName": "GetAsyncById",
+              "name": "GetAsync",
+              "httpMethod": "GET",
+              "url": "api/app/financial-item-rank-amount/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.Finance.Dtos.FinancialItemRankAmountDto",
+                "typeSimple": "MOD.Training.Training.Finance.Dtos.FinancialItemRankAmountDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.Finance.IFinancialItemRankAmountAppService"
+            },
+            "GetByFinancialItemAsyncByFinancialItemId": {
+              "uniqueName": "GetByFinancialItemAsyncByFinancialItemId",
+              "name": "GetByFinancialItemAsync",
+              "httpMethod": "GET",
+              "url": "api/app/financial-item-rank-amount/by-financial-item/{financialItemId}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "financialItemId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "financialItemId",
+                  "name": "financialItemId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Collections.Generic.List<MOD.Training.Training.Finance.Dtos.FinancialItemRankAmountDto>",
+                "typeSimple": "[MOD.Training.Training.Finance.Dtos.FinancialItemRankAmountDto]"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.Finance.IFinancialItemRankAmountAppService"
+            },
+            "CreateAsyncByInput": {
+              "uniqueName": "CreateAsyncByInput",
+              "name": "CreateAsync",
+              "httpMethod": "POST",
+              "url": "api/app/financial-item-rank-amount",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.Finance.Dtos.CreateUpdateFinancialItemRankAmountDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.Finance.Dtos.CreateUpdateFinancialItemRankAmountDto",
+                  "typeSimple": "MOD.Training.Training.Finance.Dtos.CreateUpdateFinancialItemRankAmountDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.Finance.Dtos.CreateUpdateFinancialItemRankAmountDto",
+                  "typeSimple": "MOD.Training.Training.Finance.Dtos.CreateUpdateFinancialItemRankAmountDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.Finance.Dtos.FinancialItemRankAmountDto",
+                "typeSimple": "MOD.Training.Training.Finance.Dtos.FinancialItemRankAmountDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.Finance.IFinancialItemRankAmountAppService"
+            },
+            "UpdateAsyncByIdAndInput": {
+              "uniqueName": "UpdateAsyncByIdAndInput",
+              "name": "UpdateAsync",
+              "httpMethod": "PUT",
+              "url": "api/app/financial-item-rank-amount/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.Finance.Dtos.CreateUpdateFinancialItemRankAmountDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.Finance.Dtos.CreateUpdateFinancialItemRankAmountDto",
+                  "typeSimple": "MOD.Training.Training.Finance.Dtos.CreateUpdateFinancialItemRankAmountDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.Finance.Dtos.CreateUpdateFinancialItemRankAmountDto",
+                  "typeSimple": "MOD.Training.Training.Finance.Dtos.CreateUpdateFinancialItemRankAmountDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.Finance.Dtos.FinancialItemRankAmountDto",
+                "typeSimple": "MOD.Training.Training.Finance.Dtos.FinancialItemRankAmountDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.Finance.IFinancialItemRankAmountAppService"
+            },
+            "DeleteAsyncById": {
+              "uniqueName": "DeleteAsyncById",
+              "name": "DeleteAsync",
+              "httpMethod": "DELETE",
+              "url": "api/app/financial-item-rank-amount/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.Finance.IFinancialItemRankAmountAppService"
+            }
+          }
+        },
         "MOD.Training.Training.Finance.PriceQuoteAppService": {
           "controllerName": "PriceQuote",
           "controllerGroupName": "PriceQuote",
@@ -9167,6 +9483,56 @@
                     "type": "System.Collections.Generic.List<MOD.Training.Training.Nominations.Dtos.NominationApprovalDto>",
                     "typeSimple": "[MOD.Training.Training.Nominations.Dtos.NominationApprovalDto]"
                   }
+                },
+                {
+                  "name": "ReturnAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                      "typeSimple": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
+                  }
+                },
+                {
+                  "name": "ReplaceAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.Nominations.Dtos.ReplaceNominationDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.Nominations.Dtos.ReplaceNominationDto",
+                      "typeSimple": "MOD.Training.Training.Nominations.Dtos.ReplaceNominationDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.Nominations.Dtos.NominationDto",
+                    "typeSimple": "MOD.Training.Training.Nominations.Dtos.NominationDto"
+                  }
                 }
               ]
             }
@@ -9226,6 +9592,18 @@
                 }
               ],
               "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "PlanItemId",
+                  "jsonName": null,
+                  "type": "System.Guid?",
+                  "typeSimple": "string?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
                 {
                   "nameOnMethod": "input",
                   "name": "SessionId",
@@ -9490,6 +9868,120 @@
               "returnValue": {
                 "type": "System.Collections.Generic.List<MOD.Training.Training.Nominations.Dtos.NominationApprovalDto>",
                 "typeSimple": "[MOD.Training.Training.Nominations.Dtos.NominationApprovalDto]"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.Nominations.INominationAppService"
+            },
+            "ReturnAsyncByIdAndInput": {
+              "uniqueName": "ReturnAsyncByIdAndInput",
+              "name": "ReturnAsync",
+              "httpMethod": "POST",
+              "url": "api/app/nomination/{id}/return",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.Nominations.INominationAppService"
+            },
+            "ReplaceAsyncByIdAndInput": {
+              "uniqueName": "ReplaceAsyncByIdAndInput",
+              "name": "ReplaceAsync",
+              "httpMethod": "POST",
+              "url": "api/app/nomination/{id}/replace",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.Nominations.Dtos.ReplaceNominationDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.Nominations.Dtos.ReplaceNominationDto",
+                  "typeSimple": "MOD.Training.Training.Nominations.Dtos.ReplaceNominationDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.Nominations.Dtos.ReplaceNominationDto",
+                  "typeSimple": "MOD.Training.Training.Nominations.Dtos.ReplaceNominationDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.Nominations.Dtos.NominationDto",
+                "typeSimple": "MOD.Training.Training.Nominations.Dtos.NominationDto"
               },
               "allowAnonymous": false,
               "implementFrom": "MOD.Training.Training.Nominations.INominationAppService"
@@ -10290,6 +10782,334 @@
             }
           }
         },
+        "MOD.Training.Training.Plans.PlanItemFinancialItemRankAppService": {
+          "controllerName": "PlanItemFinancialItemRank",
+          "controllerGroupName": "PlanItemFinancialItemRank",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "MOD.Training.Training.Plans.PlanItemFinancialItemRankAppService",
+          "interfaces": [
+            {
+              "type": "MOD.Training.Training.Plans.IPlanItemFinancialItemRankAppService",
+              "name": "IPlanItemFinancialItemRankAppService",
+              "methods": [
+                {
+                  "name": "GetListByPifiAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "pifiId",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Collections.Generic.List<MOD.Training.Training.Plans.Dtos.PlanItemFinancialItemRankDto>",
+                    "typeSimple": "[MOD.Training.Training.Plans.Dtos.PlanItemFinancialItemRankDto]"
+                  }
+                },
+                {
+                  "name": "UpdateRateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "rankRowId",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.Plans.Dtos.UpdateRateDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.Plans.Dtos.UpdateRateDto",
+                      "typeSimple": "MOD.Training.Training.Plans.Dtos.UpdateRateDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "GetListByPifiAsyncByPifiId": {
+              "uniqueName": "GetListByPifiAsyncByPifiId",
+              "name": "GetListByPifiAsync",
+              "httpMethod": "GET",
+              "url": "api/app/plan-item-financial-item-rank/by-pifi/{pifiId}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "pifiId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "pifiId",
+                  "name": "pifiId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Collections.Generic.List<MOD.Training.Training.Plans.Dtos.PlanItemFinancialItemRankDto>",
+                "typeSimple": "[MOD.Training.Training.Plans.Dtos.PlanItemFinancialItemRankDto]"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.Plans.IPlanItemFinancialItemRankAppService"
+            },
+            "UpdateRateAsyncByRankRowIdAndInput": {
+              "uniqueName": "UpdateRateAsyncByRankRowIdAndInput",
+              "name": "UpdateRateAsync",
+              "httpMethod": "PUT",
+              "url": "api/app/plan-item-financial-item-rank/rate/{rankRowId}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "rankRowId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.Plans.Dtos.UpdateRateDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.Plans.Dtos.UpdateRateDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.UpdateRateDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "rankRowId",
+                  "name": "rankRowId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.Plans.Dtos.UpdateRateDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.UpdateRateDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.Plans.IPlanItemFinancialItemRankAppService"
+            }
+          }
+        },
+        "MOD.Training.Training.Plans.PlanNoteAppService": {
+          "controllerName": "PlanNote",
+          "controllerGroupName": "PlanNote",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "MOD.Training.Training.Plans.PlanNoteAppService",
+          "interfaces": [
+            {
+              "type": "MOD.Training.Training.Plans.IPlanNoteAppService",
+              "name": "IPlanNoteAppService",
+              "methods": [
+                {
+                  "name": "CreateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                      "typeSimple": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.Plans.Dtos.PlanNoteDto",
+                    "typeSimple": "MOD.Training.Training.Plans.Dtos.PlanNoteDto"
+                  }
+                },
+                {
+                  "name": "GetListAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.Plans.Dtos.PlanNoteGetListInput, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.Plans.Dtos.PlanNoteGetListInput",
+                      "typeSimple": "MOD.Training.Training.Plans.Dtos.PlanNoteGetListInput",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Collections.Generic.List<MOD.Training.Training.Plans.Dtos.PlanNoteDto>",
+                    "typeSimple": "[MOD.Training.Training.Plans.Dtos.PlanNoteDto]"
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "CreateAsyncByInput": {
+              "uniqueName": "CreateAsyncByInput",
+              "name": "CreateAsync",
+              "httpMethod": "POST",
+              "url": "api/app/plan-note",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.Plans.Dtos.PlanNoteDto",
+                "typeSimple": "MOD.Training.Training.Plans.Dtos.PlanNoteDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.Plans.IPlanNoteAppService"
+            },
+            "GetListAsyncByInput": {
+              "uniqueName": "GetListAsyncByInput",
+              "name": "GetListAsync",
+              "httpMethod": "GET",
+              "url": "api/app/plan-note",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.Plans.Dtos.PlanNoteGetListInput, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.Plans.Dtos.PlanNoteGetListInput",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.PlanNoteGetListInput",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "EntityType",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.Enums.PlanNoteEntityType",
+                  "typeSimple": "enum",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "EntityId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "Sorting",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "SkipCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "MaxResultCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                }
+              ],
+              "returnValue": {
+                "type": "System.Collections.Generic.List<MOD.Training.Training.Plans.Dtos.PlanNoteDto>",
+                "typeSimple": "[MOD.Training.Training.Plans.Dtos.PlanNoteDto]"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.Plans.IPlanNoteAppService"
+            }
+          }
+        },
         "MOD.Training.Training.Plans.TrainingPlanAppService": {
           "controllerName": "TrainingPlan",
           "controllerGroupName": "TrainingPlan",
@@ -10427,6 +11247,48 @@
                       "name": "reason",
                       "typeAsString": "System.String, System.Private.CoreLib",
                       "type": "System.String",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
+                  }
+                },
+                {
+                  "name": "ReturnToCreatorAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                      "typeSimple": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
+                  }
+                },
+                {
+                  "name": "ResubmitAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
                       "typeSimple": "string",
                       "isOptional": false,
                       "defaultValue": null
@@ -11073,6 +11935,100 @@
               },
               "allowAnonymous": false,
               "implementFrom": "MOD.Training.Training.Plans.ITrainingPlanAppService"
+            },
+            "ReturnToCreatorAsyncByIdAndInput": {
+              "uniqueName": "ReturnToCreatorAsyncByIdAndInput",
+              "name": "ReturnToCreatorAsync",
+              "httpMethod": "POST",
+              "url": "api/app/training-plan/{id}/return-to-creator",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.Plans.ITrainingPlanAppService"
+            },
+            "ResubmitAsyncById": {
+              "uniqueName": "ResubmitAsyncById",
+              "name": "ResubmitAsync",
+              "httpMethod": "POST",
+              "url": "api/app/training-plan/{id}/resubmit",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.Plans.ITrainingPlanAppService"
             }
           }
         },
@@ -11103,6 +12059,31 @@
                   "returnValue": {
                     "type": "System.Collections.Generic.List<MOD.Training.Training.Plans.Dtos.PlanItemConditionDto>",
                     "typeSimple": "[MOD.Training.Training.Plans.Dtos.PlanItemConditionDto]"
+                  }
+                },
+                {
+                  "name": "ReturnAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                      "typeSimple": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
                   }
                 },
                 {
@@ -11478,6 +12459,63 @@
               },
               "allowAnonymous": false,
               "implementFrom": "Volo.Abp.Application.Services.IDeleteAppService<System.Guid>"
+            },
+            "ReturnAsyncByIdAndInput": {
+              "uniqueName": "ReturnAsyncByIdAndInput",
+              "name": "ReturnAsync",
+              "httpMethod": "POST",
+              "url": "api/app/training-plan-item/{id}/return",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.Plans.ITrainingPlanItemAppService"
             },
             "GetConditionsAsyncByPlanItemId": {
               "uniqueName": "GetConditionsAsyncByPlanItemId",
@@ -27337,7 +28375,29 @@
         "UTMApproved",
         "UGMApproved",
         "TDApproved",
-        "Rejected"
+        "Rejected",
+        "Returned"
+      ],
+      "enumValues": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "genericArguments": null,
+      "properties": null
+    },
+    "MOD.Training.Training.Enums.PlanNoteAuthorRole": {
+      "baseType": "System.Enum",
+      "isEnum": true,
+      "enumNames": [
+        "UTM",
+        "Staff",
+        "TD",
+        "TH",
+        "UGM"
       ],
       "enumValues": [
         0,
@@ -27345,6 +28405,22 @@
         2,
         3,
         4
+      ],
+      "genericArguments": null,
+      "properties": null
+    },
+    "MOD.Training.Training.Enums.PlanNoteEntityType": {
+      "baseType": "System.Enum",
+      "isEnum": true,
+      "enumNames": [
+        "Plan",
+        "PlanItem",
+        "Nomination"
+      ],
+      "enumValues": [
+        0,
+        1,
+        2
       ],
       "genericArguments": null,
       "properties": null
@@ -27359,7 +28435,9 @@
         "UnderReview",
         "TDApproved",
         "THApproved",
-        "Closed"
+        "Closed",
+        "ReturnedToCreator",
+        "Rejected"
       ],
       "enumValues": [
         0,
@@ -27368,7 +28446,9 @@
         3,
         4,
         5,
-        6
+        6,
+        7,
+        8
       ],
       "genericArguments": null,
       "properties": null
@@ -27704,6 +28784,119 @@
           "jsonName": null,
           "type": "System.Boolean",
           "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "DefaultAmountOMR",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "IsPerDay",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "IsPerNominee",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ExtraDaysBefore",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ExtraDaysAfter",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Training.Finance.Dtos.CreateUpdateFinancialItemRankAmountDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "FinancialItemId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "RankId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "AmountOMR",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -28106,6 +29299,71 @@
           "maximum": null,
           "regex": null,
           "isNullable": false
+        },
+        {
+          "name": "DefaultAmountOMR",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "IsPerDay",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "IsPerNominee",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ExtraDaysBefore",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ExtraDaysAfter",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
         }
       ]
     },
@@ -28141,6 +29399,80 @@
           "maximum": null,
           "regex": null,
           "isNullable": true
+        }
+      ]
+    },
+    "MOD.Training.Training.Finance.Dtos.FinancialItemRankAmountDto": {
+      "baseType": "Volo.Abp.Application.Dtos.FullAuditedEntityDto<System.Guid>",
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "FinancialItemId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "RankId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "RankNameAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "RankNameEn",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "AmountOMR",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
         }
       ]
     },
@@ -29259,15 +30591,15 @@
         {
           "name": "SessionId",
           "jsonName": null,
-          "type": "System.Guid",
-          "typeSimple": "string",
+          "type": "System.Guid?",
+          "typeSimple": "string?",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
           "minimum": null,
           "maximum": null,
           "regex": null,
-          "isNullable": false
+          "isNullable": true
         },
         {
           "name": "SessionCode",
@@ -29286,6 +30618,19 @@
           "name": "CourseName",
           "jsonName": null,
           "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "PlanItemId",
+          "jsonName": null,
+          "type": "System.Guid",
           "typeSimple": "string",
           "isRequired": false,
           "minLength": null,
@@ -29424,6 +30769,32 @@
           "maximum": null,
           "regex": null,
           "isNullable": true
+        },
+        {
+          "name": "IsReturned",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "LastReturnNoteId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
         }
       ]
     },
@@ -29434,6 +30805,19 @@
       "enumValues": null,
       "genericArguments": null,
       "properties": [
+        {
+          "name": "PlanItemId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
         {
           "name": "SessionId",
           "jsonName": null,
@@ -29472,6 +30856,28 @@
           "maximum": null,
           "regex": null,
           "isNullable": true
+        }
+      ]
+    },
+    "MOD.Training.Training.Nominations.Dtos.ReplaceNominationDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "NewEmployeeId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
         }
       ]
     },
@@ -29685,6 +31091,67 @@
           "maximum": null,
           "regex": null,
           "isNullable": true
+        }
+      ]
+    },
+    "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "EntityType",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.PlanNoteEntityType",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "EntityId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Note",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "IsReturnReason",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
         }
       ]
     },
@@ -29996,32 +31463,6 @@
           "isNullable": false
         },
         {
-          "name": "OfficersCount",
-          "jsonName": null,
-          "type": "System.Int32",
-          "typeSimple": "number",
-          "isRequired": true,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": "0",
-          "maximum": "2147483647",
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "EnlistedCount",
-          "jsonName": null,
-          "type": "System.Int32",
-          "typeSimple": "number",
-          "isRequired": true,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": "0",
-          "maximum": "2147483647",
-          "regex": null,
-          "isNullable": false
-        },
-        {
           "name": "Justification",
           "jsonName": null,
           "type": "System.String",
@@ -30163,6 +31604,19 @@
           "maximum": null,
           "regex": null,
           "isNullable": true
+        },
+        {
+          "name": "NomineeEmployeeIds",
+          "jsonName": null,
+          "type": "[System.Guid]",
+          "typeSimple": "[string]",
+          "isRequired": true,
+          "minLength": 1,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
         }
       ]
     },
@@ -30324,6 +31778,250 @@
           "maximum": null,
           "regex": null,
           "isNullable": true
+        }
+      ]
+    },
+    "MOD.Training.Training.Plans.Dtos.PlanItemFinancialItemRankDto": {
+      "baseType": "Volo.Abp.Application.Dtos.FullAuditedEntityDto<System.Guid>",
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "PlanItemFinancialItemId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "RankId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "RankNameAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "RankNameEn",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "NomineeCount",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "RatePerUnitOMR",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "SubtotalOMR",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Training.Plans.Dtos.PlanNoteDto": {
+      "baseType": "Volo.Abp.Application.Dtos.CreationAuditedEntityDto<System.Guid>",
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "EntityType",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.PlanNoteEntityType",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "EntityId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Note",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "AuthorRole",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.PlanNoteAuthorRole",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "IsReturnReason",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "CreatedByName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Training.Plans.Dtos.PlanNoteGetListInput": {
+      "baseType": "Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto",
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "EntityType",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.PlanNoteEntityType",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "EntityId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Training.Plans.Dtos.ReturnReasonDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Reason",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": 2000,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
         }
       ]
     },
@@ -30523,45 +32221,6 @@
         },
         {
           "name": "Priority",
-          "jsonName": null,
-          "type": "System.Int32",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "OfficersCount",
-          "jsonName": null,
-          "type": "System.Int32",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "EnlistedCount",
-          "jsonName": null,
-          "type": "System.Int32",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "Capacity",
           "jsonName": null,
           "type": "System.Int32",
           "typeSimple": "number",
@@ -30806,6 +32465,32 @@
           "maximum": null,
           "regex": null,
           "isNullable": false
+        },
+        {
+          "name": "NomineesCount",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "IsReturned",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
         }
       ]
     },
@@ -30911,6 +32596,28 @@
           "maximum": null,
           "regex": null,
           "isNullable": true
+        }
+      ]
+    },
+    "MOD.Training.Training.Plans.Dtos.UpdateRateDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "NewRate",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
         }
       ]
     },

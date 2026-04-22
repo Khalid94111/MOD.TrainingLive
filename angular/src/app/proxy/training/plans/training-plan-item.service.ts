@@ -1,4 +1,4 @@
-import type { CreateUpdateTrainingPlanItemDto, PlanItemConditionDto, TrainingPlanItemDto, TrainingPlanItemGetListInput } from './dtos/models';
+import type { CreateUpdateTrainingPlanItemDto, PlanItemConditionDto, ReturnReasonDto, TrainingPlanItemDto, TrainingPlanItemGetListInput } from './dtos/models';
 import { RestService, Rest } from '@abp/ng.core';
 import type { PagedResultDto } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
@@ -49,6 +49,15 @@ export class TrainingPlanItemService {
       method: 'GET',
       url: '/api/app/training-plan-item',
       params: { planId: input.planId, courseType: input.courseType, preferredQuarter: input.preferredQuarter, unitId: input.unitId, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
+    },
+    { apiName: this.apiName,...config });
+  
+
+  return = (id: string, input: ReturnReasonDto, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, void>({
+      method: 'POST',
+      url: `/api/app/training-plan-item/${id}/return`,
+      body: input,
     },
     { apiName: this.apiName,...config });
   

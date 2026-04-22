@@ -1,0 +1,65 @@
+@if (isOpen()) {
+  <div class="modal-backdrop return-backdrop" (click)="onBackdropClick($event)" (keydown)="onKeydown($event)" tabindex="-1">
+    <div class="modal-content modal-md return-modal" role="dialog" aria-modal="true">
+      <div class="modal-header return-header">
+        <div class="header-text">
+          <div class="return-icon">🔙</div>
+          <div>
+            <div class="modal-title">{{ title() || entityLabel }}</div>
+            @if (subtitle()) { <div class="modal-subtitle">{{ subtitle() }}</div> }
+          </div>
+        </div>
+        <button type="button" class="modal-close" (click)="onCancel()" aria-label="إلغاء">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="info-banner">
+          <span class="info-icon">ℹ️</span>
+          <div>
+            <strong>سبب الإعادة سيُحفظ كملاحظة دائمة</strong>
+            <div class="info-sub">ويُرسَل إشعار لـ {{ recipientLabel }} لإجراء التعديلات اللازمة.</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">سبب الإعادة <span class="required">*</span></label>
+          <textarea
+            class="form-input reason-input"
+            rows="5"
+            [attr.maxlength]="MAX_LEN"
+            placeholder="اشرح بوضوح ما الذي يحتاج إلى تعديل وما الإجراء المطلوب من المُنشئ…"
+            [value]="reason()"
+            (input)="onReasonInput($event)"
+            [disabled]="submitting()"
+          ></textarea>
+          <div class="input-meta">
+            <span class="form-hint">
+              @if (characterCount < MIN_LEN) {
+                يتبقى {{ MIN_LEN - characterCount }} حرفاً على الأقل
+              } @else {
+                ✓ طول كافٍ
+              }
+            </span>
+            <span class="char-count" [class.over]="characterCount > MAX_LEN">
+              {{ characterCount }} / {{ MAX_LEN }}
+            </span>
+          </div>
+        </div>
+
+        @if (error()) {
+          <div class="alert alert-danger">
+            <span class="alert-icon">⚠️</span>
+            <span>{{ error() }}</span>
+          </div>
+        }
+      </div>
+
+      <div class="modal-footer return-footer">
+        <button type="button" class="btn btn-outline" (click)="onCancel()" [disabled]="submitting()">إلغاء</button>
+        <button type="button" class="btn btn-warning" (click)="onConfirm()" [disabled]="!isValid || submitting()">
+          @if (submitting()) { جارٍ الإعادة… } @else { 🔙 تأكيد الإعادة }
+        </button>
+      </div>
+    </div>
+  </div>
+}

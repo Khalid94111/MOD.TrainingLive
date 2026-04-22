@@ -2,7 +2,22 @@
   "permissions": {
     "allow": [
       "Bash(xargs grep:*)",
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Bash(ls:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(dotnet ef:*)",
+      "Bash(git reset:*)",
+      "Bash(git log:*)",
+      "Bash(curl -ksS -o /dev/null -w \"%{http_code}\\\\n\" https://localhost:44324/api/abp/application-configuration)",
+      "Bash(command -v abp)",
+      "Bash(where abp.cmd)",
+      "Bash(abp generate-proxy *)",
+      "Bash(npx tsc *)",
+      "Bash(npx ng *)",
+      "Bash(grep -rE \"\\\\\"Training:.*\\\\\"|\\\\\"Training\\\\\\\\.[A-Z].*\\\\\"\" D:/Training/MOD.Training/src/MOD.Training.Application/Training/)",
+      "Bash(grep -oE \"\\\\\"Training:[^\\\\\"]+\\\\\"|\\\\\"Training\\\\\\\\.[^\\\\\"]+\\\\\"\")"
     ]
   }
 }

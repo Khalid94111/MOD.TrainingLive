@@ -1,5 +1,95 @@
-@import '../../shared/gtms-design';
+.nom-page { display: block; }
 
-.expand-row:hover .expand-arrow {
-  color: #3b82f6;
+.info-banner {
+  display: flex;
+  gap: 12px;
+  background: linear-gradient(135deg, #dbeafe, #eff6ff);
+  border: 1px solid #93c5fd;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  color: #1e3a8a;
+}
+
+.info-banner strong { display: block; font-size: 0.92rem; font-weight: 800; margin-bottom: 3px; }
+
+.info-icon { font-size: 1.4rem; flex-shrink: 0; }
+
+.info-sub { font-size: 0.78rem; color: #1e40af; }
+
+.meta-warn { color: #b45309; font-weight: 700; }
+
+.no-pad { padding: 0 !important; overflow: hidden; }
+
+.filter-bar {
+  align-items: center;
+  background: white;
+  padding: 12px 16px;
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  margin-bottom: 16px;
+}
+
+.filter-bar .form-input { max-width: 240px; }
+
+.filter-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: #f8fafc;
+  border-radius: 12px;
+}
+
+.filter-label { font-size: 0.76rem; color: #475569; font-weight: 600; }
+
+.filter-chip {
+  background: white;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: 'Tajawal', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-chip:hover { background: #f1f5f9; }
+
+.filter-chip.active {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+}
+
+.nom-row { cursor: pointer; transition: all 0.15s; }
+
+.nom-row:hover {
+  background: #eff6ff !important;
+  transform: translateX(-2px);
+}
+
+.nom-row.nom-returned {
+  background: linear-gradient(to right, #fffbeb, #fef9c3);
+  box-shadow: inset 3px 0 0 #d97706;
+}
+
+.nom-row.nom-returned:hover { background: #fef3c7 !important; }
+
+.cell-sub-text { font-size: 0.82rem; color: #64748b; }
+
+.skel-row .skel-bar {
+  height: 14px;
+  background: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 50%, #e2e8f0 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 0% 0; }
+  100% { background-position: -200% 0; }
 }

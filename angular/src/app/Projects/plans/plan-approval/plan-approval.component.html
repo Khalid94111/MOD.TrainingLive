@@ -1,23 +1,36 @@
 <div class="gtms-card">
-  <!-- ═══ HEADER ═══ -->
+  <!-- HEADER -->
   <div class="page-toolbar">
     <div class="page-toolbar-title">
       <h2 class="gtms-card-title">✅ اعتماد الخطة — {{ plan()?.year }}</h2>
-      @if (plan(); as p) { <span class="badge" [class]="getStatusBadge(p.status)">{{ getStatusText(p.status) }}</span> }
+      @if (plan(); as p) {
+        <span class="badge" [class]="getStatusBadge(p.status)">{{ getStatusText(p.status) }}</span>
+        @if (returnedItemsCount() > 0 || returnedNominationsCount() > 0) {
+          <span class="badge badge-submitted">
+            ⚠️ {{ returnedItemsCount() }} بند + {{ returnedNominationsCount() }} ترشيح مُعاد
+          </span>
+        }
+      }
     </div>
-    @if (showActions) {
-      <div class="page-toolbar-actions">
-        <button class="btn btn-ghost btn-sm" (click)="onReturn()">↩️ إعادة للموظف</button>
+    <div class="page-toolbar-actions">
+      <button class="btn btn-ghost" (click)="openPlanNotes()" title="ملاحظات الخطة">💬 ملاحظات</button>
+      @if (showActions) {
+        <button class="btn btn-warning btn-sm" (click)="openReturnPlanModal()">🔙 إعادة إلى UTM</button>
         <button class="btn btn-danger btn-sm" (click)="openRejectDialog()">❌ رفض</button>
-        <button class="btn btn-success btn-sm"
-          [disabled]="itemsMissingCost() > 0"
-          [title]="itemsMissingCost() > 0 ? 'يجب إدخال التكلفة لجميع البنود الخارجية' : ''"
-          (click)="onApprove()">{{ approveLabel }}</button>
-      </div>
-    }
+        <button class="btn btn-success"
+          [disabled]="!canExecuteApprove || approving()"
+          [title]="disabledApproveTitle"
+          (click)="onApprove()">
+          @if (approving()) { جارٍ الاعتماد… } @else { {{ approveLabel }} }
+        </button>
+      }
+    </div>
   </div>
 
-  <!-- Cost gate warning -->
+  @if (approveError()) {
+    <div class="alert alert-danger"><span class="alert-icon">⚠️</span>{{ approveError() }}</div>
+  }
+
   @if (itemsMissingCost() > 0) {
     <div class="alert alert-danger">
       <span class="alert-icon">⚠️</span>
@@ -28,16 +41,23 @@
     </div>
   }
 
-  <!-- ═══ STATS ═══ -->
+  @if (hasUnresolvedReturns()) {
+    <div class="alert alert-warning">
+      <span class="alert-icon">🔙</span>
+      لا يمكن الاعتماد — يوجد بنود أو ترشيحات مُعادة يجب حلها أولاً
+    </div>
+  }
+
+  <!-- STATS -->
   <div class="stat-cards">
     <div class="stat-card"><div class="stat-value">{{ totalItems() }}</div><div class="stat-label">إجمالي البنود</div></div>
     <div class="stat-card card-green"><div class="stat-value">{{ formatCost(totalCost()) || '0' }}</div><div class="stat-label">التكلفة المقدرة (ر.ع.)</div></div>
-    <div class="stat-card card-blue"><div class="stat-value">{{ internalCount() }}</div><div class="stat-label">داخلية</div></div>
-    <div class="stat-card card-green"><div class="stat-value">{{ extLocalCount() }}</div><div class="stat-label">خارجية محلية</div></div>
-    <div class="stat-card card-purple"><div class="stat-value">{{ extIntlCount() }}</div><div class="stat-label">خارجية دولية</div></div>
+    <div class="stat-card card-blue"><div class="stat-value">{{ totalNominees() }}</div><div class="stat-label">مرشحون</div></div>
+    <div class="stat-card card-purple"><div class="stat-value">{{ internalCount() }}</div><div class="stat-label">داخلية</div></div>
+    <div class="stat-card card-amber"><div class="stat-value">{{ extLocalCount() + extIntlCount() }}</div><div class="stat-label">خارجية</div></div>
   </div>
 
-  <!-- ═══ ITEMS TABLE WITH INLINE EXPAND ═══ -->
+  <!-- ITEMS TABLE -->
   <div class="gtms-table-wrap">
     <table class="gtms-table">
       <thead>
@@ -46,144 +66,172 @@
           <th>الدورة</th>
           <th class="center">النوع</th>
           <th class="center">الأولوية</th>
-          <th class="center">ضباط</th>
-          <th class="center">أفراد</th>
-          <th class="center">سعة</th>
-          <th class="center">التكلفة المقدرة</th>
+          <th class="center">👥 مرشحون</th>
+          <th class="center">التكلفة</th>
           <th>مصدر التمويل</th>
           <th class="center">الوحدة</th>
+          <th class="center">الحالة</th>
+          <th class="center">ملاحظات</th>
         </tr>
       </thead>
       <tbody>
-        @for (item of items(); track item.id) {
-          <!-- Main row -->
+        @for (item of items(); track trackById($index, item)) {
           <tr class="item-row"
-              [class.item-expanded]="isItemExpanded(item.id)"
+              [class.item-expanded]="isItemExpanded(item.id!)"
               [class.warning-row]="isMissingCost(item)"
-              (click)="toggleItemDetail(item.id)">
+              [class.item-returned]="item.isReturned"
+              (click)="toggleItemDetail(item.id!)">
             <td class="center">
-              @if (isItemLoading(item.id)) { <span class="spinner"></span> }
-              @else { <span class="expand-arrow" [class.open]="isItemExpanded(item.id)">▶</span> }
+              @if (isItemLoading(item.id!)) { <span class="spinner"></span> }
+              @else { <span class="expand-arrow" [class.open]="isItemExpanded(item.id!)">▸</span> }
             </td>
             <td>
               <span class="cell-bold" [style.color]="isMissingCost(item) ? '#dc2626' : ''">
                 @if (isMissingCost(item)) { ⚠️ }
                 {{ item.tenantCourseNameAr }}
               </span>
-              <span class="cell-sub">{{ item.tenantCourseNameEn }}</span>
+              @if (item.tenantCourseNameEn) { <span class="cell-sub">{{ item.tenantCourseNameEn }}</span> }
+              @if (item.isReturned) { <span class="return-inline-badge">🔙 مُعاد</span> }
             </td>
             <td class="center"><span class="badge" [class]="getCourseTypeBadge(item.courseType)">{{ getCourseTypeText(item.courseType) }}</span></td>
             <td class="center"><span class="badge" [class]="'priority-' + item.priority">{{ item.priority }}</span></td>
-            <td class="center cell-bold">{{ item.officersCount }}</td>
-            <td class="center cell-bold">{{ item.enlistedCount }}</td>
-            <td class="center"><span class="badge badge-open">{{ item.capacity }}</span></td>
+            <td class="center"><span class="nominees-pill">👥 {{ item.nomineesCount ?? 0 }}</span></td>
             <td class="center">
-              @if (item.courseType === 0) { <span class="cell-na">N/A</span> }
-              @else if (isMissingCost(item)) { <span class="cell-missing">⚠️ غير محدد</span> }
+              @if (item.courseType === 0) { <span class="cell-na">—</span> }
+              @else if (isMissingCost(item)) { <span class="cell-missing">⚠️</span> }
               @else { <span class="cell-money">{{ formatCost(item.estimatedCost) }}</span> }
             </td>
             <td style="font-size:0.78rem; color:#64748b;">{{ item.fundingSource || '—' }}</td>
             <td class="center" style="font-size:0.78rem; color:#64748b;">{{ item.unitName || '—' }}</td>
+            <td class="center">
+              @if (item.isReturned) { <span class="badge badge-submitted">مُعاد</span> }
+              @else { <span class="badge badge-open">عادي</span> }
+            </td>
+            <td class="center" (click)="$event.stopPropagation()">
+              <button class="btn-icon" title="ملاحظات" (click)="openItemNotes(item, $event)">💬</button>
+            </td>
           </tr>
 
-          <!-- ══ INLINE EXPANDED: Read-only detail + financial ══ -->
-          @if (isItemExpanded(item.id)) {
+          @if (isItemExpanded(item.id!)) {
             <tr class="detail-row">
               <td colspan="10">
                 <div class="inline-detail-wrap">
-
-                  <!-- Course detail (read-only) -->
-                  <div class="course-detail-card">
-                    <div class="detail-grid">
+                  <div class="detail-grid-v3">
+                    <!-- Course detail (read-only) -->
+                    <div class="course-detail-card">
                       <div class="detail-section">
                         <div class="detail-field">
                           <span class="detail-label">👤 مقدم الطلب</span>
                           <span class="detail-value">{{ item.submittedByName }}</span>
                           @if (item.submittedByRank) { <span class="detail-value-sub">{{ item.submittedByRank }}</span> }
                         </div>
-                        <div class="detail-field">
-                          <span class="detail-label">🏢 الوحدة</span>
-                          <span class="detail-value">{{ item.unitName || '—' }}</span>
-                        </div>
-                        <div class="detail-field">
-                          <span class="detail-label">📝 المبرر</span>
-                          <span class="detail-value detail-value-text">{{ item.justification }}</span>
-                        </div>
-                      </div>
-                      <div class="detail-section">
-                        <div class="detail-row-inline">
-                          <div class="detail-mini"><span class="detail-label">🎖️ ضباط</span><span class="detail-number">{{ item.officersCount }}</span></div>
-                          <div class="detail-mini"><span class="detail-label">👥 أفراد</span><span class="detail-number">{{ item.enlistedCount }}</span></div>
-                          <div class="detail-mini"><span class="detail-label">📊 سعة</span><span class="detail-number highlight">{{ item.capacity }}</span></div>
-                        </div>
-                        <div class="detail-field"><span class="detail-label">📅 الربع</span><span class="detail-value">{{ getQuarterText(item.preferredQuarter) }}</span></div>
+                        <div class="detail-field"><span class="detail-label">🏢 الوحدة</span><span class="detail-value">{{ item.unitName || '—' }}</span></div>
+                        <div class="detail-field"><span class="detail-label">📝 المبرر</span><span class="detail-value detail-value-text">{{ item.justification }}</span></div>
                         <div class="detail-field"><span class="detail-label">⏱️ المدة</span><span class="detail-value">{{ getDurationText(item) }}</span></div>
+                        <div class="detail-field"><span class="detail-label">📅 الربع</span><span class="detail-value">{{ getQuarterText(item.preferredQuarter) }}</span></div>
                         <div class="detail-field"><span class="detail-label">📆 التواريخ</span><span class="detail-value">{{ formatDate(item.estimatedDateFrom) }} — {{ formatDate(item.estimatedDateTo) }}</span></div>
-                        @if (item.fundingSource) {
-                          <div class="detail-field"><span class="detail-label">💳 مصدر التمويل</span><span class="detail-value funding-code">{{ item.fundingSource }}</span></div>
-                        }
-                      </div>
-                      <div class="detail-section">
                         @if (item.objectivesAr) { <div class="detail-field"><span class="detail-label">🎯 الأهداف</span><span class="detail-value detail-value-text">{{ item.objectivesAr }}</span></div> }
-                        @if (item.descriptionAr) { <div class="detail-field"><span class="detail-label">📄 الوصف</span><span class="detail-value detail-value-text">{{ item.descriptionAr }}</span></div> }
+                        @if (item.fundingSource) { <div class="detail-field"><span class="detail-label">💳 مصدر التمويل</span><span class="detail-value funding-code">{{ item.fundingSource }}</span></div> }
                       </div>
+
+                      @if (getConditionsFor(item.id!).length > 0) {
+                        <div class="conditions-inline">
+                          <span class="conditions-label">🔒 شروط:</span>
+                          @for (c of getConditionsFor(item.id!); track c.id) {
+                            <span class="condition-tag">{{ getConditionTypeName(c.conditionType) }}: {{ c.conditionValue }}</span>
+                          }
+                        </div>
+                      }
                     </div>
 
-                    @if (getConditionsFor(item.id).length > 0) {
-                      <div class="conditions-inline">
-                        <span class="conditions-label">🔒 شروط الالتحاق:</span>
-                        @for (c of getConditionsFor(item.id); track c.id) {
-                          <span class="condition-tag">{{ getConditionTypeName(c.conditionType) }}: {{ c.conditionValue }}</span>
-                        }
-                      </div>
+                    <!-- Financial panel (READ-ONLY) -->
+                    @if (item.courseType !== 0) {
+                      @if (getFinancialItemsFor(item.id!).length === 0) {
+                        <div class="alert alert-danger" style="margin:0;">
+                          <span class="alert-icon">⚠️</span> لم يتم تعيين بنود مالية — يجب إعادة البند للـ UTM
+                        </div>
+                      } @else {
+                        <div class="financial-panel-ro">
+                          <div class="fi-header-ro">
+                            <span class="fi-title">💰 البنود المالية ({{ getFinancialItemsFor(item.id!).length }})</span>
+                            <span class="fi-total-badge">∑ {{ formatCost(getFinancialTotalFor(item.id!)) }} ر.ع</span>
+                          </div>
+
+                          @for (pifi of getFinancialItemsFor(item.id!); track pifi.id) {
+                            <div class="pifi-card-ro">
+                              <div class="pifi-head">
+                                <div class="pifi-head-left">
+                                  <span class="pifi-name">{{ pifi.financialItemName }}</span>
+                                  @if (isPerDay(pifi.financialItemId)) { <span class="pifi-flag flag-day">🗓️ يومي</span> }
+                                  @if (isPerNominee(pifi.financialItemId)) { <span class="pifi-flag flag-nom">👤 لكل مرشح</span> }
+                                </div>
+                                <span class="pifi-total">{{ formatCost(pifi.estimatedAmountOMR) || '0' }} ر.ع</span>
+                              </div>
+
+                              @if (isPerNominee(pifi.financialItemId) && getRanksFor(pifi.id!).length > 0) {
+                                <table class="ranks-table">
+                                  <thead>
+                                    <tr>
+                                      <th>الرتبة</th>
+                                      <th class="center">عدد</th>
+                                      <th class="center">المعدل</th>
+                                      @if (isPerDay(pifi.financialItemId)) { <th class="center">أيام</th> }
+                                      <th class="center">المجموع</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    @for (rb of getRanksFor(pifi.id!); track rb.id) {
+                                      <tr>
+                                        <td><span class="rank-badge">🎖️ {{ rb.rankNameAr ?? '—' }}</span></td>
+                                        <td class="center cell-bold">{{ rb.nomineeCount }}</td>
+                                        <td class="center cell-money">{{ formatCost(rb.ratePerUnitOMR) }}</td>
+                                        @if (isPerDay(pifi.financialItemId)) {
+                                          <td class="center cell-sub-text">—</td>
+                                        }
+                                        <td class="center cell-money">{{ formatCost(rb.subtotalOMR) }}</td>
+                                      </tr>
+                                    }
+                                  </tbody>
+                                </table>
+                              }
+
+                              @if (pifi.notes) {
+                                <div class="pifi-notes-ro">📌 {{ pifi.notes }}</div>
+                              }
+                            </div>
+                          }
+                        </div>
+                      }
                     }
                   </div>
 
-                  <!-- Financial items (READ-ONLY — no inputs, no buttons) -->
-                  @if (item.courseType !== 0 && getFinancialItemsFor(item.id).length > 0) {
-                    <div class="financial-panel-readonly">
-                      <div class="fi-header-readonly">
-                        <span class="fi-title">💰 البنود المالية ({{ getFinancialItemsFor(item.id).length }} بند)</span>
-                        <span class="fi-total-badge">{{ formatCost(getFinancialTotalFor(item.id)) }} ر.ع.</span>
+                  <!-- Nominees sub-table -->
+                  @if (getNominationsFor(item.id!).length > 0) {
+                    <div class="nominees-subtable-wrap">
+                      <div class="sub-header">
+                        <span class="sub-title">👥 المرشحون ({{ getNominationsFor(item.id!).length }})</span>
                       </div>
-                      <table class="fi-table">
+                      <table class="nominees-table">
                         <thead>
                           <tr>
-                            <th>البند المالي</th>
-                            <th class="center">المبلغ (ر.ع.)</th>
-                            <th class="center">المبلغ ($)</th>
-                            <th>ملاحظات</th>
+                            <th>المرشح</th>
+                            <th>الحالة</th>
                           </tr>
                         </thead>
                         <tbody>
-                          @for (fi of getFinancialItemsFor(item.id); track fi.id) {
-                            <tr>
-                              <td class="fi-name">{{ fi.financialItemName }}</td>
-                              <td class="center fi-amount">{{ formatCost(fi.estimatedAmountOMR) }}</td>
-                              <td class="center fi-usd">{{ formatCost(fi.estimatedAmountUSD) || '—' }}</td>
-                              <td class="fi-notes">{{ fi.notes || '—' }}</td>
+                          @for (n of getNominationsFor(item.id!); track n.id) {
+                            <tr [class.nom-returned]="n.isReturned">
+                              <td><span class="cell-bold">{{ n.employeeName ?? '—' }}</span></td>
+                              <td>
+                                @if (n.isReturned) { <span class="badge badge-submitted">🔙 مُعاد</span> }
+                                @else { <span class="badge badge-open">عادي</span> }
+                              </td>
                             </tr>
                           }
                         </tbody>
-                        <tfoot>
-                          <tr class="fi-total-row">
-                            <td>الإجمالي</td>
-                            <td class="center">{{ formatCost(getFinancialTotalFor(item.id)) }}</td>
-                            <td class="center fi-usd">{{ formatCost(getFinancialTotalUSDFor(item.id)) }}</td>
-                            <td></td>
-                          </tr>
-                        </tfoot>
                       </table>
                     </div>
                   }
-
-                  @if (item.courseType !== 0 && getFinancialItemsFor(item.id).length === 0) {
-                    <div class="alert alert-danger" style="margin:0;">
-                      <span class="alert-icon">⚠️</span>
-                      لم يتم تعيين بنود مالية لهذا البند — يجب إعادته للموظف المختص
-                    </div>
-                  }
-
                 </div>
               </td>
             </tr>
@@ -198,22 +246,46 @@
 
 <!-- Reject Dialog -->
 @if (isRejectOpen()) {
-  <div class="modal-backdrop" (click)="isRejectOpen.set(false)">
-    <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
+  <div class="modal-backdrop" (click)="$event.target === $event.currentTarget ? isRejectOpen.set(false) : null">
+    <div class="modal-content modal-sm">
       <div class="modal-header">
         <h3 class="modal-title">❌ رفض الخطة</h3>
         <button class="modal-close" (click)="isRejectOpen.set(false)">✕</button>
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label class="form-label">سبب الرفض</label>
-          <textarea class="form-input" rows="3" [value]="rejectReason()" (input)="rejectReason.set($any($event.target).value)" placeholder="أدخل سبب الرفض..."></textarea>
+          <label class="form-label">سبب الرفض <span class="required">*</span></label>
+          <textarea class="form-input" rows="4"
+                    [value]="rejectReason()"
+                    (input)="rejectReason.set($any($event.target).value)"
+                    placeholder="أدخل سبب الرفض…"></textarea>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-danger" (click)="onConfirmReject()">❌ تأكيد الرفض</button>
-        <button class="btn btn-ghost" (click)="isRejectOpen.set(false)">إلغاء</button>
+        <button class="btn btn-outline" (click)="isRejectOpen.set(false)">إلغاء</button>
+        <button class="btn btn-danger" (click)="onConfirmReject()" [disabled]="!rejectReason().trim()">❌ تأكيد الرفض</button>
       </div>
     </div>
   </div>
 }
+
+<!-- Return-plan modal -->
+<gtms-return-modal
+  [isOpen]="returnModalOpen()"
+  [entityType]="PlanNoteEntityType.Plan"
+  [entityId]="planId"
+  title="إعادة الخطة إلى UTM"
+  subtitle="ستعود الخطة للمُنشئ للتعديل"
+  (confirmed)="onReturnConfirmed()"
+  (cancelled)="onReturnCancelled()">
+</gtms-return-modal>
+
+<!-- Notes drawer -->
+<gtms-notes-drawer
+  [isOpen]="notesOpen()"
+  [entityType]="notesEntityType()"
+  [entityId]="notesEntityId()"
+  [title]="notesTitle()"
+  readOnly="false"
+  (closeDrawer)="closeNotes()">
+</gtms-notes-drawer>

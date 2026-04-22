@@ -8,6 +8,8 @@ export * from './completion-status.enum';
 export * from './condition-type.enum';
 export * from './course-type.enum';
 export * from './nomination-status.enum';
+export * from './plan-note-author-role.enum';
+export * from './plan-note-entity-type.enum';
 export * from './plan-status.enum';
 export * from './preferred-quarter.enum';
 export * from './pricing-type.enum';

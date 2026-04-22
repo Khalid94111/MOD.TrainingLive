@@ -1,25 +1,53 @@
-<div class="gtms-card">
-  <div class="gtms-card-header">
+<div class="nom-page">
+  <!-- Info banner -->
+  <div class="info-banner">
+    <span class="info-icon">ℹ️</span>
     <div>
-      <h2 class="gtms-card-title">👥 الترشيحات</h2>
-      <p class="gtms-card-subtitle">ترشيح الموظفين للدورات المعتمدة — 3 مستويات اعتماد (UTM → UGM → TD)</p>
+      <strong>الترشيحات تُدار الآن مع بنود الخطة</strong>
+      <div class="info-sub">أضف أو عدّل الترشيحات من شاشة "إدخال الخطة" (UTM). هذه الصفحة للعرض العام فقط.</div>
     </div>
-    @if (canCreate) {
-      <button class="btn btn-primary" (click)="openCreateDialog()">
-        ➕ ترشيح موظفين
-      </button>
-    }
+  </div>
+
+  <!-- Header -->
+  <div class="page-toolbar">
+    <div class="page-toolbar-title">
+      <h2 class="gtms-card-title">👥 الترشيحات — عرض عام</h2>
+      <span class="page-meta">
+        {{ totalCount() }} ترشيح • {{ activeCount() }} نشط
+        @if (returnedCount() > 0) { • <span class="meta-warn">⚠️ {{ returnedCount() }} مُعاد</span> }
+      </span>
+    </div>
+    <div class="page-toolbar-actions">
+      <button class="btn btn-ghost btn-sm" (click)="resetFilters()">♻️ إعادة الفلاتر</button>
+      <button class="btn btn-outline btn-sm" (click)="loadNominations()">🔄 تحديث</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stat-cards">
+    <div class="stat-card"><div class="stat-value">{{ totalCount() }}</div><div class="stat-label">إجمالي</div></div>
+    <div class="stat-card card-green"><div class="stat-value">{{ activeCount() }}</div><div class="stat-label">نشط</div></div>
+    <div class="stat-card card-amber"><div class="stat-value">{{ returnedCount() }}</div><div class="stat-label">مُعاد</div></div>
+    <div class="stat-card"><div class="stat-value">{{ rejectedCount() }}</div><div class="stat-label">مرفوض</div></div>
+    <div class="stat-card card-blue"><div class="stat-value">{{ uniquePlanItems().length }}</div><div class="stat-label">دورات</div></div>
   </div>
 
   <!-- Filters -->
   <div class="filter-bar">
-    <select class="form-input" (change)="filterSessionId.set($any($event.target).value); loadNominations()">
-      <option value="">جميع الجلسات</option>
-      @for (session of sessions(); track session.id) {
-        <option [value]="session.id">{{ session.sessionCode }} — {{ session.courseName }}</option>
+    <input type="text" class="form-input"
+           placeholder="🔍 ابحث بالاسم أو الدورة أو المُرشِّح…"
+           [value]="filterSearch()" (input)="onSearchInput($event)">
+
+    <select class="form-input" [value]="filterPlanItemId()"
+            (change)="filterPlanItemId.set($any($event.target).value)">
+      <option value="">جميع الدورات ({{ uniquePlanItems().length }})</option>
+      @for (it of uniquePlanItems(); track it.id) {
+        <option [value]="it.id">{{ it.name }}</option>
       }
     </select>
-    <select class="form-input" (change)="filterStatus.set($any($event.target).value); loadNominations()">
+
+    <select class="form-input" [value]="filterStatus()"
+            (change)="filterStatus.set($any($event.target).value)">
       <option value="">جميع الحالات</option>
       <option value="0">مرشح</option>
       <option value="1">معتمد UTM</option>
@@ -27,225 +55,72 @@
       <option value="3">معتمد TD</option>
       <option value="4">مرفوض</option>
     </select>
+
+    <div class="filter-group">
+      <span class="filter-label">الإعادة:</span>
+      <button class="filter-chip" [class.active]="filterReturned() === 'all'" (click)="setReturnedFilter('all')">الكل</button>
+      <button class="filter-chip" [class.active]="filterReturned() === 'returned'" (click)="setReturnedFilter('returned')">🔙 مُعاد</button>
+      <button class="filter-chip" [class.active]="filterReturned() === 'normal'" (click)="setReturnedFilter('normal')">عادي</button>
+    </div>
   </div>
 
-  <!-- Nominations Table -->
-  <div class="gtms-table-wrap">
-    <table class="gtms-table">
-      <thead>
-        <tr>
-          <th style="width:30px"></th>
-          <th>الموظف</th>
-          <th>الدورة</th>
-          <th class="center">الجلسة</th>
-          <th class="center">الحالة</th>
-          <th>مرشح بواسطة</th>
-          <th class="center">التاريخ</th>
-          <th class="center">إجراءات</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (nom of nominations(); track nom.id) {
-          <!-- Main row -->
-          <tr class="expand-row" (click)="toggleExpand(nom.id)">
-            <td class="center">
-              <span class="expand-arrow" [class.open]="isExpanded(nom.id)">▶</span>
-            </td>
-            <td>
-              <span class="cell-bold">{{ nom.employeeName }}</span>
-            </td>
-            <td>{{ nom.courseName }}</td>
-            <td class="center">{{ nom.sessionCode }}</td>
-            <td class="center">
-              <span class="badge" [class]="getStatusClass(nom.status)">
-                {{ getStatusText(nom.status) }}
-              </span>
-            </td>
-            <td>{{ nom.nominatedByName }}</td>
-            <td class="center">{{ formatDate(nom.nominatedAt) }}</td>
-            <td class="center" (click)="$event.stopPropagation()">
-              @if (canActOn(nom)) {
-                <button class="btn-icon" title="اعتماد" (click)="onApprove(nom.id)">✅</button>
-                <button class="btn-icon" title="رفض" (click)="openRejectDialog(nom.id)">❌</button>
-              }
-            </td>
+  <!-- Table -->
+  <div class="gtms-card no-pad">
+    <div class="gtms-table-wrap">
+      <table class="gtms-table nom-table">
+        <thead>
+          <tr>
+            <th>المرشح</th>
+            <th>الدورة</th>
+            <th>رشّحه</th>
+            <th class="center">الحالة</th>
+            <th class="center">الإعادة</th>
+            <th class="center">تاريخ الترشيح</th>
+            <th class="center">إجراء</th>
           </tr>
-
-          <!-- Approval chain (expanded) -->
-          @if (isExpanded(nom.id)) {
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (_ of [1,2,3,4,5]; track $index) {
+              <tr class="skel-row">
+                <td colspan="7"><div class="skel-bar"></div></td>
+              </tr>
+            }
+          } @else if (filteredNominations().length === 0) {
             <tr>
-              <td></td>
               <td colspan="7">
-                <div class="approval-chain">
-                  <p style="font-size:0.82rem; font-weight:700; color:#1e40af; margin-bottom:10px;">🔗 سلسلة الاعتماد</p>
-                  @for (step of getChain(nom.id); track step.id) {
-                    <div class="approval-step">
-                      <div class="step-circle" [class]="getApprovalStepClass(step.status)">
-                        {{ getApprovalStepIcon(step.status) }}
-                      </div>
-                      <div class="step-info">
-                        <div class="step-role">{{ step.approvalLevelName }}</div>
-                        <div class="step-meta">
-                          @if (step.approvedByName) {
-                            {{ step.approvedByName }} — {{ formatDate(step.actionDate) }}
-                          } @else {
-                            بانتظار...
-                          }
-                          @if (step.notes) {
-                            <span style="color:#b45309"> | {{ step.notes }}</span>
-                          }
-                        </div>
-                      </div>
-                      <span class="badge" [class]="getApprovalStepClass(step.status) === 'step-done' ? 'badge-approved' : getApprovalStepClass(step.status) === 'step-rejected' ? 'badge-rejected' : 'badge-pending'">
-                        @switch (step.status) {
-                          @case (0) { قيد الانتظار }
-                          @case (1) { معتمد }
-                          @case (2) { مرفوض }
-                        }
-                      </span>
-                    </div>
-                  } @empty {
-                    <p style="color:#94a3b8; font-size:0.82rem;">جاري التحميل...</p>
-                  }
+                <div class="empty-state">
+                  <div class="empty-icon">📭</div>
+                  لا توجد ترشيحات مطابقة
                 </div>
               </td>
             </tr>
+          } @else {
+            @for (n of filteredNominations(); track trackById($index, n)) {
+              <tr class="nom-row" [class.nom-returned]="n.isReturned" (click)="onRowClick(n)">
+                <td>
+                  <span class="cell-bold">{{ n.employeeName ?? '—' }}</span>
+                </td>
+                <td class="cell-sub-text">{{ n.courseName ?? '—' }}</td>
+                <td class="cell-sub-text">{{ n.nominatedByName ?? '—' }}</td>
+                <td class="center">
+                  <span class="badge" [class]="getStatusBadge(n.status)">{{ getStatusText(n.status) }}</span>
+                </td>
+                <td class="center">
+                  @if (n.isReturned) { <span class="badge badge-submitted">🔙 مُعاد</span> }
+                  @else { <span class="cell-na">—</span> }
+                </td>
+                <td class="center cell-sub-text">{{ formatDate(n.nominatedAt) }}</td>
+                <td class="center">
+                  <button class="btn btn-outline btn-sm" [disabled]="navigating() === n.id">
+                    @if (navigating() === n.id) { ⏳ } @else { 📂 عرض الخطة ← }
+                  </button>
+                </td>
+              </tr>
+            }
           }
-        } @empty {
-          <tr>
-            <td colspan="8">
-              <div class="empty-state">
-                <div class="empty-icon">👥</div>
-                لا توجد ترشيحات بعد
-              </div>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
-
-<!-- Create Nomination Dialog -->
-@if (isCreateOpen()) {
-  <div class="modal-backdrop" (click)="isCreateOpen.set(false)">
-    <div class="modal-content modal-lg" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h3 class="modal-title">➕ ترشيح موظفين جدد</h3>
-        <button class="modal-close" (click)="isCreateOpen.set(false)">✕</button>
-      </div>
-      <div class="modal-body">
-        <!-- Session select -->
-        <div class="form-group">
-          <label class="form-label">الجلسة <span class="required">*</span></label>
-          <select class="form-input"
-            [value]="selectedSessionId()"
-            (change)="selectedSessionId.set($any($event.target).value); onSessionSelected()">
-            <option value="">اختر جلسة...</option>
-            @for (s of sessions(); track s.id) {
-              <option [value]="s.id">
-                {{ s.sessionCode }} — {{ s.courseName }} ({{ s.availableSeats }} مقعد متاح)
-              </option>
-            }
-          </select>
-        </div>
-
-        @if (getSelectedSession(); as session) {
-          <div class="alert alert-info" style="margin-bottom:14px;">
-            <span class="alert-icon">ℹ️</span>
-            <div>
-              <strong>{{ session.courseName }}</strong> |
-              {{ formatDate(session.startDate) }} — {{ formatDate(session.endDate) }} |
-              📍 {{ session.location }} |
-              💺 {{ session.availableSeats }} مقعد متاح من {{ session.maxSeats }}
-            </div>
-          </div>
-        }
-
-        <!-- Employee multi-select -->
-        @if (selectedSessionId()) {
-          <div class="form-group">
-            <label class="form-label">الموظفون <span class="required">*</span></label>
-            <p class="form-hint">⚡ الشروط تُفحص تلقائياً عند الترشيح — اختر موظفاً أو أكثر</p>
-
-            <div class="gtms-table-wrap" style="max-height: 300px; overflow-y: auto;">
-              <table class="gtms-table">
-                <thead>
-                  <tr>
-                    <th style="width:40px" class="center">✓</th>
-                    <th>الاسم</th>
-                    <th class="center">الرتبة</th>
-                    <th class="center">الرقم العسكري</th>
-                    <th class="center">النوع</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (emp of employees(); track emp.id) {
-                    <tr (click)="toggleEmployee(emp.id)"
-                      [style.background]="isEmployeeSelected(emp.id) ? '#eff6ff' : ''">
-                      <td class="center">
-                        <input type="checkbox" [checked]="isEmployeeSelected(emp.id)" (click)="$event.stopPropagation()">
-                      </td>
-                      <td class="cell-bold">{{ emp.fullNameAr }}</td>
-                      <td class="center">
-                        <span class="badge" [class]="emp.personnelType === 'Officer' ? 'badge-open' : 'badge-draft'">
-                          {{ emp.rankNameAr }}
-                        </span>
-                      </td>
-                      <td class="center">{{ emp.serviceNumber }}</td>
-                      <td class="center">
-                        @if (emp.personnelType === 'Officer') { ضابط } @else { فرد }
-                      </td>
-                    </tr>
-                  } @empty {
-                    <tr><td colspan="5" style="text-align:center; color:#94a3b8; padding:20px;">لا يوجد موظفون في هذه الوحدة</td></tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-
-            @if (selectedEmployeeIds().length > 0) {
-              <div class="alert alert-success" style="margin-top:10px;">
-                <span class="alert-icon">✅</span>
-                تم اختيار {{ selectedEmployeeIds().length }} موظف للترشيح
-              </div>
-            }
-          </div>
-        }
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-primary"
-          [disabled]="!selectedSessionId() || selectedEmployeeIds().length === 0"
-          (click)="onSubmitNominations()">
-          📤 ترشيح {{ selectedEmployeeIds().length }} موظف
-        </button>
-        <button class="btn btn-ghost" (click)="isCreateOpen.set(false)">إلغاء</button>
-      </div>
-    </div>
-  </div>
-}
-
-<!-- Reject Dialog -->
-@if (isRejectOpen()) {
-  <div class="modal-backdrop" (click)="isRejectOpen.set(false)">
-    <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h3 class="modal-title">❌ رفض الترشيح</h3>
-        <button class="modal-close" (click)="isRejectOpen.set(false)">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label">سبب الرفض</label>
-          <textarea class="form-input" rows="3"
-            [value]="rejectNotes()"
-            (input)="rejectNotes.set($any($event.target).value)"
-            placeholder="أدخل سبب رفض الترشيح..."></textarea>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-danger" (click)="onConfirmReject()">❌ تأكيد الرفض</button>
-        <button class="btn btn-ghost" (click)="isRejectOpen.set(false)">إلغاء</button>
-      </div>
-    </div>
-  </div>
-}

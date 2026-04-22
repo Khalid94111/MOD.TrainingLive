@@ -1,169 +1,317 @@
-import { Component, OnInit, inject, signal, viewChild } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LocalizationPipe } from '@abp/ng.core';
+import { firstValueFrom } from 'rxjs';
+import { FinancialItemService } from 'src/app/proxy/training/finance/financial-item.service';
+import { FinancialItemRankAmountService } from 'src/app/proxy/training/finance/financial-item-rank-amount.service';
 import {
-  DxTreeListModule,
-  DxTreeListComponent,
-} from 'devextreme-angular/ui/tree-list';
-import { DxPopupModule } from 'devextreme-angular/ui/popup';
-import { DxTextBoxModule } from 'devextreme-angular/ui/text-box';
-import { DxSelectBoxModule } from 'devextreme-angular/ui/select-box';
-import { DxCheckBoxModule } from 'devextreme-angular/ui/check-box';
-import { DxSwitchModule } from 'devextreme-angular/ui/switch';
-import { DxButtonModule } from 'devextreme-angular/ui/button';
-import { ToolbarItem } from 'devextreme/ui/popup';
-import { FinancialItemService } from '../../shared/services/finance-proxy.service';
-import { FinancialItemDto, CreateUpdateFinancialItemDto } from 'src/app/proxy/training/finance/dtos';
+  FinancialItemDto,
+  CreateUpdateFinancialItemDto,
+  FinancialItemRankAmountDto,
+  CreateUpdateFinancialItemRankAmountDto,
+} from 'src/app/proxy/training/finance/dtos';
+import { HrLookupService } from 'src/app/proxy/training/hr-integration/hr-lookup.service';
+import { RankLookupDto } from 'src/app/proxy/training/hr-integration/models';
 import { TrainingLocalizationHelper } from '../../shared';
 
 @Component({
   selector: 'app-financial-items',
   standalone: true,
-  imports: [
-    CommonModule,
-    LocalizationPipe,
-    DxTreeListModule,
-    DxPopupModule,
-    DxTextBoxModule,
-    DxSelectBoxModule,
-    DxCheckBoxModule,
-    DxSwitchModule,
-    DxButtonModule,
-  ],
+  imports: [CommonModule],
   templateUrl: './financial-items.component.html',
-  styleUrl: './financial-items.component.scss',
+  styleUrls: ['./financial-items.component.scss', '../../shared/gtms-design.scss'],
 })
 export class FinancialItemsComponent implements OnInit {
-  private readonly service = inject(FinancialItemService);
+  private fiService = inject(FinancialItemService);
+  private rankAmountService = inject(FinancialItemRankAmountService);
+  private hrService = inject(HrLookupService);
   readonly l = inject(TrainingLocalizationHelper);
-  readonly treeList = viewChild<DxTreeListComponent>('treeList');
 
   items = signal<FinancialItemDto[]>([]);
-  parentItems = signal<FinancialItemDto[]>([]);
-  isDialogVisible = signal(false);
-  isEditMode = signal(false);
+  ranks = signal<RankLookupDto[]>([]);
+  loading = signal(false);
+
   searchText = signal('');
-  filterActive = signal<boolean | undefined>(undefined);
+  filterActive = signal<'all' | 'active' | 'inactive'>('active');
+  filterPerDay = signal<'all' | 'yes' | 'no'>('all');
+  filterPerNominee = signal<'all' | 'yes' | 'no'>('all');
 
-  editingId: string | null = null;
-  formData: CreateUpdateFinancialItemDto = this.getEmptyForm();
+  expandedItemId = signal<string | null>(null);
+  rankAmountsMap = signal(new Map<string, FinancialItemRankAmountDto[]>());
+  loadingItemId = signal<string | null>(null);
 
-  dialogToolbarItems: ToolbarItem[] | undefined;
-  activeFilterOptions: { value: boolean | undefined; text: string }[] | undefined;
+  // Item dialog
+  isDialogOpen = signal(false);
+  isEditMode = signal(false);
+  editingId = signal<string | null>(null);
 
-  get dialogTitle(): string {
-    return this.isEditMode()
-      ? this.l.t('::Training.FinancialItems.Edit')
-      : this.l.t('::Training.FinancialItems.Add');
-  }
+  fParentId = signal<string>('');
+  fNameAr = signal('');
+  fNameEn = signal('');
+  fVoteCode = signal('');
+  fIsActive = signal(true);
+  fDefaultAmount = signal(0);
+  fIsPerDay = signal(false);
+  fIsPerNominee = signal(false);
+  fExtraDaysBefore = signal(0);
+  fExtraDaysAfter = signal(0);
+
+  // Rank amount dialog
+  isRankDialogOpen = signal(false);
+  rankDialogItemId = signal<string | null>(null);
+  editingRankAmountId = signal<string | null>(null);
+  rFRankId = signal('');
+  rFAmount = signal(0);
+
+  parentItems = computed(() => this.items().filter(i => !i.parentId));
+
+  filteredItems = computed(() => {
+    const q = this.searchText().trim().toLowerCase();
+    const act = this.filterActive();
+    const day = this.filterPerDay();
+    const nom = this.filterPerNominee();
+    return this.items().filter(i => {
+      if (q) {
+        const hit =
+          (i.nameAr ?? '').toLowerCase().includes(q) ||
+          (i.nameEn ?? '').toLowerCase().includes(q) ||
+          (i.code ?? '').toLowerCase().includes(q) ||
+          (i.voteCode ?? '').toLowerCase().includes(q);
+        if (!hit) return false;
+      }
+      if (act === 'active' && !i.isActive) return false;
+      if (act === 'inactive' && i.isActive) return false;
+      if (day === 'yes' && !i.isPerDay) return false;
+      if (day === 'no' && i.isPerDay) return false;
+      if (nom === 'yes' && !i.isPerNominee) return false;
+      if (nom === 'no' && i.isPerNominee) return false;
+      return true;
+    });
+  });
+
+  totalCount = computed(() => this.items().length);
+  perDayCount = computed(() => this.items().filter(i => i.isPerDay).length);
+  perNomineeCount = computed(() => this.items().filter(i => i.isPerNominee).length);
+  activeCount = computed(() => this.items().filter(i => i.isActive).length);
 
   ngOnInit(): void {
-    this.dialogToolbarItems = [
-      {
-        widget: 'dxButton',
-        location: 'after',
-        toolbar: 'bottom',
-        options: {
-          text: this.l.t('::Training.Common.Save'),
-          type: 'default',
-          stylingMode: 'contained',
-          onClick: () => this.onSave(),
-        },
-      },
-      {
-        widget: 'dxButton',
-        location: 'after',
-        toolbar: 'bottom',
-        options: {
-          text: this.l.t('::Training.Common.Cancel'),
-          onClick: () => this.isDialogVisible.set(false),
-        },
-      },
-    ];
-
-    this.activeFilterOptions = [
-      { value: undefined, text: this.l.t('::Training.FinancialItems.All') },
-      { value: true, text: this.l.t('::Training.FinancialItems.ActiveOnly') },
-      { value: false, text: this.l.t('::Training.FinancialItems.InactiveOnly') },
-    ];
-
     this.loadData();
+    this.loadRanks();
   }
 
   async loadData(): Promise<void> {
-    const result = await this.service.getList({
-      filter: this.searchText() || undefined,
-      isActive: this.filterActive(),
-      maxResultCount: 1000,
-      skipCount: 0,
-      sorting: '',
-    });
-    this.items.set(result.items ?? []);
-    this.parentItems.set(
-      (result.items ?? []).filter(x => !x.parentId)
+    this.loading.set(true);
+    try {
+      const r = await firstValueFrom(
+        this.fiService.getList({ maxResultCount: 1000, skipCount: 0, sorting: 'voteCode' }),
+      );
+      this.items.set(r.items ?? []);
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  async loadRanks(): Promise<void> {
+    const list = await firstValueFrom(this.hrService.getAllRanks());
+    this.ranks.set(
+      (list ?? []).slice().sort((a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999)),
     );
   }
 
+  // ── Filter handlers ──
+  onSearchInput(event: Event): void { this.searchText.set((event.target as HTMLInputElement).value); }
+  setFilterActive(v: 'all' | 'active' | 'inactive'): void { this.filterActive.set(v); }
+  setFilterPerDay(v: 'all' | 'yes' | 'no'): void { this.filterPerDay.set(v); }
+  setFilterPerNominee(v: 'all' | 'yes' | 'no'): void { this.filterPerNominee.set(v); }
+
+  // ── Item dialog ──
   onAdd(): void {
     this.isEditMode.set(false);
-    this.editingId = null;
-    this.formData = this.getEmptyForm();
-    this.isDialogVisible.set(true);
+    this.editingId.set(null);
+    this.resetForm();
+    this.isDialogOpen.set(true);
   }
 
-  onAddSubItem(parentId: string): void {
-    this.isEditMode.set(false);
-    this.editingId = null;
-    this.formData = this.getEmptyForm();
-    this.formData.parentId = parentId;
-    this.isDialogVisible.set(true);
-  }
-
-  onEdit(item: FinancialItemDto): void {
+  onEdit(item: FinancialItemDto, event: Event): void {
+    event.stopPropagation();
     this.isEditMode.set(true);
-    this.editingId = item.id;
-    this.formData = {
-      parentId: item.parentId ?? undefined,
-      nameAr: item.nameAr,
-      nameEn: item.nameEn,
-      voteCode: item.voteCode,
-      isActive: item.isActive,
-    };
-    this.isDialogVisible.set(true);
+    this.editingId.set(item.id);
+    this.fParentId.set(item.parentId ?? '');
+    this.fNameAr.set(item.nameAr ?? '');
+    this.fNameEn.set(item.nameEn ?? '');
+    this.fVoteCode.set(item.voteCode ?? '');
+    this.fIsActive.set(item.isActive ?? true);
+    this.fDefaultAmount.set(item.defaultAmountOMR ?? 0);
+    this.fIsPerDay.set(item.isPerDay ?? false);
+    this.fIsPerNominee.set(item.isPerNominee ?? false);
+    this.fExtraDaysBefore.set(item.extraDaysBefore ?? 0);
+    this.fExtraDaysAfter.set(item.extraDaysAfter ?? 0);
+    this.isDialogOpen.set(true);
+  }
+
+  private resetForm(): void {
+    this.fParentId.set('');
+    this.fNameAr.set('');
+    this.fNameEn.set('');
+    this.fVoteCode.set('');
+    this.fIsActive.set(true);
+    this.fDefaultAmount.set(0);
+    this.fIsPerDay.set(false);
+    this.fIsPerNominee.set(false);
+    this.fExtraDaysBefore.set(0);
+    this.fExtraDaysAfter.set(0);
   }
 
   async onSave(): Promise<void> {
-    if (this.isEditMode() && this.editingId) {
-      await this.service.update(this.editingId, this.formData);
-    } else {
-      await this.service.create(this.formData);
-    }
-    this.isDialogVisible.set(false);
-    await this.loadData();
-  }
-
-  async onDelete(id: string): Promise<void> {
-    await this.service.delete(id);
-    await this.loadData();
-  }
-
-  onSearch(value: string): void {
-    this.searchText.set(value);
-    this.loadData();
-  }
-
-  onFilterActive(value: boolean | undefined): void {
-    this.filterActive.set(value);
-    this.loadData();
-  }
-
-  private getEmptyForm(): CreateUpdateFinancialItemDto {
-    return {
-      parentId: undefined,
-      nameAr: '',
-      nameEn: '',
-      voteCode: '',
-      isActive: true,
+    if (!this.fNameAr().trim() || !this.fVoteCode().trim()) return;
+    const data: CreateUpdateFinancialItemDto = {
+      parentId: this.fParentId() || undefined,
+      nameAr: this.fNameAr().trim(),
+      nameEn: this.fNameEn().trim() || undefined,
+      voteCode: this.fVoteCode().trim(),
+      isActive: this.fIsActive(),
+      defaultAmountOMR: this.fDefaultAmount(),
+      isPerDay: this.fIsPerDay(),
+      isPerNominee: this.fIsPerNominee(),
+      extraDaysBefore: this.fIsPerDay() ? this.fExtraDaysBefore() : 0,
+      extraDaysAfter: this.fIsPerDay() ? this.fExtraDaysAfter() : 0,
     };
+    if (this.isEditMode() && this.editingId()) {
+      await firstValueFrom(this.fiService.update(this.editingId()!, data));
+    } else {
+      await firstValueFrom(this.fiService.create(data));
+    }
+    this.isDialogOpen.set(false);
+    await this.loadData();
   }
+
+  async onDelete(id: string, event: Event): Promise<void> {
+    event.stopPropagation();
+    if (!confirm('هل أنت متأكد من حذف هذا البند المالي؟')) return;
+    await firstValueFrom(this.fiService.delete(id));
+    if (this.expandedItemId() === id) this.expandedItemId.set(null);
+    await this.loadData();
+  }
+
+  // ── Expand row ──
+  async toggleExpand(itemId: string): Promise<void> {
+    if (this.expandedItemId() === itemId) { this.expandedItemId.set(null); return; }
+    this.expandedItemId.set(itemId);
+    this.loadingItemId.set(itemId);
+    if (!this.rankAmountsMap().has(itemId)) await this.reloadRankAmounts(itemId);
+    this.loadingItemId.set(null);
+  }
+
+  private async reloadRankAmounts(itemId: string): Promise<void> {
+    const list = await firstValueFrom(this.rankAmountService.getByFinancialItem(itemId));
+    this.rankAmountsMap.update(m => {
+      const next = new Map(m);
+      next.set(itemId, (list ?? []).slice().sort((a, b) => {
+        const ra = this.ranks().find(r => r.id === a.rankId);
+        const rb = this.ranks().find(r => r.id === b.rankId);
+        return (ra?.sortOrder ?? 999) - (rb?.sortOrder ?? 999);
+      }));
+      return next;
+    });
+  }
+
+  isExpanded(id: string): boolean { return this.expandedItemId() === id; }
+  isRowLoading(id: string): boolean { return this.loadingItemId() === id; }
+  getRankAmountsFor(id: string): FinancialItemRankAmountDto[] { return this.rankAmountsMap().get(id) ?? []; }
+
+  // ── Rank amount dialog ──
+  openAddRankDialog(itemId: string, event: Event): void {
+    event.stopPropagation();
+    this.rankDialogItemId.set(itemId);
+    this.editingRankAmountId.set(null);
+    this.rFRankId.set('');
+    this.rFAmount.set(0);
+    this.isRankDialogOpen.set(true);
+  }
+
+  openEditRankDialog(rank: FinancialItemRankAmountDto, event: Event): void {
+    event.stopPropagation();
+    this.rankDialogItemId.set(rank.financialItemId ?? null);
+    this.editingRankAmountId.set(rank.id);
+    this.rFRankId.set(rank.rankId ?? '');
+    this.rFAmount.set(rank.amountOMR ?? 0);
+    this.isRankDialogOpen.set(true);
+  }
+
+  async onSaveRankAmount(): Promise<void> {
+    const itemId = this.rankDialogItemId();
+    if (!itemId || !this.rFRankId()) return;
+    const data: CreateUpdateFinancialItemRankAmountDto = {
+      financialItemId: itemId,
+      rankId: this.rFRankId(),
+      amountOMR: this.rFAmount(),
+    };
+    if (this.editingRankAmountId()) {
+      await firstValueFrom(this.rankAmountService.update(this.editingRankAmountId()!, data));
+    } else {
+      await firstValueFrom(this.rankAmountService.create(data));
+    }
+    this.isRankDialogOpen.set(false);
+    await this.reloadRankAmounts(itemId);
+  }
+
+  async onDeleteRankAmount(rankAmountId: string, itemId: string, event: Event): Promise<void> {
+    event.stopPropagation();
+    if (!confirm('حذف هذا المبلغ للرتبة؟')) return;
+    await firstValueFrom(this.rankAmountService.delete(rankAmountId));
+    await this.reloadRankAmounts(itemId);
+  }
+
+  availableRanksForDialog(): RankLookupDto[] {
+    const itemId = this.rankDialogItemId();
+    if (!itemId) return this.ranks();
+    const existing = this.getRankAmountsFor(itemId).map(r => r.rankId);
+    const editing = this.editingRankAmountId();
+    return this.ranks().filter(r => {
+      if (existing.includes(r.id)) {
+        const match = this.getRankAmountsFor(itemId).find(ra => ra.rankId === r.id);
+        return editing && match?.id === editing;
+      }
+      return true;
+    });
+  }
+
+  // ── Formula preview ──
+  formulaExample(item: FinancialItemDto): string {
+    const rate = item.defaultAmountOMR ?? 0;
+    const sampleDays = 5;
+    const sampleCount = 3;
+    const eb = item.extraDaysBefore ?? 0;
+    const ea = item.extraDaysAfter ?? 0;
+    const days = item.isPerDay ? sampleDays + eb + ea : 1;
+    const count = item.isPerNominee ? sampleCount : 1;
+    const subtotal = rate * days * count;
+    const parts: string[] = [];
+    parts.push(`${rate.toFixed(3)} ر.ع`);
+    if (item.isPerDay) {
+      const daysPart = eb || ea ? `(${sampleDays} + ${eb} + ${ea})` : `${sampleDays}`;
+      parts.push(`× ${daysPart} يوم`);
+    }
+    if (item.isPerNominee) parts.push(`× ${sampleCount} مرشح`);
+    return `${parts.join(' ')} = ${subtotal.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 })} ر.ع`;
+  }
+
+  // ── Helpers ──
+  formatMoney(n?: number): string {
+    if (n == null) return '—';
+    return n.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+  }
+
+  getRankName(rankId?: string): string {
+    const r = this.ranks().find(x => x.id === rankId);
+    return r?.nameAr ?? '—';
+  }
+
+  getParentName(parentId?: string | null): string {
+    if (!parentId) return '—';
+    const p = this.items().find(x => x.id === parentId);
+    return p?.nameAr ?? '—';
+  }
+
+  trackById(_: number, i: FinancialItemDto): string { return i.id ?? ''; }
+  trackRankById(_: number, r: FinancialItemRankAmountDto): string { return r.id ?? ''; }
 }

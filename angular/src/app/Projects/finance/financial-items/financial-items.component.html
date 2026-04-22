@@ -1,211 +1,332 @@
-<div class="page-card">
-  <div class="card-header-gradient">
-    <h2 class="card-title">{{ '::Training.FinancialItems.Title' | abpLocalization }}</h2>
-    <p class="card-subtitle">{{ '::Training.FinancialItems.Description' | abpLocalization }}</p>
+<div class="fi-page">
+  <!-- Header -->
+  <div class="page-toolbar">
+    <div class="page-toolbar-title">
+      <h2 class="gtms-card-title">💰 البنود المالية</h2>
+      <span class="page-meta">
+        {{ totalCount() }} بند • {{ activeCount() }} نشط • {{ perDayCount() }} يومي • {{ perNomineeCount() }} لكل مرشح
+      </span>
+    </div>
+    <div class="page-toolbar-actions">
+      <button type="button" class="btn btn-primary" (click)="onAdd()">➕ إضافة بند</button>
+    </div>
   </div>
 
-  <div class="card-body-content">
-    <!-- Toolbar -->
-    <div class="toolbar-row">
-      <div class="toolbar-filters">
-        <dx-text-box
-          class="search-input"
-          [placeholder]="'::Training.FinancialItems.Search' | abpLocalization"
-          [showClearButton]="true"
-          (onValueChanged)="onSearch($event.value)"
-          mode="search"
-        ></dx-text-box>
-
-        <dx-select-box
-          class="filter-select"
-          [items]="activeFilterOptions!"
-          displayExpr="text"
-          valueExpr="value"
-          [value]="filterActive()"
-          (onValueChanged)="onFilterActive($event.value)"
-        ></dx-select-box>
-      </div>
-
-      <dx-button
-        class="btn-add"
-        [text]="'::Training.FinancialItems.Add' | abpLocalization"
-        icon="plus"
-        type="default"
-        stylingMode="contained"
-        (onClick)="onAdd()"
-      ></dx-button>
+  <!-- Filters -->
+  <div class="filter-bar">
+    <input type="text" class="form-input" placeholder="🔍 ابحث بالاسم أو الكود…"
+           [value]="searchText()" (input)="onSearchInput($event)" />
+    <div class="filter-group">
+      <span class="filter-label">الحالة:</span>
+      <button class="filter-chip" [class.active]="filterActive() === 'all'" (click)="setFilterActive('all')">الكل</button>
+      <button class="filter-chip" [class.active]="filterActive() === 'active'" (click)="setFilterActive('active')">نشط</button>
+      <button class="filter-chip" [class.active]="filterActive() === 'inactive'" (click)="setFilterActive('inactive')">غير نشط</button>
     </div>
+    <div class="filter-group">
+      <span class="filter-label">🗓️ يومي:</span>
+      <button class="filter-chip" [class.active]="filterPerDay() === 'all'" (click)="setFilterPerDay('all')">الكل</button>
+      <button class="filter-chip" [class.active]="filterPerDay() === 'yes'" (click)="setFilterPerDay('yes')">نعم</button>
+      <button class="filter-chip" [class.active]="filterPerDay() === 'no'" (click)="setFilterPerDay('no')">لا</button>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">👤 لكل مرشح:</span>
+      <button class="filter-chip" [class.active]="filterPerNominee() === 'all'" (click)="setFilterPerNominee('all')">الكل</button>
+      <button class="filter-chip" [class.active]="filterPerNominee() === 'yes'" (click)="setFilterPerNominee('yes')">نعم</button>
+      <button class="filter-chip" [class.active]="filterPerNominee() === 'no'" (click)="setFilterPerNominee('no')">لا</button>
+    </div>
+  </div>
 
-    <!-- Tree List -->
-    <dx-tree-list
-      #treeList
-      [dataSource]="items()"
-      dataStructure="plain"
-      keyExpr="id"
-      parentIdExpr="parentId"
-      [showBorders]="true"
-      [showRowLines]="true"
-      [columnAutoWidth]="true"
-      [wordWrapEnabled]="true"
-      [autoExpandAll]="true"
-      [rootValue]="null"
-    >
-    <dxi-column
-        dataField="code"
-        [caption]="'::Training.FinancialItems.Code' | abpLocalization"
-        [width]="100"
-        cellTemplate="codeTemplate"
-      ></dxi-column>
-      <dxi-column
-        dataField="nameAr"
-        [caption]="'::Training.FinancialItems.NameAr' | abpLocalization"
-        [width]="250"
-      ></dxi-column>
+  <!-- Table -->
+  <div class="gtms-card">
+    <div class="gtms-table-wrap">
+      <table class="gtms-table fi-table">
+        <thead>
+          <tr>
+            <th style="width: 36px;"></th>
+            <th>الكود</th>
+            <th>الاسم</th>
+            <th>البند الأب</th>
+            <th class="center">🗓️ يومي</th>
+            <th class="center">👤 لكل مرشح</th>
+            <th class="center">💰 الافتراضي (ر.ع)</th>
+            <th class="center">👥 مبالغ رتب</th>
+            <th class="center">الحالة</th>
+            <th class="center">إجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (_ of [1,2,3,4,5]; track $index) {
+              <tr class="skel-row">
+                <td colspan="10"><div class="skel-bar"></div></td>
+              </tr>
+            }
+          } @else if (filteredItems().length === 0) {
+            <tr>
+              <td colspan="10" class="empty-cell">
+                <div class="empty-state"><div class="empty-icon">📭</div><div>لا توجد بنود مطابقة</div></div>
+              </td>
+            </tr>
+          } @else {
+            @for (item of filteredItems(); track trackById($index, item)) {
+              <tr class="expand-row fi-row" [class.expanded]="isExpanded(item.id!)" (click)="toggleExpand(item.id!)">
+                <td>
+                  <span class="expand-arrow" [class.open]="isExpanded(item.id!)">▸</span>
+                </td>
+                <td class="cell-bold">{{ item.voteCode ?? '—' }}</td>
+                <td>
+                  <div class="cell-bold">{{ item.nameAr }}</div>
+                  @if (item.nameEn) { <span class="cell-sub">{{ item.nameEn }}</span> }
+                </td>
+                <td class="cell-sub-cell">{{ getParentName(item.parentId) }}</td>
+                <td class="center">
+                  @if (item.isPerDay) {
+                    <span class="flag-pill flag-yes" [title]="'يتكرر بعدد الأيام'">
+                      ✓ نعم
+                      @if (item.extraDaysBefore || item.extraDaysAfter) {
+                        <span class="flag-extra">+{{ (item.extraDaysBefore || 0) + (item.extraDaysAfter || 0) }}</span>
+                      }
+                    </span>
+                  } @else { <span class="flag-pill flag-no">—</span> }
+                </td>
+                <td class="center">
+                  @if (item.isPerNominee) { <span class="flag-pill flag-yes">✓ نعم</span> }
+                  @else { <span class="flag-pill flag-no">—</span> }
+                </td>
+                <td class="center cell-money">{{ formatMoney(item.defaultAmountOMR) }}</td>
+                <td class="center">
+                  <span class="rank-count-pill">
+                    📊 {{ getRankAmountsFor(item.id!).length || 0 }}
+                  </span>
+                </td>
+                <td class="center">
+                  @if (item.isActive) { <span class="badge badge-approved">نشط</span> }
+                  @else { <span class="badge badge-draft">معطّل</span> }
+                </td>
+                <td class="center">
+                  <button class="btn-icon" (click)="onEdit(item, $event)" title="تعديل">✏️</button>
+                  <button class="btn-icon" (click)="onDelete(item.id!, $event)" title="حذف">🗑️</button>
+                </td>
+              </tr>
 
-      <dxi-column
-        dataField="nameEn"
-        [caption]="'::Training.FinancialItems.NameEn' | abpLocalization"
-        [width]="200"
-      ></dxi-column>
+              @if (isExpanded(item.id!)) {
+                <tr class="detail-row">
+                  <td colspan="10" class="detail-panel">
+                    <div class="rank-panel">
+                      <div class="panel-header">
+                        <div>
+                          <span class="panel-title">👥 المبالغ حسب الرتبة</span>
+                          <span class="panel-sub">تخصيص مبلغ لكل رتبة — إن لم يوجد، يُستخدم المبلغ الافتراضي</span>
+                        </div>
+                        <button class="btn btn-primary btn-sm" (click)="openAddRankDialog(item.id!, $event)">
+                          ➕ إضافة مبلغ لرتبة
+                        </button>
+                      </div>
 
-      
+                      @if (isRowLoading(item.id!)) {
+                        <div class="skel-ranks">
+                          @for (_ of [1,2,3]; track $index) { <div class="skel-bar"></div> }
+                        </div>
+                      } @else if (getRankAmountsFor(item.id!).length === 0) {
+                        <div class="empty-rank-state">
+                          <span class="empty-icon">🎖️</span>
+                          <span>لم تُحدَّد مبالغ خاصة بالرتب — الجميع سيحصل على <strong>{{ formatMoney(item.defaultAmountOMR) }} ر.ع</strong></span>
+                        </div>
+                      } @else {
+                        <table class="gtms-table rank-table">
+                          <thead>
+                            <tr>
+                              <th>الرتبة</th>
+                              <th class="center">المبلغ (ر.ع)</th>
+                              <th class="center">إجراءات</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            @for (ra of getRankAmountsFor(item.id!); track trackRankById($index, ra)) {
+                              <tr>
+                                <td>
+                                  <span class="rank-badge">🎖️ {{ ra.rankNameAr ?? getRankName(ra.rankId) }}</span>
+                                </td>
+                                <td class="center cell-money">{{ formatMoney(ra.amountOMR) }}</td>
+                                <td class="center">
+                                  <button class="btn-icon" (click)="openEditRankDialog(ra, $event)" title="تعديل">✏️</button>
+                                  <button class="btn-icon" (click)="onDeleteRankAmount(ra.id!, item.id!, $event)" title="حذف">🗑️</button>
+                                </td>
+                              </tr>
+                            }
+                          </tbody>
+                        </table>
+                      }
 
-      <dxi-column
-        dataField="voteCode"
-        [caption]="'::Training.FinancialItems.VoteCode' | abpLocalization"
-        [width]="120"
-        cellTemplate="voteCodeTemplate"
-      ></dxi-column>
-
-      <dxi-column
-        dataField="isGeneral"
-        [caption]="'::Training.FinancialItems.IsGeneral' | abpLocalization"
-        [width]="80"
-        alignment="center"
-        cellTemplate="generalTemplate"
-      ></dxi-column>
-
-      <dxi-column
-        dataField="isActive"
-        [caption]="'::Training.FinancialItems.IsActive' | abpLocalization"
-        [width]="80"
-        alignment="center"
-        cellTemplate="activeTemplate"
-      ></dxi-column>
-
-      <dxi-column
-        [caption]="'::Training.FinancialItems.Actions' | abpLocalization"
-        [width]="120"
-        alignment="center"
-        cellTemplate="actionsTemplate"
-      ></dxi-column>
-
-      <!-- Cell Templates -->
-      <div *dxTemplate="let cell of 'codeTemplate'">
-        <span class="code-pill">{{ cell.data.code }}</span>
-      </div>
-
-      <div *dxTemplate="let cell of 'voteCodeTemplate'">
-        @if (cell.data.voteCode) {
-          <span class="vote-code-pill">{{ cell.data.voteCode }}</span>
-        } @else {
-          <span class="text-muted">—</span>
-        }
-      </div>
-
-      <div *dxTemplate="let cell of 'generalTemplate'">
-        @if (cell.data.isGeneral) {
-          <span class="badge-general">{{ '::Training.FinancialItems.IsGeneral' | abpLocalization }}</span>
-        } @else {
-          <span class="text-muted">—</span>
-        }
-      </div>
-
-      <div *dxTemplate="let cell of 'activeTemplate'">
-        @if (cell.data.isActive) {
-          <span class="badge-active">{{ '::Training.Common.Active' | abpLocalization }}</span>
-        } @else {
-          <span class="badge-inactive">{{ '::Training.Common.Inactive' | abpLocalization }}</span>
-        }
-      </div>
-
-      <div *dxTemplate="let cell of 'actionsTemplate'">
-        <button class="emoji-action-btn" (click)="onEdit(cell.data)" title="Edit">✏️</button>
-        @if (!cell.data.parentId) {
-          <button class="emoji-action-btn" (click)="onAddSubItem(cell.data.id)" title="Add Sub-Item">➕</button>
-        } @else {
-          <button class="emoji-action-btn" (click)="onDelete(cell.data.id)" title="Delete">🗑️</button>
-        }
-      </div>
-    </dx-tree-list>
+                      <!-- Formula card -->
+                      <div class="formula-card">
+                        <div class="formula-title">🧮 مثال على الحساب (5 أيام × 3 مرشحين)</div>
+                        <div class="formula-text">{{ formulaExample(item) }}</div>
+                        <div class="formula-legend">
+                          <span>الصيغة: </span>
+                          <code>المعدل × (الأيام @if (item.isPerDay && (item.extraDaysBefore || item.extraDaysAfter)) { + أيام إضافية }) × العدد</code>
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          }
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
-<!-- Add/Edit Dialog -->
-<dx-popup
-  [visible]="isDialogVisible()"
-  (visibleChange)="isDialogVisible.set($event)"
-  [title]="dialogTitle"
-  [showCloseButton]="true"
-  [dragEnabled]="true"
-  [width]="480"
-  [height]="'auto'"
-  [toolbarItems]="dialogToolbarItems!"
->
-  <div class="dialog-form">
-    <div class="form-group">
-      <label class="form-label">{{ '::Training.FinancialItems.NameAr' | abpLocalization }} *</label>
-      <dx-text-box
-        [(value)]="formData.nameAr"
-        [placeholder]="'::Training.FinancialItems.NameAr' | abpLocalization"
-      ></dx-text-box>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">{{ '::Training.FinancialItems.NameEn' | abpLocalization }} *</label>
-      <dx-text-box
-        [(value)]="formData.nameEn"
-        [placeholder]="'::Training.FinancialItems.NameEn' | abpLocalization"
-        rtlEnabled="false"
-      ></dx-text-box>
-    </div>
-
-    <div class="form-row-2col">
-      <div class="form-group">
-        <label class="form-label">{{ '::Training.FinancialItems.CodeAuto' | abpLocalization }}</label>
-        <dx-text-box
-          [value]="formData.nameEn"
-          [readOnly]="false"
-        ></dx-text-box>
+<!-- Item dialog -->
+@if (isDialogOpen()) {
+  <div class="modal-backdrop" (click)="$event.target === $event.currentTarget ? isDialogOpen.set(false) : null">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <div class="modal-title">
+          @if (isEditMode()) { ✏️ تعديل بند مالي } @else { ➕ إضافة بند مالي }
+        </div>
+        <button class="modal-close" (click)="isDialogOpen.set(false)">✕</button>
       </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label class="form-label">الاسم (عربي) <span class="required">*</span></label>
+            <input type="text" class="form-input"
+                   [value]="fNameAr()" (input)="fNameAr.set($any($event.target).value)" />
+          </div>
+          <div class="form-group flex-2">
+            <label class="form-label">الاسم (إنجليزي)</label>
+            <input type="text" class="form-input"
+                   [value]="fNameEn()" (input)="fNameEn.set($any($event.target).value)" />
+          </div>
+        </div>
 
-      <div class="form-group">
-        <label class="form-label">{{ '::Training.FinancialItems.VoteCodeNebras' | abpLocalization }} *</label>
-        <dx-text-box
-          [(value)]="formData.voteCode"
-          placeholder="VT-XXX-000"
-          rtlEnabled="false"
-        ></dx-text-box>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">كود التصويت <span class="required">*</span></label>
+            <input type="text" class="form-input"
+                   [value]="fVoteCode()" (input)="fVoteCode.set($any($event.target).value)" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">البند الأب</label>
+            <select class="form-input"
+                    [value]="fParentId()" (change)="fParentId.set($any($event.target).value)">
+              <option value="">— بلا —</option>
+              @for (p of parentItems(); track p.id) {
+                <option [value]="p.id">{{ p.nameAr }} ({{ p.voteCode }})</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">المبلغ الافتراضي (ر.ع) 💰</label>
+            <input type="number" min="0" step="0.001" class="form-input"
+                   [value]="fDefaultAmount()" (input)="fDefaultAmount.set(+$any($event.target).value || 0)" />
+            <span class="form-hint">يُستخدم عند غياب مبلغ مخصص للرتبة</span>
+          </div>
+        </div>
+
+        <div class="flags-section">
+          <div class="flag-card" [class.flag-active]="fIsPerDay()">
+            <label class="toggle-wrap">
+              <div class="toggle-switch">
+                <input type="checkbox" [checked]="fIsPerDay()" (change)="fIsPerDay.set($any($event.target).checked)" />
+                <span class="toggle-slider"></span>
+              </div>
+              <div class="flag-meta">
+                <span class="flag-meta-title">🗓️ يتكرر بعدد الأيام (IsPerDay)</span>
+                <span class="flag-meta-sub">المبلغ يُضرب في عدد أيام الدورة</span>
+              </div>
+            </label>
+          </div>
+          <div class="flag-card" [class.flag-active]="fIsPerNominee()">
+            <label class="toggle-wrap">
+              <div class="toggle-switch">
+                <input type="checkbox" [checked]="fIsPerNominee()" (change)="fIsPerNominee.set($any($event.target).checked)" />
+                <span class="toggle-slider"></span>
+              </div>
+              <div class="flag-meta">
+                <span class="flag-meta-title">👤 لكل مرشح (IsPerNominee)</span>
+                <span class="flag-meta-sub">المبلغ يُضرب في عدد المرشحين لكل رتبة</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        @if (fIsPerDay()) {
+          <div class="form-row travel-row">
+            <div class="form-group">
+              <label class="form-label">🧳 أيام السفر قبل الدورة</label>
+              <input type="number" min="0" class="form-input"
+                     [value]="fExtraDaysBefore()" (input)="fExtraDaysBefore.set(+$any($event.target).value || 0)" />
+              <span class="form-hint">مثلاً 1 للسفر الذهابي</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">🧳 أيام السفر بعد الدورة</label>
+              <input type="number" min="0" class="form-input"
+                     [value]="fExtraDaysAfter()" (input)="fExtraDaysAfter.set(+$any($event.target).value || 0)" />
+              <span class="form-hint">مثلاً 1 للسفر الإيابي</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">&nbsp;</label>
+              <div class="alert alert-info travel-info">
+                <span class="alert-icon">ℹ️</span>
+                <span>العدد الفعلي = أيام الدورة + {{ fExtraDaysBefore() }} + {{ fExtraDaysAfter() }}</span>
+              </div>
+            </div>
+          </div>
+        }
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="checkbox-wrap">
+              <input type="checkbox" [checked]="fIsActive()" (change)="fIsActive.set($any($event.target).checked)" />
+              <span>نشط</span>
+            </label>
+          </div>
+        </div>
       </div>
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">{{ '::Training.FinancialItems.Parent' | abpLocalization }}</label>
-      <dx-select-box
-        [(value)]="formData.parentId"
-        [items]="parentItems()"
-        displayExpr="nameAr"
-        valueExpr="id"
-        [showClearButton]="true"
-        [placeholder]="'::Training.FinancialItems.ParentNone' | abpLocalization"
-      ></dx-select-box>
-    </div>
-
-    <div class="form-row-checks">
-      <dx-check-box
-        [(value)]="formData.isActive"
-        [text]="'::Training.FinancialItems.IsActive' | abpLocalization"
-      ></dx-check-box>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="isDialogOpen.set(false)">إلغاء</button>
+        <button class="btn btn-primary" (click)="onSave()">💾 حفظ</button>
+      </div>
     </div>
   </div>
-</dx-popup>
+}
+
+<!-- Rank amount mini-dialog -->
+@if (isRankDialogOpen()) {
+  <div class="modal-backdrop" (click)="$event.target === $event.currentTarget ? isRankDialogOpen.set(false) : null">
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <div class="modal-title">
+          @if (editingRankAmountId()) { ✏️ تعديل مبلغ رتبة } @else { ➕ إضافة مبلغ لرتبة }
+        </div>
+        <button class="modal-close" (click)="isRankDialogOpen.set(false)">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">الرتبة <span class="required">*</span></label>
+          <select class="form-input"
+                  [value]="rFRankId()" (change)="rFRankId.set($any($event.target).value)"
+                  [disabled]="!!editingRankAmountId()">
+            <option value="">— اختر رتبة —</option>
+            @for (r of availableRanksForDialog(); track r.id) {
+              <option [value]="r.id">{{ r.nameAr }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">المبلغ (ر.ع) <span class="required">*</span></label>
+          <input type="number" min="0" step="0.001" class="form-input"
+                 [value]="rFAmount()" (input)="rFAmount.set(+$any($event.target).value || 0)" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="isRankDialogOpen.set(false)">إلغاء</button>
+        <button class="btn btn-primary" (click)="onSaveRankAmount()" [disabled]="!rFRankId()">💾 حفظ</button>
+      </div>
+    </div>
+  </div>
+}

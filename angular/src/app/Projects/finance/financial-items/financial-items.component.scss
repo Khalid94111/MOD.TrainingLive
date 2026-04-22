@@ -1,159 +1,272 @@
-.page-card {
+.fi-page { display: block; }
+
+.filter-bar {
+  align-items: center;
   background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
+  padding: 12px 16px;
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  margin-bottom: 16px;
 }
 
-.card-header-gradient {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  padding: 20px 24px;
-  border-bottom: 1px solid #e2e8f0;
+.filter-bar .form-input { max-width: 260px; }
+
+.filter-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: #f8fafc;
+  border-radius: 12px;
 }
 
-.card-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0;
+.filter-label {
+  font-size: 0.76rem;
+  color: #475569;
+  font-weight: 600;
 }
 
-.card-subtitle {
-  font-size: 13px;
+.filter-chip {
+  background: white;
+  border: 1px solid #e2e8f0;
   color: #64748b;
-  margin: 4px 0 0;
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: 'Tajawal', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.card-body-content {
-  padding: 20px 24px;
+.filter-chip:hover { background: #f1f5f9; }
+
+.filter-chip.active {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
 }
 
-.toolbar-row {
+.fi-table tbody tr.fi-row.expanded {
+  background: #eff6ff;
+  box-shadow: inset 3px 0 0 #3b82f6;
+}
+
+.fi-table tbody tr.fi-row { transition: all 0.18s; }
+
+.fi-table .cell-sub-cell { font-size: 0.78rem; color: #64748b; }
+
+/* Skeleton */
+.skel-row .skel-bar {
+  height: 14px;
+  background: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 50%, #e2e8f0 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+.skel-ranks { display: flex; flex-direction: column; gap: 8px; padding: 12px 0; }
+
+.skel-ranks .skel-bar {
+  height: 30px;
+  background: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 50%, #e2e8f0 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 0% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Flag pills in the grid */
+.flag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 14px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.flag-yes {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  color: #15803d;
+}
+
+.flag-no { background: #f1f5f9; color: #94a3b8; }
+
+.flag-extra {
+  background: #fcd34d;
+  color: #78350f;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.rank-count-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  padding: 3px 10px;
+  border-radius: 14px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.rank-count-pill:hover { background: #dbeafe; transform: translateY(-1px); }
+
+/* Expand arrow for RTL */
+.expand-arrow { transform: rotate(180deg); }
+.expand-arrow.open { transform: rotate(270deg); }
+
+/* Rank panel */
+.rank-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px;
+}
+
+.panel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.toolbar-filters {
-  display: flex;
   gap: 10px;
-  align-items: center;
 }
 
-.search-input {
-  width: 280px;
-}
-
-.filter-select {
-  width: 140px;
-}
-
-.btn-add {
-  ::ng-deep .dx-button {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    border: none;
-    border-radius: 10px;
-    color: white;
-    font-weight: 600;
-    transition: all 0.3s ease;
-
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
-    }
-  }
-}
-
-.code-pill {
-  font-family: monospace;
-  color: #6366f1;
-  background: #eef2ff;
-  padding: 2px 8px;
-  border-radius: 6px;
-  font-size: 12px;
-}
-
-.vote-code-pill {
-  font-family: monospace;
-  color: #0891b2;
-  background: #ecfeff;
-  padding: 2px 8px;
-  border-radius: 6px;
-  font-size: 12px;
-}
-
-.badge-general {
-  background: #dbeafe;
-  color: #2563eb;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.badge-active {
-  background: #dcfce7;
-  color: #16a34a;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.badge-inactive {
-  background: #f1f5f9;
-  color: #64748b;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.text-muted {
-  color: #94a3b8;
-}
-
-.emoji-action-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px 6px;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: background 0.2s;
-
-  &:hover {
-    background: #f1f5f9;
-  }
-}
-
-.dialog-form {
-  padding: 8px;
-}
-
-.form-group {
-  margin-bottom: 14px;
-}
-
-.form-label {
+.panel-title {
   display: block;
-  font-size: 12px;
-  font-weight: 600;
-  color: #475569;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #1e40af;
+  margin-bottom: 3px;
+}
+
+.panel-sub { font-size: 0.75rem; color: #64748b; }
+
+.rank-table {
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.rank-badge {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: inline-block;
+}
+
+.empty-rank-state {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  background: white;
+  border: 2px dashed #e2e8f0;
+  border-radius: 12px;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.empty-rank-state .empty-icon { font-size: 1.6rem; }
+
+.empty-rank-state strong { color: #1e40af; }
+
+/* Formula card */
+.formula-card {
+  background: linear-gradient(135deg, #f5f3ff, #faf5ff);
+  border: 1px solid #c4b5fd;
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.formula-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #6d28d9;
   margin-bottom: 6px;
 }
 
-.form-row-2col {
+.formula-text {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+  font-family: 'Tajawal', sans-serif;
+  direction: ltr;
+  unicode-bidi: plaintext;
+  text-align: start;
+  margin-bottom: 8px;
+}
+
+.formula-legend {
+  font-size: 0.72rem;
+  color: #7c3aed;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.formula-legend code {
+  background: rgba(124, 58, 237, 0.08);
+  padding: 1px 7px;
+  border-radius: 6px;
+  font-family: 'Tajawal', sans-serif;
+  color: #5b21b6;
+}
+
+/* Dialog flag cards */
+.flags-section {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+  margin-bottom: 14px;
 }
 
-.form-row-checks {
-  display: flex;
-  gap: 24px;
-  margin-top: 8px;
+@media (max-width: 768px) {
+  .flags-section { grid-template-columns: 1fr; }
 }
+
+.flag-card {
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #f8fafc;
+  transition: all 0.2s;
+}
+
+.flag-card.flag-active {
+  border-color: #3b82f6;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.12);
+}
+
+.flag-card .toggle-wrap { align-items: flex-start; gap: 12px; }
+
+.flag-meta { display: flex; flex-direction: column; gap: 2px; }
+
+.flag-meta-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.flag-meta-sub { font-size: 0.74rem; color: #64748b; }
+
+.travel-row { background: #fffbeb; border-radius: 12px; padding: 10px 12px; border: 1px solid #fcd34d; }
+
+.travel-info { margin: 0; padding: 8px 12px; font-size: 0.78rem; }
+
+.empty-cell { padding: 40px !important; }

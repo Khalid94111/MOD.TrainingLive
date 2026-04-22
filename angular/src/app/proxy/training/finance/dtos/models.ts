@@ -30,6 +30,17 @@ export interface CreateUpdateFinancialItemDto {
   nameEn?: string;
   voteCode?: string;
   isActive?: boolean;
+  defaultAmountOMR?: number;
+  isPerDay?: boolean;
+  isPerNominee?: boolean;
+  extraDaysBefore?: number;
+  extraDaysAfter?: number;
+}
+
+export interface CreateUpdateFinancialItemRankAmountDto {
+  financialItemId?: string;
+  rankId?: string;
+  amountOMR?: number;
 }
 
 export interface CreateUpdatePriceQuoteDto {
@@ -72,11 +83,24 @@ export interface FinancialItemDto extends EntityDto<string> {
   voteCode?: string;
   isGeneral?: boolean;
   isActive?: boolean;
+  defaultAmountOMR?: number;
+  isPerDay?: boolean;
+  isPerNominee?: boolean;
+  extraDaysBefore?: number;
+  extraDaysAfter?: number;
 }
 
 export interface FinancialItemGetListInput extends PagedAndSortedResultRequestDto {
   filter?: string | null;
   isActive?: boolean | null;
+}
+
+export interface FinancialItemRankAmountDto extends FullAuditedEntityDto<string> {
+  financialItemId?: string;
+  rankId?: string;
+  rankNameAr?: string;
+  rankNameEn?: string;
+  amountOMR?: number;
 }
 
 export interface FinancialItemSubItemDto {
