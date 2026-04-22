@@ -29,6 +29,7 @@ public class TrainingPlanItemAppService(
     PlanItemCostCalculator costCalculator,
     NominationConditionValidator conditionValidator,
     PlanItemRankBreakdownManager rankBreakdownManager,
+    PlanItemUnitScope unitScope,
     IPlanNoteAppService planNoteAppService,
     TrainingPlanItemToDtoMapper toDtoMapper)
     : ApplicationService, ITrainingPlanItemAppService
@@ -36,6 +37,7 @@ public class TrainingPlanItemAppService(
     public async Task<TrainingPlanItemDto> GetAsync(Guid id)
     {
         var entity = await repository.GetAsync(id);
+        await unitScope.EnsureCanAccessAsync(entity);
         var dto = toDtoMapper.Map(entity);
         await EnrichSingleDtoAsync(dto, entity);
         return dto;
@@ -45,6 +47,7 @@ public class TrainingPlanItemAppService(
     {
         var queryable = await repository.GetQueryableAsync();
         queryable = queryable.Where(x => x.PlanId == input.PlanId);
+        queryable = await unitScope.ApplyScopeAsync(queryable);
 
         if (input.CourseType.HasValue)
             queryable = queryable.Where(x => x.CourseType == input.CourseType.Value);
@@ -187,6 +190,7 @@ public class TrainingPlanItemAppService(
     public async Task<TrainingPlanItemDto> UpdateAsync(Guid id, CreateUpdateTrainingPlanItemDto input)
     {
         var entity = await repository.GetAsync(id);
+        await unitScope.EnsureCanAccessAsync(entity);
         var plan = await planRepository.GetAsync(entity.PlanId);
 
         var canEdit = plan.Status == PlanStatus.Open ||
@@ -230,6 +234,7 @@ public class TrainingPlanItemAppService(
     public async Task DeleteAsync(Guid id)
     {
         var entity = await repository.GetAsync(id);
+        await unitScope.EnsureCanAccessAsync(entity);
         var plan = await planRepository.GetAsync(entity.PlanId);
         if (plan.Status != PlanStatus.Open && plan.Status != PlanStatus.Draft)
             throw new Volo.Abp.BusinessException("Training:TrainingPlan:NotInDraftStatus");
@@ -241,6 +246,7 @@ public class TrainingPlanItemAppService(
     public async Task ReturnAsync(Guid id, ReturnReasonDto input)
     {
         var entity = await repository.GetAsync(id);
+        await unitScope.EnsureCanAccessAsync(entity);
         var plan = await planRepository.GetAsync(entity.PlanId);
         if (plan.Status != PlanStatus.UnderReview && plan.Status != PlanStatus.TDApproved)
             throw new Volo.Abp.BusinessException("Training:TrainingPlanItem:CannotReturnInThisStatus");
@@ -260,6 +266,7 @@ public class TrainingPlanItemAppService(
 
     public async Task<List<PlanItemConditionDto>> GetConditionsAsync(Guid planItemId)
     {
+        await unitScope.EnsureCanAccessPlanItemAsync(planItemId);
         var queryable = await planItemConditionRepository.GetQueryableAsync();
         var conditions = await AsyncExecuter.ToListAsync(
             queryable.Where(x => x.PlanItemId == planItemId));

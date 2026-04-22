@@ -24,6 +24,7 @@ public class NominationAppService(
     CourseNameResolver courseNameResolver,
     NominationConditionValidator conditionValidator,
     PlanItemRankBreakdownManager rankBreakdownManager,
+    PlanItemUnitScope unitScope,
     IPlanNoteAppService planNoteAppService,
     NominationToDtoMapper toDtoMapper,
     NominationApprovalToDtoMapper approvalToDtoMapper)
@@ -32,6 +33,7 @@ public class NominationAppService(
     public async Task<NominationDto> GetAsync(Guid id)
     {
         var entity = await repository.GetAsync(id);
+        await unitScope.EnsureCanAccessPlanItemAsync(entity.PlanItemId);
         var dto = toDtoMapper.Map(entity);
         await EnrichDtoAsync(dto, entity);
         return dto;
@@ -40,6 +42,15 @@ public class NominationAppService(
     public async Task<PagedResultDto<NominationDto>> GetListAsync(NominationGetListInput input)
     {
         var queryable = await repository.GetQueryableAsync();
+
+        // Scope to the current user's unit via the parent plan item (UTM/UGM only).
+        if (await unitScope.IsCurrentUserUnitScopedAsync())
+        {
+            var currentUnitId = await unitScope.GetCurrentUserUnitIdAsync();
+            queryable = currentUnitId.HasValue
+                ? queryable.Where(x => x.PlanItem!.UnitId == currentUnitId.Value)
+                : queryable.Where(_ => false);
+        }
 
         if (input.PlanItemId.HasValue)
             queryable = queryable.Where(x => x.PlanItemId == input.PlanItemId.Value);
@@ -109,6 +120,7 @@ public class NominationAppService(
     public async Task ApproveAsync(Guid id, ApproveRejectNominationDto input)
     {
         var nomination = await repository.GetAsync(id);
+        await unitScope.EnsureCanAccessPlanItemAsync(nomination.PlanItemId);
 
         var approvalsQueryable = await approvalRepository.GetQueryableAsync();
         var pendingApproval = await AsyncExecuter.FirstOrDefaultAsync(
@@ -145,6 +157,7 @@ public class NominationAppService(
     public async Task RejectAsync(Guid id, ApproveRejectNominationDto input)
     {
         var nomination = await repository.GetAsync(id);
+        await unitScope.EnsureCanAccessPlanItemAsync(nomination.PlanItemId);
 
         var approvalsQueryable = await approvalRepository.GetQueryableAsync();
         var pendingApproval = await AsyncExecuter.FirstOrDefaultAsync(
@@ -174,6 +187,9 @@ public class NominationAppService(
 
     public async Task<List<NominationApprovalDto>> GetApprovalChainAsync(Guid nominationId)
     {
+        var nomination = await repository.GetAsync(nominationId);
+        await unitScope.EnsureCanAccessPlanItemAsync(nomination.PlanItemId);
+
         var queryable = await approvalRepository.GetQueryableAsync();
         var approvals = await AsyncExecuter.ToListAsync(
             queryable.Where(x => x.NominationId == nominationId)
@@ -207,6 +223,7 @@ public class NominationAppService(
     public async Task ReturnAsync(Guid id, ReturnReasonDto input)
     {
         var entity = await repository.GetAsync(id);
+        await unitScope.EnsureCanAccessPlanItemAsync(entity.PlanItemId);
 
         var noteDto = await planNoteAppService.CreateAsync(new CreatePlanNoteDto
         {
@@ -226,6 +243,7 @@ public class NominationAppService(
     public async Task<NominationDto> ReplaceAsync(Guid id, ReplaceNominationDto input)
     {
         var oldNom = await repository.GetAsync(id);
+        await unitScope.EnsureCanAccessPlanItemAsync(oldNom.PlanItemId);
         if (!oldNom.IsReturned)
             throw new Volo.Abp.BusinessException("Training:Nomination:NotReturned");
 

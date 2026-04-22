@@ -22,11 +22,14 @@ public class PlanItemFinancialItemAppService(
     IRepository<ExchangeRate, Guid> exchangeRate,
     PlanItemRankBreakdownManager rankBreakdownManager,
     FinancialItemDefaultResolver defaultResolver,
+    PlanItemUnitScope unitScope,
     PlanItemFinancialItemToDtoMapper toDtoMapper)
     : ApplicationService, IPlanItemFinancialItemAppService
 {
     public async Task<List<PlanItemFinancialItemDto>> GetListByPlanItemAsync(Guid planItemId)
     {
+        await unitScope.EnsureCanAccessPlanItemAsync(planItemId);
+
         var queryable = await repository.GetQueryableAsync();
         var items = await AsyncExecuter.ToListAsync(
             queryable.Where(x => x.PlanItemId == planItemId));
@@ -49,6 +52,8 @@ public class PlanItemFinancialItemAppService(
 
     public async Task<PlanItemFinancialItemDto> CreateAsync(CreateUpdatePlanItemFinancialItemDto input)
     {
+        await unitScope.EnsureCanAccessPlanItemAsync(input.PlanItemId);
+
         var entity = new PlanItemFinancialItem(
             GuidGenerator.Create(),
             input.PlanItemId,
@@ -64,6 +69,8 @@ public class PlanItemFinancialItemAppService(
     public async Task<PlanItemFinancialItemDto> UpdateAsync(Guid id, CreateUpdatePlanItemFinancialItemDto input)
     {
         var entity = await repository.GetAsync(id);
+        await unitScope.EnsureCanAccessPlanItemAsync(entity.PlanItemId);
+
         entity.FinancialItemId = input.FinancialItemId;
         entity.EstimatedAmountOMR = input.EstimatedAmountOMR;
         entity.EstimatedAmountUSD = input.EstimatedAmountUSD;
@@ -75,6 +82,8 @@ public class PlanItemFinancialItemAppService(
 
     public async Task DeleteAsync(Guid id)
     {
+        var entity = await repository.GetAsync(id);
+        await unitScope.EnsureCanAccessPlanItemAsync(entity.PlanItemId);
         await repository.DeleteAsync(id);
     }
 
@@ -82,6 +91,7 @@ public class PlanItemFinancialItemAppService(
     public async Task AutoFillFromDefaultsAsync(Guid planItemId)
     {
         var planItem = await planItemRepository.GetAsync(planItemId);
+        await unitScope.EnsureCanAccessAsync(planItem);
 
         var defaultsQueryable = await defaultsRepository.GetQueryableAsync();
         var defaults = await AsyncExecuter.ToListAsync(
@@ -144,6 +154,8 @@ public class PlanItemFinancialItemAppService(
     public async Task<PlanItemFinancialItemDto> UpdateAmountAsync(Guid id, UpdateAmountDto input)
     {
         var entity = await repository.GetAsync(id);
+        await unitScope.EnsureCanAccessPlanItemAsync(entity.PlanItemId);
+
         entity.EstimatedAmountOMR = input.EstimatedAmountOMR;
 
         // Auto-calculate USD from OMR using active exchange rate
@@ -170,6 +182,8 @@ public class PlanItemFinancialItemAppService(
     public async Task UpdateNotesAsync(Guid id, UpdateNotesDto input)
     {
         var entity = await repository.GetAsync(id);
+        await unitScope.EnsureCanAccessPlanItemAsync(entity.PlanItemId);
+
         entity.Notes = input.Notes;
         await repository.UpdateAsync(entity, autoSave: true);
     }

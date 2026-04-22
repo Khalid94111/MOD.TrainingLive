@@ -22,6 +22,7 @@ public class TrainingPlanAppService(
     PlanItemCostCalculator costCalculator,
     CourseNameResolver courseNameResolver,
     BudgetRecalculatorManager budgetRecalculator,
+    PlanItemUnitScope unitScope,
     IPlanNoteAppService planNoteAppService,
     TrainingPlanToDtoMapper toDtoMapper)
     : ApplicationService, ITrainingPlanAppService
@@ -47,9 +48,11 @@ public class TrainingPlanAppService(
 
         var entities = await AsyncExecuter.ToListAsync(queryable);
 
-        // Batch load item counts
+        // Batch load item counts — counts and costs are scoped to the current user's
+        // unit for UTM/UGM so the figures in the list match what they actually see.
         var planIds = entities.Select(x => x.Id).ToList();
         var itemQueryable = await planItemRepository.GetQueryableAsync();
+        itemQueryable = await unitScope.ApplyScopeAsync(itemQueryable);
         var itemCounts = await AsyncExecuter.ToListAsync(
             itemQueryable.Where(x => planIds.Contains(x.PlanId))
                 .GroupBy(x => x.PlanId)
@@ -261,6 +264,8 @@ public class TrainingPlanAppService(
     private async Task EnrichPlanDtoAsync(TrainingPlanDto dto, Guid planId)
     {
         var itemQueryable = await planItemRepository.GetQueryableAsync();
+        itemQueryable = await unitScope.ApplyScopeAsync(itemQueryable);
+
         dto.ItemCount = await AsyncExecuter.CountAsync(
             itemQueryable.Where(x => x.PlanId == planId));
 
