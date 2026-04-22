@@ -21,6 +21,7 @@ public class PlanItemFinancialItemAppService(
     IRepository<CourseTypeFinancialItemDefault, Guid> defaultsRepository,
     IRepository<ExchangeRate, Guid> exchangeRate,
     PlanItemRankBreakdownManager rankBreakdownManager,
+    FinancialItemDefaultResolver defaultResolver,
     PlanItemFinancialItemToDtoMapper toDtoMapper)
     : ApplicationService, IPlanItemFinancialItemAppService
 {
@@ -91,16 +92,44 @@ public class PlanItemFinancialItemAppService(
             existingQueryable.Where(x => x.PlanItemId == planItemId)
                 .Select(x => x.FinancialItemId))).ToHashSet();
 
+        // Active USD→OMR rate (same lookup as UpdateAmountAsync); fetched once.
+        var rateQueryable = await exchangeRate.GetQueryableAsync();
+        var activeRate = await AsyncExecuter.FirstOrDefaultAsync(
+            rateQueryable
+                .Where(r => r.FromCurrency == "USD" && r.ToCurrency == "OMR" && r.IsActive)
+                .OrderByDescending(r => r.SetAt));
+
         foreach (var def in defaults)
         {
             if (existingFiIds.Contains(def.FinancialItemId)) continue; // skip if already added
 
+            var fi = await financialItemRepository.GetAsync(def.FinancialItemId);
+
+            // CHG-07 — per-nominee items get 0 here; the rank breakdown (InitializeAsync)
+            // owns the OMR total. Flat and per-day items are computed up-front with the
+            // full formula so the grid reflects a real estimate immediately.
+            decimal initialOmr = fi.IsPerNominee
+                ? 0m
+                : defaultResolver.ComputeSubtotal(
+                    fi.DefaultAmountOMR,
+                    fi.IsPerDay, fi.IsPerNominee,
+                    planItem.DurationDays,
+                    fi.ExtraDaysBefore, fi.ExtraDaysAfter,
+                    nomineeCount: 1);
+
             var pifi = new PlanItemFinancialItem(
-                GuidGenerator.Create(), planItemId, def.FinancialItemId, 0);
+                GuidGenerator.Create(), planItemId, def.FinancialItemId, initialOmr);
+
+            // Mirror UpdateAmountAsync: compute USD only for non-per-nominee items,
+            // since per-nominee OMR is not finalized until InitializeAsync runs.
+            if (!fi.IsPerNominee && activeRate != null && activeRate.Rate > 0)
+            {
+                pifi.EstimatedAmountUSD = Math.Round(initialOmr / activeRate.Rate, 2);
+            }
+
             await repository.InsertAsync(pifi, autoSave: true);
 
             // CHG-03 + CHG-07 — initialize per-rank breakdown if applicable
-            var fi = await financialItemRepository.GetAsync(def.FinancialItemId);
             if (fi.IsPerNominee)
                 await rankBreakdownManager.InitializeAsync(pifi.Id);
         }
