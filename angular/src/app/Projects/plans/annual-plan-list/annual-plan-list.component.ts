@@ -109,8 +109,10 @@ export class AnnualPlanListComponent implements OnInit {
       [PlanStatus.Open]: 'badge-open',
       [PlanStatus.Submitted]: 'badge-submitted',
       [PlanStatus.UnderReview]: 'badge-review',
+      [PlanStatus.ReturnedToCreator]: 'badge-returned',
       [PlanStatus.TDApproved]: 'badge-td-approved',
       [PlanStatus.THApproved]: 'badge-th-approved',
+      [PlanStatus.Rejected]: 'badge-rejected',
     } as Record<number, string>)[status] ?? 'badge-draft';
   }
 
@@ -120,8 +122,10 @@ export class AnnualPlanListComponent implements OnInit {
       [PlanStatus.Open]: 'مفتوحة',
       [PlanStatus.Submitted]: 'مُرسلة',
       [PlanStatus.UnderReview]: 'قيد المراجعة',
+      [PlanStatus.ReturnedToCreator]: 'مُعادة للمُنشئ',
       [PlanStatus.TDApproved]: 'معتمدة TD',
       [PlanStatus.THApproved]: 'معتمدة نهائياً',
+      [PlanStatus.Rejected]: 'مرفوضة',
     } as Record<number, string>)[status] ?? '';
   }
 

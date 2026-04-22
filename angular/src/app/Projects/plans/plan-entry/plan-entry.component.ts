@@ -12,6 +12,7 @@ import {
 } from 'src/app/proxy/training/plans/dtos';
 import { TenantCourseService } from 'src/app/proxy/training/tenant-courses';
 import { HrLookupService } from 'src/app/proxy/training/hr-integration/hr-lookup.service';
+import { NominationService } from 'src/app/proxy/training/nominations/nomination.service';
 import { PlanNoteEntityType } from 'src/app/proxy/training/enums/plan-note-entity-type.enum';
 import {
   NominationPickerComponent,
@@ -44,6 +45,7 @@ export class PlanEntryComponent implements OnInit {
   private tcService = inject(TenantCourseService);
   private hrService = inject(HrLookupService);
   private noteService = inject(PlanNoteService);
+  private nominationService = inject(NominationService);
   l = inject(TrainingLocalizationHelper);
 
   planId = '';
@@ -119,7 +121,10 @@ export class PlanEntryComponent implements OnInit {
     return s === PlanStatus.Open || s === PlanStatus.ReturnedToCreator;
   });
   returnedItems = computed(() => this.items().filter(i => i.isReturned));
-  hasUnresolvedReturns = computed(() => this.returnedItems().length > 0);
+  returnedNominationsCount = signal(0);
+  hasUnresolvedReturns = computed(() =>
+    this.returnedItems().length > 0 || this.returnedNominationsCount() > 0,
+  );
   canResubmit = computed(() =>
     this.isReturnedToCreator() && !this.hasUnresolvedReturns() && this.items().length > 0,
   );
@@ -229,7 +234,10 @@ export class PlanEntryComponent implements OnInit {
       this.loadTenantCourses(),
       this.loadCurrentEmployee(),
     ]);
-    this.loadReturnReason();
+    await Promise.all([
+      this.loadReturnReason(),
+      this.loadReturnedNominationsCount(),
+    ]);
   }
 
   async loadPlan(): Promise<void> {
@@ -278,6 +286,25 @@ export class PlanEntryComponent implements OnInit {
     );
     const returnNotes = (list ?? []).filter(n => n.isReturnReason);
     this.returnNote.set(returnNotes[0] ?? null);
+  }
+
+  // Count nominations in this plan that were returned for correction, so the
+  // Resubmit button stays disabled until all of them are resolved (the backend
+  // ValidateNoUnresolvedReturnsAsync would otherwise throw).
+  async loadReturnedNominationsCount(): Promise<void> {
+    if (!this.isReturnedToCreator()) { this.returnedNominationsCount.set(0); return; }
+    const planItemIds = new Set(this.items().map(i => i.id));
+    if (planItemIds.size === 0) { this.returnedNominationsCount.set(0); return; }
+    try {
+      const r = await firstValueFrom(this.nominationService.getList({ maxResultCount: 1000 }));
+      let count = 0;
+      for (const n of (r.items ?? [])) {
+        if (n.isReturned && n.planItemId && planItemIds.has(n.planItemId)) count++;
+      }
+      this.returnedNominationsCount.set(count);
+    } catch {
+      this.returnedNominationsCount.set(0);
+    }
   }
 
   // ── Inline expand ──
@@ -419,6 +446,7 @@ export class PlanEntryComponent implements OnInit {
       }
       this.isDialogOpen.set(false);
       await this.loadItems();
+      await this.loadReturnedNominationsCount();
     } catch (e: any) {
       this.saveError.set(e?.error?.error?.message ?? e?.message ?? 'فشل الحفظ');
     } finally {
@@ -432,15 +460,20 @@ export class PlanEntryComponent implements OnInit {
     await firstValueFrom(this.itemService.delete(id));
     if (this.expandedItemId() === id) this.expandedItemId.set(null);
     await this.loadItems();
+    await this.loadReturnedNominationsCount();
   }
 
   // ── Resubmit ──
   async onResubmit(): Promise<void> {
     if (!this.canResubmit() || this.resubmitting()) return;
     this.resubmitting.set(true);
+    this.saveError.set(null);
     try {
       await firstValueFrom(this.planService.resubmit(this.planId));
       await this.loadPlan();
+      await this.loadReturnedNominationsCount();
+    } catch (e: any) {
+      this.saveError.set(e?.error?.error?.message ?? e?.message ?? this.l.t('Training.Errors.Generic'));
     } finally {
       this.resubmitting.set(false);
     }

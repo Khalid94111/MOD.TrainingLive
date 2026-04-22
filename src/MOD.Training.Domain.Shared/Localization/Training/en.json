@@ -574,9 +574,11 @@
     "Training.PlanStatus.Open": "Open",
     "Training.PlanStatus.Submitted": "Submitted",
     "Training.PlanStatus.UnderReview": "Under Review",
+    "Training.PlanStatus.ReturnedToCreator": "Returned to Creator",
     "Training.PlanStatus.TDApproved": "TD Approved",
     "Training.PlanStatus.THApproved": "TH Approved",
     "Training.PlanStatus.Closed": "Closed",
+    "Training.PlanStatus.Rejected": "Rejected",
 
     "Training.PlanItemFinancialItem": "Plan Item Financial Item",
     "Training.PlanItemFinancialItems": "Financial Items",

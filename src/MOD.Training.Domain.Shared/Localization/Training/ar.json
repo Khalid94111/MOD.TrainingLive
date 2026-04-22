@@ -521,9 +521,11 @@
     "Training.PlanStatus.Open": "مفتوحة",
     "Training.PlanStatus.Submitted": "مُرسلة",
     "Training.PlanStatus.UnderReview": "قيد المراجعة",
+    "Training.PlanStatus.ReturnedToCreator": "مُعادة للمُنشئ",
     "Training.PlanStatus.TDApproved": "معتمدة من مدير التدريب",
     "Training.PlanStatus.THApproved": "معتمدة من رئيس الجهة",
     "Training.PlanStatus.Closed": "مغلقة",
+    "Training.PlanStatus.Rejected": "مرفوضة",
 
     "Training.PlanItemFinancialItem": "بند مالي للخطة",
     "Training.PlanItemFinancialItems": "البنود المالية",

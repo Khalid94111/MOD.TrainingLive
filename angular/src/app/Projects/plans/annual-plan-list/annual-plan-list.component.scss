@@ -1,1 +1,11 @@
 @import '../../shared/gtms-design';
+
+/* Highlight rows for plans that were returned to the creator so UTM can spot them */
+.row-returned {
+  background: linear-gradient(90deg, #fffbeb 0%, transparent 50%);
+  border-inline-end: 3px solid #f59e0b;
+}
+
+.row-returned:hover {
+  background: linear-gradient(90deg, #fef3c7 0%, transparent 50%);
+}

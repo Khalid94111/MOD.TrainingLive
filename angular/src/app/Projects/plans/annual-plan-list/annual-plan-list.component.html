@@ -27,7 +27,7 @@
       </thead>
       <tbody>
         @for (plan of plans(); track plan.id) {
-          <tr>
+          <tr [class.row-returned]="plan.status === PlanStatus.ReturnedToCreator">
             <td class="center cell-bold" style="font-size: 1.1rem; color: #1e40af;">{{ plan.year }}</td>
             <td class="center">
               <span class="badge" [class]="getStatusBadgeClass(plan.status)">
@@ -50,6 +50,12 @@
                   <button class="btn-icon" title="إدخال البنود" (click)="navigateToEntry(plan.id)">📝</button>
                   @if (canReview) {
                     <button class="btn-icon" title="إغلاق النافذة" (click)="onCloseWindow(plan.id)">🔒</button>
+                  }
+                }
+                @case (PlanStatus.ReturnedToCreator) {
+                  <button class="btn-icon" title="تعديل الخطة المُعادة" (click)="navigateToEntry(plan.id)">✏️</button>
+                  @if (canReview) {
+                    <button class="btn-icon" title="عرض" (click)="navigateToReview(plan.id)">👁️</button>
                   }
                 }
                 @case (PlanStatus.Submitted) {
