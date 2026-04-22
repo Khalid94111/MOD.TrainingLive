@@ -6,9 +6,10 @@ namespace MOD.Training.Training.Nominations.Dtos;
 
 public class NominationDto : FullAuditedEntityDto<Guid>
 {
-    public Guid SessionId { get; set; }
+    public Guid? SessionId { get; set; }
     public string SessionCode { get; set; } = string.Empty; // Resolved
     public string CourseName { get; set; } = string.Empty;  // Resolved
+    public Guid PlanItemId { get; set; }
     public Guid EmployeeId { get; set; }
     public string EmployeeName { get; set; } = string.Empty; // Resolved
     public Guid NominatedById { get; set; }
@@ -19,4 +20,6 @@ public class NominationDto : FullAuditedEntityDto<Guid>
     public AttendanceStatus? AttendanceStatus { get; set; }
     public ResultType? ResultType { get; set; }
     public string? ResultValue { get; set; }
+    public bool IsReturned { get; set; }
+    public Guid? LastReturnNoteId { get; set; }
 }

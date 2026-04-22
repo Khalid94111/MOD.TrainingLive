@@ -121,8 +121,6 @@ public class TrainingPlanItemAppService(
             input.CourseType,
             input.PreferredQuarter,
             input.Priority,
-            input.OfficersCount,
-            input.EnlistedCount,
             input.Justification,
             CurrentUser.Id!.Value)
         {
@@ -161,9 +159,6 @@ public class TrainingPlanItemAppService(
         entity.CourseType = input.CourseType;
         entity.PreferredQuarter = input.PreferredQuarter;
         entity.Priority = input.Priority;
-        entity.OfficersCount = input.OfficersCount;
-        entity.EnlistedCount = input.EnlistedCount;
-        entity.Capacity = input.OfficersCount + input.EnlistedCount;
         entity.Justification = input.Justification;
         entity.DescriptionAr = input.DescriptionAr;
         entity.DescriptionEn = input.DescriptionEn;

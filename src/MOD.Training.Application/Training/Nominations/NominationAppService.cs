@@ -62,14 +62,12 @@ public class NominationAppService(
 
         // Resolve session → course names
         var sessionCourseMap = new Dictionary<Guid, (string code, string nameAr)>();
-        foreach (var sid in sessionIds)
+        foreach (var sid in sessionIds.Where(s => s.HasValue).Select(s => s!.Value).Distinct())
         {
             var session = await sessionRepository.FindAsync(sid);
             if (session != null)
             {
                 var course = await courseNameResolver.ResolveAsync(session.CourseId);
-                // CourseSession.CourseId → Course.TenantCourseId → we need to go through Course entity
-                // For simplicity, store the session code
                 sessionCourseMap[sid] = (session.SessionCode, course?.NameAr ?? "");
             }
         }
@@ -88,7 +86,7 @@ public class NominationAppService(
                 dto.NominatedByName = nominator.FullNameAr;
             }
 
-            if (sessionCourseMap.TryGetValue(e.SessionId, out var sessionInfo))
+            if (e.SessionId.HasValue && sessionCourseMap.TryGetValue(e.SessionId.Value, out var sessionInfo))
             {
                 dto.SessionCode = sessionInfo.code;
                 dto.CourseName = sessionInfo.nameAr;
@@ -100,77 +98,12 @@ public class NominationAppService(
         return new PagedResultDto<NominationDto>(totalCount, dtos);
     }
 
+    // CreateBatchAsync — removed (moved to TrainingPlanItemAppService.CreateAsync)
+    [Obsolete("Moved to TrainingPlanItemAppService.CreateAsync")]
     [Authorize(TrainingPermissions.Nomination.Create)]
-    public async Task<List<NominationDto>> CreateBatchAsync(CreateNominationDto input)
+    public Task<List<NominationDto>> CreateBatchAsync(CreateNominationDto input)
     {
-        var session = await sessionRepository.GetAsync(input.SessionId);
-
-        if (session.AvailableSeats < input.EmployeeIds.Count)
-            throw new Volo.Abp.BusinessException("Training:Nomination:SessionFull");
-
-        var results = new List<NominationDto>();
-
-        foreach (var employeeId in input.EmployeeIds)
-        {
-            // Check duplicate
-            var existsQueryable = await repository.GetQueryableAsync();
-            var alreadyNominated = await AsyncExecuter.AnyAsync(
-                existsQueryable.Where(x => x.SessionId == input.SessionId && x.EmployeeId == employeeId));
-            if (alreadyNominated)
-                throw new Volo.Abp.BusinessException("Training:Nomination:AlreadyNominated");
-
-            // Validate 9 conditions against employee HR data
-            var conditionResults = await conditionValidator.ValidateAsync(input.SessionId, employeeId);
-            var failedConditions = conditionResults.Where(r => !r.Passed).ToList();
-            if (failedConditions.Any())
-            {
-                var details = string.Join(" | ", failedConditions.Select(f => $"{f.ConditionTypeAr}: {f.Details}"));
-                throw new Volo.Abp.BusinessException("Training:Nomination:ConditionFailed")
-                    .WithData("Details", details);
-            }
-
-            var nomination = new Nomination(
-                GuidGenerator.Create(),
-                input.SessionId,
-                employeeId,
-                CurrentUser.Id!.Value);
-
-            // Auto-approve level 1 (UTM) since UTM is the creator (MOD-17)
-            nomination.Status = NominationStatus.UTMApproved;
-
-            await repository.InsertAsync(nomination, autoSave: true);
-
-            // Create 3-level approval chain
-            // Level 1: UTM — auto-approved
-            await approvalRepository.InsertAsync(new NominationApproval(
-                GuidGenerator.Create(), nomination.Id, 1)
-            {
-                ApprovedById = CurrentUser.Id,
-                Status = ApprovalStatus.Approved,
-                ActionDate = DateTime.Now,
-            }, autoSave: true);
-
-            // Level 2: UGM — pending
-            await approvalRepository.InsertAsync(
-                new NominationApproval(GuidGenerator.Create(), nomination.Id, 2),
-                autoSave: true);
-
-            // Level 3: TD — pending
-            await approvalRepository.InsertAsync(
-                new NominationApproval(GuidGenerator.Create(), nomination.Id, 3),
-                autoSave: true);
-
-            // Decrement available seats
-            session.AvailableSeats--;
-
-            var dto = toDtoMapper.Map(nomination);
-            await EnrichDtoAsync(dto, nomination);
-            results.Add(dto);
-        }
-
-        await sessionRepository.UpdateAsync(session, autoSave: true);
-
-        return results;
+        throw new Volo.Abp.BusinessException("Training:Nomination:UsePlanItemCreate");
     }
 
     public async Task ApproveAsync(Guid id, ApproveRejectNominationDto input)
@@ -230,10 +163,13 @@ public class NominationAppService(
         nomination.Status = NominationStatus.Rejected;
         await repository.UpdateAsync(nomination, autoSave: true);
 
-        // Restore available seat
-        var session = await sessionRepository.GetAsync(nomination.SessionId);
-        session.AvailableSeats++;
-        await sessionRepository.UpdateAsync(session, autoSave: true);
+        // Restore available seat if session is assigned
+        if (nomination.SessionId.HasValue)
+        {
+            var session = await sessionRepository.GetAsync(nomination.SessionId.Value);
+            session.AvailableSeats++;
+            await sessionRepository.UpdateAsync(session, autoSave: true);
+        }
     }
 
     public async Task<List<NominationApprovalDto>> GetApprovalChainAsync(Guid nominationId)
@@ -278,7 +214,10 @@ public class NominationAppService(
         var nominator = await employeeResolver.GetByUserIdAsync(entity.NominatedById);
         if (nominator != null) dto.NominatedByName = nominator.FullNameAr;
 
-        var session = await sessionRepository.FindAsync(entity.SessionId);
-        if (session != null) dto.SessionCode = session.SessionCode;
+        if (entity.SessionId.HasValue)
+        {
+            var session = await sessionRepository.FindAsync(entity.SessionId.Value);
+            if (session != null) dto.SessionCode = session.SessionCode;
+        }
     }
 }

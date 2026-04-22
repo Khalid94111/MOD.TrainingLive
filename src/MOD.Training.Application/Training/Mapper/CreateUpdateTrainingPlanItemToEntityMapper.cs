@@ -15,8 +15,8 @@ public partial class CreateUpdateTrainingPlanItemToEntityMapper : MapperBase<Cre
 
     public override   TrainingPlanItem Map(CreateUpdateTrainingPlanItemDto source)
     {
-        var entity = new TrainingPlanItem(Guid.NewGuid(), source.PlanId, source.TenantCourseId,source.CourseType, source.PreferredQuarter, 
-        source.Priority, source.OfficersCount, source.EnlistedCount, source.Justification,  _currentUser.Id.Value  );
+        var entity = new TrainingPlanItem(Guid.NewGuid(), source.PlanId, source.TenantCourseId,source.CourseType, source.PreferredQuarter,
+        source.Priority, source.Justification,  _currentUser.Id.Value  );
         Map(source, entity);
         return entity;
     }
