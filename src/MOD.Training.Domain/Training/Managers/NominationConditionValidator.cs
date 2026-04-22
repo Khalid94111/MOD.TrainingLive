@@ -68,6 +68,9 @@ public class NominationConditionValidator(
     /// <summary>
     /// Validates an employee against plan item conditions (before session exists).
     /// </summary>
+    public Task<List<ConditionResult>> ValidateByPlanItemAsync(Guid planItemId, Guid employeeId)
+        => ValidateAgainstPlanItemAsync(planItemId, employeeId);
+
     public async Task<List<ConditionResult>> ValidateAgainstPlanItemAsync(Guid planItemId, Guid employeeId)
     {
         var results = new List<ConditionResult>();
