@@ -19,4 +19,8 @@ public interface ITrainingPlanAppService : ICrudAppService<
     Task FinalApproveAsync(Guid id);
     Task RejectAsync(Guid id, string? reason);
     Task ReturnToStaffAsync(Guid id, string? reason);
+
+    // CHG-05
+    Task ReturnToCreatorAsync(Guid id, ReturnReasonDto input);
+    Task ResubmitAsync(Guid id);
 }

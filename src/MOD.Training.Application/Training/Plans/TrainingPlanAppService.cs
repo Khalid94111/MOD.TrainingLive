@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using MOD.Training.Training.Enums;
 using MOD.Training.Training.Managers;
+using MOD.Training.Training.Nominations;
 using MOD.Training.Training.Permissions;
 using MOD.Training.Training.Plans.Dtos;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
- 
 
 namespace MOD.Training.Training.Plans;
 
@@ -18,9 +18,11 @@ namespace MOD.Training.Training.Plans;
 public class TrainingPlanAppService(
     IRepository<TrainingPlan, Guid> repository,
     IRepository<TrainingPlanItem, Guid> planItemRepository,
+    IRepository<Nomination, Guid> nominationRepository,
     PlanItemCostCalculator costCalculator,
     CourseNameResolver courseNameResolver,
-     BudgetRecalculatorManager budgetRecalculator,
+    BudgetRecalculatorManager budgetRecalculator,
+    IPlanNoteAppService planNoteAppService,
     TrainingPlanToDtoMapper toDtoMapper)
     : ApplicationService, ITrainingPlanAppService
 {
@@ -149,6 +151,7 @@ public class TrainingPlanAppService(
     {
         var entity = await repository.GetAsync(id);
         await ValidateCostGateAsync(id);
+        await ValidateNoUnresolvedReturnsAsync(id);
         entity.Status = PlanStatus.TDApproved;
         await repository.UpdateAsync(entity, autoSave: true);
     }
@@ -184,6 +187,53 @@ public class TrainingPlanAppService(
         var entity = await repository.GetAsync(id);
         entity.Status = PlanStatus.Submitted;
         await repository.UpdateAsync(entity, autoSave: true);
+    }
+
+    [Authorize(TrainingPermissions.TrainingPlan.ReturnToCreator)]
+    public async Task ReturnToCreatorAsync(Guid id, ReturnReasonDto input)
+    {
+        var entity = await repository.GetAsync(id);
+        if (entity.Status != PlanStatus.UnderReview && entity.Status != PlanStatus.TDApproved)
+            throw new Volo.Abp.BusinessException("Training:TrainingPlan:CannotReturnInThisStatus");
+
+        await planNoteAppService.CreateAsync(new CreatePlanNoteDto
+        {
+            EntityType = PlanNoteEntityType.Plan,
+            EntityId = id,
+            Note = input.Reason,
+            IsReturnReason = true
+        });
+
+        entity.Status = PlanStatus.ReturnedToCreator;
+        await repository.UpdateAsync(entity, autoSave: true);
+    }
+
+    [Authorize(TrainingPermissions.TrainingPlan.Resubmit)]
+    public async Task ResubmitAsync(Guid id)
+    {
+        var entity = await repository.GetAsync(id);
+        if (entity.Status != PlanStatus.ReturnedToCreator)
+            throw new Volo.Abp.BusinessException("Training:TrainingPlan:NotInReturnedStatus");
+
+        await ValidateNoUnresolvedReturnsAsync(id);
+
+        entity.Status = PlanStatus.UnderReview;
+        await repository.UpdateAsync(entity, autoSave: true);
+    }
+
+    private async Task ValidateNoUnresolvedReturnsAsync(Guid planId)
+    {
+        var itemQ = await planItemRepository.GetQueryableAsync();
+        var hasReturnedItem = await AsyncExecuter.AnyAsync(
+            itemQ.Where(x => x.PlanId == planId && x.IsReturned));
+        if (hasReturnedItem)
+            throw new Volo.Abp.BusinessException("Training:TrainingPlan:UnresolvedReturnedItems");
+
+        var nomQ = await nominationRepository.GetQueryableAsync();
+        var hasReturnedNomination = await AsyncExecuter.AnyAsync(
+            nomQ.Where(x => x.PlanItem!.PlanId == planId && x.IsReturned));
+        if (hasReturnedNomination)
+            throw new Volo.Abp.BusinessException("Training:TrainingPlan:UnresolvedReturnedNominations");
     }
 
     /// <summary>

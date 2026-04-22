@@ -190,6 +190,10 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
             TrainingPermissions.TrainingPlan.Approve, L("Permission:TrainingPlan.Approve"));
         trainingPlanGroup.AddChild(
             TrainingPermissions.TrainingPlan.FinalApprove, L("Permission:TrainingPlan.FinalApprove"));
+        trainingPlanGroup.AddChild(
+            TrainingPermissions.TrainingPlan.ReturnToCreator, L("Permission:TrainingPlan.ReturnToCreator"));
+        trainingPlanGroup.AddChild(
+            TrainingPermissions.TrainingPlan.Resubmit, L("Permission:TrainingPlan.Resubmit"));
 
         var planItemGroup = group.AddPermission(
             TrainingPermissions.TrainingPlanItem.Default,
@@ -202,6 +206,8 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
             TrainingPermissions.TrainingPlanItem.Delete, L("Permission:TrainingPlanItem.Delete"));
         planItemGroup.AddChild(
             TrainingPermissions.TrainingPlanItem.AssignFinancials, L("Permission:TrainingPlanItem.AssignFinancials"));
+        planItemGroup.AddChild(
+            TrainingPermissions.TrainingPlanItem.Return, L("Permission:TrainingPlanItem.Return"));
 
         // --- Phase 3: Nominations ---
         var nominationGroup = group.AddPermission(
@@ -213,6 +219,10 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
             TrainingPermissions.Nomination.ApproveUGM, L("Permission:Nomination.ApproveUGM"));
         nominationGroup.AddChild(
             TrainingPermissions.Nomination.ApproveTD, L("Permission:Nomination.ApproveTD"));
+        nominationGroup.AddChild(
+            TrainingPermissions.Nomination.Return, L("Permission:Nomination.Return"));
+        nominationGroup.AddChild(
+            TrainingPermissions.Nomination.Replace, L("Permission:Nomination.Replace"));
 
         // --- Phase 3: Price Quotes ---
         var priceQuoteGroup = group.AddPermission(
@@ -246,6 +256,29 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
             TrainingPermissions.CourseSession.Update, L("Permission:CourseSession.Update"));
         sessionGroup.AddChild(
             TrainingPermissions.CourseSession.Delete, L("Permission:CourseSession.Delete"));
+
+        // --- Phase 3 v4.4: New groups ---
+        var financialItemRankAmountGroup = group.AddPermission(
+            TrainingPermissions.FinancialItemRankAmount.Default,
+            L("Permission:FinancialItemRankAmount"));
+        financialItemRankAmountGroup.AddChild(
+            TrainingPermissions.FinancialItemRankAmount.Create, L("Permission:FinancialItemRankAmount.Create"));
+        financialItemRankAmountGroup.AddChild(
+            TrainingPermissions.FinancialItemRankAmount.Update, L("Permission:FinancialItemRankAmount.Update"));
+        financialItemRankAmountGroup.AddChild(
+            TrainingPermissions.FinancialItemRankAmount.Delete, L("Permission:FinancialItemRankAmount.Delete"));
+
+        var planItemFinancialItemRankGroup = group.AddPermission(
+            TrainingPermissions.PlanItemFinancialItemRank.Default,
+            L("Permission:PlanItemFinancialItemRank"));
+        planItemFinancialItemRankGroup.AddChild(
+            TrainingPermissions.PlanItemFinancialItemRank.UpdateRate, L("Permission:PlanItemFinancialItemRank.UpdateRate"));
+
+        var planNoteGroup = group.AddPermission(
+            TrainingPermissions.PlanNote.Default,
+            L("Permission:PlanNote"));
+        planNoteGroup.AddChild(
+            TrainingPermissions.PlanNote.Create, L("Permission:PlanNote.Create"));
 
     }
 

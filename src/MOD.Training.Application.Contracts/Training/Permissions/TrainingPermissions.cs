@@ -160,6 +160,8 @@ public static class TrainingPermissions
         public const string Review = Default + ".Review";       // Staff reviews
         public const string Approve = Default + ".Approve";     // TD approves
         public const string FinalApprove = Default + ".FinalApprove"; // TH final
+        public const string ReturnToCreator = Default + ".ReturnToCreator"; // CHG-05
+        public const string Resubmit = Default + ".Resubmit";               // CHG-05
     }
 
     public static class TrainingPlanItem
@@ -169,6 +171,7 @@ public static class TrainingPermissions
         public const string Update = Default + ".Update";
         public const string Delete = Default + ".Delete";
         public const string AssignFinancials = Default + ".AssignFinancials"; // Staff only
+        public const string Return = Default + ".Return"; // CHG-05 — Staff/TD/TH return individual item
     }
 
     // --- Phase 3: Nominations ---
@@ -178,6 +181,29 @@ public static class TrainingPermissions
         public const string Create = Default + ".Create";       // UTM nominates
         public const string ApproveUGM = Default + ".ApproveUGM";
         public const string ApproveTD = Default + ".ApproveTD";
+        public const string Return = Default + ".Return";     // CHG-05
+        public const string Replace = Default + ".Replace";   // CHG-05 — UTM replaces returned nominee
+    }
+
+    // --- Phase 3 v4.4: New groups ---
+    public static class FinancialItemRankAmount
+    {
+        public const string Default = GroupName + ".FinancialItemRankAmount";
+        public const string Create = Default + ".Create";
+        public const string Update = Default + ".Update";
+        public const string Delete = Default + ".Delete";
+    }
+
+    public static class PlanItemFinancialItemRank
+    {
+        public const string Default = GroupName + ".PlanItemFinancialItemRank";
+        public const string UpdateRate = Default + ".UpdateRate";
+    }
+
+    public static class PlanNote
+    {
+        public const string Default = GroupName + ".PlanNote";
+        public const string Create = Default + ".Create";
     }
 
     // --- Phase 3: Price Quotes ---

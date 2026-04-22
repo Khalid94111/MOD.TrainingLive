@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using MOD.Training.Training;
 using MOD.Training.Training.Finance;
+using MOD.Training.Training.Managers;
 using MOD.Training.Training.Permissions;
 using MOD.Training.Training.Plans.Dtos;
 using Volo.Abp.Application.Services;
@@ -18,7 +19,8 @@ public class PlanItemFinancialItemAppService(
     IRepository<TrainingPlanItem, Guid> planItemRepository,
     IRepository<FinancialItem, Guid> financialItemRepository,
     IRepository<CourseTypeFinancialItemDefault, Guid> defaultsRepository,
-    IRepository<ExchangeRate,Guid> exchangeRate,
+    IRepository<ExchangeRate, Guid> exchangeRate,
+    PlanItemRankBreakdownManager rankBreakdownManager,
     PlanItemFinancialItemToDtoMapper toDtoMapper)
     : ApplicationService, IPlanItemFinancialItemAppService
 {
@@ -75,33 +77,32 @@ public class PlanItemFinancialItemAppService(
         await repository.DeleteAsync(id);
     }
 
-    // MOD-15: Auto-fill financial items from CourseTypeFinancialItemDefaults
+    // MOD-15: Auto-fill financial items from CourseTypeFinancialItemDefaults (non-destructive)
     public async Task AutoFillFromDefaultsAsync(Guid planItemId)
     {
         var planItem = await planItemRepository.GetAsync(planItemId);
 
-        // Get defaults for this course type
         var defaultsQueryable = await defaultsRepository.GetQueryableAsync();
         var defaults = await AsyncExecuter.ToListAsync(
             defaultsQueryable.Where(x => x.CourseType == planItem.CourseType));
 
-        // Remove existing auto-filled items for this plan item
         var existingQueryable = await repository.GetQueryableAsync();
-        var existing = await AsyncExecuter.ToListAsync(
-            existingQueryable.Where(x => x.PlanItemId == planItemId));
-        foreach (var item in existing)
-            await repository.DeleteAsync(item);
+        var existingFiIds = (await AsyncExecuter.ToListAsync(
+            existingQueryable.Where(x => x.PlanItemId == planItemId)
+                .Select(x => x.FinancialItemId))).ToHashSet();
 
-        // Create new items from defaults (amounts blank — Staff enters manually)
         foreach (var def in defaults)
         {
-            await repository.InsertAsync(
-                new PlanItemFinancialItem(
-                    GuidGenerator.Create(),
-                    planItemId,
-                    def.FinancialItemId,
-                    0), // Amount blank — Staff enters
-                autoSave: true);
+            if (existingFiIds.Contains(def.FinancialItemId)) continue; // skip if already added
+
+            var pifi = new PlanItemFinancialItem(
+                GuidGenerator.Create(), planItemId, def.FinancialItemId, 0);
+            await repository.InsertAsync(pifi, autoSave: true);
+
+            // CHG-03 + CHG-07 — initialize per-rank breakdown if applicable
+            var fi = await financialItemRepository.GetAsync(def.FinancialItemId);
+            if (fi.IsPerNominee)
+                await rankBreakdownManager.InitializeAsync(pifi.Id);
         }
     }
 

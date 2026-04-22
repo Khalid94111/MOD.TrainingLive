@@ -12,6 +12,13 @@ public class FinancialItemDto : EntityDto<Guid>
     public string VoteCode { get; set; } = default!;
     public bool IsGeneral { get; set; }
     public bool IsActive { get; set; }
+
+    // CHG-02 + CHG-07
+    public decimal DefaultAmountOMR { get; set; }
+    public bool IsPerDay { get; set; }
+    public bool IsPerNominee { get; set; }
+    public int ExtraDaysBefore { get; set; }
+    public int ExtraDaysAfter { get; set; }
 }
 
 public class CreateUpdateFinancialItemDto
@@ -21,6 +28,13 @@ public class CreateUpdateFinancialItemDto
     public string NameEn { get; set; } = default!;
     public string VoteCode { get; set; } = default!;
     public bool IsActive { get; set; } = true;
+
+    // CHG-02 + CHG-07
+    public decimal DefaultAmountOMR { get; set; }
+    public bool IsPerDay { get; set; }
+    public bool IsPerNominee { get; set; }
+    public int ExtraDaysBefore { get; set; }
+    public int ExtraDaysAfter { get; set; }
 }
 
 public class FinancialItemGetListInput : PagedAndSortedResultRequestDto

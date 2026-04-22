@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using MOD.Training.Training.Enums;
 using MOD.Training.Training.Managers;
+using MOD.Training.Training.Nominations;
 using MOD.Training.Training.Permissions;
 using MOD.Training.Training.Plans.Dtos;
 using MOD.Training.Training.TenantCourses;
@@ -12,7 +13,6 @@ using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Identity;
- 
 
 namespace MOD.Training.Training.Plans;
 
@@ -22,10 +22,14 @@ public class TrainingPlanItemAppService(
     IRepository<TrainingPlan, Guid> planRepository,
     IRepository<TenantCourseCondition, Guid> tenantConditionRepository,
     IRepository<PlanItemCondition, Guid> planItemConditionRepository,
+    IRepository<Nomination, Guid> nominationRepository,
     IOrganizationUnitRepository orgUnitRepository,
     CourseNameResolver courseNameResolver,
     EmployeeResolver employeeResolver,
     PlanItemCostCalculator costCalculator,
+    NominationConditionValidator conditionValidator,
+    PlanItemRankBreakdownManager rankBreakdownManager,
+    IPlanNoteAppService planNoteAppService,
     TrainingPlanItemToDtoMapper toDtoMapper)
     : ApplicationService, ITrainingPlanItemAppService
 {
@@ -55,7 +59,7 @@ public class TrainingPlanItemAppService(
 
         var entities = await AsyncExecuter.ToListAsync(queryable);
 
-        // Batch resolve all lookups in parallel
+        // Batch resolve all lookups
         var tcIds = entities.Select(x => x.TenantCourseId).Distinct().ToList();
         var submitterUserIds = entities.Select(x => x.SubmittedById).Distinct().ToList();
         var unitIds = entities.Where(x => x.UnitId.HasValue).Select(x => x.UnitId!.Value).Distinct().ToList();
@@ -64,6 +68,14 @@ public class TrainingPlanItemAppService(
         var courseNames = await courseNameResolver.BatchResolveAsync(tcIds);
         var employees = await employeeResolver.BatchResolveByUserIdsAsync(submitterUserIds);
         var costs = await costCalculator.BatchGetEstimatedCostsAsync(planItemIds);
+
+        // Batch load nominee counts
+        var nomQ = await nominationRepository.GetQueryableAsync();
+        var nomCounts = await AsyncExecuter.ToListAsync(
+            nomQ.Where(x => planItemIds.Contains(x.PlanItemId) && !x.IsReturned)
+                .GroupBy(x => x.PlanItemId)
+                .Select(g => new { PlanItemId = g.Key, Count = g.Count() }));
+        var nomCountMap = nomCounts.ToDictionary(x => x.PlanItemId, x => x.Count);
 
         // Batch load OrgUnit names
         var unitLookup = new Dictionary<Guid, string>();
@@ -77,26 +89,23 @@ public class TrainingPlanItemAppService(
         {
             var dto = toDtoMapper.Map(e);
 
-            // Course name
             if (courseNames.TryGetValue(e.TenantCourseId, out var cn))
             {
                 dto.TenantCourseNameAr = cn.NameAr;
                 dto.TenantCourseNameEn = cn.NameEn;
             }
 
-            // Submitter name + rank
             if (employees.TryGetValue(e.SubmittedById, out var emp))
             {
                 dto.SubmittedByName = emp.FullNameAr;
                 dto.SubmittedByRank = emp.Rank?.NameAr;
             }
 
-            // Unit name
             if (e.UnitId.HasValue && unitLookup.TryGetValue(e.UnitId.Value, out var unitName))
                 dto.UnitName = unitName;
 
-            // Estimated cost (auto-calculated)
             dto.EstimatedCost = costs.GetValueOrDefault(e.Id, 0);
+            dto.NomineesCount = nomCountMap.GetValueOrDefault(e.Id, 0);
 
             return dto;
         }).ToList();
@@ -108,10 +117,9 @@ public class TrainingPlanItemAppService(
     public async Task<TrainingPlanItemDto> CreateAsync(CreateUpdateTrainingPlanItemDto input)
     {
         var plan = await planRepository.GetAsync(input.PlanId);
-        if (plan.Status != PlanStatus.Open)
+        if (plan.Status != PlanStatus.Open && plan.Status != PlanStatus.ReturnedToCreator)
             throw new Volo.Abp.BusinessException("Training:TrainingPlan:WindowNotOpen");
 
-        // Auto-detect unit from current user's Employee.MainUnitId
         var currentUnitId = await employeeResolver.GetCurrentUserUnitIdAsync();
 
         var entity = new TrainingPlanItem(
@@ -129,9 +137,9 @@ public class TrainingPlanItemAppService(
             DescriptionEn = input.DescriptionEn,
             ObjectivesAr = input.ObjectivesAr,
             ObjectivesEn = input.ObjectivesEn,
-            DurationYears = input.DurationYears ,
-            DurationMonths = input.DurationMonths ,
-            DurationDays = input.DurationDays  ,
+            DurationYears = input.DurationYears,
+            DurationMonths = input.DurationMonths,
+            DurationDays = input.DurationDays,
             EstimatedDateFrom = input.EstimatedDateFrom,
             EstimatedDateTo = input.EstimatedDateTo,
             FundingSource = input.FundingSource,
@@ -139,8 +147,36 @@ public class TrainingPlanItemAppService(
 
         await repository.InsertAsync(entity, autoSave: true);
 
-        // Auto-copy conditions from TenantCourseConditions
+        // Copy conditions BEFORE validating nominees
         await CopyConditionsAsync(entity.Id, input.TenantCourseId);
+
+        // CHG-01 — validate every nominee against conditions, then create
+        var failures = new List<string>();
+        foreach (var employeeId in input.NomineeEmployeeIds.Distinct())
+        {
+            var results = await conditionValidator.ValidateByPlanItemAsync(entity.Id, employeeId);
+            var failed = results.Where(r => !r.Passed).ToList();
+            if (failed.Any())
+            {
+                var emp = await employeeResolver.GetByIdAsync(employeeId);
+                failures.Add($"{emp?.FullNameAr ?? employeeId.ToString()}: " +
+                             string.Join(", ", failed.Select(f => f.Details)));
+                continue;
+            }
+
+            var nomination = new Nomination(
+                GuidGenerator.Create(),
+                entity.Id,
+                employeeId,
+                CurrentUser.Id!.Value);
+            await nominationRepository.InsertAsync(nomination, autoSave: true);
+        }
+
+        if (failures.Any())
+        {
+            throw new Volo.Abp.BusinessException("Training:Nomination:ConditionFailed")
+                .WithData("Failures", string.Join(" | ", failures));
+        }
 
         var dto = toDtoMapper.Map(entity);
         await EnrichSingleDtoAsync(dto, entity);
@@ -152,8 +188,15 @@ public class TrainingPlanItemAppService(
     {
         var entity = await repository.GetAsync(id);
         var plan = await planRepository.GetAsync(entity.PlanId);
-        if (plan.Status != PlanStatus.Open && plan.Status != PlanStatus.Draft)
-            throw new Volo.Abp.BusinessException("Training:TrainingPlan:NotInDraftStatus");
+
+        var canEdit = plan.Status == PlanStatus.Open ||
+                      plan.Status == PlanStatus.Draft ||
+                      (plan.Status == PlanStatus.ReturnedToCreator) ||
+                      (plan.Status == PlanStatus.UnderReview && entity.IsReturned);
+        if (!canEdit)
+            throw new Volo.Abp.BusinessException("Training:TrainingPlan:NotEditable");
+
+        var oldDays = entity.DurationDays;
 
         entity.TenantCourseId = input.TenantCourseId;
         entity.CourseType = input.CourseType;
@@ -164,14 +207,19 @@ public class TrainingPlanItemAppService(
         entity.DescriptionEn = input.DescriptionEn;
         entity.ObjectivesAr = input.ObjectivesAr;
         entity.ObjectivesEn = input.ObjectivesEn;
-        entity.DurationYears = input.DurationYears ;
-        entity.DurationMonths = input.DurationMonths ;
-        entity.DurationDays = input.DurationDays  ;
+        entity.DurationYears = input.DurationYears;
+        entity.DurationMonths = input.DurationMonths;
+        entity.DurationDays = input.DurationDays;
         entity.EstimatedDateFrom = input.EstimatedDateFrom;
         entity.EstimatedDateTo = input.EstimatedDateTo;
         entity.FundingSource = input.FundingSource;
+        entity.IsReturned = false; // saving clears the return flag
 
         await repository.UpdateAsync(entity, autoSave: true);
+
+        // CHG-07 cascade — DurationDays changed
+        if (oldDays != input.DurationDays)
+            await rankBreakdownManager.RefreshForDaysChangeAsync(entity.Id);
 
         var dto = toDtoMapper.Map(entity);
         await EnrichSingleDtoAsync(dto, entity);
@@ -187,6 +235,27 @@ public class TrainingPlanItemAppService(
             throw new Volo.Abp.BusinessException("Training:TrainingPlan:NotInDraftStatus");
 
         await repository.DeleteAsync(id);
+    }
+
+    [Authorize(TrainingPermissions.TrainingPlanItem.Return)]
+    public async Task ReturnAsync(Guid id, ReturnReasonDto input)
+    {
+        var entity = await repository.GetAsync(id);
+        var plan = await planRepository.GetAsync(entity.PlanId);
+        if (plan.Status != PlanStatus.UnderReview && plan.Status != PlanStatus.TDApproved)
+            throw new Volo.Abp.BusinessException("Training:TrainingPlanItem:CannotReturnInThisStatus");
+
+        var noteDto = await planNoteAppService.CreateAsync(new CreatePlanNoteDto
+        {
+            EntityType = PlanNoteEntityType.PlanItem,
+            EntityId = id,
+            Note = input.Reason,
+            IsReturnReason = true
+        });
+
+        entity.IsReturned = true;
+        entity.LastReturnNoteId = noteDto.Id;
+        await repository.UpdateAsync(entity, autoSave: true);
     }
 
     public async Task<List<PlanItemConditionDto>> GetConditionsAsync(Guid planItemId)
@@ -241,7 +310,10 @@ public class TrainingPlanItemAppService(
         }
 
         dto.EstimatedCost = await costCalculator.GetEstimatedCostAsync(entity.Id);
-    }
 
-    
+        // Nominees count
+        var nomQ = await nominationRepository.GetQueryableAsync();
+        dto.NomineesCount = await AsyncExecuter.CountAsync(
+            nomQ.Where(x => x.PlanItemId == entity.Id && !x.IsReturned));
+    }
 }

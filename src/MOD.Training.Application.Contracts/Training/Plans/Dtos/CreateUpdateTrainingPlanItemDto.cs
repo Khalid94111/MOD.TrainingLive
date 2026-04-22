@@ -1,8 +1,9 @@
 using MOD.Training.Training.Consts;
 using MOD.Training.Training.Enums;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
- 
+
 namespace MOD.Training.Training.Plans.Dtos;
 
 public class CreateUpdateTrainingPlanItemDto
@@ -22,14 +23,6 @@ public class CreateUpdateTrainingPlanItemDto
     [Required]
     [Range(1, 5)]
     public int Priority { get; set; }
-
-    [Required]
-    [Range(0, int.MaxValue)]
-    public int OfficersCount { get; set; }
-
-    [Required]
-    [Range(0, int.MaxValue)]
-    public int EnlistedCount { get; set; }
 
     [Required]
     [MaxLength(TrainingConsts.MaxJustificationLength)]
@@ -55,4 +48,9 @@ public class CreateUpdateTrainingPlanItemDto
 
     [MaxLength(TrainingConsts.MaxFundingSourceLength)]
     public string? FundingSource { get; set; }
+
+    // CHG-01: required at creation, min 1
+    [Required]
+    [MinLength(1)]
+    public List<Guid> NomineeEmployeeIds { get; set; } = [];
 }

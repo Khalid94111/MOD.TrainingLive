@@ -8,10 +8,10 @@ using MOD.Training.Training.Managers;
 using MOD.Training.Training.Nominations.Dtos;
 using MOD.Training.Training.Permissions;
 using MOD.Training.Training.Plans;
+using MOD.Training.Training.Plans.Dtos;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
- 
 
 namespace MOD.Training.Training.Nominations;
 
@@ -23,6 +23,8 @@ public class NominationAppService(
     EmployeeResolver employeeResolver,
     CourseNameResolver courseNameResolver,
     NominationConditionValidator conditionValidator,
+    PlanItemRankBreakdownManager rankBreakdownManager,
+    IPlanNoteAppService planNoteAppService,
     NominationToDtoMapper toDtoMapper,
     NominationApprovalToDtoMapper approvalToDtoMapper)
     : ApplicationService, INominationAppService
@@ -39,6 +41,8 @@ public class NominationAppService(
     {
         var queryable = await repository.GetQueryableAsync();
 
+        if (input.PlanItemId.HasValue)
+            queryable = queryable.Where(x => x.PlanItemId == input.PlanItemId.Value);
         if (input.SessionId.HasValue)
             queryable = queryable.Where(x => x.SessionId == input.SessionId.Value);
         if (input.Status.HasValue)
@@ -55,14 +59,14 @@ public class NominationAppService(
         // Batch resolve employee names
         var employeeIds = entities.Select(x => x.EmployeeId).Distinct().ToList();
         var nominatorUserIds = entities.Select(x => x.NominatedById).Distinct().ToList();
-        var sessionIds = entities.Select(x => x.SessionId).Distinct().ToList();
+        var sessionIds = entities.Where(x => x.SessionId.HasValue).Select(x => x.SessionId!.Value).Distinct().ToList();
 
         var employees = await employeeResolver.BatchResolveByIdsAsync(employeeIds);
         var nominators = await employeeResolver.BatchResolveByUserIdsAsync(nominatorUserIds);
 
         // Resolve session → course names
         var sessionCourseMap = new Dictionary<Guid, (string code, string nameAr)>();
-        foreach (var sid in sessionIds.Where(s => s.HasValue).Select(s => s!.Value).Distinct())
+        foreach (var sid in sessionIds)
         {
             var session = await sessionRepository.FindAsync(sid);
             if (session != null)
@@ -77,14 +81,10 @@ public class NominationAppService(
             var dto = toDtoMapper.Map(e);
 
             if (employees.TryGetValue(e.EmployeeId, out var emp))
-            {
                 dto.EmployeeName = emp.FullNameAr;
-            }
 
             if (nominators.TryGetValue(e.NominatedById, out var nominator))
-            {
                 dto.NominatedByName = nominator.FullNameAr;
-            }
 
             if (e.SessionId.HasValue && sessionCourseMap.TryGetValue(e.SessionId.Value, out var sessionInfo))
             {
@@ -179,7 +179,6 @@ public class NominationAppService(
             queryable.Where(x => x.NominationId == nominationId)
                 .OrderBy(x => x.ApprovalLevel));
 
-        // Resolve approver names
         var approverUserIds = approvals
             .Where(a => a.ApprovedById.HasValue)
             .Select(a => a.ApprovedById!.Value)
@@ -198,12 +197,66 @@ public class NominationAppService(
             };
 
             if (a.ApprovedById.HasValue && approvers.TryGetValue(a.ApprovedById.Value, out var approver))
-            {
                 dto.ApprovedByName = approver.FullNameAr;
-            }
 
             return dto;
         }).ToList();
+    }
+
+    [Authorize(TrainingPermissions.Nomination.Return)]
+    public async Task ReturnAsync(Guid id, ReturnReasonDto input)
+    {
+        var entity = await repository.GetAsync(id);
+
+        var noteDto = await planNoteAppService.CreateAsync(new CreatePlanNoteDto
+        {
+            EntityType = PlanNoteEntityType.Nomination,
+            EntityId = id,
+            Note = input.Reason,
+            IsReturnReason = true
+        });
+
+        entity.IsReturned = true;
+        entity.LastReturnNoteId = noteDto.Id;
+        entity.Status = NominationStatus.Returned;
+        await repository.UpdateAsync(entity, autoSave: true);
+    }
+
+    [Authorize(TrainingPermissions.Nomination.Replace)]
+    public async Task<NominationDto> ReplaceAsync(Guid id, ReplaceNominationDto input)
+    {
+        var oldNom = await repository.GetAsync(id);
+        if (!oldNom.IsReturned)
+            throw new Volo.Abp.BusinessException("Training:Nomination:NotReturned");
+
+        // Validate new employee against conditions
+        var results = await conditionValidator.ValidateByPlanItemAsync(oldNom.PlanItemId, input.NewEmployeeId);
+        var failed = results.Where(r => !r.Passed).ToList();
+        if (failed.Any())
+        {
+            var details = string.Join(" | ", failed.Select(f => $"{f.ConditionTypeAr}: {f.Details}"));
+            throw new Volo.Abp.BusinessException("Training:Nomination:ConditionFailed")
+                .WithData("Details", details);
+        }
+
+        // Mark old as rejected
+        oldNom.Status = NominationStatus.Rejected;
+        await repository.UpdateAsync(oldNom, autoSave: true);
+
+        // Create new nomination
+        var newNom = new Nomination(
+            GuidGenerator.Create(),
+            oldNom.PlanItemId,
+            input.NewEmployeeId,
+            CurrentUser.Id!.Value);
+        await repository.InsertAsync(newNom, autoSave: true);
+
+        // Refresh rank breakdown
+        await rankBreakdownManager.RefreshForNomineeChangeAsync(oldNom.PlanItemId);
+
+        var dto = toDtoMapper.Map(newNom);
+        await EnrichDtoAsync(dto, newNom);
+        return dto;
     }
 
     private async Task EnrichDtoAsync(NominationDto dto, Nomination entity)
