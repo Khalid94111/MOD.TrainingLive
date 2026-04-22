@@ -1,4 +1,3 @@
-using MOD.Training.Oranges;
 using System;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.Uow;

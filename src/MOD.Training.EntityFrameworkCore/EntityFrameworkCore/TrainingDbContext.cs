@@ -1,6 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using MOD.Training.Books;
-using MOD.Training.Oranges;
 using MOD.Training.Training;
 using MOD.Training.Training.Catalog;
 using MOD.Training.Training.Centers;
@@ -88,10 +86,7 @@ public DbSet<NominationApproval> NominationApprovals { get; set; }
     public DbSet<Employee> HrEmployees { get; set; }
 
 
-    public DbSet<Orange> Oranges { get; set; } = null!;
 
-    /* Add DbSet properties for your Aggregate Roots / Entities here. */
-    public DbSet<Book> Books { get; set; }
 
     #region Entities from the modules
     /* Notice: We only implemented IIdentityProDbContext and ISaasDbContext
@@ -151,26 +146,6 @@ public DbSet<NominationApproval> NominationApprovals { get; set; }
         builder.ConfigureTraining();
         builder.ConfigureHrReadOnly(); // Must be called
 
-        builder.Entity<Book>(b => {
-            b.ToTable(TrainingConsts.DbTablePrefix + "Books", TrainingConsts.DbSchema);
-            b.ConfigureByConvention();
-            //auto configure for the base class props
-            b.Property(x => x.Name).IsRequired().HasMaxLength(128);
-        });
-        /* Configure your own tables/entities inside here */
-        //builder.Entity<YourEntity>(b =>
-        //{
-        //    b.ToTable(TrainingConsts.DbTablePrefix + "YourEntities", TrainingConsts.DbSchema);
-        //    b.ConfigureByConvention(); //auto configure for the base class props
-        //    //...
-        //});
-        if (builder.IsHostDatabase())
-        {
-            builder.Entity<Orange>(b => {
-                b.ToTable(TrainingConsts.DbTablePrefix + "Oranges", TrainingConsts.DbSchema);
-                b.ConfigureByConvention();
-                b.Property(x => x.ArabicName).HasColumnName(nameof(Orange.ArabicName)).IsRequired();
-            });
-        }
+     
     }
 }
