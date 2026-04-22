@@ -61,6 +61,7 @@ public class TenantDataSeeder(
     IRepository<NominationApproval, Guid> approvalRepo,
     IRepository<PriceQuote, Guid> quoteRepo,
     IRepository<CourseProposal, Guid> proposalRepo,
+    IRepository<FinancialItemRankAmount, Guid> financialItemRankAmountRepo,
     IUnitOfWorkManager uowManager,
     ILogger<TenantDataSeeder> logger)
     : ITransientDependency, ITenantDataSeeder
@@ -306,18 +307,38 @@ private async Task SeedFinancialItemsAsync(Guid tenantId)
         // Parents (no ParentId)
         new (_fiIds["Travel"])            { TenantId=tenantId,  NameAr = "التدريب الخارجي",  NameEn = "External Training",    Code = "ET",    VoteCode = "VOT-CC-001", IsActive = true },
         new (_fiIds["CourseCost"])        { TenantId=tenantId,  NameAr = "التدريب الداخلي",   NameEn = "Internal Training", Code = "IT",    VoteCode = "VOT-TE-001", IsActive = true },
-         // Children of Course Cost     
+         // Children of Course Cost
         new (_fiIds["Tuition"])           { TenantId=tenantId,  NameAr = "تكلفة الدورات",     NameEn = "Course Cost",       Code = "CC-TF", VoteCode = "VOT-CC-TF", ParentId = _fiIds["CourseCost"],    IsActive = true },
-        
-                                         
-        // Children of Travel             
-        new (_fiIds["Tickets"])          { TenantId=tenantId, NameAr = "التذاكر",       NameEn = "Tickets",            Code = "TE-TK", VoteCode = "VOT-TE-TK", ParentId = _fiIds["Travel"], IsActive = true },
-        new(_fiIds["TravelAllowance"]) { TenantId = tenantId, NameAr = "بدل السفر", NameEn = "Travel Allowance", Code = "TE-TA", VoteCode = "VOT-TE-TA", ParentId = _fiIds["Travel"], IsActive = true },
-        new(_fiIds["ClothingAllowance"]) { TenantId = tenantId, NameAr = "بدل الملابس", NameEn = "Clothing Allowance", Code = "TE-CA", VoteCode = "VOT-TE-CA", ParentId = _fiIds["Travel"], IsActive = true },
-        new(_fiIds["Insurance"]) { TenantId = tenantId, NameAr = "التأمين", NameEn = "Insurance", Code = "TE-IN", VoteCode = "VOT-TE-IN", ParentId = _fiIds["Travel"], IsActive = true },
-        new(_fiIds["Visa"]) { TenantId = tenantId, NameAr = "التأشيرة", NameEn = "Visa", Code = "TE-VS", VoteCode = "VOT-TE-VS", ParentId = _fiIds["Travel"], IsActive = true },
+
+        // Children of Travel — with IsPerDay/IsPerNominee flags
+        new (_fiIds["Tickets"])          { TenantId=tenantId, NameAr = "التذاكر",       NameEn = "Tickets",            Code = "TE-TK", VoteCode = "VOT-TE-TK", ParentId = _fiIds["Travel"], IsActive = true, IsPerNominee = true, DefaultAmountOMR = 200m },
+        new(_fiIds["TravelAllowance"]) { TenantId = tenantId, NameAr = "بدل السفر", NameEn = "Travel Allowance", Code = "TE-TA", VoteCode = "VOT-TE-TA", ParentId = _fiIds["Travel"], IsActive = true, IsPerDay = true, IsPerNominee = true, DefaultAmountOMR = 15m, ExtraDaysBefore = 1, ExtraDaysAfter = 1 },
+        new(_fiIds["ClothingAllowance"]) { TenantId = tenantId, NameAr = "بدل الملابس", NameEn = "Clothing Allowance", Code = "TE-CA", VoteCode = "VOT-TE-CA", ParentId = _fiIds["Travel"], IsActive = true, IsPerNominee = true, DefaultAmountOMR = 75m },
+        new(_fiIds["Insurance"]) { TenantId = tenantId, NameAr = "التأمين", NameEn = "Insurance", Code = "TE-IN", VoteCode = "VOT-TE-IN", ParentId = _fiIds["Travel"], IsActive = true, IsPerNominee = true, DefaultAmountOMR = 50m },
+        new(_fiIds["Visa"]) { TenantId = tenantId, NameAr = "التأشيرة", NameEn = "Visa", Code = "TE-VS", VoteCode = "VOT-TE-VS", ParentId = _fiIds["Travel"], IsActive = true, IsPerNominee = true, DefaultAmountOMR = 25m },
 
     }, autoSave: true);
+
+        // Seed FinancialItemRankAmounts for Travel Allowance (per-rank rates)
+        await SeedFinancialItemRankAmountsAsync(tenantId);
+    }
+
+    private async Task SeedFinancialItemRankAmountsAsync(Guid tenantId)
+    {
+        var travelAllowanceId = _fiIds["TravelAllowance"];
+        var rankAmounts = new (Guid rankId, decimal amount)[]
+        {
+            (RankIds.Colonel, 25m),
+            (RankIds.Captain, 15m),
+            (RankIds.FirstLieutenant, 12m),
+        };
+        foreach (var (rankId, amount) in rankAmounts)
+        {
+            await financialItemRankAmountRepo.InsertAsync(
+                new FinancialItemRankAmount(guidGenerator.Create(), travelAllowanceId, rankId, amount)
+                { TenantId = tenantId },
+                autoSave: true);
+        }
     }
 
 
@@ -486,22 +507,27 @@ private async Task SeedFinancialItemsAsync(Guid tenantId)
         await sessionRepo.InsertAsync(new CourseSession(leaderSession, leaderCourse, "S-2027-002", new(2027,2,1), new(2027,2,14), 30)
             { Location = "مركز التدريب الأساسي", Country = "OM", Status = SessionStatus.Scheduled }, autoSave: true);
 
-        // Nominations — use Employee IDs (not User IDs)
-        await CreateNomination(cyberSession, _employees["Emp1"], _users["UTM1"], _users["UGM1"], _users["TD"], NominationStatus.TDApproved);
-        await CreateNomination(cyberSession, _employees["Emp2"], _users["UTM1"], _users["UGM1"], null, NominationStatus.UGMApproved);
-        await CreateNomination(cyberSession, _employees["Emp3"], _users["UTM1"], null, null, NominationStatus.UTMApproved);
-        await CreateNominationRejected(cyberSession, _employees["Emp5"], _users["UTM2"], _users["UGM1"], "الرتبة أقل من المطلوب");
-        await CreateNomination(leaderSession, _employees["Emp1"], _users["UTM1"], _users["UGM1"], _users["TD"], NominationStatus.TDApproved);
-        await CreateNomination(leaderSession, _employees["Emp6"], _users["UTM3"], _users["UGM2"], _users["TD"], NominationStatus.TDApproved);
+        // Nominations — use PlanItemId + Employee IDs
+        await CreateNomination(cyberPlanItemId, cyberSession, _employees["Emp1"], _users["UTM1"], _users["UGM1"], _users["TD"], NominationStatus.TDApproved);
+        await CreateNomination(cyberPlanItemId, cyberSession, _employees["Emp2"], _users["UTM1"], _users["UGM1"], null, NominationStatus.UGMApproved);
+        await CreateNomination(cyberPlanItemId, cyberSession, _employees["Emp3"], _users["UTM1"], null, null, NominationStatus.UTMApproved);
+        await CreateNominationRejected(cyberPlanItemId, cyberSession, _employees["Emp5"], _users["UTM2"], _users["UGM1"], "الرتبة أقل من المطلوب");
+        await CreateNomination(leaderPlanItemId, leaderSession, _employees["Emp1"], _users["UTM1"], _users["UGM1"], _users["TD"], NominationStatus.TDApproved);
+        await CreateNomination(leaderPlanItemId, leaderSession, _employees["Emp6"], _users["UTM3"], _users["UGM2"], _users["TD"], NominationStatus.TDApproved);
 
         // Price Quotes
         await quoteRepo.InsertAsync(new PriceQuote(guidGenerator.Create(), cyberSession, ProviderIds.SANS, PricingType.PerPerson, 56.667m, 15) { Status = ApprovalStatus.Approved }, autoSave: true);
         await quoteRepo.InsertAsync(new PriceQuote(guidGenerator.Create(), cyberSession, ProviderIds.LocalAcademy, PricingType.Total, 1000m, 15) { Status = ApprovalStatus.Rejected }, autoSave: true);
     }
 
-    private async Task CreateNomination(Guid sessionId, Guid employeeId, Guid utmId, Guid? ugmId, Guid? tdId, NominationStatus status)
+    private async Task CreateNomination(Guid planItemId, Guid sessionId, Guid employeeId, Guid utmId, Guid? ugmId, Guid? tdId, NominationStatus status)
     {
-        var nom = new Nomination(guidGenerator.Create(), sessionId, employeeId, utmId) { Status = status, ApprovedAt = status == NominationStatus.TDApproved ? DateTime.Now.AddDays(-10) : null };
+        var nom = new Nomination(guidGenerator.Create(), planItemId, employeeId, utmId)
+        {
+            SessionId = sessionId,
+            Status = status,
+            ApprovedAt = status == NominationStatus.TDApproved ? DateTime.Now.AddDays(-10) : null
+        };
         await nominationRepo.InsertAsync(nom, autoSave: true);
 
         await approvalRepo.InsertAsync(new NominationApproval(guidGenerator.Create(), nom.Id, 1) { ApprovedById = utmId, Status = ApprovalStatus.Approved, ActionDate = DateTime.Now.AddDays(-15) }, autoSave: true);
@@ -509,9 +535,13 @@ private async Task SeedFinancialItemsAsync(Guid tenantId)
         await approvalRepo.InsertAsync(new NominationApproval(guidGenerator.Create(), nom.Id, 3) { ApprovedById = tdId, Status = tdId.HasValue ? ApprovalStatus.Approved : ApprovalStatus.Pending, ActionDate = tdId.HasValue ? DateTime.Now.AddDays(-10) : null }, autoSave: true);
     }
 
-    private async Task CreateNominationRejected(Guid sessionId, Guid employeeId, Guid utmId, Guid ugmId, string reason)
+    private async Task CreateNominationRejected(Guid planItemId, Guid sessionId, Guid employeeId, Guid utmId, Guid ugmId, string reason)
     {
-        var nom = new Nomination(guidGenerator.Create(), sessionId, employeeId, utmId) { Status = NominationStatus.Rejected };
+        var nom = new Nomination(guidGenerator.Create(), planItemId, employeeId, utmId)
+        {
+            SessionId = sessionId,
+            Status = NominationStatus.Rejected
+        };
         await nominationRepo.InsertAsync(nom, autoSave: true);
 
         await approvalRepo.InsertAsync(new NominationApproval(guidGenerator.Create(), nom.Id, 1) { ApprovedById = utmId, Status = ApprovalStatus.Approved, ActionDate = DateTime.Now.AddDays(-7) }, autoSave: true);
