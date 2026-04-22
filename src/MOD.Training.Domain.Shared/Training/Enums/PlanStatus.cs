@@ -8,5 +8,7 @@ public enum PlanStatus
     UnderReview = 3,
     TDApproved = 4,
     THApproved = 5,
-    Closed = 6
+    Closed = 6,
+    ReturnedToCreator = 7,
+    Rejected = 8
 }

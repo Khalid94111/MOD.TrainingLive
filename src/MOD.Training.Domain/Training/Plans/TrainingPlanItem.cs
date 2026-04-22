@@ -2,7 +2,7 @@ using MOD.Training.Training.Enums;
 using System;
 using Volo.Abp.Domain.Entities.Auditing;
 using Volo.Abp.MultiTenancy;
- 
+
 namespace MOD.Training.Training.Plans;
 
 public class TrainingPlanItem : FullAuditedEntity<Guid>, IMultiTenant
@@ -13,9 +13,6 @@ public class TrainingPlanItem : FullAuditedEntity<Guid>, IMultiTenant
     public CourseType CourseType { get; set; }
     public PreferredQuarter PreferredQuarter { get; set; }
     public int Priority { get; set; }
-    public int OfficersCount { get; set; }
-    public int EnlistedCount { get; set; }
-    public int Capacity { get; set; } // Auto = OfficersCount + EnlistedCount
     public string Justification { get; set; } = string.Empty;
     public string? DescriptionAr { get; set; }
     public string? DescriptionEn { get; set; }
@@ -26,10 +23,13 @@ public class TrainingPlanItem : FullAuditedEntity<Guid>, IMultiTenant
     public int DurationDays { get; set; }
     public DateTime? EstimatedDateFrom { get; set; }
     public DateTime? EstimatedDateTo { get; set; }
-    // EstimatedCost REMOVED — auto-calculated from SUM(PlanItemFinancialItem.EstimatedAmountOMR)
-    public string? FundingSource { get; set; } // Casual only, free text
-    public Guid SubmittedById { get; set; } // UTM user (MOD-17)
-    public Guid? UnitId { get; set; } // Auto from Employee.MainUnitId
+    public string? FundingSource { get; set; }
+    public Guid SubmittedById { get; set; }
+    public Guid? UnitId { get; set; }
+
+    // CHG-05
+    public bool IsReturned { get; set; }
+    public Guid? LastReturnNoteId { get; set; }
 
     public TrainingPlan? Plan { get; set; }
 
@@ -42,8 +42,6 @@ public class TrainingPlanItem : FullAuditedEntity<Guid>, IMultiTenant
         CourseType courseType,
         PreferredQuarter preferredQuarter,
         int priority,
-        int officersCount,
-        int enlistedCount,
         string justification,
         Guid submittedById) : base(id)
     {
@@ -52,9 +50,6 @@ public class TrainingPlanItem : FullAuditedEntity<Guid>, IMultiTenant
         CourseType = courseType;
         PreferredQuarter = preferredQuarter;
         Priority = priority;
-        OfficersCount = officersCount;
-        EnlistedCount = enlistedCount;
-        Capacity = officersCount + enlistedCount;
         Justification = justification;
         SubmittedById = submittedById;
     }

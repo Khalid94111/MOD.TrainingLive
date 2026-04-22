@@ -81,6 +81,11 @@ public DbSet<TrainingProvider> TrainingProviders { get; set; }
 public DbSet<Nomination> Nominations { get; set; }
 public DbSet<NominationApproval> NominationApprovals { get; set; }
 
+// Phase 3 v4.4 additions
+public DbSet<FinancialItemRankAmount> FinancialItemRankAmounts { get; set; }
+public DbSet<PlanItemFinancialItemRank> PlanItemFinancialItemRanks { get; set; }
+public DbSet<PlanNote> PlanNotes { get; set; }
+
     // In your DbContext class:
     public DbSet<Rank> HrRanks { get; set; }
     public DbSet<Employee> HrEmployees { get; set; }

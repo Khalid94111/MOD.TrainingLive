@@ -166,6 +166,8 @@ builder.ConfigureFinancePhase3();
                 .HasForeignKey(x => x.ParentId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            b.Property(x => x.DefaultAmountOMR).IsRequired().HasColumnType("decimal(18,3)");
+
             b.HasIndex(x => new { x.TenantId, x.ParentId });
         });
 
@@ -311,9 +313,6 @@ builder.ConfigureFinancePhase3();
             b.Property(x => x.CourseType).IsRequired();
             b.Property(x => x.PreferredQuarter).IsRequired();
             b.Property(x => x.Priority).IsRequired();
-            b.Property(x => x.OfficersCount).IsRequired();
-            b.Property(x => x.EnlistedCount).IsRequired();
-            b.Property(x => x.Capacity).IsRequired();
             b.Property(x => x.Justification).IsRequired().HasMaxLength(TrainingConsts.MaxJustificationLength);
             b.Property(x => x.DescriptionAr).HasMaxLength(TrainingConsts.MaxDescriptionLength);
             b.Property(x => x.DescriptionEn).HasMaxLength(TrainingConsts.MaxDescriptionLength);
@@ -399,18 +398,22 @@ builder.ConfigureFinancePhase3();
             b.ToTable(TrainingConsts.DbTablePrefix + "Nominations", TrainingConsts.DbSchema);
             b.ConfigureByConvention();
 
-            b.Property(x => x.SessionId).IsRequired();
+            b.Property(x => x.SessionId).IsRequired(false);
+            b.Property(x => x.PlanItemId).IsRequired();
             b.Property(x => x.EmployeeId).IsRequired();
             b.Property(x => x.NominatedById).IsRequired();
             b.Property(x => x.Status).IsRequired();
             b.Property(x => x.NominatedAt).IsRequired();
             b.Property(x => x.ResultValue).HasMaxLength(TrainingConsts.MaxCodeLength);
 
-            b.HasOne(x => x.Session).WithMany().HasForeignKey(x => x.SessionId).OnDelete(DeleteBehavior.Restrict);
+            b.HasOne(x => x.Session).WithMany().HasForeignKey(x => x.SessionId)
+                .OnDelete(DeleteBehavior.Restrict).IsRequired(false);
+            b.HasOne(x => x.PlanItem).WithMany().HasForeignKey(x => x.PlanItemId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            b.HasIndex(x => x.SessionId);
+            b.HasIndex(x => x.PlanItemId);
             b.HasIndex(x => x.EmployeeId);
-            b.HasIndex(x => new { x.SessionId, x.EmployeeId }).IsUnique();
+            b.HasIndex(x => new { x.PlanItemId, x.EmployeeId }).IsUnique();
         });
 
         builder.Entity<NominationApproval>(b =>
@@ -483,6 +486,41 @@ builder.ConfigureFinancePhase3();
             b.Property(x => x.Address).HasMaxLength(TrainingConsts.MaxAddressLength);
             b.Property(x => x.Website).HasMaxLength(TrainingConsts.MaxWebsiteLength);
             b.Property(x => x.AverageRating).HasColumnType("decimal(3,2)");
+        });
+
+        builder.Entity<FinancialItemRankAmount>(b =>
+        {
+            b.ToTable(TrainingConsts.DbTablePrefix + "FinancialItemRankAmounts", TrainingConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.FinancialItemId).IsRequired();
+            b.Property(x => x.RankId).IsRequired();
+            b.Property(x => x.AmountOMR).IsRequired().HasColumnType("decimal(18,3)");
+            b.HasOne<FinancialItem>().WithMany().HasForeignKey(x => x.FinancialItemId).OnDelete(DeleteBehavior.Cascade);
+            b.HasIndex(x => new { x.TenantId, x.FinancialItemId, x.RankId }).IsUnique();
+        });
+
+        builder.Entity<PlanItemFinancialItemRank>(b =>
+        {
+            b.ToTable(TrainingConsts.DbTablePrefix + "PlanItemFinancialItemRanks", TrainingConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.PlanItemFinancialItemId).IsRequired();
+            b.Property(x => x.RankId).IsRequired();
+            b.Property(x => x.NomineeCount).IsRequired();
+            b.Property(x => x.RatePerUnitOMR).IsRequired().HasColumnType("decimal(18,3)");
+            b.Property(x => x.SubtotalOMR).IsRequired().HasColumnType("decimal(18,3)");
+            b.HasOne<PlanItemFinancialItem>().WithMany().HasForeignKey(x => x.PlanItemFinancialItemId).OnDelete(DeleteBehavior.Cascade);
+            b.HasIndex(x => new { x.TenantId, x.PlanItemFinancialItemId, x.RankId }).IsUnique();
+        });
+
+        builder.Entity<PlanNote>(b =>
+        {
+            b.ToTable(TrainingConsts.DbTablePrefix + "PlanNotes", TrainingConsts.DbSchema);
+            b.ConfigureByConvention();
+            b.Property(x => x.EntityType).IsRequired();
+            b.Property(x => x.EntityId).IsRequired();
+            b.Property(x => x.Note).IsRequired().HasMaxLength(2000);
+            b.Property(x => x.AuthorRole).IsRequired();
+            b.HasIndex(x => new { x.TenantId, x.EntityType, x.EntityId, x.CreationTime });
         });
     }
 }

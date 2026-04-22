@@ -429,7 +429,7 @@ private async Task SeedFinancialItemsAsync(Guid tenantId)
     private async Task<Guid> AddPlanItem(Guid tenantId, Guid planId, Guid catId, CourseType ct, PreferredQuarter q, int pri, int off, int enl, string just, string utmKey, string unitKey, string? funding)
     {
         var id = guidGenerator.Create();
-        await planItemRepo.InsertAsync(new TrainingPlanItem(id, planId, _tenantCourses[catId], ct, q, pri, off, enl, just, _users[utmKey])
+        await planItemRepo.InsertAsync(new TrainingPlanItem(id, planId, _tenantCourses[catId], ct, q, pri, just, _users[utmKey])
         {
             UnitId = _orgUnits[unitKey], FundingSource = funding, DurationDays = ct == CourseType.Internal ? 10 : 14,
             TenantId= tenantId

@@ -6,5 +6,6 @@ public enum NominationStatus
     UTMApproved = 1,
     UGMApproved = 2,
     TDApproved = 3,
-    Rejected = 4
+    Rejected = 4,
+    Returned = 5
 }

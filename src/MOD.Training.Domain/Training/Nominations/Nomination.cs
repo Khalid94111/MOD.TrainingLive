@@ -9,9 +9,15 @@ namespace MOD.Training.Training.Nominations;
 public class Nomination : FullAuditedEntity<Guid>, IMultiTenant
 {
     public Guid? TenantId { get; set; }
-    public Guid SessionId { get; set; }
+
+    // Was required, now nullable
+    public Guid? SessionId { get; set; }
+
+    // CHG-01: nominations live at plan-item level until session exists
+    public Guid PlanItemId { get; set; }
+
     public Guid EmployeeId { get; set; }
-    public Guid NominatedById { get; set; } // UTM (MOD-17)
+    public Guid NominatedById { get; set; }
     public NominationStatus Status { get; set; }
     public DateTime NominatedAt { get; set; }
     public DateTime? ApprovedAt { get; set; }
@@ -23,17 +29,22 @@ public class Nomination : FullAuditedEntity<Guid>, IMultiTenant
     public Guid? ResultEnteredById { get; set; }
     public DateTime? ResultEnteredAt { get; set; }
 
+    // CHG-05
+    public bool IsReturned { get; set; }
+    public Guid? LastReturnNoteId { get; set; }
+
     public CourseSession? Session { get; set; }
+    public TrainingPlanItem? PlanItem { get; set; }
 
     protected Nomination() { }
 
     public Nomination(
         Guid id,
-        Guid sessionId,
+        Guid planItemId,
         Guid employeeId,
         Guid nominatedById) : base(id)
     {
-        SessionId = sessionId;
+        PlanItemId = planItemId;
         EmployeeId = employeeId;
         NominatedById = nominatedById;
         Status = NominationStatus.Nominated;
