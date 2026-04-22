@@ -25,6 +25,7 @@ import {
   NotesDrawerComponent,
   PlanStatus,
   ReturnModalComponent,
+  TrainingLocalizationHelper,
 } from '../../shared';
 
 @Component({
@@ -43,6 +44,7 @@ export class PlanApprovalComponent implements OnInit {
   private nominationService = inject(NominationService);
   private financialItemService = inject(FinancialItemService);
   private permissionService = inject(PermissionService);
+  readonly l = inject(TrainingLocalizationHelper);
 
   planId = '';
   plan = signal<TrainingPlanDto | null>(null);
@@ -94,11 +96,17 @@ export class PlanApprovalComponent implements OnInit {
   hasUnresolvedReturns = computed(() => this.returnedItemsCount() > 0 || this.returnedNominationsCount() > 0);
   totalNominees = computed(() => this.items().reduce((s, i) => s + (i.nomineesCount ?? 0), 0));
 
+  // Plan-approval is the TH workspace — approve actions are only available once the
+  // Training Directorate staff finishes their review (UnderReview → TDApproved).
+  // While the plan is still UnderReview, TH sees an explanatory banner and no actions.
   get showActions(): boolean {
     const p = this.plan();
     if (!p) return false;
-    return (p.status === PlanStatus.UnderReview && this.canApprove)
-        || (p.status === PlanStatus.TDApproved && this.canFinalApprove);
+    return p.status === PlanStatus.TDApproved && this.canFinalApprove;
+  }
+
+  get isWaitingForStaffReview(): boolean {
+    return this.plan()?.status === PlanStatus.UnderReview;
   }
 
   get canExecuteApprove(): boolean {

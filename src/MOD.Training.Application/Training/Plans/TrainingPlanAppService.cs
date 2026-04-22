@@ -145,6 +145,9 @@ public class TrainingPlanAppService(
     public async Task SubmitForReviewAsync(Guid id)
     {
         var entity = await repository.GetAsync(id);
+        if (entity.Status != PlanStatus.Submitted)
+            throw new Volo.Abp.BusinessException("Training:TrainingPlan:NotInSubmittedStatus");
+
         entity.Status = PlanStatus.UnderReview;
         await repository.UpdateAsync(entity, autoSave: true);
     }

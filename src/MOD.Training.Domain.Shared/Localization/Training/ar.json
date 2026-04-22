@@ -653,7 +653,14 @@
 
     "Training:TrainingPlan:YearAlreadyExists": "توجد خطة تدريب لسنة {Year} بالفعل",
     "Training:TrainingPlan:NotInDraftStatus": "يجب أن تكون الخطة في حالة مسودة لتنفيذ هذا الإجراء",
+    "Training:TrainingPlan:NotInSubmittedStatus": "يجب أن تكون الخطة في حالة مُرسلة لبدء المراجعة",
     "Training:TrainingPlan:WindowNotOpen": "نافذة الاستلام غير مفتوحة",
+
+    "Training.TrainingPlan.ReviewStarted": "بدأت مراجعة الخطة",
+    "Training.TrainingPlan.NotInSubmittedStatus": "الخطة ليست في حالة مُرسلة — لا يمكن بدء المراجعة",
+    "Training.TrainingPlan.SubmittedBannerText": "الخطة جاهزة للمراجعة. اضغط \"بدء المراجعة\" لتبدأ مراجعة البنود وإدخال التكاليف وتخصيص البنود المالية. بمجرد البدء ستنتقل الخطة إلى حالة \"قيد المراجعة\".",
+    "Training.TrainingPlan.UnderReviewByStaffBannerText": "الخطة قيد المراجعة من قِبل طاقم مديرية التدريب. يُرجى الانتظار حتى يُكمِلوا المراجعة ويُحيلوها إليك للاعتماد.",
+    "Training.Errors.Generic": "حدث خطأ أثناء تنفيذ العملية",
     "Training:TrainingPlan:CostNotEntered": "يجب إدخال التكلفة المقدرة لجميع البنود قبل الاعتماد",
     "Training:TrainingPlan:NotEditable": "لا يمكن تعديل الخطة في هذه الحالة",
     "Training:TrainingPlan:CannotReturnInThisStatus": "لا يمكن إعادة الخطة إلى مُنشئها في هذه الحالة",

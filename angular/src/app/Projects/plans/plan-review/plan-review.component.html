@@ -14,6 +14,13 @@
     </div>
     <div class="page-toolbar-actions">
       <button class="btn btn-ghost" (click)="openPlanNotes()" title="ملاحظات الخطة">💬 ملاحظات</button>
+      @if (plan()?.status === PlanStatus.Submitted) {
+        <button class="btn btn-primary"
+                [disabled]="startingReview()"
+                (click)="onStartReview()">
+          @if (startingReview()) { جارٍ البدء… } @else { ▶ بدء المراجعة }
+        </button>
+      }
       @if (plan()?.status === PlanStatus.UnderReview) {
         <button class="btn btn-warning btn-sm" (click)="openReturnPlanModal()">🔙 إعادة الخطة</button>
         <button class="btn btn-success"
@@ -32,6 +39,14 @@
   @if (approveError()) {
     <div class="alert alert-danger"><span class="alert-icon">⚠️</span>{{ approveError() }}</div>
   }
+
+  @if (plan()?.status === PlanStatus.Submitted) {
+    <div class="info-banner info-banner-primary">
+      <div class="info-banner-icon">ℹ️</div>
+      <div class="info-banner-text">{{ l.t('Training.TrainingPlan.SubmittedBannerText') }}</div>
+    </div>
+  }
+
   @if (hasUnresolvedReturns()) {
     <div class="alert alert-warning">
       <span class="alert-icon">🔙</span>
@@ -108,7 +123,7 @@
             </select>
             <span class="unit-page-info">صفحة {{ getUnitPage(group.unitId) + 1 }} من {{ getTotalPages(group.allItems, group.unitId) }}</span>
           </div>
-          @if (group.itemsMissingCost > 0) {
+          @if (group.itemsMissingCost > 0 && !isReadOnly()) {
             <button class="btn btn-outline btn-sm" [disabled]="batchFilling()" (click)="batchAutoFillUnit(group.unitId, group.allItems); $event.stopPropagation()">
               🔄 تعبئة تلقائية للوحدة ({{ group.itemsMissingCost }})
             </button>
@@ -225,10 +240,12 @@
                         <div class="financial-panel-v6">
                           <div class="fi-header">
                             <span class="fi-title">💰 البنود المالية</span>
-                            <div class="fi-actions">
-                              <button class="btn btn-outline btn-sm" (click)="onAutoFill(item.id!); $event.stopPropagation()">🔄 تعبئة تلقائية</button>
-                              <button class="btn btn-outline btn-sm" (click)="openAddFiDialog(item.id!); $event.stopPropagation()">➕ إضافة</button>
-                            </div>
+                            @if (!isReadOnly()) {
+                              <div class="fi-actions">
+                                <button class="btn btn-outline btn-sm" (click)="onAutoFill(item.id!); $event.stopPropagation()">🔄 تعبئة تلقائية</button>
+                                <button class="btn btn-outline btn-sm" (click)="openAddFiDialog(item.id!); $event.stopPropagation()">➕ إضافة</button>
+                              </div>
+                            }
                           </div>
 
                           @if (getFinancialItemsFor(item.id!).length === 0) {
@@ -248,7 +265,9 @@
                                   </div>
                                   <div class="pifi-head-right">
                                     <span class="pifi-total">∑ {{ formatCost(pifi.estimatedAmountOMR) || '0' }} ر.ع</span>
-                                    <button class="btn-icon btn-icon-sm" (click)="onDeleteFi(pifi.id!, item.id!); $event.stopPropagation()" title="حذف">🗑️</button>
+                                    @if (!isReadOnly()) {
+                                      <button class="btn-icon btn-icon-sm" (click)="onDeleteFi(pifi.id!, item.id!); $event.stopPropagation()" title="حذف">🗑️</button>
+                                    }
                                   </div>
                                 </div>
 
@@ -276,6 +295,7 @@
                                               <input type="number" class="form-input inline-rate"
                                                      [value]="rb.ratePerUnitOMR"
                                                      min="0" step="0.001"
+                                                     [disabled]="isReadOnly()"
                                                      (click)="$event.stopPropagation()"
                                                      (blur)="onRateChanged(rb, $any($event.target).value, item.id!)">
                                             </td>
@@ -301,6 +321,7 @@
                                     <input type="number" class="form-input inline-amount"
                                            [value]="pifi.estimatedAmountOMR"
                                            min="0" step="0.001"
+                                           [disabled]="isReadOnly()"
                                            (click)="$event.stopPropagation()"
                                            (blur)="onAmountChanged(pifi.id!, +$any($event.target).value, item.id!)">
                                   </div>
@@ -310,6 +331,7 @@
                                   <input type="text" class="form-input inline-notes"
                                          [value]="pifi.notes || ''"
                                          placeholder="ملاحظات على البند المالي…"
+                                         [disabled]="isReadOnly()"
                                          (click)="$event.stopPropagation()"
                                          (blur)="onNotesChanged(pifi.id!, $any($event.target).value)">
                                 </div>

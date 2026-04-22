@@ -118,8 +118,21 @@ export class PlanReviewComponent implements OnInit {
   approving = signal(false);
   approveError = signal<string | null>(null);
 
+  // Start-review (Submitted → UnderReview)
+  startingReview = signal(false);
+
   PlanStatus = PlanStatus;
   PlanNoteEntityType = PlanNoteEntityType;
+
+  // Plan is read-only for Staff when they can't yet act on it (Submitted) or
+  // once it has moved beyond their stage (TD/TH approved). Inline edits,
+  // rank rate inputs, return buttons and approve actions all gate on this.
+  isReadOnly = computed(() => {
+    const s = this.plan()?.status;
+    return s === PlanStatus.Submitted
+      || s === PlanStatus.TDApproved
+      || s === PlanStatus.THApproved;
+  });
 
   // ── Computed ──
   unitGroups = computed<UnitGroup[]>(() => {
@@ -131,6 +144,8 @@ export class PlanReviewComponent implements OnInit {
 
     const map = new Map<string, UnitGroup>();
     for (const item of items) {
+      console.log('Processing item', item
+        , 'with unit', item.unitId, item.unitName);
       const uid = item.unitId ?? 'unknown';
       const uname = item.unitName ?? 'غير محدد';
       if (!map.has(uid)) map.set(uid, { unitId: uid, unitName: uname, allItems: [], totalItems: 0, itemsWithCost: 0, itemsMissingCost: 0, totalCost: 0, isComplete: true });
@@ -142,7 +157,9 @@ export class PlanReviewComponent implements OnInit {
         else { g.itemsMissingCost++; g.isComplete = false; }
       } else { g.itemsWithCost++; }
     }
-    return Array.from(map.values()).sort((a, b) => a.unitName.localeCompare(b.unitName, 'ar'));
+    var sss= Array.from(map.values()).sort((a, b) => a.unitName.localeCompare(b.unitName, 'ar'));
+    console.log(sss); 
+    return sss;
   });
 
   totalItems = computed(() => this.allItems().length);
@@ -170,6 +187,8 @@ export class PlanReviewComponent implements OnInit {
     && !this.hasUnresolvedReturns(),
   );
 
+  canStartReview = computed(() => this.plan()?.status === PlanStatus.Submitted);
+
   ngOnInit(): void {
     this.planId = this.route.snapshot.paramMap.get('planId') ?? '';
     this.loadPlan();
@@ -181,6 +200,7 @@ export class PlanReviewComponent implements OnInit {
 
   async loadItems(): Promise<void> {
     const r = await firstValueFrom(this.itemService.getList({ planId: this.planId, maxResultCount: 1000 }));
+    console.log('Loaded items', r.items);
     this.allItems.set(r.items ?? []);
   }
 
@@ -416,6 +436,23 @@ export class PlanReviewComponent implements OnInit {
       this.approveError.set(e?.error?.error?.message ?? e?.message ?? 'تعذّر اعتماد الخطة');
     } finally {
       this.approving.set(false);
+    }
+  }
+
+  // ── Start review (Submitted → UnderReview) ──
+  async onStartReview(): Promise<void> {
+    if (!this.canStartReview() || this.startingReview()) return;
+    this.startingReview.set(true);
+    this.approveError.set(null);
+    try {
+      await firstValueFrom(this.planService.submitForReview(this.planId));
+      await this.loadPlan();
+    } catch (e: any) {
+      this.approveError.set(
+        e?.error?.error?.message ?? e?.message ?? this.l.t('Training.Errors.Generic'),
+      );
+    } finally {
+      this.startingReview.set(false);
     }
   }
 

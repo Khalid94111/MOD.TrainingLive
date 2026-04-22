@@ -706,7 +706,14 @@
 
     "Training:TrainingPlan:YearAlreadyExists": "A training plan for year {Year} already exists",
     "Training:TrainingPlan:NotInDraftStatus": "Plan must be in Draft status for this action",
+    "Training:TrainingPlan:NotInSubmittedStatus": "Plan must be in Submitted status to start review",
     "Training:TrainingPlan:WindowNotOpen": "Submission window is not open",
+
+    "Training.TrainingPlan.ReviewStarted": "Plan review has started",
+    "Training.TrainingPlan.NotInSubmittedStatus": "Plan is not in Submitted state — cannot start review",
+    "Training.TrainingPlan.SubmittedBannerText": "The plan is ready for review. Click \"Start Review\" to begin reviewing items, entering costs, and assigning financial items. Once started, the plan moves to \"Under Review\" status.",
+    "Training.TrainingPlan.UnderReviewByStaffBannerText": "This plan is still being reviewed by the Training Directorate staff. Please wait until they complete the review and forward it to you for approval.",
+    "Training.Errors.Generic": "An error occurred while processing the action",
     "Training:TrainingPlan:CostNotEntered": "Estimated cost must be entered for all items before approval",
     "Training:TrainingPlan:NotFound": "Training plan not found",
     "Training:TrainingPlan:NotEditable": "Plan cannot be edited in its current status",
