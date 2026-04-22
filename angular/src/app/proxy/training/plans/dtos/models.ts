@@ -78,6 +78,7 @@ export interface CreateUpdateTrainingPlanItemDto {
   estimatedDateFrom?: string | null;
   estimatedDateTo?: string | null;
   fundingSource?: string | null;
+  unitId?: string | null;
   nomineeEmployeeIds: string[];
 }
 

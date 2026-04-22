@@ -1,5 +1,72 @@
 .entry-page { display: block; }
 
+/* ═══ Filter bar (accordion mode) — mirrors plan-review styling ═══ */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.filter-bar .form-input {
+  max-width: 240px;
+  font-size: 0.82rem;
+}
+
+/* ═══ Unit accordion — duplicated from plan-review to match exactly ═══ */
+.unit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  margin-bottom: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.unit-header:hover { background: #e2e8f0; }
+
+.unit-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.unit-icon { font-size: 1.1rem; }
+.unit-name { font-weight: 700; color: #1e293b; font-size: 0.95rem; }
+.unit-stat { font-size: 0.82rem; font-weight: 700; color: #334155; }
+
+.unit-header-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.unit-cost {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #047857;
+  font-variant-numeric: tabular-nums;
+}
+
+.unit-items {
+  margin-bottom: 8px;
+  border: 1px solid #e2e8f0;
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  overflow: hidden;
+  animation: expandIn 0.2s ease;
+}
+
 /* Return banner at top */
 .return-banner {
   background: linear-gradient(135deg, #fffbeb, #fef3c7);

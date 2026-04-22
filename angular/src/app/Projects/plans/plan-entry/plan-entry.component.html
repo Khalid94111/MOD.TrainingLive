@@ -49,8 +49,10 @@
     @if (plan(); as p) {
       <p class="page-meta">
         📅 نافذة الاستلام: {{ formatDate(p.openDate) }} — {{ formatDate(p.closeDate) }}
-        &nbsp;|&nbsp; 👤 UTM
         &nbsp;|&nbsp; 📋 {{ items().length }} بند
+        @if (showAccordions()) {
+          &nbsp;|&nbsp; 🏢 {{ groupedByUnit().length }} وحدة
+        }
         @if (hasUnresolvedReturns()) {
           &nbsp;|&nbsp; <span class="meta-warn">⚠️ {{ returnedItems().length }} بند يحتاج تعديل</span>
         }
@@ -64,126 +66,205 @@
       </div>
     }
 
-    <!-- Items table -->
-    <div class="gtms-table-wrap">
-      <table class="gtms-table">
-        <thead>
-          <tr>
-            <th style="width:30px"></th>
-            <th>الدورة</th>
-            <th class="center">النوع</th>
-            <th class="center">الأولوية</th>
-            <th class="center">الربع</th>
-            <th class="center">المرشحون</th>
-            <th class="center">المدة</th>
-            <th>مصدر التمويل</th>
-            <th class="center">الحالة</th>
-            <th class="center">إجراءات</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (item of items(); track trackById($index, item)) {
-            <tr class="item-row"
-                [class.item-expanded]="isItemExpanded(item.id!)"
-                [class.item-returned]="item.isReturned"
-                (click)="toggleItemDetail(item.id!)">
-              <td class="center">
-                @if (isItemLoading(item.id!)) { <span class="spinner"></span> }
-                @else { <span class="expand-arrow" [class.open]="isItemExpanded(item.id!)">▸</span> }
-              </td>
-              <td>
-                <div class="item-name-wrap">
-                  <span class="cell-bold">{{ item.tenantCourseNameAr }}</span>
-                  @if (item.tenantCourseNameEn) { <span class="cell-sub">{{ item.tenantCourseNameEn }}</span> }
-                  @if (item.isReturned) {
-                    <span class="return-badge">⚠️ يحتاج تعديل</span>
-                  }
-                </div>
-              </td>
-              <td class="center"><span class="badge" [class]="getCourseTypeBadge(item.courseType!)">{{ getCourseTypeText(item.courseType!) }}</span></td>
-              <td class="center"><span class="badge" [class]="'priority-' + item.priority">{{ item.priority }}</span></td>
-              <td class="center">Q{{ item.preferredQuarter }}</td>
-              <td class="center cell-bold">
-                <span class="nominees-pill">👥 {{ item.nomineesCount ?? 0 }}</span>
-              </td>
-              <td class="center cell-sub-text">{{ getDurationText(item) }}</td>
-              <td class="cell-sub-text">{{ item.fundingSource || '—' }}</td>
-              <td class="center">
-                @if (item.isReturned) { <span class="badge badge-submitted">مُعاد</span> }
-                @else { <span class="badge badge-open">عادي</span> }
-              </td>
-              <td class="center" (click)="$event.stopPropagation()">
-                <button class="btn-icon" title="ملاحظات" (click)="openItemNotes(item, $event)">💬</button>
-                @if (canEdit() || (plan()?.status === PlanStatus.UnderReview && item.isReturned)) {
-                  <button class="btn-icon" title="تعديل" (click)="openEditDialog(item, $event)">✏️</button>
-                  <button class="btn-icon" title="حذف" (click)="onDelete(item.id!, $event)">🗑️</button>
+    <!-- Filter bar (shown in accordion mode so Staff/TD/TH can narrow quickly) -->
+    @if (showAccordions()) {
+      <div class="filter-bar">
+        <input type="text" class="form-input" placeholder="🔍 ابحث في اسم الدورة…"
+               [value]="searchText()" (input)="onSearchInput($event)">
+        <select class="form-input" [value]="filterCourseType()"
+                (change)="filterCourseType.set($any($event.target).value)">
+          <option value="">جميع الأنواع</option>
+          <option value="0">داخلية</option>
+          <option value="1">خارجية محلية</option>
+          <option value="2">خارجية دولية</option>
+        </select>
+        <select class="form-input" [value]="filterUnit()"
+                (change)="filterUnit.set($any($event.target).value)">
+          <option value="">جميع الوحدات ({{ uniqueUnits().length }})</option>
+          @for (u of uniqueUnits(); track u.id) { <option [value]="u.id">{{ u.name }}</option> }
+        </select>
+        <button class="btn btn-ghost btn-sm" (click)="expandAll()">📂 فتح الكل</button>
+        <button class="btn btn-ghost btn-sm" (click)="collapseAll()">📁 إغلاق الكل</button>
+      </div>
+    }
+
+    <!-- BRANCH: accordions for Staff/TD/TH, flat table for UTM/UGM -->
+    @if (showAccordions()) {
+      @for (group of groupedByUnit(); track trackByUnit($index, group)) {
+        <div class="unit-header" (click)="toggleUnit(group.unitId)">
+          <div class="unit-header-right">
+            <span class="expand-arrow" [class.open]="isUnitExpanded(group.unitId)">▸</span>
+            <span class="unit-icon">🏢</span>
+            <span class="unit-name">{{ group.unitName }}</span>
+          </div>
+          <div class="unit-header-stats">
+            <span class="unit-stat">{{ group.itemCount }} بند</span>
+            @if (group.missingNominees > 0) {
+              <span class="badge badge-rejected">⚠️ {{ group.missingNominees }} بدون مرشحين</span>
+            }
+            @if (group.returnedCount > 0) {
+              <span class="badge badge-submitted">🔙 {{ group.returnedCount }} مُعاد</span>
+            }
+            @if (group.totalCost > 0) {
+              <span class="unit-cost">{{ formatCost(group.totalCost) }} ر.ع.</span>
+            }
+          </div>
+        </div>
+
+        @if (isUnitExpanded(group.unitId)) {
+          <div class="unit-items">
+            <table class="gtms-table">
+              <thead>
+                <tr>
+                  <th style="width:30px"></th>
+                  <th>الدورة</th>
+                  <th class="center">النوع</th>
+                  <th class="center">الأولوية</th>
+                  <th class="center">الربع</th>
+                  <th class="center">المرشحون</th>
+                  <th class="center">المدة</th>
+                  <th>مصدر التمويل</th>
+                  <th class="center">الحالة</th>
+                  <th class="center">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of group.items; track trackById($index, item)) {
+                  <ng-container *ngTemplateOutlet="itemRowTpl; context: { $implicit: item }"></ng-container>
                 }
-              </td>
+              </tbody>
+            </table>
+          </div>
+        }
+      } @empty {
+        <div class="empty-state"><div class="empty-icon">🔍</div>لا توجد بنود مطابقة للفلتر</div>
+      }
+    } @else {
+      <div class="gtms-table-wrap">
+        <table class="gtms-table">
+          <thead>
+            <tr>
+              <th style="width:30px"></th>
+              <th>الدورة</th>
+              <th class="center">النوع</th>
+              <th class="center">الأولوية</th>
+              <th class="center">الربع</th>
+              <th class="center">المرشحون</th>
+              <th class="center">المدة</th>
+              <th>مصدر التمويل</th>
+              <th class="center">الحالة</th>
+              <th class="center">إجراءات</th>
             </tr>
-
-            @if (isItemExpanded(item.id!)) {
-              <tr class="detail-row">
+          </thead>
+          <tbody>
+            @for (item of filteredItems(); track trackById($index, item)) {
+              <ng-container *ngTemplateOutlet="itemRowTpl; context: { $implicit: item }"></ng-container>
+            } @empty {
+              <tr>
                 <td colspan="10">
-                  <div class="inline-detail-wrap">
-                    <div class="course-detail-card">
-                      <div class="detail-grid">
-                        <div class="detail-section">
-                          <div class="detail-field">
-                            <span class="detail-label">👤 مقدم الطلب</span>
-                            <span class="detail-value">{{ item.submittedByName }}</span>
-                            @if (item.submittedByRank) { <span class="detail-value-sub">{{ item.submittedByRank }}</span> }
-                          </div>
-                          <div class="detail-field">
-                            <span class="detail-label">🏢 الوحدة</span>
-                            <span class="detail-value">{{ item.unitName || '—' }}</span>
-                          </div>
-                          <div class="detail-field">
-                            <span class="detail-label">📝 المبرر</span>
-                            <span class="detail-value detail-value-text">{{ item.justification }}</span>
-                          </div>
-                        </div>
-
-                        <div class="detail-section">
-                          <div class="detail-field"><span class="detail-label">👥 عدد المرشحين</span><span class="detail-number highlight">{{ item.nomineesCount ?? 0 }}</span></div>
-                          <div class="detail-field"><span class="detail-label">📅 الربع المفضل</span><span class="detail-value">{{ getQuarterText(item.preferredQuarter!) }}</span></div>
-                          <div class="detail-field"><span class="detail-label">⏱️ المدة</span><span class="detail-value">{{ getDurationText(item) }}</span></div>
-                          <div class="detail-field"><span class="detail-label">📆 التواريخ المتوقعة</span><span class="detail-value">{{ formatDate(item.estimatedDateFrom) }} — {{ formatDate(item.estimatedDateTo) }}</span></div>
-                          @if (item.fundingSource) {
-                            <div class="detail-field"><span class="detail-label">💳 مصدر التمويل</span><span class="detail-value funding-code">{{ item.fundingSource }}</span></div>
-                          }
-                        </div>
-
-                        <div class="detail-section">
-                          @if (item.objectivesAr) { <div class="detail-field"><span class="detail-label">🎯 الأهداف</span><span class="detail-value detail-value-text">{{ item.objectivesAr }}</span></div> }
-                          @if (item.descriptionAr) { <div class="detail-field"><span class="detail-label">📄 الوصف</span><span class="detail-value detail-value-text">{{ item.descriptionAr }}</span></div> }
-                        </div>
-                      </div>
-
-                      @if (getConditionsFor(item.id!).length > 0) {
-                        <div class="conditions-inline">
-                          <span class="conditions-label">🔒 شروط الالتحاق:</span>
-                          @for (c of getConditionsFor(item.id!); track c.id) {
-                            <span class="condition-tag">{{ getConditionTypeName(c.conditionType!) }}: {{ c.conditionValue }}</span>
-                          }
-                        </div>
-                      }
-                    </div>
-                  </div>
+                  <div class="empty-state"><div class="empty-icon">📝</div>لم يتم إضافة بنود بعد — اضغط "إضافة بند جديد"</div>
                 </td>
               </tr>
             }
-          } @empty {
-            <tr>
-              <td colspan="10">
-                <div class="empty-state"><div class="empty-icon">📝</div>لم يتم إضافة بنود بعد — اضغط "إضافة بند جديد"</div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
+          </tbody>
+        </table>
+      </div>
+    }
   </div>
 </div>
+
+<!-- Shared row + expanded detail template (used by both flat and accordion modes) -->
+<ng-template #itemRowTpl let-item>
+  <tr class="item-row"
+      [class.item-expanded]="isItemExpanded(item.id!)"
+      [class.item-returned]="item.isReturned"
+      (click)="toggleItemDetail(item.id!)">
+    <td class="center">
+      @if (isItemLoading(item.id!)) { <span class="spinner"></span> }
+      @else { <span class="expand-arrow" [class.open]="isItemExpanded(item.id!)">▸</span> }
+    </td>
+    <td>
+      <div class="item-name-wrap">
+        <span class="cell-bold">{{ item.tenantCourseNameAr }}</span>
+        @if (item.tenantCourseNameEn) { <span class="cell-sub">{{ item.tenantCourseNameEn }}</span> }
+        @if (item.isReturned) {
+          <span class="return-badge">⚠️ يحتاج تعديل</span>
+        }
+      </div>
+    </td>
+    <td class="center"><span class="badge" [class]="getCourseTypeBadge(item.courseType!)">{{ getCourseTypeText(item.courseType!) }}</span></td>
+    <td class="center"><span class="badge" [class]="'priority-' + item.priority">{{ item.priority }}</span></td>
+    <td class="center">Q{{ item.preferredQuarter }}</td>
+    <td class="center cell-bold">
+      <span class="nominees-pill">👥 {{ item.nomineesCount ?? 0 }}</span>
+    </td>
+    <td class="center cell-sub-text">{{ getDurationText(item) }}</td>
+    <td class="cell-sub-text">{{ item.fundingSource || '—' }}</td>
+    <td class="center">
+      @if (item.isReturned) { <span class="badge badge-submitted">مُعاد</span> }
+      @else { <span class="badge badge-open">عادي</span> }
+    </td>
+    <td class="center" (click)="$event.stopPropagation()">
+      <button class="btn-icon" title="ملاحظات" (click)="openItemNotes(item, $event)">💬</button>
+      @if (canEdit() || (plan()?.status === PlanStatus.UnderReview && item.isReturned)) {
+        <button class="btn-icon" title="تعديل" (click)="openEditDialog(item, $event)">✏️</button>
+        <button class="btn-icon" title="حذف" (click)="onDelete(item.id!, $event)">🗑️</button>
+      }
+    </td>
+  </tr>
+
+  @if (isItemExpanded(item.id!)) {
+    <tr class="detail-row">
+      <td colspan="10">
+        <div class="inline-detail-wrap">
+          <div class="course-detail-card">
+            <div class="detail-grid">
+              <div class="detail-section">
+                <div class="detail-field">
+                  <span class="detail-label">👤 مقدم الطلب</span>
+                  <span class="detail-value">{{ item.submittedByName }}</span>
+                  @if (item.submittedByRank) { <span class="detail-value-sub">{{ item.submittedByRank }}</span> }
+                </div>
+                <div class="detail-field">
+                  <span class="detail-label">🏢 الوحدة</span>
+                  <span class="detail-value">{{ item.unitName || '—' }}</span>
+                </div>
+                <div class="detail-field">
+                  <span class="detail-label">📝 المبرر</span>
+                  <span class="detail-value detail-value-text">{{ item.justification }}</span>
+                </div>
+              </div>
+
+              <div class="detail-section">
+                <div class="detail-field"><span class="detail-label">👥 عدد المرشحين</span><span class="detail-number highlight">{{ item.nomineesCount ?? 0 }}</span></div>
+                <div class="detail-field"><span class="detail-label">📅 الربع المفضل</span><span class="detail-value">{{ getQuarterText(item.preferredQuarter!) }}</span></div>
+                <div class="detail-field"><span class="detail-label">⏱️ المدة</span><span class="detail-value">{{ getDurationText(item) }}</span></div>
+                <div class="detail-field"><span class="detail-label">📆 التواريخ المتوقعة</span><span class="detail-value">{{ formatDate(item.estimatedDateFrom) }} — {{ formatDate(item.estimatedDateTo) }}</span></div>
+                @if (item.fundingSource) {
+                  <div class="detail-field"><span class="detail-label">💳 مصدر التمويل</span><span class="detail-value funding-code">{{ item.fundingSource }}</span></div>
+                }
+              </div>
+
+              <div class="detail-section">
+                @if (item.objectivesAr) { <div class="detail-field"><span class="detail-label">🎯 الأهداف</span><span class="detail-value detail-value-text">{{ item.objectivesAr }}</span></div> }
+                @if (item.descriptionAr) { <div class="detail-field"><span class="detail-label">📄 الوصف</span><span class="detail-value detail-value-text">{{ item.descriptionAr }}</span></div> }
+              </div>
+            </div>
+
+            @if (getConditionsFor(item.id!).length > 0) {
+              <div class="conditions-inline">
+                <span class="conditions-label">🔒 شروط الالتحاق:</span>
+                @for (c of getConditionsFor(item.id!); track c.id) {
+                  <span class="condition-tag">{{ getConditionTypeName(c.conditionType!) }}: {{ c.conditionValue }}</span>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </td>
+    </tr>
+  }
+</ng-template>
 
 <!-- Add/Edit Dialog — 2 sections (Course + Nominees) -->
 @if (isDialogOpen()) {
@@ -202,6 +283,20 @@
         <div class="dialog-section">
           <div class="section-label"><span class="section-num">A</span> بيانات الدورة</div>
 
+          <!-- Unit picker (Staff/TD/TH only; UTM/UGM are auto-scoped by backend) -->
+          @if (showAccordions() && !isEditMode()) {
+            <div class="form-group">
+              <label class="form-label">🏢 الوحدة المستفيدة <span class="required">*</span></label>
+              <select class="form-input"
+                      [value]="fUnitId()"
+                      (change)="fUnitId.set($any($event.target).value)">
+                <option value="">اختر الوحدة...</option>
+                @for (u of uniqueUnits(); track u.id) { <option [value]="u.id">{{ u.name }}</option> }
+              </select>
+              <span class="form-hint">البند سيُسجَّل تحت هذه الوحدة.</span>
+            </div>
+          }
+
           <div class="form-row">
             <div class="form-group flex-2">
               <label class="form-label">الدورة <span class="required">*</span></label>
@@ -209,7 +304,7 @@
                       [value]="fTenantCourseId()"
                       (change)="fTenantCourseId.set($any($event.target).value); onCourseSelected()">
                 <option value="">اختر دورة...</option>
-                @for (tc of tenantCourses(); track tc.id) { <option [value]="tc.id">{{ tc.courseNameAr }}</option> }
+                @for (tc of tenantCourses(); track tc.id) { <option [value]="tc.id">{{ tc.catalogCourseNameAr }}</option> }
               </select>
             </div>
             <div class="form-group">
@@ -302,7 +397,20 @@
             <div class="section-label"><span class="section-num">B</span> المرشحون <span class="required">*</span></div>
             <div class="section-sub">اختر مرشحاً واحداً على الأقل. سيتم التحقق من توفر شروط الالتحاق لكل مرشح تلقائياً.</div>
 
-            @if (myUnitId()) {
+            @if (showAccordions()) {
+              @if (fUnitId()) {
+                <gtms-nomination-picker
+                  [unitId]="fUnitId()"
+                  [minCount]="1"
+                  [initialSelection]="fNomineeIds()"
+                  (selectionChange)="onNomineesChange($event)">
+                </gtms-nomination-picker>
+              } @else {
+                <div class="alert alert-info">
+                  <span class="alert-icon">ℹ️</span> اختر الوحدة أولاً لعرض المرشحين المتاحين.
+                </div>
+              }
+            } @else if (myUnitId()) {
               <gtms-nomination-picker
                 [unitId]="myUnitId()"
                 [minCount]="1"

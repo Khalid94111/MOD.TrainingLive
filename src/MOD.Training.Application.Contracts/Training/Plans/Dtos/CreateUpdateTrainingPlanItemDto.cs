@@ -49,6 +49,11 @@ public class CreateUpdateTrainingPlanItemDto
     [MaxLength(TrainingConsts.MaxFundingSourceLength)]
     public string? FundingSource { get; set; }
 
+    // Optional: Staff/TD/TH may specify the owning unit when creating an item.
+    // Unit-scoped users (UTM/UGM) have this ignored — their unit is auto-detected
+    // from Employee.MainUnitId in TrainingPlanItemAppService.CreateAsync.
+    public Guid? UnitId { get; set; }
+
     // CHG-01: required at creation, min 1
     [Required]
     [MinLength(1)]

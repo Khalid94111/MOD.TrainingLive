@@ -123,7 +123,13 @@ public class TrainingPlanItemAppService(
         if (plan.Status != PlanStatus.Open && plan.Status != PlanStatus.ReturnedToCreator)
             throw new Volo.Abp.BusinessException("Training:TrainingPlan:WindowNotOpen");
 
-        var currentUnitId = await employeeResolver.GetCurrentUserUnitIdAsync();
+        // Unit-scoped callers (UTM/UGM) always get their own unit regardless of DTO value.
+        // Non-scoped callers (Staff/TD/TH) may specify input.UnitId; fall back to their
+        // Employee.MainUnitId when omitted.
+        var isUnitScoped = await unitScope.IsCurrentUserUnitScopedAsync();
+        var resolvedUnitId = isUnitScoped
+            ? await employeeResolver.GetCurrentUserUnitIdAsync()
+            : (input.UnitId ?? await employeeResolver.GetCurrentUserUnitIdAsync());
 
         var entity = new TrainingPlanItem(
             GuidGenerator.Create(),
@@ -135,7 +141,7 @@ public class TrainingPlanItemAppService(
             input.Justification,
             CurrentUser.Id!.Value)
         {
-            UnitId = currentUnitId,
+            UnitId = resolvedUnitId,
             DescriptionAr = input.DescriptionAr,
             DescriptionEn = input.DescriptionEn,
             ObjectivesAr = input.ObjectivesAr,

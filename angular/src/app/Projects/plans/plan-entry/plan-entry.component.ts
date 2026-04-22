@@ -20,6 +20,16 @@ import {
   TrainingLocalizationHelper,
 } from '../../shared';
 
+interface UnitGroup {
+  unitId: string;
+  unitName: string;
+  items: TrainingPlanItemDto[];
+  itemCount: number;
+  totalCost: number;
+  missingNominees: number;
+  returnedCount: number;
+}
+
 @Component({
   standalone: true,
   selector: 'app-plan-entry',
@@ -73,9 +83,19 @@ export class PlanEntryComponent implements OnInit {
   // Section B: Nominees
   fNomineeIds = signal<string[]>([]);
   pickerResetKey = signal(0); // bump to remount picker between dialog opens
+  fUnitId = signal<string>(''); // only used by Staff/TD/TH when accordions are shown
 
   // Conditions preview (for new item dialog — from tenant course)
   dialogConditions = signal<any[]>([]);
+
+  // Accordion state (Staff/TD/TH only; UTM/UGM see a flat list)
+  expandedUnits = signal<Set<string>>(new Set());
+  private expansionInitialized = false;
+
+  // Filter bar above accordions / flat list
+  searchText = signal('');
+  filterCourseType = signal<string>('');
+  filterUnit = signal<string>('');
 
   // Save error banner
   saveError = signal<string | null>(null);
@@ -103,6 +123,69 @@ export class PlanEntryComponent implements OnInit {
   canResubmit = computed(() =>
     this.isReturnedToCreator() && !this.hasUnresolvedReturns() && this.items().length > 0,
   );
+
+  hasActiveFilter = computed(() =>
+    !!this.searchText().trim() || !!this.filterCourseType() || !!this.filterUnit(),
+  );
+
+  filteredItems = computed(() => {
+    const q = this.searchText().trim().toLowerCase();
+    const ct = this.filterCourseType();
+    const uid = this.filterUnit();
+    return this.items().filter(i => {
+      if (q) {
+        const hit =
+          (i.tenantCourseNameAr ?? '').toLowerCase().includes(q) ||
+          (i.tenantCourseNameEn ?? '').toLowerCase().includes(q) ||
+          (i.fundingSource ?? '').toLowerCase().includes(q);
+        if (!hit) return false;
+      }
+      if (ct !== '' && i.courseType !== +ct) return false;
+      if (uid && i.unitId !== uid) return false;
+      return true;
+    });
+  });
+
+  groupedByUnit = computed<UnitGroup[]>(() => {
+    const byUnit = new Map<string, UnitGroup>();
+    for (const item of this.filteredItems()) {
+      const key = item.unitId ?? 'no-unit';
+      const name = item.unitName ?? 'بدون وحدة';
+      if (!byUnit.has(key)) {
+        byUnit.set(key, {
+          unitId: key, unitName: name, items: [],
+          itemCount: 0, totalCost: 0, missingNominees: 0, returnedCount: 0,
+        });
+      }
+      const g = byUnit.get(key)!;
+      g.items.push(item);
+      g.itemCount++;
+      g.totalCost += item.estimatedCost ?? 0;
+      if (!item.nomineesCount || item.nomineesCount === 0) g.missingNominees++;
+      if (item.isReturned) g.returnedCount++;
+    }
+    return Array.from(byUnit.values()).sort((a, b) => a.unitName.localeCompare(b.unitName, 'ar'));
+  });
+
+  // Response-based inference: if items span multiple units the caller is non-scoped
+  // (Staff/TD/TH) and should see accordions. Unit-scoped users (UTM/UGM) only ever
+  // see their own unit's items, so a single group means flat-list mode.
+  showAccordions = computed(() => {
+    // Base the decision on the unfiltered items so the mode is stable while filtering.
+    const unitSet = new Set<string>();
+    for (const i of this.items()) unitSet.add(i.unitId ?? 'no-unit');
+    return unitSet.size > 1;
+  });
+
+  uniqueUnits = computed<{ id: string; name: string }[]>(() => {
+    const m = new Map<string, string>();
+    for (const i of this.items()) {
+      if (i.unitId) m.set(i.unitId, i.unitName ?? i.unitId);
+    }
+    return Array.from(m.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+  });
 
   get dialogTitle(): string {
     return this.isEditMode() ? '✏️ تعديل بند' : '➕ إضافة بند جديد';
@@ -155,7 +238,18 @@ export class PlanEntryComponent implements OnInit {
 
   async loadItems(): Promise<void> {
     const r = await firstValueFrom(this.itemService.getList({ planId: this.planId, maxResultCount: 500 }));
-    this.items.set(r.items ?? []);
+    const items = r.items ?? [];
+    this.items.set(items);
+
+    // Default-expand rule (Staff/TD/TH only; runs once on first load):
+    // ≤3 units → all expanded; more → all collapsed. Subsequent reloads
+    // keep whatever state the user has set.
+    if (!this.expansionInitialized) {
+      const unitIds = new Set<string>();
+      for (const i of items) unitIds.add(i.unitId ?? 'no-unit');
+      this.expandedUnits.set(unitIds.size <= 3 ? unitIds : new Set());
+      this.expansionInitialized = true;
+    }
   }
 
   async loadTenantCourses(): Promise<void> {
@@ -202,11 +296,37 @@ export class PlanEntryComponent implements OnInit {
   isItemLoading(id: string): boolean { return this.loadingItemId() === id; }
   getConditionsFor(id: string): PlanItemConditionDto[] { return this.conditionsMap().get(id) ?? []; }
 
+  // ── Accordion ──
+  toggleUnit(unitId: string): void {
+    this.expandedUnits.update(s => {
+      const n = new Set(s);
+      if (n.has(unitId)) n.delete(unitId); else n.add(unitId);
+      return n;
+    });
+  }
+
+  isUnitExpanded(unitId: string): boolean {
+    if (this.expandedUnits().has(unitId)) return true;
+    // Auto-expand when a filter is active so matching items in a previously-
+    // collapsed accordion stay visible.
+    return this.hasActiveFilter();
+  }
+
+  expandAll(): void { this.expandedUnits.set(new Set(this.groupedByUnit().map(g => g.unitId))); }
+  collapseAll(): void { this.expandedUnits.set(new Set()); this.expandedItemId.set(null); }
+
+  onSearchInput(event: Event): void { this.searchText.set((event.target as HTMLInputElement).value); }
+
   // ── Dialog ──
   openAddDialog(): void {
     this.isEditMode.set(false);
     this.editItemId.set(null);
     this.resetForm();
+    // Default the picker to the first unit in the list (Staff/TD/TH only).
+    if (this.showAccordions()) {
+      const first = this.uniqueUnits()[0];
+      if (first) this.fUnitId.set(first.id);
+    }
     this.pickerResetKey.update(v => v + 1);
     this.isDialogOpen.set(true);
   }
@@ -242,6 +362,7 @@ export class PlanEntryComponent implements OnInit {
     this.fObjectivesAr.set(''); this.fObjectivesEn.set('');
     this.fDurationYears.set(0); this.fDurationMonths.set(0); this.fDurationDays.set(0);
     this.fEstimatedDateFrom.set(''); this.fEstimatedDateTo.set(''); this.fFundingSource.set('');
+    this.fUnitId.set('');
     this.fNomineeIds.set([]);
     this.dialogConditions.set([]);
     this.saveError.set(null);
@@ -256,10 +377,14 @@ export class PlanEntryComponent implements OnInit {
   onNomineesChange(ids: string[]): void { this.fNomineeIds.set(ids); }
 
   get isFormValid(): boolean {
-    return !!this.fTenantCourseId()
+    const baseValid = !!this.fTenantCourseId()
       && !!this.fJustification().trim()
       && this.fPriority() >= 1 && this.fPriority() <= 5
       && (this.isEditMode() || this.fNomineeIds().length >= 1);
+    if (!baseValid) return false;
+    // Non-scoped users (multi-unit view) must pick a unit when creating.
+    if (!this.isEditMode() && this.showAccordions() && !this.fUnitId()) return false;
+    return true;
   }
 
   async onSave(): Promise<void> {
@@ -283,6 +408,7 @@ export class PlanEntryComponent implements OnInit {
       estimatedDateFrom: this.fEstimatedDateFrom() || undefined,
       estimatedDateTo: this.fEstimatedDateTo() || undefined,
       fundingSource: this.fFundingSource() || undefined,
+      unitId: this.showAccordions() && this.fUnitId() ? this.fUnitId() : undefined,
       nomineeEmployeeIds: this.fNomineeIds(),
     };
     try {
@@ -352,4 +478,10 @@ export class PlanEntryComponent implements OnInit {
     return p.length ? p.join(' و ') : '—';
   }
   trackById(_: number, i: TrainingPlanItemDto): string { return i.id ?? ''; }
+  trackByUnit(_: number, g: UnitGroup): string { return g.unitId; }
+
+  formatCost(n?: number): string {
+    if (!n || n <= 0) return '';
+    return n.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+  }
 }
