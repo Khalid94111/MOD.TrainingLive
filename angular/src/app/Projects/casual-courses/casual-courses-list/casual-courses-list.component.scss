@@ -1,17 +1,43 @@
-:host {
-  display: block;
-  min-height: 100%;
-  background: #f8fafc;
+@import '../../shared/gtms-design';
+
+.search-input {
+  flex: 1;
+  min-width: 240px;
+  max-width: 420px;
 }
 
-.table-row {
-  transition: background 0.2s;
+.row-clickable {
   cursor: pointer;
 }
-.table-row:hover {
-  background: #f8fafc;
+
+.returned-row {
+  background: #fffbeb !important;
+  border-inline-end: 3px solid #f59e0b;
 }
-.table-row.returned-row {
-  background: #fffbeb;
-  border-right: 3px solid #f59e0b;
+
+.empty-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #475569;
+  margin-top: 6px;
+}
+
+.empty-text {
+  font-size: 0.82rem;
+  color: #94a3b8;
+  margin-top: 4px;
+  margin-bottom: 12px;
+}
+
+.empty-action {
+  margin-top: 6px;
+}
+
+.action-hint {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.cell-money-col {
+  text-align: end;
 }

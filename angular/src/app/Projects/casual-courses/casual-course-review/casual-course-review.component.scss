@@ -1,10 +1,151 @@
-:host {
-  display: block;
-  min-height: 100%;
-  background: #f8fafc;
+@import '../../shared/gtms-design';
+
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.back-link {
+  font-size: 0.78rem;
+  color: #64748b;
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 4px;
+  &:hover { color: #1e293b; }
+}
+
+.page-h1 {
+  font-size: 1.4rem;
+  margin: 0;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+
+  .section-title {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+}
+
+.panel-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 20px;
+  font-size: 0.88rem;
+
+  .lbl { color: #94a3b8; margin-inline-end: 4px; }
+  .val { color: #1e293b; font-weight: 600; }
+  .summary-wide { grid-column: 1 / -1; }
+}
+
+.scenario-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.scenario-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.scenario-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.scenario-hint {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0;
 }
 
 .returned-row {
-  background: #fffbeb;
-  border-right: 3px solid #f59e0b;
+  background: #fffbeb !important;
+  border-inline-end: 3px solid #f59e0b;
+}
+
+.source-cell {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.form-input-inline {
+  padding: 5px 10px !important;
+  font-size: 0.82rem !important;
+  width: 100%;
+  max-width: 160px;
+}
+
+.total-row {
+  font-weight: 700;
+  background: #f8fafc;
+}
+
+.action-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+}
+
+.add-item-form {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.add-item-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.btn-danger-ghost {
+  color: #b91c1c;
+  &:hover { background: #fee2e2; color: #991b1b; }
+}
+
+.empty-state.small {
+  padding: 18px;
+  font-size: 0.85rem;
+  border: none;
+}
+
+.modal-intro {
+  font-size: 0.85rem;
+  color: #475569;
+  margin: 0 0 12px;
+}
+
+@media (max-width: 768px) {
+  .scenario-grid { grid-template-columns: 1fr; }
+  .summary-grid { grid-template-columns: 1fr; }
 }

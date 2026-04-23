@@ -1,12 +1,92 @@
-:host {
-  display: block;
-  min-height: 100%;
+@import '../../shared/gtms-design';
+
+.page-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.back-link {
+  font-size: 0.78rem;
+  color: #64748b;
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 4px;
+  &:hover { color: #1e293b; }
+}
+
+.page-h1 {
+  font-size: 1.4rem;
+  margin: 0;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+
+  .section-title {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+}
+
+.section-meta {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.form-hint.warning {
+  color: #b45309;
+  font-weight: 600;
+}
+
+.info-banner-returned {
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border: 1px solid #fbbf24;
+  color: #92400e;
+  align-items: center;
+
+  .banner-hint {
+    font-size: 0.75rem;
+    color: #b45309;
+    margin-top: 4px;
+  }
+
+  .banner-actions {
+    flex-shrink: 0;
+  }
+}
+
+.mt-1 { margin-top: 4px; }
+
+.empty-state.small {
+  padding: 18px;
+  font-size: 0.85rem;
+  border: none;
+}
+
+.total-row {
+  font-weight: 700;
   background: #f8fafc;
 }
 
-.returned-banner {
-  background: linear-gradient(135deg, #fffbeb, #fef3c7);
-  border: 2px solid #fbbf24;
-  border-radius: 14px;
-  padding: 14px 18px;
+.action-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 0;
 }

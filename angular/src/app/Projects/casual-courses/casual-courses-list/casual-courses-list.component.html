@@ -1,23 +1,25 @@
-<div class="p-6" dir="rtl">
+<div class="gtms-card">
   <!-- Header -->
-  <div class="card p-5 mb-5 flex items-center justify-between">
-    <div>
-      <h1 class="text-2xl font-bold">الدورات العرضية</h1>
-      <p class="text-sm text-slate-500">طلبات الدورات خارج الخطة السنوية</p>
+  <div class="page-toolbar">
+    <div class="page-toolbar-title">
+      <h2 class="gtms-card-title">🎯 الدورات العرضية</h2>
     </div>
-    @if (canCreate()) {
-      <a routerLink="/training/casual-courses/new" class="btn-primary px-5 py-2 rounded-xl text-white">
-        ✏️ طلب جديد
-      </a>
-    }
+    <div class="page-toolbar-actions">
+      @if (canCreate()) {
+        <a routerLink="/training/casual-courses/new" class="btn btn-primary">
+          ✏️ طلب جديد
+        </a>
+      }
+    </div>
   </div>
+  <p class="page-meta">طلبات الدورات خارج الخطة السنوية</p>
 
   <!-- Filter toolbar -->
-  <div class="card p-4 mb-5 flex gap-3 flex-wrap items-center">
+  <div class="filter-bar">
     <select
+      class="form-input"
       [value]="fStatus()"
       (change)="onStatusChange($any($event.target).value)"
-      class="input-field px-3 py-2 rounded-lg"
     >
       <option value="">كل الحالات</option>
       @for (opt of STATUS_OPTIONS; track opt.value) {
@@ -26,73 +28,69 @@
     </select>
 
     <input
+      class="form-input search-input"
       [value]="fSearch()"
       (input)="onSearchChange($any($event.target).value)"
       placeholder="بحث بالاسم أو الجهة الممولة..."
-      class="input-field px-3 py-2 rounded-lg flex-1 min-w-64"
     />
 
-    <label class="flex items-center gap-2 text-sm">
+    <label class="checkbox-wrap">
       <input
         type="checkbox"
         [checked]="fOnlyMine()"
         (change)="onOnlyMineChange($any($event.target).checked)"
       />
-      طلباتي فقط
+      <span>طلباتي فقط</span>
     </label>
   </div>
 
   <!-- Grid -->
   @if (loading()) {
-    <div class="card p-12 text-center text-slate-500">
-      <div class="text-4xl mb-3">⏳</div>
+    <div class="empty-state">
+      <div class="empty-icon">⏳</div>
       جاري التحميل...
     </div>
   } @else if (filteredRows().length === 0) {
-    <div class="card p-12 text-center">
-      <div class="text-6xl mb-3">🎯</div>
-      <h3 class="font-bold mb-2">لا توجد طلبات</h3>
-      <p class="text-sm text-slate-500 mb-4">لم يتم العثور على أي دورات عرضية مطابقة للفلاتر الحالية.</p>
+    <div class="empty-state">
+      <div class="empty-icon">🎯</div>
+      <div class="empty-title">لا توجد طلبات</div>
+      <div class="empty-text">لم يتم العثور على أي دورات عرضية مطابقة للفلاتر الحالية.</div>
       @if (canCreate()) {
-        <a routerLink="/training/casual-courses/new" class="btn-primary px-4 py-2 rounded-lg inline-block text-white">
+        <a routerLink="/training/casual-courses/new" class="btn btn-primary btn-sm empty-action">
           إنشاء أول طلب
         </a>
       }
     </div>
   } @else {
-    <div class="card overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead class="bg-slate-50 text-slate-600">
+    <div class="gtms-table-wrap">
+      <table class="gtms-table">
+        <thead>
           <tr>
-            <th class="p-3 text-start">اسم الدورة</th>
-            <th class="p-3 text-start">الجهة الممولة</th>
-            <th class="p-3 text-start">الوحدة</th>
-            <th class="p-3 text-start">مقدم الطلب</th>
-            <th class="p-3 text-center">عدد المرشحين</th>
-            <th class="p-3 text-end">التكلفة المقدّرة</th>
-            <th class="p-3 text-center">الحالة</th>
-            <th class="p-3 text-center">الإجراء</th>
+            <th>اسم الدورة</th>
+            <th>الجهة الممولة</th>
+            <th>الوحدة</th>
+            <th>مقدم الطلب</th>
+            <th class="center">عدد المرشحين</th>
+            <th class="cell-money-col">التكلفة المقدّرة (ر.ع)</th>
+            <th class="center">الحالة</th>
+            <th class="center">الإجراء</th>
           </tr>
         </thead>
         <tbody>
           @for (row of filteredRows(); track row.id) {
-            <tr
-              class="table-row border-t"
-              [class.returned-row]="row.isReturned"
-              (click)="onRowClick(row)"
-            >
-              <td class="p-3 font-medium">{{ row.courseNameAr || '—' }}</td>
-              <td class="p-3">{{ row.fundingSource || '—' }}</td>
-              <td class="p-3">{{ row.unitName || '—' }}</td>
-              <td class="p-3">{{ row.requesterName || '—' }}</td>
-              <td class="p-3 text-center">{{ row.nomineesCount ?? 0 }}</td>
-              <td class="p-3 text-end">{{ formatCost(row.estimatedTotalCost) }} ر.ع</td>
-              <td class="p-3 text-center">
+            <tr class="row-clickable" [class.returned-row]="row.isReturned" (click)="onRowClick(row)">
+              <td class="cell-bold">{{ row.courseNameAr || '—' }}</td>
+              <td>{{ row.fundingSource || '—' }}</td>
+              <td>{{ row.unitName || '—' }}</td>
+              <td>{{ row.requesterName || '—' }}</td>
+              <td class="center">{{ row.nomineesCount ?? 0 }}</td>
+              <td class="cell-money">{{ formatCost(row.estimatedTotalCost) }}</td>
+              <td class="center">
                 <span class="status-badge" [class]="statusCss(row.status)">
                   {{ statusLabel(row.status) }}
                 </span>
               </td>
-              <td class="p-3 text-center text-slate-600">{{ actionLabel(row) }}</td>
+              <td class="center action-hint">{{ actionLabel(row) }}</td>
             </tr>
           }
         </tbody>
