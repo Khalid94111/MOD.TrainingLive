@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using MOD.Training.Training.CasualCourses;
 using MOD.Training.Training.Catalog;
 using MOD.Training.Training.Centers;
 using MOD.Training.Training.Consts;
@@ -29,6 +30,7 @@ public static class TrainingDbContextModelCreatingExtensions
         builder.ConfigurePlans();
 builder.ConfigureNominations();
 builder.ConfigureFinancePhase3();
+builder.ConfigureCasualCoursesPhase4A();
     }
 
     private static void ConfigureCatalog(this ModelBuilder builder)
@@ -521,6 +523,65 @@ builder.ConfigureFinancePhase3();
             b.Property(x => x.Note).IsRequired().HasMaxLength(2000);
             b.Property(x => x.AuthorRole).IsRequired();
             b.HasIndex(x => new { x.TenantId, x.EntityType, x.EntityId, x.CreationTime });
+        });
+    }
+
+    public static void ConfigureCasualCoursesPhase4A(this ModelBuilder builder)
+    {
+        builder.Entity<CasualCourse>(b =>
+        {
+            b.ToTable(TrainingConsts.DbTablePrefix + "CasualCourses", TrainingConsts.DbSchema);
+            b.ConfigureByConvention();
+
+            b.Property(x => x.TenantCourseId).IsRequired();
+            b.Property(x => x.UnitId).IsRequired();
+            b.Property(x => x.RequestedById).IsRequired();
+            b.Property(x => x.CourseType).IsRequired();
+            b.Property(x => x.Priority).IsRequired();
+            b.Property(x => x.Justification).IsRequired().HasMaxLength(500);
+            b.Property(x => x.DescriptionAr).HasMaxLength(1000);
+            b.Property(x => x.ObjectivesAr).HasMaxLength(1000);
+            b.Property(x => x.DurationDays).IsRequired();
+            b.Property(x => x.EstimatedDateFrom).IsRequired();
+            b.Property(x => x.EstimatedDateTo).IsRequired();
+            b.Property(x => x.FundingSource).HasMaxLength(200);
+            b.Property(x => x.EstimatedTotalCost).HasColumnType("decimal(18,3)");
+            b.Property(x => x.RejectedReason).HasMaxLength(500);
+            b.Property(x => x.Status).IsRequired();
+
+            b.HasMany(x => x.Financials).WithOne()
+                .HasForeignKey(x => x.CasualCourseId).OnDelete(DeleteBehavior.Cascade);
+            b.HasMany(x => x.Nominations).WithOne()
+                .HasForeignKey(x => x.CasualCourseId).OnDelete(DeleteBehavior.Cascade);
+
+            b.HasIndex(x => new { x.TenantId, x.Status });
+            b.HasIndex(x => new { x.TenantId, x.UnitId });
+        });
+
+        builder.Entity<CasualCourseFinancial>(b =>
+        {
+            b.ToTable(TrainingConsts.DbTablePrefix + "CasualCourseFinancials", TrainingConsts.DbSchema);
+            b.ConfigureByConvention();
+
+            b.Property(x => x.CasualCourseId).IsRequired();
+            b.Property(x => x.FinancialItemId).IsRequired();
+            b.Property(x => x.EstimatedAmountOMR).IsRequired().HasColumnType("decimal(18,3)");
+            b.Property(x => x.ActualAmountOMR).HasColumnType("decimal(18,3)");
+            b.Property(x => x.Source).IsRequired();
+            b.Property(x => x.Notes).HasMaxLength(500);
+
+            b.HasIndex(x => new { x.CasualCourseId, x.FinancialItemId }).IsUnique();
+        });
+
+        builder.Entity<CasualCourseNomination>(b =>
+        {
+            b.ToTable(TrainingConsts.DbTablePrefix + "CasualCourseNominations", TrainingConsts.DbSchema);
+            b.ConfigureByConvention();
+
+            b.Property(x => x.CasualCourseId).IsRequired();
+            b.Property(x => x.EmployeeId).IsRequired();
+
+            b.HasIndex(x => new { x.CasualCourseId, x.EmployeeId }).IsUnique();
         });
     }
 }
