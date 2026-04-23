@@ -1,0 +1,322 @@
+<div class="p-6 max-w-6xl mx-auto" dir="rtl">
+  <!-- Header -->
+  <div class="mb-5 flex items-center justify-between">
+    <div>
+      <a routerLink="/training/casual-courses" class="text-sm text-slate-500 hover:text-slate-700">
+        ← الدورات العرضية
+      </a>
+      <h1 class="text-2xl font-bold mt-1">مراجعة طلب دورة عرضية</h1>
+    </div>
+    <button
+      type="button"
+      (click)="openNotesDrawer()"
+      class="px-4 py-2 rounded-lg border border-slate-300 text-sm"
+    >
+      📑 الملاحظات
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="card p-12 text-center text-slate-500">
+      <div class="text-4xl mb-3">⏳</div>
+      جاري التحميل...
+    </div>
+  } @else if (!casualCourse()) {
+    <div class="card p-12 text-center text-red-600">
+      <div class="text-4xl mb-3">❌</div>
+      تعذر تحميل الطلب.
+    </div>
+  } @else {
+    @if (error()) {
+      <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700 mb-4">
+        {{ error() }}
+      </div>
+    }
+
+    <!-- Start Review banner -->
+    @if (canStartReview()) {
+      <div class="card p-4 mb-5 flex items-center justify-between bg-blue-50 border border-blue-200">
+        <div>
+          <div class="font-bold text-blue-900">الطلب معتمد من UGM وجاهز للمراجعة</div>
+          <p class="text-xs text-blue-700">اضغط "بدء المراجعة" لبدء تعيين السيناريو والبنود المالية.</p>
+        </div>
+        <button
+          type="button"
+          (click)="onStartReview()"
+          [disabled]="actionBusy()"
+          class="btn-primary px-4 py-2 rounded-lg text-white"
+        >
+          ▶️ بدء المراجعة
+        </button>
+      </div>
+    }
+
+    <!-- Panel 1: Course summary -->
+    <div class="card p-5 mb-5">
+      <h2 class="font-bold mb-3 pb-2 border-b">ملخص الدورة</h2>
+      <div class="grid grid-cols-2 gap-3 text-sm">
+        <div><span class="text-slate-500">اسم الدورة:</span> <span class="font-medium">{{ casualCourse()?.courseNameAr || '—' }}</span></div>
+        <div><span class="text-slate-500">الوحدة:</span> <span class="font-medium">{{ casualCourse()?.unitName || '—' }}</span></div>
+        <div><span class="text-slate-500">مقدم الطلب:</span> <span class="font-medium">{{ casualCourse()?.requesterName || '—' }}</span></div>
+        <div><span class="text-slate-500">الجهة الممولة:</span> <span class="font-medium">{{ casualCourse()?.fundingSource || '—' }}</span></div>
+        <div><span class="text-slate-500">المدة:</span> <span class="font-medium">{{ casualCourse()?.durationDays }} يوم</span></div>
+        <div><span class="text-slate-500">عدد المرشحين:</span> <span class="font-medium">{{ casualCourse()?.nomineesCount ?? 0 }}</span></div>
+        <div class="col-span-2"><span class="text-slate-500">المبرر:</span> <span class="font-medium">{{ casualCourse()?.justification }}</span></div>
+      </div>
+    </div>
+
+    <!-- Panel 2: Nominations -->
+    <div class="card p-5 mb-5">
+      <h2 class="font-bold mb-3 pb-2 border-b">المرشحون</h2>
+      @if (nominations().length === 0) {
+        <p class="text-sm text-slate-500">لا يوجد مرشحون.</p>
+      } @else {
+        <table class="w-full text-sm">
+          <thead class="text-slate-600 border-b">
+            <tr>
+              <th class="p-2 text-start">الاسم</th>
+              <th class="p-2 text-start">الرتبة</th>
+              <th class="p-2 text-start">الوحدة</th>
+              <th class="p-2 text-center">الحالة</th>
+              <th class="p-2 text-center">إجراء</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (nom of nominations(); track nom.id) {
+              <tr class="border-b" [class.returned-row]="nom.isReturned">
+                <td class="p-2 font-medium">{{ nom.employeeName }}</td>
+                <td class="p-2">{{ nom.rankName }}</td>
+                <td class="p-2">{{ nom.unitName }}</td>
+                <td class="p-2 text-center">
+                  @if (nom.isReturned) {
+                    <span class="status-badge status-returned">مُعاد</span>
+                  } @else {
+                    <span class="condition-pass">جاهز</span>
+                  }
+                </td>
+                <td class="p-2 text-center">
+                  @if (isReviewable() && !nom.isReturned) {
+                    <button
+                      type="button"
+                      (click)="openReturnNomination(nom)"
+                      class="text-xs text-amber-700 hover:underline"
+                    >
+                      إعادة الترشيح
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+
+    <!-- Panel 3: Funding Scenario -->
+    <div class="card p-5 mb-5">
+      <h2 class="font-bold mb-3 pb-2 border-b">سيناريو التمويل</h2>
+      <div class="grid grid-cols-3 gap-3">
+        @for (opt of SCENARIO_OPTIONS; track opt.value) {
+          <div
+            class="scenario-card"
+            [class.selected]="fScenario() === opt.value"
+            (click)="onScenarioSelect(opt.value)"
+          >
+            <div class="flex items-center gap-2 mb-2">
+              <span class="scenario-num">{{ scenarioNum(opt.value) }}</span>
+              <span class="font-bold text-sm">{{ l.t(opt.key) }}</span>
+            </div>
+            <p class="text-xs text-slate-500">{{ l.t(opt.hint) }}</p>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Panel 4: Financial Items -->
+    <div class="card p-5 mb-5">
+      <div class="flex items-center justify-between mb-3 pb-2 border-b">
+        <h2 class="font-bold">البنود المالية</h2>
+        @if (isReviewable()) {
+          <div class="flex gap-2">
+            <button
+              type="button"
+              (click)="toggleAddItem()"
+              [disabled]="actionBusy()"
+              class="px-3 py-1.5 rounded-lg border border-slate-300 text-xs"
+            >
+              ➕ إضافة بند
+            </button>
+            <button
+              type="button"
+              (click)="onAutoFill()"
+              [disabled]="actionBusy()"
+              class="px-3 py-1.5 rounded-lg bg-blue-100 text-blue-800 text-xs"
+            >
+              ⚡ تعبئة تلقائية من الإعدادات
+            </button>
+          </div>
+        }
+      </div>
+
+      @if (addItemSelectOpen()) {
+        <div class="bg-slate-50 border rounded-lg p-3 mb-3 grid grid-cols-3 gap-3 items-end">
+          <label class="block col-span-2">
+            <span class="text-xs text-slate-600 mb-1 block">البند</span>
+            <select
+              [value]="addItemId()"
+              (change)="addItemId.set($any($event.target).value)"
+              class="input-field px-2 py-1.5 rounded-lg w-full text-sm"
+            >
+              <option value="">اختر بندًا...</option>
+              @for (fi of financialItems(); track fi.id) {
+                <option [value]="fi.id">{{ fi.nameAr }}</option>
+              }
+            </select>
+          </label>
+          <label class="block">
+            <span class="text-xs text-slate-600 mb-1 block">المبلغ التقديري</span>
+            <input
+              type="number" min="0" step="0.001"
+              [value]="addItemAmount()"
+              (input)="addItemAmount.set(+$any($event.target).value)"
+              class="input-field px-2 py-1.5 rounded-lg w-full text-sm"
+            />
+          </label>
+          <div class="col-span-3 flex gap-2 justify-end">
+            <button type="button" (click)="toggleAddItem()" class="px-3 py-1 rounded-lg border text-xs">إلغاء</button>
+            <button type="button" (click)="onConfirmAddItem()" [disabled]="!addItemId() || actionBusy()" class="btn-primary px-3 py-1 rounded-lg text-white text-xs">إضافة</button>
+          </div>
+        </div>
+      }
+
+      @if (financials().length === 0) {
+        <p class="text-sm text-slate-500">لا توجد بنود مالية بعد — استخدم "تعبئة تلقائية" أو أضف بنودًا يدويًا.</p>
+      } @else {
+        <table class="w-full text-sm">
+          <thead class="text-slate-600 border-b">
+            <tr>
+              <th class="p-2 text-start">البند</th>
+              <th class="p-2 text-center">المصدر</th>
+              <th class="p-2 text-center">المبلغ التقديري (ر.ع)</th>
+              <th class="p-2 text-start">ملاحظات</th>
+              <th class="p-2 text-center"></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (fin of financials(); track fin.id) {
+              <tr class="border-b">
+                <td class="p-2 font-medium">{{ fin.financialItemName || financialItemName(fin.financialItemId) }}</td>
+                <td class="p-2 text-center text-xs text-slate-600">
+                  {{ sourceLabel(sourceFor(fin.financialItemId)) }}
+                </td>
+                <td class="p-2 text-center">
+                  @if (isReviewable()) {
+                    <input
+                      type="number" min="0" step="0.001"
+                      [value]="fin.estimatedAmountOMR ?? 0"
+                      (input)="onAmountInput(fin, $any($event.target).value)"
+                      class="input-field px-2 py-1 rounded w-28 text-center text-sm"
+                    />
+                  } @else {
+                    {{ fin.estimatedAmountOMR | number:'1.3-3' }}
+                  }
+                </td>
+                <td class="p-2">
+                  @if (isReviewable()) {
+                    <input
+                      type="text"
+                      [value]="fin.notes ?? ''"
+                      (input)="onNotesInput(fin, $any($event.target).value)"
+                      class="input-field px-2 py-1 rounded w-full text-sm"
+                    />
+                  } @else {
+                    {{ fin.notes || '—' }}
+                  }
+                </td>
+                <td class="p-2 text-center">
+                  @if (isReviewable()) {
+                    <button
+                      type="button"
+                      (click)="onDeleteLine(fin)"
+                      [disabled]="actionBusy()"
+                      class="text-red-600 text-xs hover:underline"
+                    >حذف</button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr class="font-bold bg-slate-50">
+              <td class="p-2" colspan="2">الإجمالي</td>
+              <td class="p-2 text-center">{{ grandTotal() | number:'1.3-3' }}</td>
+              <td class="p-2" colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
+      }
+    </div>
+
+    <!-- Actions -->
+    @if (isReviewable()) {
+      <div class="flex gap-3 justify-end flex-wrap">
+        <button type="button" (click)="openReject()" [disabled]="actionBusy()" class="btn-danger px-5 py-2 rounded-xl text-white">
+          ❌ رفض الطلب
+        </button>
+        <button type="button" (click)="openReturnCourse()" [disabled]="actionBusy()" class="btn-amber px-5 py-2 rounded-xl text-white">
+          🔁 إعادة إلى مُنشئ الطلب
+        </button>
+        <button type="button" (click)="onSaveAssignments(false)" [disabled]="actionBusy() || fScenario() === null" class="px-5 py-2 rounded-xl border border-slate-300">
+          💾 حفظ التعيينات
+        </button>
+        <button type="button" (click)="onSaveAssignments(true)" [disabled]="actionBusy() || fScenario() === null || financials().length === 0" class="btn-primary px-5 py-2 rounded-xl text-white">
+          📤 إرسال إلى TD
+        </button>
+      </div>
+    }
+  }
+</div>
+
+<gtms-notes-drawer
+  [isOpen]="notesOpen()"
+  [entityType]="PlanNoteEntityType.CasualCourse"
+  [entityId]="courseId()"
+  [title]="'ملاحظات الطلب'"
+  (closeDrawer)="closeNotesDrawer()"
+></gtms-notes-drawer>
+
+<gtms-return-modal
+  [isOpen]="returnModalOpen()"
+  [entityType]="returnTargetType()"
+  [entityId]="returnTargetId()"
+  (cancelled)="onReturnCancelled()"
+  (confirmed)="onReturnConfirmed()"
+></gtms-return-modal>
+
+<!-- Reject modal -->
+@if (rejectOpen()) {
+  <div class="modal-overlay open" (click)="closeReject()">
+    <div class="modal-box" (click)="$event.stopPropagation()" dir="rtl">
+      <h3 class="font-bold text-lg mb-2">رفض الطلب</h3>
+      <p class="text-sm text-slate-600 mb-3">أدخل سبب الرفض (10 أحرف على الأقل). هذا الإجراء نهائي.</p>
+      <textarea
+        rows="4"
+        [value]="rejectReason()"
+        (input)="rejectReason.set($any($event.target).value)"
+        class="input-field px-3 py-2 rounded-lg w-full mb-3"
+        placeholder="سبب الرفض..."
+      ></textarea>
+      <div class="flex gap-2 justify-end">
+        <button type="button" (click)="closeReject()" class="px-4 py-2 rounded-lg border">إلغاء</button>
+        <button
+          type="button"
+          (click)="onConfirmReject()"
+          [disabled]="rejectReason().trim().length < 10 || rejectSubmitting()"
+          class="btn-danger px-4 py-2 rounded-lg text-white"
+        >
+          تأكيد الرفض
+        </button>
+      </div>
+    </div>
+  </div>
+}
