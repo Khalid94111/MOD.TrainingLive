@@ -4,11 +4,13 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using MOD.Training.Training.CasualCourses;
 using MOD.Training.Training.Catalog;
 using MOD.Training.Training.Centers;
 using MOD.Training.Training.Enums;
 using MOD.Training.Training.Finance;
 using MOD.Training.Training.Hr;
+using MOD.Training.Training.Managers;
 using MOD.Training.Training.Nominations;
 using MOD.Training.Training.Plans;
 using MOD.Training.Training.TenantCourses;
@@ -62,6 +64,11 @@ public class TenantDataSeeder(
     IRepository<PriceQuote, Guid> quoteRepo,
     IRepository<CourseProposal, Guid> proposalRepo,
     IRepository<FinancialItemRankAmount, Guid> financialItemRankAmountRepo,
+    IRepository<CasualCourse, Guid> casualCourseRepo,
+    IRepository<CasualCourseFinancial, Guid> casualCourseFinancialRepo,
+    IRepository<CasualCourseNomination, Guid> casualCourseNominationRepo,
+    IRepository<PlanNote, Guid> planNoteRepo,
+    FinancialItemDefaultResolver financialItemDefaultResolver,
     IUnitOfWorkManager uowManager,
     ILogger<TenantDataSeeder> logger)
     : ITransientDependency, ITenantDataSeeder
@@ -102,6 +109,7 @@ public class TenantDataSeeder(
             //await InUow(() => SeedCenterPlansAsync(tenant.Id));
             //await InUow(() => SeedAnnualPlanAsync(prefix, scenario,tenant.Id));
             //await InUow(() => SeedProposalsAsync(tenant.Id));
+            await InUow(() => SeedCasualCoursesAsync(tenant.Id));
         }
     }
 
@@ -554,5 +562,147 @@ private async Task SeedFinancialItemsAsync(Guid tenantId)
     {
         await proposalRepo.InsertAsync(new CourseProposal(guidGenerator.Create()) { TenantId=tenantId,  CourseNameAr = "تحليل المخاطر الأمنية", CourseNameEn = "Security Risk Analysis", Category = "Military", Nature = "Qualifying", FieldId = FieldIds.Security, Status = ProposalStatus.Pending, ProposedById = _users["UTM1"] }, autoSave: true);
         await proposalRepo.InsertAsync(new CourseProposal(guidGenerator.Create()) { TenantId = tenantId, CourseNameAr = "صيانة المدرعات", CourseNameEn = "Armored Vehicle Maintenance", Category = "Military", Nature = "Mandatory", FieldId = FieldIds.Engineering, Status = ProposalStatus.Approved, ProposedById = _users["UTM3"] }, autoSave: true);
+    }
+
+    // ── CASUAL COURSES (Phase 4A) ──
+    // Seeds 3 casual courses per tenant at Draft / UnderReview / THApproved.
+    // Queries the DB directly so it survives even when other Seed* methods are
+    // disabled — if required prerequisites (tenant courses, UTM user, units) are
+    // missing, the method logs a warning and exits cleanly per Risk #6.
+    private async Task SeedCasualCoursesAsync(Guid tenantId)
+    {
+        if (await casualCourseRepo.AnyAsync(x => x.TenantId == tenantId))
+            return;
+
+        var tenantCourses = await tenantCourseRepo.GetListAsync(x => x.TenantId == tenantId && x.IsActive);
+        if (tenantCourses.Count < 3)
+        {
+            logger.LogWarning("Skipping casual course seed — tenant {TenantId} has fewer than 3 active tenant courses ({Count}).", tenantId, tenantCourses.Count);
+            return;
+        }
+
+        var utm = await employeeRepo.FirstOrDefaultAsync(x => x.TenantId == tenantId);
+        if (utm == null)
+        {
+            logger.LogWarning("Skipping casual course seed — tenant {TenantId} has no employees.", tenantId);
+            return;
+        }
+
+        var picked = tenantCourses.Take(3).ToList();
+        var today = DateTime.Today;
+        var scenarios = new[]
+        {
+            (status: CasualCourseStatus.Draft,       courseType: CourseType.Internal,              durationDays: 5,  fromOffset: 60, fundingCode: (string?)null),
+            (status: CasualCourseStatus.UnderReview, courseType: CourseType.ExternalLocal,         durationDays: 7,  fromOffset: 75, fundingCode: (string?)"NEBR-2026-1"),
+            (status: CasualCourseStatus.THApproved,  courseType: CourseType.ExternalInternational, durationDays: 10, fromOffset: 90, fundingCode: (string?)"NEBR-2026-2"),
+        };
+
+        for (int i = 0; i < scenarios.Length; i++)
+        {
+            var s = scenarios[i];
+            var from = today.AddDays(s.fromOffset);
+            var to = from.AddDays(s.durationDays - 1);
+            var cc = new CasualCourse(
+                guidGenerator.Create(),
+                picked[i].Id,
+                utm.MainUnitId,
+                utm.UserId,
+                s.courseType,
+                priority: i + 1,
+                justification: $"دورة تجريبية رقم {i + 1} — حالة {s.status}",
+                durationDays: s.durationDays,
+                from: from,
+                to: to)
+            {
+                TenantId = tenantId,
+                FundingSource = s.fundingCode,
+                Status = s.status,
+                DescriptionAr = "بيانات تجريبية لأغراض العرض",
+                ObjectivesAr = "تجربة تدفق الدورات العارضة",
+            };
+
+            // Financials + scenario only for THApproved
+            if (s.status == CasualCourseStatus.THApproved)
+            {
+                cc.FundingScenario = FundingScenario.FundingSourceCoversAll;
+                var defaults = await financialDefaultRepo.GetListAsync(x => x.CourseType == s.courseType && x.TenantId == tenantId);
+                if (defaults.Any())
+                {
+                    decimal total = 0;
+                    foreach (var def in defaults)
+                    {
+                        var fi = await financialItemRepo.FindAsync(def.FinancialItemId);
+                        if (fi == null) continue;
+                        var amount = financialItemDefaultResolver.ComputeSubtotal(
+                            fi.DefaultAmountOMR, fi.IsPerDay, fi.IsPerNominee,
+                            s.durationDays, fi.ExtraDaysBefore, fi.ExtraDaysAfter, nomineeCount: 3);
+                        total += amount;
+                    }
+                    cc.EstimatedTotalCost = total;
+                }
+            }
+
+            await casualCourseRepo.InsertAsync(cc, autoSave: true);
+
+            // Nominations (2 or 3 depending on scenario)
+            var nomineeCount = s.status == CasualCourseStatus.THApproved ? 3 : 2;
+            var employees = await employeeRepo.GetListAsync(x => x.TenantId == tenantId && x.IsActive);
+            foreach (var emp in employees.Take(nomineeCount))
+            {
+                await casualCourseNominationRepo.InsertAsync(
+                    new CasualCourseNomination(guidGenerator.Create(), cc.Id, emp.Id)
+                    {
+                        TenantId = tenantId,
+                    },
+                    autoSave: true);
+            }
+
+            // Financial rows for THApproved
+            if (s.status == CasualCourseStatus.THApproved && cc.EstimatedTotalCost.HasValue)
+            {
+                var defaults = await financialDefaultRepo.GetListAsync(x => x.CourseType == s.courseType && x.TenantId == tenantId);
+                foreach (var def in defaults)
+                {
+                    var fi = await financialItemRepo.FindAsync(def.FinancialItemId);
+                    if (fi == null) continue;
+                    var amount = financialItemDefaultResolver.ComputeSubtotal(
+                        fi.DefaultAmountOMR, fi.IsPerDay, fi.IsPerNominee,
+                        s.durationDays, fi.ExtraDaysBefore, fi.ExtraDaysAfter, nomineeCount: 3);
+                    await casualCourseFinancialRepo.InsertAsync(
+                        new CasualCourseFinancial(
+                            guidGenerator.Create(), cc.Id, fi.Id, amount, FinancialAmountSource.FundingSource)
+                        {
+                            TenantId = tenantId,
+                        },
+                        autoSave: true);
+                }
+            }
+
+            // Approval-chain notes on UnderReview and THApproved
+            if (s.status == CasualCourseStatus.UnderReview)
+            {
+                await planNoteRepo.InsertAsync(
+                    new PlanNote(guidGenerator.Create(),
+                        PlanNoteEntityType.CasualCourse, cc.Id,
+                        "موافقة — يُرفع للاعتماد المالي",
+                        PlanNoteAuthorRole.UGM, false)
+                    { TenantId = tenantId },
+                    autoSave: true);
+            }
+            else if (s.status == CasualCourseStatus.THApproved)
+            {
+                await planNoteRepo.InsertManyAsync(new[]
+                {
+                    new PlanNote(guidGenerator.Create(), PlanNoteEntityType.CasualCourse, cc.Id,
+                        "موافقة UGM", PlanNoteAuthorRole.UGM, false) { TenantId = tenantId },
+                    new PlanNote(guidGenerator.Create(), PlanNoteEntityType.CasualCourse, cc.Id,
+                        "مراجعة مالية مكتملة", PlanNoteAuthorRole.Staff, false) { TenantId = tenantId },
+                    new PlanNote(guidGenerator.Create(), PlanNoteEntityType.CasualCourse, cc.Id,
+                        "اعتماد المدير", PlanNoteAuthorRole.TD, false) { TenantId = tenantId },
+                    new PlanNote(guidGenerator.Create(), PlanNoteEntityType.CasualCourse, cc.Id,
+                        "اعتماد القائد", PlanNoteAuthorRole.TH, false) { TenantId = tenantId },
+                }, autoSave: true);
+            }
+        }
     }
 }
