@@ -1,6 +1,7 @@
 using MOD.Training.Training.Enums;
 using MOD.Training.Training.Hr;
 using MOD.Training.Training.Plans;
+using MOD.Training.Training.TenantCourses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Repositories;
- 
+
 
 namespace MOD.Training.Training.Managers;
 
@@ -19,6 +20,7 @@ namespace MOD.Training.Training.Managers;
 public class NominationConditionValidator(
     IRepository<SessionCondition, Guid> sessionConditionRepo,
     IRepository<PlanItemCondition, Guid> planItemConditionRepo,
+    IRepository<TenantCourseCondition, Guid> tenantCourseConditionRepo,
     EmployeeResolver employeeResolver)
     : ITransientDependency
 {
@@ -33,7 +35,6 @@ public class NominationConditionValidator(
     {
         var results = new List<ConditionResult>();
 
-        // Get employee with rank
         var employee = await employeeResolver.GetWithRankAsync(employeeId);
         if (employee == null)
         {
@@ -41,26 +42,19 @@ public class NominationConditionValidator(
             return results;
         }
 
-        // Get all ranks for comparison
         var allRanks = await employeeResolver.GetAllRanksAsync();
 
-        // Get conditions from session
         var condQueryable = await sessionConditionRepo.GetQueryableAsync();
         var conditions = await sessionConditionRepo.AsyncExecuter.ToListAsync(
             condQueryable.Where(x => x.SessionId == sessionId));
 
-        // If no session conditions, check plan item conditions
         if (!conditions.Any())
         {
-            // Session conditions might not be populated yet — this is OK
             return results;
         }
 
         foreach (var condition in conditions)
-        {
-            var result = ValidateCondition(condition.ConditionType, condition.ConditionValue, employee, allRanks);
-            results.Add(result);
-        }
+            results.Add(EvaluateCondition(condition.ConditionType, condition.ConditionValue, employee, allRanks));
 
         return results;
     }
@@ -89,15 +83,41 @@ public class NominationConditionValidator(
             condQueryable.Where(x => x.PlanItemId == planItemId));
 
         foreach (var condition in conditions)
-        {
-            var result = ValidateCondition(condition.ConditionType, condition.ConditionValue, employee, allRanks);
-            results.Add(result);
-        }
+            results.Add(EvaluateCondition(condition.ConditionType, condition.ConditionValue, employee, allRanks));
 
         return results;
     }
 
-    private ConditionResult ValidateCondition(
+    /// <summary>
+    /// Validates an employee against tenant-course-level conditions. Used by casual courses
+    /// (no session / plan item yet). Permissive default — if no conditions exist, pass.
+    /// </summary>
+    public async Task<List<ConditionResult>> ValidateByTenantCourseAsync(Guid tenantCourseId, Guid employeeId)
+    {
+        var results = new List<ConditionResult>();
+
+        var employee = await employeeResolver.GetWithRankAsync(employeeId);
+        if (employee == null)
+        {
+            results.Add(new ConditionResult(false, "الموظف", "الموظف غير موجود في النظام"));
+            return results;
+        }
+
+        var allRanks = await employeeResolver.GetAllRanksAsync();
+
+        var condQueryable = await tenantCourseConditionRepo.GetQueryableAsync();
+        var conditions = await tenantCourseConditionRepo.AsyncExecuter.ToListAsync(
+            condQueryable.Where(x => x.TenantCourseId == tenantCourseId && x.IsActive));
+
+        if (!conditions.Any()) return results;
+
+        foreach (var condition in conditions)
+            results.Add(EvaluateCondition(condition.ConditionType, condition.ConditionValue, employee, allRanks));
+
+        return results;
+    }
+
+    private ConditionResult EvaluateCondition(
         ConditionType type, string conditionValueJson, Employee employee, List<Rank> allRanks)
     {
         try
