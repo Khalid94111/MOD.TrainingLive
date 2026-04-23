@@ -151,10 +151,39 @@ export const TRAINING_ROUTES: Routes = [
       // { path: 'nominations', loadComponent: () => import(...) },
       // { path: 'price-quotes', loadComponent: () => import(...) },
 
+      // ===== Phase 4A: Casual Courses =====
+      {
+        path: 'casual-courses',
+        loadComponent: () =>
+          import('./casual-courses/casual-courses-list/casual-courses-list.component')
+            .then(m => m.CasualCoursesListComponent),
+      },
+      {
+        path: 'casual-courses/new',
+        loadComponent: () =>
+          import('./casual-courses/casual-course-request/casual-course-request.component')
+            .then(m => m.CasualCourseRequestComponent),
+      },
+      {
+        path: 'casual-courses/:id/edit',
+        loadComponent: () =>
+          import('./casual-courses/casual-course-request/casual-course-request.component')
+            .then(m => m.CasualCourseRequestComponent),
+      },
+      {
+        path: 'casual-courses/:id/review',
+        loadComponent: () =>
+          import('./casual-courses/casual-course-review/casual-course-review.component')
+            .then(m => m.CasualCourseReviewComponent),
+      },
+      {
+        path: 'casual-courses/:id/approve',
+        loadComponent: () =>
+          import('./casual-courses/casual-course-approval/casual-course-approval.component')
+            .then(m => m.CasualCourseApprovalComponent),
+      },
+
       // Phase 4 (future)
-      // { path: 'casual-courses', loadComponent: () => import(...) },
-      // { path: 'casual-courses/new', loadComponent: () => import(...) },
-      // { path: 'casual-courses/:id/review', loadComponent: () => import(...) },
       // { path: 'payments/travel', loadComponent: () => import(...) },
       // { path: 'payments/course', loadComponent: () => import(...) },
       // { path: 'payments/reallocations', loadComponent: () => import(...) },
