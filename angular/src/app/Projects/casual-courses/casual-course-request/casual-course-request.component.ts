@@ -70,18 +70,18 @@ export class CasualCourseRequestComponent implements OnInit {
   showFundingSource = computed(() => this.fCourseType() !== CourseType.Internal);
   nomineeCount = computed(() => this.fNomineeIds().length);
 
-  dateRangeWarning = computed(() => {
+  computedDateTo = computed(() => {
     const from = this.fDateFrom();
-    const to = this.fDateTo();
-    const declaredDays = this.fDurationDays();
-    if (!from || !to || declaredDays <= 0) return null;
-    const ms = new Date(to).getTime() - new Date(from).getTime();
-    if (Number.isNaN(ms) || ms < 0) return 'نطاق التاريخ غير صالح';
-    const actualDays = Math.round(ms / (1000 * 60 * 60 * 24)) + 1;
-    if (actualDays !== declaredDays) {
-      return `نطاق التاريخ (${actualDays} يوم) لا يطابق المدة المدخلة (${declaredDays} يوم)`;
-    }
-    return null;
+    const years = this.fDurationYears();
+    const months = this.fDurationMonths();
+    const days = this.fDurationDays();
+    if (!from || (years <= 0 && months <= 0 && days <= 0)) return '';
+    const d = new Date(from);
+    if (Number.isNaN(d.getTime())) return '';
+    d.setFullYear(d.getFullYear() + years);
+    d.setMonth(d.getMonth() + months);
+    d.setDate(d.getDate() + Math.max(days - 1, 0));
+    return d.toISOString().substring(0, 10);
   });
 
   canSubmit = computed(() => {
@@ -134,6 +134,13 @@ export class CasualCourseRequestComponent implements OnInit {
         this.preview.set(null);
       }
     });
+
+    effect(() => {
+      const next = this.computedDateTo();
+      if (this.fDateTo() !== next) {
+        this.fDateTo.set(next);
+      }
+    }, { allowSignalWrites: true });
   }
 
   async ngOnInit(): Promise<void> {
