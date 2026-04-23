@@ -1,0 +1,102 @@
+<div class="p-6" dir="rtl">
+  <!-- Header -->
+  <div class="card p-5 mb-5 flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold">الدورات العرضية</h1>
+      <p class="text-sm text-slate-500">طلبات الدورات خارج الخطة السنوية</p>
+    </div>
+    @if (canCreate()) {
+      <a routerLink="/training/casual-courses/new" class="btn-primary px-5 py-2 rounded-xl text-white">
+        ✏️ طلب جديد
+      </a>
+    }
+  </div>
+
+  <!-- Filter toolbar -->
+  <div class="card p-4 mb-5 flex gap-3 flex-wrap items-center">
+    <select
+      [value]="fStatus()"
+      (change)="onStatusChange($any($event.target).value)"
+      class="input-field px-3 py-2 rounded-lg"
+    >
+      <option value="">كل الحالات</option>
+      @for (opt of STATUS_OPTIONS; track opt.value) {
+        <option [value]="opt.value">{{ l.t(opt.key) }}</option>
+      }
+    </select>
+
+    <input
+      [value]="fSearch()"
+      (input)="onSearchChange($any($event.target).value)"
+      placeholder="بحث بالاسم أو الجهة الممولة..."
+      class="input-field px-3 py-2 rounded-lg flex-1 min-w-64"
+    />
+
+    <label class="flex items-center gap-2 text-sm">
+      <input
+        type="checkbox"
+        [checked]="fOnlyMine()"
+        (change)="onOnlyMineChange($any($event.target).checked)"
+      />
+      طلباتي فقط
+    </label>
+  </div>
+
+  <!-- Grid -->
+  @if (loading()) {
+    <div class="card p-12 text-center text-slate-500">
+      <div class="text-4xl mb-3">⏳</div>
+      جاري التحميل...
+    </div>
+  } @else if (filteredRows().length === 0) {
+    <div class="card p-12 text-center">
+      <div class="text-6xl mb-3">🎯</div>
+      <h3 class="font-bold mb-2">لا توجد طلبات</h3>
+      <p class="text-sm text-slate-500 mb-4">لم يتم العثور على أي دورات عرضية مطابقة للفلاتر الحالية.</p>
+      @if (canCreate()) {
+        <a routerLink="/training/casual-courses/new" class="btn-primary px-4 py-2 rounded-lg inline-block text-white">
+          إنشاء أول طلب
+        </a>
+      }
+    </div>
+  } @else {
+    <div class="card overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-50 text-slate-600">
+          <tr>
+            <th class="p-3 text-start">اسم الدورة</th>
+            <th class="p-3 text-start">الجهة الممولة</th>
+            <th class="p-3 text-start">الوحدة</th>
+            <th class="p-3 text-start">مقدم الطلب</th>
+            <th class="p-3 text-center">عدد المرشحين</th>
+            <th class="p-3 text-end">التكلفة المقدّرة</th>
+            <th class="p-3 text-center">الحالة</th>
+            <th class="p-3 text-center">الإجراء</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of filteredRows(); track row.id) {
+            <tr
+              class="table-row border-t"
+              [class.returned-row]="row.isReturned"
+              (click)="onRowClick(row)"
+            >
+              <td class="p-3 font-medium">{{ row.courseNameAr || '—' }}</td>
+              <td class="p-3">{{ row.fundingSource || '—' }}</td>
+              <td class="p-3">{{ row.unitName || '—' }}</td>
+              <td class="p-3">{{ row.requesterName || '—' }}</td>
+              <td class="p-3 text-center">{{ row.nomineesCount ?? 0 }}</td>
+              <td class="p-3 text-end">{{ formatCost(row.estimatedTotalCost) }} ر.ع</td>
+              <td class="p-3 text-center">
+                <span class="status-badge" [class]="statusCss(row.status)">
+                  {{ statusLabel(row.status) }}
+                </span>
+              </td>
+              <td class="p-3 text-center text-slate-600">{{ actionLabel(row) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
