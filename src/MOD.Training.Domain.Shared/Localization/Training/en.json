@@ -709,6 +709,7 @@
     "Training:TrainingPlan:YearAlreadyExists": "A training plan for year {Year} already exists",
     "Training:TrainingPlan:NotInDraftStatus": "Plan must be in Draft status for this action",
     "Training:TrainingPlan:NotInSubmittedStatus": "Plan must be in Submitted status to start review",
+    "Training:TrainingPlan:NotInUnderReviewStatus": "Plan must be Under Review before it can be TD-approved",
     "Training:TrainingPlan:WindowNotOpen": "Submission window is not open",
 
     "Training.TrainingPlan.ReviewStarted": "Plan review has started",

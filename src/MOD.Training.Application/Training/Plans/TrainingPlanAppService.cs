@@ -156,6 +156,11 @@ public class TrainingPlanAppService(
     public async Task ApproveAsync(Guid id)
     {
         var entity = await repository.GetAsync(id);
+        // Defensive guard: the TD-approval transition must come from UnderReview only.
+        // Prevents any caller (including a misrouted frontend button) from flipping a
+        // Submitted or ReturnedToCreator plan straight to TDApproved and skipping staff review.
+        if (entity.Status != PlanStatus.UnderReview)
+            throw new Volo.Abp.BusinessException("Training:TrainingPlan:NotInUnderReviewStatus");
         await ValidateCostGateAsync(id);
         await ValidateNoUnresolvedReturnsAsync(id);
         entity.Status = PlanStatus.TDApproved;
