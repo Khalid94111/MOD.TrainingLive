@@ -57,12 +57,22 @@ public static class TrainingPermissions
 
     public static class CasualCourses
     {
-        public const string Default = GroupName + ".CasualCourses";
-        public const string Create = Default + ".Create";
-        public const string ApproveUGM = Default + ".ApproveUGM";
-        public const string Review = Default + ".Review";
-        public const string ApproveTD = Default + ".ApproveTD";
-        public const string ApproveTH = Default + ".ApproveTH";
+        public const string Default     = GroupName + ".CasualCourses";
+        public const string Create      = Default + ".Create";
+        public const string Edit        = Default + ".Edit";
+        public const string Delete      = Default + ".Delete";
+        public const string Submit      = Default + ".Submit";
+        public const string Approve     = Default + ".Approve";     // UGM approve
+        public const string Review      = Default + ".Review";      // Staff (start-review + assign-scenario + financials)
+        public const string TDApprove   = Default + ".TDApprove";
+        public const string HeadApprove = Default + ".HeadApprove";
+        public const string Return      = Default + ".Return";
+        public const string Reject      = Default + ".Reject";
+
+        // Aliases kept for older pre-v4.5 scaffolding bindings
+        public const string ApproveUGM  = Approve;
+        public const string ApproveTD   = TDApprove;
+        public const string ApproveTH   = HeadApprove;
     }
 
     public static class Finance
