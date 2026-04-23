@@ -787,6 +787,44 @@
     "Training.PlanItem.FundingSource": "Funding Source",
     "Training.PlanItem.Objectives": "Objectives",
     "Training.PlanItem.Description": "Description",
-    "Training.PlanItem.Conditions": "Enrollment Conditions"
+    "Training.PlanItem.Conditions": "Enrollment Conditions",
+
+    "Training:CasualCourse:NotFound": "Casual course not found",
+    "Training:CasualCourse:InvalidStatusTransition": "Invalid status transition for this action",
+    "Training:CasualCourse:NoNominations": "At least one nominee is required before submit",
+    "Training:CasualCourse:DurationRequired": "Duration (days) must be greater than zero",
+    "Training:CasualCourse:DateRangeInvalid": "Start date must be before or equal to end date",
+    "Training:CasualCourse:FundingSourceRequired": "Funding source is required for external courses",
+    "Training:CasualCourse:CostRequired": "Estimated total cost must be set and greater than zero",
+    "Training:CasualCourse:ScenarioRequired": "Funding scenario must be assigned before approval",
+    "Training:CasualCourse:ConditionsFailed": "One or more nominees do not meet enrollment conditions",
+    "Training:CasualCourse:UnresolvedReturn": "Cannot approve — there is an outstanding return that must be resolved first",
+    "Training:CasualCourse:UnresolvedReturnedNominations": "Cannot approve — one or more nominations are in returned state",
+    "Training:CasualCourse:CannotDeleteInThisStatus": "Casual course can only be deleted while in Draft status",
+    "Training:CasualCourse:CannotEditInThisStatus": "Casual course can only be edited in Draft or Returned-to-Creator status",
+    "Training:CasualCourse:DuplicateNominee": "This employee is already nominated for this casual course",
+
+    "Training.CasualCourseStatus.Draft": "Draft",
+    "Training.CasualCourseStatus.Submitted": "Submitted",
+    "Training.CasualCourseStatus.UGMApproved": "UGM Approved",
+    "Training.CasualCourseStatus.UnderReview": "Under Review",
+    "Training.CasualCourseStatus.StaffReviewed": "Staff Reviewed",
+    "Training.CasualCourseStatus.TDApproved": "TD Approved",
+    "Training.CasualCourseStatus.THApproved": "TH Approved",
+    "Training.CasualCourseStatus.ReturnedToCreator": "Returned to Creator",
+    "Training.CasualCourseStatus.Rejected": "Rejected",
+
+    "Training.FundingScenario.FundingSourceCoversAll": "Funding source covers all",
+    "Training.FundingScenario.FundingSourceCoversCourse": "Funding source covers course only (travel via reallocation)",
+    "Training.FundingScenario.FinancialItemsCoverAll": "Full reallocation from financial items",
+
+    "Permission:CasualCourses.Edit": "Edit",
+    "Permission:CasualCourses.Delete": "Delete",
+    "Permission:CasualCourses.Submit": "Submit",
+    "Permission:CasualCourses.Approve": "Approve (UGM)",
+    "Permission:CasualCourses.TDApprove": "Approve (TD)",
+    "Permission:CasualCourses.HeadApprove": "Approve (TH)",
+    "Permission:CasualCourses.Return": "Return",
+    "Permission:CasualCourses.Reject": "Reject"
   }
 }

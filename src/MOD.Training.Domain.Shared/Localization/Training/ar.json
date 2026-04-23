@@ -737,6 +737,44 @@
     "Training.PlanItem.FundingSource": "مصدر التمويل",
     "Training.PlanItem.Objectives": "الأهداف",
     "Training.PlanItem.Description": "الوصف",
-    "Training.PlanItem.Conditions": "شروط الالتحاق"
+    "Training.PlanItem.Conditions": "شروط الالتحاق",
+
+    "Training:CasualCourse:NotFound": "الدورة العارضة غير موجودة",
+    "Training:CasualCourse:InvalidStatusTransition": "لا يمكن تنفيذ هذا الإجراء في الحالة الحالية",
+    "Training:CasualCourse:NoNominations": "يجب ترشيح موظف واحد على الأقل قبل الإرسال",
+    "Training:CasualCourse:DurationRequired": "عدد أيام الدورة يجب أن يكون أكبر من صفر",
+    "Training:CasualCourse:DateRangeInvalid": "تاريخ البداية يجب أن يسبق تاريخ النهاية",
+    "Training:CasualCourse:FundingSourceRequired": "مصدر التمويل مطلوب للدورات الخارجية",
+    "Training:CasualCourse:CostRequired": "يجب تحديد التكلفة التقديرية وأن تكون أكبر من صفر",
+    "Training:CasualCourse:ScenarioRequired": "يجب اختيار سيناريو التمويل قبل الاعتماد",
+    "Training:CasualCourse:ConditionsFailed": "لا يستوفي أحد المرشحين أو أكثر شروط الالتحاق",
+    "Training:CasualCourse:UnresolvedReturn": "لا يمكن الاعتماد — يوجد إرجاع مفتوح يجب معالجته أولاً",
+    "Training:CasualCourse:UnresolvedReturnedNominations": "لا يمكن الاعتماد — يوجد مرشحون في حالة إرجاع",
+    "Training:CasualCourse:CannotDeleteInThisStatus": "لا يمكن حذف الدورة العارضة إلا في حالة المسودة",
+    "Training:CasualCourse:CannotEditInThisStatus": "لا يمكن تعديل الدورة العارضة إلا في حالة المسودة أو الإرجاع",
+    "Training:CasualCourse:DuplicateNominee": "هذا الموظف مرشح بالفعل لهذه الدورة",
+
+    "Training.CasualCourseStatus.Draft": "مسودة",
+    "Training.CasualCourseStatus.Submitted": "مُرسلة",
+    "Training.CasualCourseStatus.UGMApproved": "معتمدة من UGM",
+    "Training.CasualCourseStatus.UnderReview": "قيد المراجعة",
+    "Training.CasualCourseStatus.StaffReviewed": "تمت مراجعتها من الموظفين",
+    "Training.CasualCourseStatus.TDApproved": "معتمدة من TD",
+    "Training.CasualCourseStatus.THApproved": "معتمدة من TH",
+    "Training.CasualCourseStatus.ReturnedToCreator": "مُعادة للمنشئ",
+    "Training.CasualCourseStatus.Rejected": "مرفوضة",
+
+    "Training.FundingScenario.FundingSourceCoversAll": "مصدر التمويل يغطي الكل",
+    "Training.FundingScenario.FundingSourceCoversCourse": "مصدر التمويل يغطي الدورة (السفر عبر إعادة التخصيص)",
+    "Training.FundingScenario.FinancialItemsCoverAll": "إعادة تخصيص كاملة من البنود المالية",
+
+    "Permission:CasualCourses.Edit": "تعديل",
+    "Permission:CasualCourses.Delete": "حذف",
+    "Permission:CasualCourses.Submit": "إرسال",
+    "Permission:CasualCourses.Approve": "اعتماد (UGM)",
+    "Permission:CasualCourses.TDApprove": "اعتماد (TD)",
+    "Permission:CasualCourses.HeadApprove": "اعتماد (TH)",
+    "Permission:CasualCourses.Return": "إعادة",
+    "Permission:CasualCourses.Reject": "رفض"
   }
 }
