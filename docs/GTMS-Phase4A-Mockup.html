@@ -1,0 +1,1671 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTMS — Phase 4A — الدورات العرضية — Design Mockup</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 'tajawal': ['Tajawal', 'sans-serif'] },
+                    colors: {
+                        primary: { 50:'#eff6ff',100:'#dbeafe',200:'#bfdbfe',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8',800:'#1e40af',900:'#1e3a8a' },
+                        success: { 50:'#f0fdf4',100:'#dcfce7',500:'#22c55e',600:'#16a34a',700:'#15803d' },
+                        warning: { 50:'#fffbeb',100:'#fef3c7',500:'#f59e0b',600:'#d97706' },
+                        danger: { 50:'#fef2f2',100:'#fee2e2',500:'#ef4444',600:'#dc2626' },
+                        purple: { 50:'#faf5ff',100:'#f3e8ff',500:'#a855f7',600:'#9333ea' },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { font-family: 'Tajawal', sans-serif; }
+        body { background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); min-height: 100vh; }
+        .card { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .btn-primary { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); transition: all 0.3s; color: white; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.4); }
+        .btn-success { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; }
+        .btn-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; }
+        .btn-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; }
+        .btn-amber { background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%); color: white; }
+        .btn-disabled { background: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
+        .input-field { border: 2px solid #e2e8f0; border-radius: 10px; transition: all 0.3s; }
+        .input-field:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); outline: none; }
+        .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .status-draft { background: #f1f5f9; color: #64748b; }
+        .status-submitted { background: #fef3c7; color: #d97706; }
+        .status-ugm-approved { background: #dbeafe; color: #2563eb; }
+        .status-under-review { background: #e0e7ff; color: #4338ca; }
+        .status-staff-reviewed { background: #ede9fe; color: #7c3aed; }
+        .status-td-approved { background: #dcfce7; color: #16a34a; }
+        .status-th-approved { background: #065f46; color: #ffffff; }
+        .status-returned { background: #fef3c7; color: #b45309; border: 2px solid #fbbf24; }
+        .status-rejected { background: #fee2e2; color: #dc2626; }
+        .table-row { transition: all 0.2s; }
+        .table-row:hover { background: #f8fafc; cursor: pointer; }
+        .table-row.returned-row { background: #fffbeb; border-right: 3px solid #f59e0b; }
+        .screen { display: none; }
+        .screen.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(4px); } to { opacity:1; transform: translateY(0); } }
+        .tab-btn { padding: 12px 20px; border-bottom: 3px solid transparent; transition: all 0.3s; cursor: pointer; white-space: nowrap; }
+        .tab-btn.active { border-bottom-color: #3b82f6; color: #3b82f6; background: #eff6ff; }
+        .tab-btn:hover { background: #f1f5f9; }
+        .phase-badge { background: linear-gradient(135deg,#d69e2e,#92400e); color:white; padding:2px 10px; border-radius:10px; font-size:11px; font-weight:bold; }
+        .scope-badge { background:#d69e2e; color:white; padding:2px 8px; border-radius:6px; font-size:10px; font-weight:bold; }
+        .rank-pill { background:#e0e7ff; color:#4338ca; padding:2px 8px; border-radius:8px; font-size:11px; font-weight:600; }
+        .stat-card { background: white; border-radius: 14px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .nominee-chip { background:#eff6ff; border:1.5px solid #bfdbfe; padding:6px 10px; border-radius:20px; display:inline-flex; align-items:center; gap:8px; font-size:13px; }
+        .nominee-chip .remove { color:#dc2626; cursor:pointer; font-weight:700; padding: 0 2px; }
+        .returned-banner { background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 2px solid #fbbf24; border-radius: 14px; padding: 14px 18px; }
+        .note-card { background:white; border:1px solid #e2e8f0; border-radius:10px; padding:12px; }
+        .note-card.return-reason { border-color:#fbbf24; background:#fffbeb; }
+        .role-pill { font-size:10px; padding:2px 8px; border-radius:6px; font-weight:700; }
+        .role-staff { background:#e0e7ff; color:#4338ca; }
+        .role-td { background:#fef3c7; color:#b45309; }
+        .role-th { background:#065f46; color:white; }
+        .role-utm { background:#dbeafe; color:#2563eb; }
+        .role-ugm { background:#fce7f3; color:#be185d; }
+        .drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 40; }
+        .drawer-overlay.open { display: block; animation: fadeIn 0.2s; }
+        .drawer { display: none; position: fixed; top: 0; left: 0; width: 440px; height: 100vh; background: white; box-shadow: -4px 0 24px rgba(0,0,0,0.15); z-index: 50; overflow-y: auto; }
+        .drawer.open { display: block; animation: slideIn 0.25s ease; }
+        @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 60; align-items: center; justify-content: center; }
+        .modal-overlay.open { display: flex; animation: fadeIn 0.2s; }
+        .modal-box { background: white; border-radius: 18px; padding: 24px; max-width: 520px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+        /* Scenario cards */
+        .scenario-card { border: 2px solid #e2e8f0; border-radius: 14px; padding: 16px; transition: all 0.25s; cursor: pointer; background: white; }
+        .scenario-card:hover { border-color: #93c5fd; box-shadow: 0 4px 12px rgba(59,130,246,0.1); }
+        .scenario-card.selected { border-color: #2563eb; background: linear-gradient(135deg, #eff6ff, #dbeafe); box-shadow: 0 4px 16px rgba(37,99,235,0.2); }
+        .scenario-card.selected .scenario-num { background: #2563eb; }
+        .scenario-num { background: #94a3b8; color: white; width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
+        /* State diagram */
+        .sm-node { background: white; border: 2px solid #cbd5e1; border-radius: 12px; padding: 10px 16px; text-align: center; font-weight: 600; font-size: 13px; min-width: 140px; }
+        .sm-node.start { border-color: #64748b; background: #f8fafc; color: #475569; }
+        .sm-node.submit { border-color: #f59e0b; background: #fffbeb; color: #d97706; }
+        .sm-node.ugm { border-color: #ec4899; background: #fdf2f8; color: #be185d; }
+        .sm-node.review { border-color: #6366f1; background: #eef2ff; color: #4338ca; }
+        .sm-node.staff-done { border-color: #a855f7; background: #faf5ff; color: #7c3aed; }
+        .sm-node.td { border-color: #22c55e; background: #f0fdf4; color: #16a34a; }
+        .sm-node.returned { border-color: #f59e0b; background: #fffbeb; color: #b45309; }
+        .sm-node.final { border-color: #065f46; background: #065f46; color: white; }
+        .sm-node.rejected { border-color: #dc2626; background: #fef2f2; color: #dc2626; }
+        .sm-edge { color: #94a3b8; font-size: 11px; font-weight: 600; }
+        .sm-edge.return { color: #d97706; }
+        .sm-edge.reject { color: #dc2626; }
+        /* Cost gate */
+        .cost-gate-ok { background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 2px solid #22c55e; }
+        .cost-gate-block { background: linear-gradient(135deg, #fef2f2, #fee2e2); border: 2px solid #ef4444; }
+        .condition-pass { background: #dcfce7; color: #15803d; padding: 2px 6px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+        .condition-fail { background: #fee2e2; color: #b91c1c; padding: 2px 6px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+        .section-label { background: #1e40af; color: white; font-size: 11px; font-weight: bold; padding: 3px 10px; border-radius: 6px; }
+        .section-label.amber { background: #d97706; }
+        .section-label.purple { background: #7c3aed; }
+        .section-label.green { background: #16a34a; }
+        .section-label.red { background: #dc2626; }
+        /* Unit accordion */
+        .unit-accordion { border: 1px solid #e2e8f0; border-radius: 14px; margin-bottom: 12px; overflow: hidden; }
+        .unit-header { background: linear-gradient(90deg, #eff6ff, #f8fafc); padding: 14px 18px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .unit-header:hover { background: linear-gradient(90deg, #dbeafe, #eff6ff); }
+        .unit-body { padding: 8px 0; }
+        .chevron { transition: transform 0.2s; }
+        .chevron.open { transform: rotate(180deg); }
+    </style>
+</head>
+<body class="font-tajawal p-6">
+
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-amber-900 mb-1">
+            🎲 GTMS — Phase 4A — الدورات العرضية
+            <span class="phase-badge text-sm">Casual Courses — Foundation</span>
+        </h1>
+        <p class="text-gray-500 text-sm">تصميم واجهات المرحلة الرابعة أ — 5 خطوات (MOD-17) + 3 سيناريوهات تمويل + حلقة إعادة — 23 أبريل 2026</p>
+
+        <div class="flex flex-wrap gap-2 mt-5 overflow-x-auto">
+            <button onclick="showScreen('state-machine')" class="tab-btn active rounded-t-lg font-medium text-sm">🔄 آلة الحالات</button>
+            <button onclick="showScreen('list')" class="tab-btn rounded-t-lg font-medium text-sm">📋 4.1 قائمة العرضية</button>
+            <button onclick="showScreen('request')" class="tab-btn rounded-t-lg font-medium text-sm">✏️ 4.2 طلب عرضية (UTM)</button>
+            <button onclick="showScreen('review')" class="tab-btn rounded-t-lg font-medium text-sm">🔍 4.3 مراجعة (Staff)</button>
+            <button onclick="showScreen('approval')" class="tab-btn rounded-t-lg font-medium text-sm">✅ 4.4 اعتماد (TD/TH)</button>
+            <button onclick="showScreen('returned-view')" class="tab-btn rounded-t-lg font-medium text-sm">🔙 طلب مُعاد (UTM)</button>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB 1: STATE MACHINE -->
+    <!-- ============================================================ -->
+    <div id="state-machine" class="screen active">
+        <div class="card p-8">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">🔄 آلة حالات الدورة العرضية</h2>
+                    <p class="text-gray-500 text-sm mt-1">9 حالات — 5 خطوات اعتماد (بعد MOD-17) + حلقة إعادة + رفض نهائي</p>
+                </div>
+                <span class="scope-badge">Phase 4A</span>
+            </div>
+
+            <!-- Diagram -->
+            <div class="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl p-8 mb-6">
+                <div class="flex flex-col items-center gap-5">
+                    <!-- Row 1 -->
+                    <div class="flex items-center gap-4 flex-wrap justify-center">
+                        <div class="sm-node start">📝 Draft</div>
+                        <span class="sm-edge">—Submit→</span>
+                        <div class="sm-node submit">⏳ Submitted</div>
+                        <span class="sm-edge">—UGMApprove→</span>
+                        <div class="sm-node ugm">👤 UGMApproved</div>
+                        <span class="sm-edge">—StartReview→</span>
+                        <div class="sm-node review">🔍 UnderReview</div>
+                    </div>
+
+                    <!-- Arrow down -->
+                    <div class="text-slate-400 text-xl">↓ AssignScenario + Items</div>
+
+                    <!-- Row 2 -->
+                    <div class="flex items-center gap-4 flex-wrap justify-center">
+                        <div class="sm-node staff-done">📋 StaffReviewed</div>
+                        <span class="sm-edge">—TDApprove (cost gate)→</span>
+                        <div class="sm-node td">✅ TDApproved</div>
+                        <span class="sm-edge">—HeadApprove (cost gate)→</span>
+                        <div class="sm-node final">🏆 THApproved</div>
+                    </div>
+
+                    <!-- Return + reject flows -->
+                    <div class="mt-6 pt-6 border-t border-slate-300 w-full">
+                        <div class="flex items-center justify-center gap-4 flex-wrap">
+                            <div class="sm-node returned">🔙 ReturnedToCreator</div>
+                            <span class="sm-edge return">← Return (from UGM / Staff / TD / TH)</span>
+                        </div>
+                        <div class="mt-3 mx-auto max-w-2xl bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-900 text-center">
+                            <b>🎯 ReturnedFromStatus (tweak 2):</b>
+                            عند الإعادة يُخزَّن المُرسِل في عمود <code class="bg-white px-1 py-0.5 rounded border">ReturnedFromStatus</code> على CasualCourse.
+                            عند <code>Resubmit</code> يعود الطلب لنفس المرحلة (مثلًا: إذا أعاد Staff → عند إعادة الإرسال ينتقل مباشرة لـ <code class="bg-white px-1 py-0.5 rounded border">UnderReview</code> لا إلى Submitted).
+                        </div>
+                        <div class="flex items-center justify-center gap-4 flex-wrap mt-5">
+                            <div class="sm-node rejected">❌ Rejected (terminal)</div>
+                            <span class="sm-edge reject">← Reject (from any approval stage)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
+                    <h3 class="font-bold text-blue-900 mb-2">✔️ خطوات العمل الرئيسية</h3>
+                    <ol class="text-sm text-slate-700 space-y-1 list-decimal pr-5">
+                        <li><b>UTM</b> — تقديم الطلب + مصدر التمويل + الترشيحات</li>
+                        <li><b>UGM</b> — اعتماد الوحدة</li>
+                        <li><b>Staff</b> — بدء المراجعة + تحديد السيناريو + تعيين البنود</li>
+                        <li><b>TD</b> — اعتماد مدير مديرية التدريب (بوابة التكلفة)</li>
+                        <li><b>TH</b> — اعتماد رئيس الجهة (بوابة التكلفة)</li>
+                    </ol>
+                </div>
+                <div class="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl p-4 border border-amber-200">
+                    <h3 class="font-bold text-amber-800 mb-2">🔙 حلقة الإعادة</h3>
+                    <p class="text-sm text-slate-700">يمكن لأي مرحلة اعتماد (UGM / Staff / TD / TH) إرجاع الطلب لـ UTM مع سبب إجباري. UTM يعدّل ثم يعيد الإرسال ← يُستأنف من نفس المرحلة التي أرجعته.</p>
+                    <p class="text-xs text-amber-700 mt-2 font-semibold">* تمامًا مثل نمط CHG-05 في الخطة السنوية — نفس مكونات <b>NotesDrawer</b> و <b>ReturnModal</b>.</p>
+                </div>
+                <div class="bg-gradient-to-br from-red-50 to-rose-50 rounded-xl p-4 border border-red-200">
+                    <h3 class="font-bold text-red-800 mb-2">⛔ بوابة التكلفة</h3>
+                    <p class="text-sm text-slate-700">لا يستطيع TD ولا TH الاعتماد إذا كانت <code>EstimatedTotalCost</code> فارغة أو ≤ 0. الزر يظهر معطلًا مع تلميحة تشرح السبب.</p>
+                    <p class="text-xs text-red-700 mt-2 font-semibold">* Staff يكتب التكلفة في <code>AssignScenarioAsync</code> قبل الانتقال إلى StaffReviewed.</p>
+                </div>
+            </div>
+
+            <!-- Status-to-action mapping table -->
+            <div class="bg-white rounded-2xl p-6 border border-slate-200">
+                <h3 class="font-bold text-slate-800 mb-4">📌 خريطة الحالة ← الإجراء (تُطبق في @switch بدون @default)</h3>
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-700">
+                            <th class="p-3 text-right rounded-tr-lg">الحالة</th>
+                            <th class="p-3 text-center">الدور المسؤول</th>
+                            <th class="p-3 text-right">الأزرار الظاهرة</th>
+                            <th class="p-3 text-right rounded-tl-lg">ملاحظة</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <tr><td class="p-3"><span class="status-badge status-draft">مسودة</span></td><td class="text-center"><span class="role-pill role-utm">UTM</span></td><td class="p-3">✏️ تعديل — 📤 تقديم — 🗑️ حذف</td><td class="text-xs text-slate-500">UTM فقط؛ الحذف مسموح في Draft فقط</td></tr>
+                        <tr><td class="p-3"><span class="status-badge status-submitted">مُقدَّم</span></td><td class="text-center"><span class="role-pill role-ugm">UGM</span></td><td class="p-3">👁️ عرض — ✅ اعتماد — 🔙 إعادة — ❌ رفض</td><td class="text-xs text-slate-500">UGM الوحدة</td></tr>
+                        <tr><td class="p-3"><span class="status-badge status-ugm-approved">اعتماد الوحدة</span></td><td class="text-center"><span class="role-pill role-staff">Staff</span></td><td class="p-3">🚀 بدء المراجعة</td><td class="text-xs text-slate-500">انتقال إلى UnderReview</td></tr>
+                        <tr><td class="p-3"><span class="status-badge status-under-review">قيد المراجعة</span></td><td class="text-center"><span class="role-pill role-staff">Staff</span></td><td class="p-3">🔍 فتح صفحة المراجعة</td><td class="text-xs text-slate-500">تحرير السيناريو + البنود المالية</td></tr>
+                        <tr><td class="p-3"><span class="status-badge status-staff-reviewed">مُراجع</span></td><td class="text-center"><span class="role-pill role-td">TD</span></td><td class="p-3">🔍 فتح صفحة الاعتماد</td><td class="text-xs text-slate-500">يعتمد مع بوابة التكلفة</td></tr>
+                        <tr><td class="p-3"><span class="status-badge status-td-approved">اعتماد TD</span></td><td class="text-center"><span class="role-pill role-th">TH</span></td><td class="p-3">🔍 فتح صفحة الاعتماد النهائي</td><td class="text-xs text-slate-500">بوابة تكلفة مزدوجة</td></tr>
+                        <tr class="bg-amber-50"><td class="p-3"><span class="status-badge status-returned">مُعاد لـ UTM</span></td><td class="text-center"><span class="role-pill role-utm">UTM</span></td><td class="p-3">✏️ تعديل + 📤 إعادة إرسال</td><td class="text-xs text-amber-700 font-semibold">خلفية صفراء — تنبيه بصري</td></tr>
+                        <tr><td class="p-3"><span class="status-badge status-th-approved">اعتماد نهائي</span></td><td class="text-center text-slate-500">—</td><td class="p-3 text-slate-500">👁️ عرض فقط</td><td class="text-xs text-slate-500">حالة نهائية</td></tr>
+                        <tr><td class="p-3"><span class="status-badge status-rejected">مرفوض</span></td><td class="text-center text-slate-500">—</td><td class="p-3 text-slate-500">👁️ عرض فقط (السبب في tooltip)</td><td class="text-xs text-slate-500">نهائي — لا يعود</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB 2: PAGE 4.1 — LIST -->
+    <!-- ============================================================ -->
+    <div id="list" class="screen">
+        <div class="card p-6 mb-6">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">📋 الدورات العرضية — 2026</h2>
+                    <p class="text-gray-500 text-sm mt-1">القوات البرية — عرض <span class="role-pill role-staff">Staff</span></p>
+                </div>
+                <button class="btn-primary px-5 py-2.5 rounded-xl text-sm font-semibold">➕ طلب دورة عرضية جديد</button>
+            </div>
+
+            <!-- Stat cards -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                <div class="stat-card">
+                    <div class="text-slate-500 text-xs mb-1">إجمالي الطلبات</div>
+                    <div class="text-3xl font-bold text-slate-800">14</div>
+                </div>
+                <div class="stat-card border-r-4 border-blue-500">
+                    <div class="text-blue-600 text-xs mb-1">قيد المراجعة</div>
+                    <div class="text-3xl font-bold text-blue-700">3</div>
+                </div>
+                <div class="stat-card border-r-4 border-amber-500">
+                    <div class="text-amber-600 text-xs mb-1">بحاجة إجراء (مُعاد)</div>
+                    <div class="text-3xl font-bold text-amber-700">2</div>
+                </div>
+                <div class="stat-card border-r-4 border-green-500">
+                    <div class="text-green-600 text-xs mb-1">معتمدة نهائيًا</div>
+                    <div class="text-3xl font-bold text-green-700">7</div>
+                </div>
+                <div class="stat-card border-r-4 border-red-400">
+                    <div class="text-red-600 text-xs mb-1">مرفوضة</div>
+                    <div class="text-3xl font-bold text-red-700">2</div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-slate-50 rounded-2xl p-4 mb-5 flex items-center gap-3 flex-wrap">
+                <div class="flex items-center gap-2">
+                    <label class="text-xs text-slate-600">السنة:</label>
+                    <select class="input-field px-3 py-1.5 text-sm bg-white"><option>2026</option><option>2025</option></select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-xs text-slate-600">الحالة:</label>
+                    <select class="input-field px-3 py-1.5 text-sm bg-white"><option>الكل</option><option>قيد المراجعة</option><option>بحاجة إجراء</option></select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-xs text-slate-600">الوحدة:</label>
+                    <select class="input-field px-3 py-1.5 text-sm bg-white"><option>كل الوحدات</option><option>اللواء الأول</option><option>الكتيبة الثالثة</option></select>
+                </div>
+                <label class="flex items-center gap-2 text-sm text-slate-600 mr-auto">
+                    <input type="checkbox" class="w-4 h-4"> طلباتي فقط
+                </label>
+                <div class="relative">
+                    <input type="text" placeholder="🔍 ابحث بالدورة / المبرر / مصدر التمويل..." class="input-field px-3 py-1.5 text-sm bg-white w-72">
+                </div>
+            </div>
+
+            <!-- UNIT ACCORDION: Brigade 1 -->
+            <div class="unit-accordion">
+                <div class="unit-header" onclick="toggleUnit('unit-1')">
+                    <div class="flex items-center gap-3">
+                        <span class="text-primary-700 font-bold text-base">🎖️ اللواء الأول</span>
+                        <span class="text-xs text-slate-500">5 طلبات</span>
+                        <span class="status-badge status-returned text-xs">1 يحتاج إجراء</span>
+                    </div>
+                    <span class="chevron open text-slate-500">▼</span>
+                </div>
+                <div class="unit-body" id="unit-1">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-50">
+                            <tr class="text-slate-600 text-xs">
+                                <th class="p-3 text-right">الدورة</th>
+                                <th class="p-3 text-right">مصدر التمويل</th>
+                                <th class="p-3 text-center">المرشحون</th>
+                                <th class="p-3 text-center">التكلفة (ر.ع)</th>
+                                <th class="p-3 text-center">الحالة</th>
+                                <th class="p-3 text-center">الإجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr class="table-row">
+                                <td class="p-3">
+                                    <div class="font-semibold">الأمن السيبراني المتقدم</div>
+                                    <div class="text-xs text-slate-500">خارجية دولية · 5 أيام · 15–19 يونيو 2026</div>
+                                </td>
+                                <td class="p-3 font-mono text-xs text-slate-600">wew-232-343-2</td>
+                                <td class="p-3 text-center"><b>2</b><span class="text-xs text-slate-400 mr-1">(1ض·1ف)</span></td>
+                                <td class="p-3 text-center font-bold text-slate-700">5,360</td>
+                                <td class="p-3 text-center"><span class="status-badge status-under-review">قيد المراجعة</span></td>
+                                <td class="p-3 text-center"><button class="btn-primary px-3 py-1.5 rounded-lg text-xs">🔍 فتح المراجعة</button></td>
+                            </tr>
+                            <tr class="table-row returned-row">
+                                <td class="p-3">
+                                    <div class="font-semibold">إدارة المشاريع الاحترافية — PMP</div>
+                                    <div class="text-xs text-amber-700">⚠️ سبب الإعادة: مبرر غير كافٍ — راجع الملاحظة</div>
+                                </td>
+                                <td class="p-3 font-mono text-xs text-slate-600">pmo-2026-014</td>
+                                <td class="p-3 text-center"><b>3</b></td>
+                                <td class="p-3 text-center text-slate-400">—</td>
+                                <td class="p-3 text-center"><span class="status-badge status-returned">مُعاد لـ UTM</span></td>
+                                <td class="p-3 text-center"><button class="btn-amber px-3 py-1.5 rounded-lg text-xs">✏️ تعديل</button></td>
+                            </tr>
+                            <tr class="table-row">
+                                <td class="p-3">
+                                    <div class="font-semibold">تحليل البيانات بـ Python</div>
+                                    <div class="text-xs text-slate-500">داخلية · 10 أيام</div>
+                                </td>
+                                <td class="p-3 text-slate-400 italic">—</td>
+                                <td class="p-3 text-center"><b>4</b></td>
+                                <td class="p-3 text-center font-bold text-slate-700">1,200</td>
+                                <td class="p-3 text-center"><span class="status-badge status-td-approved">اعتماد TD</span></td>
+                                <td class="p-3 text-center"><button class="bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg text-xs">👁️ عرض</button></td>
+                            </tr>
+                            <tr class="table-row">
+                                <td class="p-3">
+                                    <div class="font-semibold">القيادة الاستراتيجية</div>
+                                    <div class="text-xs text-slate-500">خارجية محلية · 3 أيام</div>
+                                </td>
+                                <td class="p-3 font-mono text-xs text-slate-600">strat-ld-07</td>
+                                <td class="p-3 text-center"><b>1</b></td>
+                                <td class="p-3 text-center font-bold text-green-700">2,100</td>
+                                <td class="p-3 text-center"><span class="status-badge status-th-approved">اعتماد نهائي ✅</span></td>
+                                <td class="p-3 text-center"><button class="bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg text-xs">👁️ عرض</button></td>
+                            </tr>
+                            <tr class="table-row">
+                                <td class="p-3">
+                                    <div class="font-semibold">إدارة المخاطر</div>
+                                    <div class="text-xs text-slate-500">داخلية</div>
+                                </td>
+                                <td class="p-3 text-slate-400 italic">—</td>
+                                <td class="p-3 text-center"><b>2</b></td>
+                                <td class="p-3 text-center text-slate-400">—</td>
+                                <td class="p-3 text-center"><span class="status-badge status-draft">مسودة</span></td>
+                                <td class="p-3 text-center flex gap-1 justify-center">
+                                    <button class="btn-primary px-2.5 py-1.5 rounded-lg text-xs">✏️</button>
+                                    <button class="btn-success px-2.5 py-1.5 rounded-lg text-xs">📤</button>
+                                    <button class="btn-danger px-2.5 py-1.5 rounded-lg text-xs">🗑️</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- UNIT ACCORDION: Battalion 3 -->
+            <div class="unit-accordion">
+                <div class="unit-header" onclick="toggleUnit('unit-2')">
+                    <div class="flex items-center gap-3">
+                        <span class="text-primary-700 font-bold text-base">🎖️ الكتيبة الثالثة</span>
+                        <span class="text-xs text-slate-500">4 طلبات</span>
+                    </div>
+                    <span class="chevron open text-slate-500">▼</span>
+                </div>
+                <div class="unit-body" id="unit-2">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-50">
+                            <tr class="text-slate-600 text-xs">
+                                <th class="p-3 text-right">الدورة</th>
+                                <th class="p-3 text-right">مصدر التمويل</th>
+                                <th class="p-3 text-center">المرشحون</th>
+                                <th class="p-3 text-center">التكلفة (ر.ع)</th>
+                                <th class="p-3 text-center">الحالة</th>
+                                <th class="p-3 text-center">الإجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr class="table-row">
+                                <td class="p-3">
+                                    <div class="font-semibold">الذكاء الاصطناعي التطبيقي</div>
+                                    <div class="text-xs text-slate-500">خارجية دولية · 7 أيام</div>
+                                </td>
+                                <td class="p-3 font-mono text-xs text-slate-600">ai-proj-09</td>
+                                <td class="p-3 text-center"><b>1</b></td>
+                                <td class="p-3 text-center font-bold text-slate-700">4,800</td>
+                                <td class="p-3 text-center"><span class="status-badge status-ugm-approved">اعتماد الوحدة</span></td>
+                                <td class="p-3 text-center"><button class="btn-warning px-3 py-1.5 rounded-lg text-xs">🚀 بدء المراجعة</button></td>
+                            </tr>
+                            <tr class="table-row">
+                                <td class="p-3">
+                                    <div class="font-semibold">الإسعافات الأولية المتقدمة</div>
+                                    <div class="text-xs text-slate-500">داخلية · 2 يوم</div>
+                                </td>
+                                <td class="p-3 text-slate-400 italic">—</td>
+                                <td class="p-3 text-center"><b>5</b></td>
+                                <td class="p-3 text-center font-bold text-slate-700">450</td>
+                                <td class="p-3 text-center"><span class="status-badge status-staff-reviewed">مُراجع</span></td>
+                                <td class="p-3 text-center"><button class="bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg text-xs">👁️ عرض</button></td>
+                            </tr>
+                            <tr class="table-row">
+                                <td class="p-3">
+                                    <div class="font-semibold">اللغة الإنجليزية التخصصية</div>
+                                    <div class="text-xs text-slate-500">خارجية محلية · 20 يوم</div>
+                                </td>
+                                <td class="p-3 font-mono text-xs text-slate-600">lang-ii-14</td>
+                                <td class="p-3 text-center"><b>6</b></td>
+                                <td class="p-3 text-center text-slate-400">—</td>
+                                <td class="p-3 text-center"><span class="status-badge status-submitted">مُقدَّم</span></td>
+                                <td class="p-3 text-center"><button class="btn-success px-3 py-1.5 rounded-lg text-xs">✅ اعتماد</button></td>
+                            </tr>
+                            <tr class="table-row">
+                                <td class="p-3">
+                                    <div class="font-semibold">السلامة المهنية</div>
+                                    <div class="text-xs text-slate-500">داخلية</div>
+                                </td>
+                                <td class="p-3 text-slate-400 italic">—</td>
+                                <td class="p-3 text-center"><b>3</b></td>
+                                <td class="p-3 text-center text-slate-400">—</td>
+                                <td class="p-3 text-center"><span class="status-badge status-rejected">مرفوض</span></td>
+                                <td class="p-3 text-center"><button class="bg-slate-100 text-slate-700 px-3 py-1.5 rounded-lg text-xs" title="سبب الرفض: تم تغطيتها ضمن الخطة السنوية">👁️ عرض</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="flex items-center justify-between mt-4">
+                <span class="text-xs text-slate-500">عرض 1–9 من أصل 14</span>
+                <div class="flex gap-1">
+                    <button class="px-3 py-1.5 bg-slate-100 rounded-lg text-sm">‹</button>
+                    <button class="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-sm font-semibold">1</button>
+                    <button class="px-3 py-1.5 bg-slate-100 rounded-lg text-sm">2</button>
+                    <button class="px-3 py-1.5 bg-slate-100 rounded-lg text-sm">›</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-sm text-blue-900">
+            <b>🔍 ملاحظات التصميم:</b>
+            Staff و TD و TH يرون كل الوحدات (ضمن Accordion لكل وحدة). UTM و UGM يرون وحدتهم فقط بدون Accordion (قائمة مسطحة).
+            صف "مُعاد" بخلفية صفراء + حد أيمن برتقالي — زر التعديل باللون الكهرماني.
+            أزرار الإجراء مشروطة بالحالة (لا @default — كل حالة لها زر صريح، درس من Phase 3 bug #6/#7).
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB 3: PAGE 4.2 — REQUEST FORM (UTM) -->
+    <!-- ============================================================ -->
+    <div id="request" class="screen">
+        <div class="card p-6 mb-6">
+            <div class="flex justify-between items-start mb-5">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">✏️ طلب دورة عرضية جديد</h2>
+                    <p class="text-gray-500 text-sm mt-1">المُقدِّم: <span class="role-pill role-utm">UTM</span> — اللواء الأول · القوات البرية</p>
+                </div>
+                <span class="status-badge status-draft">مسودة</span>
+            </div>
+
+            <!-- Step indicator (top) -->
+            <div class="bg-gradient-to-l from-blue-50 via-white to-slate-50 border border-blue-100 rounded-xl p-4 mb-5">
+                <div class="text-xs text-slate-500 mb-2 flex items-center gap-2">
+                    <span>🛤️</span>
+                    <span>مسار الطلب — 5 خطوات</span>
+                    <span class="mr-auto text-primary-700 font-semibold">أنت هنا: الخطوة 1 من 5</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <div class="flex-1 text-center">
+                        <div class="w-8 h-8 bg-primary-600 text-white rounded-full mx-auto mb-1 flex items-center justify-center font-bold text-sm shadow-md">1</div>
+                        <div class="text-xs font-semibold text-primary-700">UTM — تقديم</div>
+                    </div>
+                    <div class="flex-1 border-t-2 border-dashed border-slate-300 mb-6"></div>
+                    <div class="flex-1 text-center">
+                        <div class="w-8 h-8 bg-white border-2 border-slate-300 text-slate-400 rounded-full mx-auto mb-1 flex items-center justify-center font-bold text-sm">2</div>
+                        <div class="text-xs text-slate-500">UGM — اعتماد</div>
+                    </div>
+                    <div class="flex-1 border-t-2 border-dashed border-slate-300 mb-6"></div>
+                    <div class="flex-1 text-center">
+                        <div class="w-8 h-8 bg-white border-2 border-slate-300 text-slate-400 rounded-full mx-auto mb-1 flex items-center justify-center font-bold text-sm">3</div>
+                        <div class="text-xs text-slate-500">Staff — مراجعة</div>
+                    </div>
+                    <div class="flex-1 border-t-2 border-dashed border-slate-300 mb-6"></div>
+                    <div class="flex-1 text-center">
+                        <div class="w-8 h-8 bg-white border-2 border-slate-300 text-slate-400 rounded-full mx-auto mb-1 flex items-center justify-center font-bold text-sm">4</div>
+                        <div class="text-xs text-slate-500">TD — اعتماد 🚪</div>
+                    </div>
+                    <div class="flex-1 border-t-2 border-dashed border-slate-300 mb-6"></div>
+                    <div class="flex-1 text-center">
+                        <div class="w-8 h-8 bg-white border-2 border-slate-300 text-slate-400 rounded-full mx-auto mb-1 flex items-center justify-center font-bold text-sm">5</div>
+                        <div class="text-xs text-slate-500">TH — نهائي 🚪</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============== SECTION 1 — Course Details ============== -->
+            <div class="bg-white rounded-xl p-5 mb-4 border border-slate-200">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="section-label">القسم 1</span>
+                    <h4 class="font-bold text-slate-800">📚 بيانات الدورة</h4>
+                    <span class="text-xs text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full mr-auto">✓ جميع الحقول المطلوبة مكتملة</span>
+                </div>
+
+                <!-- Course selector with search -->
+                <div class="mb-4">
+                    <label class="text-xs text-slate-600 mb-1 block">الدورة (من دورات الجهة النشطة) <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <input type="text" value="الأمن السيبراني المتقدم" class="input-field w-full px-3 py-2 text-sm pl-10">
+                        <span class="absolute left-3 top-2.5 text-slate-400">🔍</span>
+                    </div>
+                    <div class="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-2 text-xs text-blue-900 flex items-center gap-2">
+                        <span>ℹ️</span>
+                        <div>
+                            <span class="font-semibold">الكود:</span> <code class="bg-white px-1.5 py-0.5 rounded border border-blue-200">TC-CYB-ADV-2026</code>
+                            <span class="mx-2 text-slate-400">·</span>
+                            <span class="font-semibold">المجال:</span> أمن المعلومات
+                            <span class="mx-2 text-slate-400">·</span>
+                            <span class="font-semibold">الحد الأدنى للرتبة:</span> رقيب
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-xs text-slate-600 mb-1 block">نوع الدورة <span class="text-red-500">*</span></label>
+                        <select class="input-field w-full px-3 py-2 text-sm" onchange="onCourseTypeChange(this)">
+                            <option>خارجية دولية</option>
+                            <option>خارجية محلية</option>
+                            <option>داخلية</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-600 mb-1 block">الأولوية <span class="text-red-500">*</span></label>
+                        <select class="input-field w-full px-3 py-2 text-sm">
+                            <option>1 — عالية جدًا</option>
+                            <option>2 — عالية</option>
+                            <option>3 — متوسطة</option>
+                            <option>4 — منخفضة</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-600 mb-1 block">لغة الدورة</label>
+                        <select class="input-field w-full px-3 py-2 text-sm">
+                            <option>الإنجليزية</option>
+                            <option>العربية</option>
+                            <option>أخرى</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-600 mb-1 block">الدولة</label>
+                        <input type="text" value="الإمارات العربية المتحدة" class="input-field w-full px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-600 mb-1 block">المدينة</label>
+                        <input type="text" value="دبي" class="input-field w-full px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-600 mb-1 block">الجهة المُزوِّدة (اختياري)</label>
+                        <input type="text" value="SANS Institute" class="input-field w-full px-3 py-2 text-sm" placeholder="Staff سيؤكدها عند جمع عروض الأسعار">
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="text-xs text-slate-600 mb-1 block">المبرر <span class="text-red-500">*</span></label>
+                        <textarea class="input-field w-full px-3 py-2 text-sm" rows="2">تطوير قدرات الفريق في تحليل التهديدات والاستجابة للحوادث — حاجة ملحة قبل مشروع شمس 2.</textarea>
+                        <p class="text-xs text-slate-400 mt-1"><span class="text-green-600 font-semibold">✓</span> 92 حرف — مقبول (الحد الأدنى 30)</p>
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-600 mb-1 block">الوصف</label>
+                        <textarea class="input-field w-full px-3 py-2 text-sm bg-slate-50" rows="2" placeholder="افتراضي من دورات الجهة — يمكن التعديل">دورة متقدمة في تحليل التهديدات والاستجابة للحوادث.</textarea>
+                        <p class="text-xs text-slate-400 mt-1">💡 مُعبَّأ تلقائيًا من TenantCourse — قابل للتعديل</p>
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-600 mb-1 block">الأهداف</label>
+                        <textarea class="input-field w-full px-3 py-2 text-sm bg-slate-50" rows="2" placeholder="افتراضي من دورات الجهة — يمكن التعديل">إتقان تقنيات كشف الاختراقات + الاستجابة للحوادث.</textarea>
+                        <p class="text-xs text-slate-400 mt-1">💡 مُعبَّأ تلقائيًا من TenantCourse — قابل للتعديل</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============== SECTION 2 — Duration & Dates ============== -->
+            <div class="bg-white rounded-xl p-5 mb-4 border border-slate-200">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="section-label">القسم 2</span>
+                    <h4 class="font-bold text-slate-800">📅 المدة والتواريخ</h4>
+                    <span class="text-xs text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full mr-auto">✓ المدة والتواريخ متطابقة</span>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-3">
+                    <div><label class="text-xs text-slate-600 mb-1 block">سنوات</label><input type="number" value="0" class="input-field w-full px-3 py-2 text-sm"></div>
+                    <div><label class="text-xs text-slate-600 mb-1 block">أشهر</label><input type="number" value="0" class="input-field w-full px-3 py-2 text-sm"></div>
+                    <div><label class="text-xs text-slate-600 mb-1 block">أيام <span class="text-red-500">*</span></label><input type="number" value="5" class="input-field w-full px-3 py-2 text-sm border-green-400"></div>
+                    <div><label class="text-xs text-slate-600 mb-1 block">من <span class="text-red-500">*</span></label><input type="date" value="2026-06-15" class="input-field w-full px-3 py-2 text-sm border-green-400"></div>
+                    <div><label class="text-xs text-slate-600 mb-1 block">إلى <span class="text-red-500">*</span></label><input type="date" value="2026-06-19" class="input-field w-full px-3 py-2 text-sm border-green-400"></div>
+                </div>
+                <!-- Calculated indicators -->
+                <div class="bg-slate-50 rounded-lg p-3 text-xs text-slate-600 flex items-center justify-between flex-wrap gap-2">
+                    <div class="flex items-center gap-4 flex-wrap">
+                        <span>📊 <b>الإجمالي الفعلي:</b> 5 أيام</span>
+                        <span class="text-slate-400">·</span>
+                        <span>📆 <b>أيام عمل:</b> 5</span>
+                        <span class="text-slate-400">·</span>
+                        <span>🕌 <b>أيام عطلة أسبوعية:</b> 0</span>
+                    </div>
+                    <span class="text-green-700 text-xs font-semibold">✓ المدة تطابق التواريخ</span>
+                </div>
+            </div>
+
+            <!-- ============== SECTION 3 — FundingSource (conditional) ============== -->
+            <div class="bg-gradient-to-br from-red-50 to-amber-50 rounded-xl p-5 mb-4 border-2 border-red-200">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="section-label red">القسم 3</span>
+                    <h4 class="font-bold text-red-800">💰 مصدر التمويل — FundingSource</h4>
+                    <span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded mr-auto">مطلوب للخارجية</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                    <div>
+                        <label class="text-xs text-slate-600 mb-1 block">كود مصدر التمويل <span class="text-red-500">*</span> <span class="text-slate-400">(نص حر)</span></label>
+                        <div class="relative">
+                            <input type="text" value="wew-232-343-2" class="input-field w-full px-3 py-2 text-sm font-mono border-green-400">
+                            <span class="absolute left-3 top-2.5 text-green-600 text-lg">✓</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1">مثال: <code>wew-232-343-2</code> (مشروع شمس 2) — يُقدَّم من المدير</p>
+                    </div>
+                    <div>
+                        <div class="bg-white rounded-lg border border-dashed border-slate-300 p-3 text-sm h-full flex flex-col justify-center">
+                            <div class="text-xs text-slate-500 mb-1">رصيد FundingSource (من نبراس):</div>
+                            <div class="text-xl font-bold text-slate-400">—</div>
+                            <div class="text-xs text-slate-400 mt-1">🔌 سيُعرض عند ربط نبراس (مستقبلًا)</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Recent suggestions -->
+                <div class="bg-white rounded-lg p-3 border border-slate-200">
+                    <div class="text-xs text-slate-600 mb-2">💡 أكواد استخدمتها سابقًا (اقتراحات):</div>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="text-xs font-mono bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded border border-slate-200">wew-232-343-2</button>
+                        <button class="text-xs font-mono bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded border border-slate-200">proj-shams2-14</button>
+                        <button class="text-xs font-mono bg-slate-100 hover:bg-slate-200 px-2 py-1 rounded border border-slate-200">training-cyb-q2</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============== SECTION 4 — Attachments (NEW) ============== -->
+            <div class="bg-white rounded-xl p-5 mb-4 border border-slate-200">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="section-label purple">القسم 4</span>
+                    <h4 class="font-bold text-slate-800">📎 المرفقات</h4>
+                    <span class="text-xs text-slate-500 mr-auto">اختياري — لكن يُنصح بإرفاقها لتسريع مراجعة Staff</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="border-2 border-dashed border-slate-300 rounded-xl p-4 hover:border-primary-400 transition cursor-pointer">
+                        <div class="flex items-start gap-3">
+                            <div class="text-2xl">📄</div>
+                            <div class="flex-1">
+                                <div class="font-semibold text-slate-800 text-sm">خطاب الدعوة</div>
+                                <div class="text-xs text-slate-500">PDF · حتى 5MB</div>
+                                <div class="mt-2 text-xs text-green-700 font-semibold flex items-center gap-1">
+                                    <span>✓</span> <code class="bg-green-50 px-1.5 py-0.5 rounded">invitation-sans-2026.pdf</code>
+                                    <button class="text-red-500 mr-2">🗑️</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="border-2 border-dashed border-slate-300 rounded-xl p-4 hover:border-primary-400 transition cursor-pointer">
+                        <div class="flex items-start gap-3">
+                            <div class="text-2xl">📋</div>
+                            <div class="flex-1">
+                                <div class="font-semibold text-slate-800 text-sm">بروشور / محتوى الدورة</div>
+                                <div class="text-xs text-slate-500">PDF · حتى 10MB</div>
+                                <div class="mt-2 text-xs text-slate-400 flex items-center gap-1">
+                                    <span class="text-primary-600">📤</span> اسحب الملف هنا أو انقر للرفع
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="border-2 border-dashed border-slate-300 rounded-xl p-4 hover:border-primary-400 transition cursor-pointer">
+                        <div class="flex items-start gap-3">
+                            <div class="text-2xl">💵</div>
+                            <div class="flex-1">
+                                <div class="font-semibold text-slate-800 text-sm">عرض سعر مبدئي</div>
+                                <div class="text-xs text-slate-500">PDF · من الجهة المُزوِّدة</div>
+                                <div class="mt-2 text-xs text-amber-700 font-semibold flex items-center gap-1">
+                                    <span>💡</span> يساعد Staff في تحديد التكلفة المقدرة
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="border-2 border-dashed border-slate-300 rounded-xl p-4 hover:border-primary-400 transition cursor-pointer">
+                        <div class="flex items-start gap-3">
+                            <div class="text-2xl">✅</div>
+                            <div class="flex-1">
+                                <div class="font-semibold text-slate-800 text-sm">خطاب موافقة المدير</div>
+                                <div class="text-xs text-slate-500">PDF · اختياري</div>
+                                <div class="mt-2 text-xs text-slate-400 flex items-center gap-1">
+                                    <span class="text-primary-600">📤</span> اسحب الملف هنا أو انقر للرفع
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============== SECTION 5 — Nominations ============== -->
+            <div class="bg-white rounded-xl p-5 mb-4 border-2 border-amber-300 shadow-sm">
+                <div class="flex items-center gap-2 mb-4 flex-wrap">
+                    <span class="section-label amber">القسم 5</span>
+                    <h4 class="font-bold text-slate-800">👥 المرشحون</h4>
+                    <span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded">مطلوب — مرشح واحد على الأقل</span>
+                    <button class="text-xs bg-primary-50 hover:bg-primary-100 text-primary-700 border border-primary-200 px-2 py-1 rounded mr-auto">🔍 فحص شروط الكل</button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="md:col-span-2">
+                        <label class="text-xs text-slate-600 mb-1 block">ابحث عن موظف (بالاسم أو الرقم العسكري)</label>
+                        <input type="text" placeholder="🔍 ابحث هنا..." class="input-field w-full px-3 py-2 text-sm" value="سالم">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-600 mb-1 block">التصفية بالوحدة</label>
+                        <select class="input-field w-full px-3 py-2 text-sm">
+                            <option>اللواء الأول (وحدتي)</option>
+                            <option>الكتيبة الأولى</option>
+                            <option>الكتيبة الثانية</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 rounded-lg p-3 mb-4 max-h-48 overflow-y-auto">
+                    <div class="flex items-center justify-between p-2 hover:bg-white rounded cursor-pointer">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" class="w-4 h-4" checked>
+                            <span class="font-semibold text-sm">سالم بن أحمد الهنائي</span>
+                            <span class="rank-pill">نقيب</span>
+                            <span class="text-xs text-slate-500">اللواء الأول · خدمة 8 سنوات</span>
+                        </div>
+                        <span class="condition-pass">✓ 9/9 شروط</span>
+                    </div>
+                    <div class="flex items-center justify-between p-2 hover:bg-white rounded cursor-pointer">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" class="w-4 h-4" checked>
+                            <span class="font-semibold text-sm">خالد بن محمد البلوشي</span>
+                            <span class="rank-pill">رقيب</span>
+                            <span class="text-xs text-slate-500">اللواء الأول · خدمة 5 سنوات</span>
+                        </div>
+                        <span class="condition-pass">✓ 9/9 شروط</span>
+                    </div>
+                    <div class="flex items-center justify-between p-2 hover:bg-white rounded cursor-pointer">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" class="w-4 h-4" disabled>
+                            <span class="font-semibold text-sm text-slate-400">سالم بن عبدالله الراشدي</span>
+                            <span class="rank-pill">ملازم</span>
+                            <span class="text-xs text-slate-400">اللواء الأول · خدمة 2 سنة</span>
+                        </div>
+                        <span class="condition-fail" title="سنوات الخدمة &lt; 3 · اللغة الإنجليزية غير مسجلة">✗ 7/9 شروط</span>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="text-xs text-slate-600 mb-2 flex items-center gap-2">
+                        <span>المرشحون المختارون — 2 موظفين:</span>
+                        <span class="text-green-700 font-semibold">✓ الجميع مستوفٍ للشروط</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="nominee-chip">
+                            <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                            سالم بن أحمد — نقيب
+                            <span class="remove">✕</span>
+                        </span>
+                        <span class="nominee-chip">
+                            <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                            خالد بن محمد — رقيب
+                            <span class="remove">✕</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============== SECTION 6 — UTM Preliminary Estimate (optional) ============== -->
+            <div class="bg-white rounded-xl p-5 mb-4 border border-slate-200">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="section-label">القسم 6</span>
+                    <h4 class="font-bold text-slate-800">💡 تقدير مبدئي للتكلفة (اختياري)</h4>
+                    <span class="text-xs text-slate-500 mr-auto">Staff سيُحسِّنه أثناء المراجعة بناء على سيناريو التمويل والبنود المالية</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-xs text-slate-600 mb-1 block">التقدير المبدئي (ر.ع)</label>
+                        <div class="relative">
+                            <input type="number" value="3000" class="input-field w-full px-3 py-2 text-sm">
+                            <span class="absolute left-3 top-2.5 text-xs text-slate-400">ر.ع</span>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">بناء على عرض السعر المرفق</p>
+                    </div>
+                    <div class="md:col-span-2 bg-blue-50 rounded-lg p-3 border border-blue-100 flex items-start gap-2 text-sm text-blue-900">
+                        <span class="text-lg">ℹ️</span>
+                        <div>
+                            <div class="font-semibold mb-1">ملاحظة مهمة</div>
+                            <p class="text-xs">هذا مجرد تقدير لإعطاء Staff صورة. <b>التكلفة الإجمالية المعتمدة</b> ستُحسب من البنود المالية التي سيعيّنها Staff في مرحلة المراجعة (خطوة 3)، وهي التي ستمر عبر بوابة اعتماد TD و TH.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============== SECTION 6.5 — Default Cost Preview (NEW) ============== -->
+            <div class="bg-gradient-to-br from-indigo-50 via-purple-50 to-white rounded-xl p-5 mb-4 border-2 border-indigo-200">
+                <div class="flex items-center gap-2 mb-4 flex-wrap">
+                    <span class="section-label purple">القسم 6.5</span>
+                    <h4 class="font-bold text-indigo-900">🧮 التقدير التلقائي من البنود الافتراضية</h4>
+                    <span class="text-xs bg-indigo-600 text-white font-bold px-2 py-1 rounded flex items-center gap-1">
+                        <span class="w-2 h-2 bg-green-300 rounded-full animate-pulse"></span>
+                        يُحدَّث تلقائيًا
+                    </span>
+                    <span class="scope-badge mr-auto">NEW — UTM + UGM visibility</span>
+                </div>
+
+                <div class="bg-white/70 border border-indigo-100 rounded-lg p-3 mb-4 text-xs text-slate-700 flex items-start gap-2">
+                    <span class="text-indigo-600 text-base">ℹ️</span>
+                    <div>
+                        محسوب من <code class="bg-white px-1.5 py-0.5 rounded border border-slate-200">CourseTypeFinancialItemDefaults</code>
+                        (للنوع <b>خارجية دولية</b>) × صيغة CHG-07 (IsPerDay · IsPerNominee · أيام إضافية قبل/بعد).
+                        <b class="text-purple-900">هذا تقدير مبدئي — Staff سيُصقِّله في مراجعته بناء على عروض الأسعار الفعلية، وهو المبلغ الذي يمر عبر بوابة TD و TH.</b>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto bg-white rounded-lg border border-indigo-100">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-indigo-50 text-indigo-900 text-xs">
+                                <th class="p-2 text-right">البند المالي الافتراضي</th>
+                                <th class="p-2 text-center">السعر</th>
+                                <th class="p-2 text-center">أيام فعّالة</th>
+                                <th class="p-2 text-center">عدد المرشحين</th>
+                                <th class="p-2 text-center">المجموع (ر.ع)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr>
+                                <td class="p-2">
+                                    <div class="font-semibold">تكلفة الدورة</div>
+                                    <div class="text-xs text-slate-400">Course Cost — ثابت</div>
+                                </td>
+                                <td class="text-center p-2">3,000</td>
+                                <td class="text-center p-2 text-slate-400">—</td>
+                                <td class="text-center p-2 text-slate-400">—</td>
+                                <td class="text-center p-2 font-bold text-indigo-700">3,000.000</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2">
+                                    <div class="font-semibold">علاوة الغربة</div>
+                                    <div class="text-xs text-slate-400">IsPerDay · IsPerNominee · +1 قبل +1 بعد</div>
+                                </td>
+                                <td class="text-center p-2">80</td>
+                                <td class="text-center p-2 text-slate-600">7 <span class="text-xs text-slate-400">(5+2)</span></td>
+                                <td class="text-center p-2">2</td>
+                                <td class="text-center p-2 font-bold text-indigo-700">1,120.000</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2">
+                                    <div class="font-semibold">تذاكر السفر</div>
+                                    <div class="text-xs text-slate-400">IsPerNominee</div>
+                                </td>
+                                <td class="text-center p-2">650</td>
+                                <td class="text-center p-2 text-slate-400">—</td>
+                                <td class="text-center p-2">2</td>
+                                <td class="text-center p-2 font-bold text-indigo-700">1,300.000</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2">
+                                    <div class="font-semibold">التأمين الصحي</div>
+                                    <div class="text-xs text-slate-400">IsPerNominee</div>
+                                </td>
+                                <td class="text-center p-2">80</td>
+                                <td class="text-center p-2 text-slate-400">—</td>
+                                <td class="text-center p-2">2</td>
+                                <td class="text-center p-2 font-bold text-indigo-700">160.000</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="bg-gradient-to-l from-indigo-100 to-purple-100 font-bold">
+                                <td colspan="4" class="p-3 text-right text-indigo-900">🧮 التقدير الإجمالي الافتراضي</td>
+                                <td class="p-3 text-center text-lg text-indigo-900">5,580.000</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Comparison with UTM preliminary -->
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="bg-white rounded-lg p-3 border border-slate-200">
+                        <div class="text-xs text-slate-500">تقديرك المبدئي</div>
+                        <div class="text-xl font-bold text-slate-600">3,000 ر.ع</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border-2 border-indigo-300">
+                        <div class="text-xs text-indigo-600">التقدير الافتراضي (الكامل)</div>
+                        <div class="text-xl font-bold text-indigo-700">5,580 ر.ع</div>
+                    </div>
+                    <div class="bg-amber-50 rounded-lg p-3 border border-amber-200">
+                        <div class="text-xs text-amber-700">الفارق</div>
+                        <div class="text-xl font-bold text-amber-800">+2,580 ر.ع</div>
+                        <div class="text-xs text-amber-700">بنود سفر لم تُضمَّن</div>
+                    </div>
+                </div>
+
+                <div class="mt-3 text-xs text-slate-500 text-center">
+                    🔄 يُعاد الحساب عند تغيير: <b>نوع الدورة</b> · <b>المدة</b> · <b>عدد المرشحين</b>
+                </div>
+            </div>
+
+            <!-- ============== SECTION 7 — Summary with validation ============== -->
+            <div class="bg-gradient-to-br from-green-50 via-white to-blue-50 rounded-xl p-5 mb-4 border-2 border-green-200">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="section-label green">ملخص جاهزية الطلب</span>
+                    <h4 class="font-bold text-slate-800">📊 الإحصائيات + فحص الاكتمال</h4>
+                    <span class="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full mr-auto flex items-center gap-1">✓ الطلب جاهز للتقديم</span>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+                    <div class="bg-white rounded-lg p-3 border border-slate-100">
+                        <div class="text-xs text-slate-500">عدد الضباط</div>
+                        <div class="text-2xl font-bold text-blue-700">1</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-slate-100">
+                        <div class="text-xs text-slate-500">عدد الأفراد</div>
+                        <div class="text-2xl font-bold text-amber-700">1</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-slate-100">
+                        <div class="text-xs text-slate-500">السعة</div>
+                        <div class="text-2xl font-bold text-slate-800">2</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-slate-100">
+                        <div class="text-xs text-slate-500">التقدير المبدئي</div>
+                        <div class="text-2xl font-bold text-primary-700">3,000</div>
+                        <div class="text-xs text-slate-400">ر.ع</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-slate-100">
+                        <div class="text-xs text-slate-500">المرفقات</div>
+                        <div class="text-2xl font-bold text-purple-700">1/4</div>
+                    </div>
+                </div>
+
+                <!-- Validation checklist -->
+                <div class="mt-4 bg-white rounded-lg p-3 border border-slate-100">
+                    <div class="text-xs font-semibold text-slate-600 mb-2">📋 فحص الاكتمال قبل التقديم:</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+                        <div class="flex items-center gap-2 text-green-700"><span>✓</span> بيانات الدورة مكتملة (7/7 حقول مطلوبة)</div>
+                        <div class="flex items-center gap-2 text-green-700"><span>✓</span> المدة والتواريخ متطابقة</div>
+                        <div class="flex items-center gap-2 text-green-700"><span>✓</span> مصدر التمويل مُدخل (مطلوب للخارجية)</div>
+                        <div class="flex items-center gap-2 text-green-700"><span>✓</span> مرشحان مستوفيان للشروط</div>
+                        <div class="flex items-center gap-2 text-slate-500"><span class="text-slate-400">○</span> المرفقات اختيارية — 1 من 4 مرفوع</div>
+                        <div class="flex items-center gap-2 text-slate-500"><span class="text-slate-400">○</span> التقدير المبدئي اختياري — مُدخل</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============== Action bar ============== -->
+            <div class="border-t border-slate-200 pt-5 mt-4">
+                <div class="flex items-center justify-between flex-wrap gap-3">
+                    <div class="text-xs text-slate-500 flex items-center gap-2 flex-wrap">
+                        <span>💡 نصيحة:</span>
+                        <span><span class="kbd" style="padding:1px 6px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:4px; font-family:monospace; font-size:11px;">Ctrl+S</span> لحفظ المسودة</span>
+                        <span class="text-slate-300">·</span>
+                        <span><span class="kbd" style="padding:1px 6px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:4px; font-family:monospace; font-size:11px;">Ctrl+Enter</span> للمعاينة</span>
+                    </div>
+                    <div class="flex gap-3 flex-wrap">
+                        <button class="bg-slate-100 text-slate-700 px-5 py-2.5 rounded-xl text-sm">إلغاء</button>
+                        <button class="bg-white border-2 border-slate-300 text-slate-700 px-5 py-2.5 rounded-xl text-sm font-semibold">💾 حفظ كمسودة</button>
+                        <button class="bg-white border-2 border-primary-300 text-primary-700 px-5 py-2.5 rounded-xl text-sm font-semibold" onclick="document.getElementById('preview-modal').classList.add('open')">👁️ معاينة</button>
+                        <button class="btn-success px-6 py-2.5 rounded-xl text-sm font-semibold">📤 تقديم للاعتماد</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approval path info banner -->
+            <div class="mt-5 p-4 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-900">
+                <b>🔄 مسار الاعتماد (5 خطوات — بعد MOD-17):</b>
+                <span class="role-pill role-utm mr-1">UTM</span> تقديم →
+                <span class="role-pill role-ugm mr-1">UGM</span> اعتماد →
+                <span class="role-pill role-staff mr-1">Staff</span> مراجعة + سيناريو + بنود →
+                <span class="role-pill role-td mr-1">TD</span> اعتماد (🚪 بوابة تكلفة) →
+                <span class="role-pill role-th mr-1">TH</span> اعتماد نهائي (🚪 بوابة تكلفة)
+            </div>
+        </div>
+
+        <!-- Preview Modal (inline design for mockup) -->
+        <div id="preview-modal" class="modal-overlay" onclick="if(event.target===this)this.classList.remove('open')">
+            <div class="modal-box" style="max-width: 640px;">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="text-2xl">👁️</span>
+                    <h3 class="font-bold text-slate-800 text-lg">معاينة الطلب قبل التقديم</h3>
+                    <button class="mr-auto text-slate-400 hover:text-slate-600" onclick="document.getElementById('preview-modal').classList.remove('open')">✕</button>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-4 mb-4 text-sm space-y-2">
+                    <div class="flex justify-between"><span class="text-slate-500">الدورة:</span><b>الأمن السيبراني المتقدم</b></div>
+                    <div class="flex justify-between"><span class="text-slate-500">الكود:</span><code class="text-xs">TC-CYB-ADV-2026</code></div>
+                    <div class="flex justify-between"><span class="text-slate-500">النوع · الأولوية:</span><span>خارجية دولية · 1 (عالية جدًا)</span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">الموقع:</span><span>دبي · الإمارات</span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">المدة:</span><span>5 أيام (15–19 يونيو 2026)</span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">مصدر التمويل:</span><code class="font-mono text-xs">wew-232-343-2</code></div>
+                    <div class="flex justify-between"><span class="text-slate-500">المرشحون:</span><b>2 (1 ضابط · 1 فرد)</b></div>
+                    <div class="flex justify-between"><span class="text-slate-500">التقدير المبدئي:</span><b class="text-primary-700">3,000 ر.ع</b></div>
+                    <div class="flex justify-between"><span class="text-slate-500">المرفقات:</span><span>1 ملف (خطاب الدعوة)</span></div>
+                </div>
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 text-xs text-amber-900 flex items-start gap-2">
+                    <span>⚠️</span>
+                    <div>
+                        <b>بعد التقديم:</b> لا يمكن التعديل حتى يُرجع الطلب إليك من إحدى مراحل الاعتماد. الحذف متاح في مرحلة المسودة فقط.
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button class="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg text-sm" onclick="document.getElementById('preview-modal').classList.remove('open')">رجوع للتعديل</button>
+                    <button class="btn-success px-5 py-2 rounded-lg text-sm font-semibold">📤 تأكيد التقديم</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB 4: PAGE 4.3 — REVIEW (Staff) -->
+    <!-- ============================================================ -->
+    <div id="review" class="screen">
+        <div class="card p-6 mb-6">
+            <div class="flex justify-between items-start mb-5">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">🔍 مراجعة الدورة العرضية</h2>
+                    <p class="text-gray-500 text-sm mt-1">الأمن السيبراني المتقدم · اللواء الأول · المُقدِّم: سالم الهنائي (UTM) — <span class="role-pill role-staff">Staff</span></p>
+                </div>
+                <div class="flex gap-2 items-center">
+                    <span class="status-badge status-under-review">قيد المراجعة</span>
+                    <button class="bg-slate-100 text-slate-700 px-3 py-2 rounded-lg text-sm">📝 الملاحظات <span class="bg-amber-500 text-white text-xs px-1.5 rounded-full ml-1">2</span></button>
+                </div>
+            </div>
+
+            <!-- Panel 1: Course summary (read-only) -->
+            <div class="bg-slate-50 rounded-xl p-5 mb-4 border border-slate-200">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="section-label">ملخص الطلب</span>
+                    <h4 class="font-bold text-slate-800">📚 تفاصيل الدورة (للقراءة فقط)</h4>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div><div class="text-xs text-slate-500">الدورة</div><div class="font-semibold">الأمن السيبراني المتقدم</div></div>
+                    <div><div class="text-xs text-slate-500">النوع</div><div class="font-semibold">خارجية دولية</div></div>
+                    <div><div class="text-xs text-slate-500">الأولوية</div><div class="font-semibold">1 — عالية جدًا</div></div>
+                    <div><div class="text-xs text-slate-500">المدة</div><div class="font-semibold">5 أيام</div></div>
+                    <div><div class="text-xs text-slate-500">التواريخ</div><div class="font-semibold">15 – 19 يونيو 2026</div></div>
+                    <div><div class="text-xs text-slate-500">مصدر التمويل</div><div class="font-mono text-xs">wew-232-343-2</div></div>
+                    <div><div class="text-xs text-slate-500">عدد المرشحين</div><div class="font-semibold">2 (1ض · 1ف)</div></div>
+                    <div><div class="text-xs text-slate-500">المبرر</div><div class="font-semibold text-xs">حاجة ملحة قبل مشروع شمس 2</div></div>
+                </div>
+            </div>
+
+            <!-- Panel 2: Nominations (check) -->
+            <div class="bg-white rounded-xl p-5 mb-4 border border-slate-200">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="section-label">الترشيحات</span>
+                    <h4 class="font-bold text-slate-800">👥 المرشحون + فحص الشروط</h4>
+                </div>
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-slate-500 text-xs border-b">
+                            <th class="p-2 text-right">#</th>
+                            <th class="p-2 text-right">الاسم</th>
+                            <th class="p-2 text-center">الرتبة</th>
+                            <th class="p-2 text-center">النوع</th>
+                            <th class="p-2 text-center">الشروط</th>
+                            <th class="p-2 text-center">إجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <tr>
+                            <td class="p-2">1</td>
+                            <td class="p-2 font-bold">سالم بن أحمد الهنائي</td>
+                            <td class="text-center p-2"><span class="rank-pill">نقيب</span></td>
+                            <td class="text-center p-2"><span class="text-blue-700 bg-blue-100 text-xs px-2 py-1 rounded">ضابط</span></td>
+                            <td class="text-center p-2"><span class="condition-pass">✓ 9/9</span></td>
+                            <td class="text-center p-2"><button class="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded">🔙 إعادة مرشح</button></td>
+                        </tr>
+                        <tr>
+                            <td class="p-2">2</td>
+                            <td class="p-2 font-bold">خالد بن محمد البلوشي</td>
+                            <td class="text-center p-2"><span class="rank-pill">رقيب</span></td>
+                            <td class="text-center p-2"><span class="text-amber-700 bg-amber-100 text-xs px-2 py-1 rounded">فرد</span></td>
+                            <td class="text-center p-2"><span class="condition-pass">✓ 9/9</span></td>
+                            <td class="text-center p-2"><button class="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded">🔙 إعادة مرشح</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Panel 3: Funding Scenario (3 cards) -->
+            <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-5 mb-4 border-2 border-purple-200">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="section-label purple">القرار الرئيسي</span>
+                    <h4 class="font-bold text-purple-900">💰 تحديد سيناريو التمويل</h4>
+                    <span class="scope-badge mr-auto">Staff فقط</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="scenario-card">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="scenario-num">1</span>
+                            <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">بدون إعادة تخصيص</span>
+                        </div>
+                        <h5 class="font-bold text-sm mt-2">FundingSource يغطي الكل</h5>
+                        <p class="text-xs text-slate-600 mt-1">التكلفة + السفر يخصمان من <code>wew-232-343-2</code>. لا بنود مالية.</p>
+                    </div>
+                    <div class="scenario-card selected">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="scenario-num">2</span>
+                            <span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">إعادة تخصيص تلقائية</span>
+                        </div>
+                        <h5 class="font-bold text-sm mt-2">FundingSource للدورة + بنود للسفر</h5>
+                        <p class="text-xs text-slate-600 mt-1">تكلفة الدورة من <code>wew-232-343-2</code>. بنود السفر من <code>FinancialItems</code>.</p>
+                        <div class="mt-2 text-xs text-blue-700 font-semibold">✓ محدد</div>
+                    </div>
+                    <div class="scenario-card">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="scenario-num">3</span>
+                            <span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">إعادة تخصيص تلقائية</span>
+                        </div>
+                        <h5 class="font-bold text-sm mt-2">البنود المالية تغطي الكل</h5>
+                        <p class="text-xs text-slate-600 mt-1">كل شيء من <code>FinancialItems</code> — لا استخدام لـ FundingSource.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 4: Financial Items (flat) -->
+            <div class="bg-white rounded-xl p-5 mb-4 border border-slate-200">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="section-label amber">البنود المالية</span>
+                        <h4 class="font-bold text-slate-800">🏦 البنود المالية (Flat — بدون كسر حسب الرتبة)</h4>
+                    </div>
+                    <button class="btn-primary px-4 py-2 rounded-lg text-xs">🔄 تعبئة من الافتراضيات</button>
+                </div>
+
+                <div class="text-xs text-slate-500 mb-3">
+                    <b>الصيغة المطبقة (CHG-07):</b> <code>EstimatedAmount = Rate × effectiveDays × effectiveCount</code> —
+                    <code>effectiveDays = IsPerDay ? (5 + ExtraBefore + ExtraAfter) : 1</code> —
+                    <code>effectiveCount = IsPerNominee ? 2 : 1</code>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-600 text-xs">
+                                <th class="p-2 text-right">البند</th>
+                                <th class="p-2 text-center">المصدر</th>
+                                <th class="p-2 text-center">السعر</th>
+                                <th class="p-2 text-center">الأيام</th>
+                                <th class="p-2 text-center">المرشحون</th>
+                                <th class="p-2 text-center">المبلغ (ر.ع)</th>
+                                <th class="p-2 text-right">ملاحظات</th>
+                                <th class="p-2 text-center">×</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr>
+                                <td class="p-2">
+                                    <div class="font-semibold">تكلفة الدورة</div>
+                                    <div class="text-xs text-slate-400">Course Cost</div>
+                                </td>
+                                <td class="text-center p-2"><span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">FundingSource</span></td>
+                                <td class="text-center p-2">3,000</td>
+                                <td class="text-center p-2 text-slate-400">—</td>
+                                <td class="text-center p-2 text-slate-400">—</td>
+                                <td class="text-center p-2 font-bold">3,000.000</td>
+                                <td class="p-2 text-xs text-slate-500">سيناريو 2 — من التمويل</td>
+                                <td class="text-center p-2"><button class="text-red-500 text-xs">🗑️</button></td>
+                            </tr>
+                            <tr>
+                                <td class="p-2">
+                                    <div class="font-semibold">علاوة الغربة</div>
+                                    <div class="text-xs text-slate-400">Travel Allowance · IsPerDay · IsPerNominee</div>
+                                </td>
+                                <td class="text-center p-2"><span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">FinancialItem</span></td>
+                                <td class="text-center p-2">
+                                    <input type="number" value="80" class="input-field w-20 px-2 py-1 text-xs text-center">
+                                </td>
+                                <td class="text-center p-2 text-slate-600">7 <span class="text-xs text-slate-400">(5+1+1)</span></td>
+                                <td class="text-center p-2">2</td>
+                                <td class="text-center p-2 font-bold text-green-700">1,120.000</td>
+                                <td class="p-2"><input type="text" placeholder="ملاحظات..." class="input-field w-full px-2 py-1 text-xs"></td>
+                                <td class="text-center p-2"><button class="text-red-500 text-xs">🗑️</button></td>
+                            </tr>
+                            <tr>
+                                <td class="p-2">
+                                    <div class="font-semibold">تذاكر السفر</div>
+                                    <div class="text-xs text-slate-400">Tickets · IsPerNominee</div>
+                                </td>
+                                <td class="text-center p-2"><span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">FinancialItem</span></td>
+                                <td class="text-center p-2">
+                                    <input type="number" value="650" class="input-field w-20 px-2 py-1 text-xs text-center">
+                                </td>
+                                <td class="text-center p-2 text-slate-400">—</td>
+                                <td class="text-center p-2">2</td>
+                                <td class="text-center p-2 font-bold text-green-700">1,300.000</td>
+                                <td class="p-2"><input type="text" placeholder="ملاحظات..." class="input-field w-full px-2 py-1 text-xs"></td>
+                                <td class="text-center p-2"><button class="text-red-500 text-xs">🗑️</button></td>
+                            </tr>
+                            <tr>
+                                <td class="p-2">
+                                    <div class="font-semibold">التأمين الصحي</div>
+                                    <div class="text-xs text-slate-400">Insurance · IsPerNominee</div>
+                                </td>
+                                <td class="text-center p-2"><span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">FinancialItem</span></td>
+                                <td class="text-center p-2">
+                                    <input type="number" value="80" class="input-field w-20 px-2 py-1 text-xs text-center">
+                                </td>
+                                <td class="text-center p-2 text-slate-400">—</td>
+                                <td class="text-center p-2">2</td>
+                                <td class="text-center p-2 font-bold text-green-700">160.000</td>
+                                <td class="p-2"><input type="text" placeholder="ملاحظات..." class="input-field w-full px-2 py-1 text-xs"></td>
+                                <td class="text-center p-2"><button class="text-red-500 text-xs">🗑️</button></td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="bg-gradient-to-l from-blue-50 to-primary-50 font-bold">
+                                <td colspan="5" class="p-3 text-right">💰 الإجمالي المقدر (يُخزَّن في EstimatedTotalCost)</td>
+                                <td class="p-3 text-center text-lg text-primary-800">5,580.000</td>
+                                <td colspan="2" class="p-3 text-xs text-slate-500">ر.ع · سيناريو 2</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="mt-4">
+                    <button class="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg text-xs border-2 border-dashed border-slate-300 hover:border-primary-400 hover:text-primary-700">➕ إضافة بند مخصص</button>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="border-t border-slate-200 pt-5 mt-4">
+                <div class="flex items-center justify-between flex-wrap gap-3">
+                    <div class="text-xs text-slate-500 flex items-center gap-2">
+                        <span class="scope-badge">tweak 1</span>
+                        <span><b>AssignScenarioAsync</b> يأخذ <code class="bg-slate-100 px-1.5 py-0.5 rounded">Commit</code> flag — Save Draft = <code>false</code> (يبقى UnderReview) · Finalize = <code>true</code> (ينتقل لـ StaffReviewed).</span>
+                    </div>
+                </div>
+                <div class="flex gap-3 justify-end mt-3 flex-wrap">
+                    <button class="bg-slate-100 text-slate-700 px-5 py-2.5 rounded-xl text-sm">إلغاء</button>
+                    <button class="btn-danger px-5 py-2.5 rounded-xl text-sm font-semibold">❌ رفض</button>
+                    <button class="btn-amber px-5 py-2.5 rounded-xl text-sm font-semibold">🔙 إعادة لـ UTM</button>
+                    <div class="w-px h-auto bg-slate-200 mx-1"></div>
+                    <button class="bg-white border-2 border-primary-300 text-primary-700 px-5 py-2.5 rounded-xl text-sm font-semibold" title="Commit=false — يبقى قيد المراجعة">💾 حفظ كمسودة مراجعة</button>
+                    <button class="btn-success px-5 py-2.5 rounded-xl text-sm font-semibold" title="Commit=true — ينتقل لـ StaffReviewed">✅ إنهاء المراجعة ← إرسال لـ TD</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB 5: PAGE 4.4 — APPROVAL (TD / TH) -->
+    <!-- ============================================================ -->
+    <div id="approval" class="screen">
+        <!-- UGM View — NEW — shows default cost preview since Staff hasn't run yet -->
+        <div class="card p-6 mb-6">
+            <div class="flex justify-between items-start mb-5">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">✅ اعتماد الدورة العرضية — مستوى الوحدة</h2>
+                    <p class="text-gray-500 text-sm mt-1">إدارة المشاريع الاحترافية — PMP · الكتيبة الثالثة — <span class="role-pill role-ugm">UGM (مدير عام الوحدة)</span></p>
+                </div>
+                <div class="flex gap-2 items-center">
+                    <span class="status-badge status-submitted">مُقدَّم</span>
+                    <button class="bg-slate-100 text-slate-700 px-3 py-2 rounded-lg text-sm">📝 الملاحظات</button>
+                </div>
+            </div>
+
+            <!-- No cost gate at UGM level - explicit info banner -->
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-5 flex items-center gap-3">
+                <div class="bg-blue-500 text-white w-9 h-9 rounded-full flex items-center justify-center text-sm">ℹ️</div>
+                <div class="text-sm text-blue-900 flex-1">
+                    <b>لا بوابة تكلفة على مستوى UGM.</b> قرارك هنا تشغيلي (هل الدورة مناسبة للوحدة والمرشحين؟). بوابة التكلفة تُفعَّل لاحقًا على مستوى TD و TH بعد أن يُعيِّن Staff البنود المالية الفعلية.
+                </div>
+            </div>
+
+            <!-- Course summary -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <h4 class="font-bold text-slate-800 mb-3">📚 معلومات الدورة</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between"><span class="text-slate-500">الدورة:</span><span class="font-semibold">إدارة المشاريع الاحترافية — PMP</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">النوع:</span><span class="font-semibold">خارجية محلية</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">المدة:</span><span class="font-semibold">5 أيام (10–14 يوليو 2026)</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">المُقدِّم:</span><span class="font-semibold"><span class="role-pill role-utm">UTM</span> خالد الراشدي</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">الأولوية:</span><span class="font-semibold">2 — عالية</span></div>
+                    </div>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <h4 class="font-bold text-slate-800 mb-3">👥 المرشحون (3) + المرفقات</h4>
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        <span class="nominee-chip">خالد بن أحمد — رائد</span>
+                        <span class="nominee-chip">سعيد بن محمد — نقيب</span>
+                        <span class="nominee-chip">ناصر بن علي — ملازم</span>
+                    </div>
+                    <div class="text-xs text-slate-600 flex items-center gap-2"><span>📎</span> 1 مرفق — خطاب الدعوة (PDF)</div>
+                </div>
+            </div>
+
+            <!-- DEFAULT COST PREVIEW — the key new panel -->
+            <div class="bg-gradient-to-br from-indigo-50 via-purple-50 to-white rounded-xl p-5 mb-5 border-2 border-indigo-200">
+                <div class="flex items-center gap-2 mb-4 flex-wrap">
+                    <span class="section-label purple">التقدير المبدئي</span>
+                    <h4 class="font-bold text-indigo-900">🧮 التقدير بناء على البنود الافتراضية</h4>
+                    <span class="scope-badge mr-auto">عرض UGM</span>
+                </div>
+
+                <div class="bg-white/70 border border-indigo-100 rounded-lg p-3 mb-4 text-xs text-slate-700 flex items-start gap-2">
+                    <span class="text-indigo-600 text-base">ℹ️</span>
+                    <div>
+                        Staff لم يبدأ مراجعته بعد — الأرقام أدناه محسوبة تلقائيًا من <code class="bg-white px-1.5 py-0.5 rounded border border-slate-200">CourseTypeFinancialItemDefaults</code> للنوع <b>خارجية محلية</b>.
+                        <b class="text-purple-900">الأرقام تقريبية ولا تُمثِّل التزامًا ماليًا</b> — TD و TH سيحصلان على الأرقام النهائية بعد أن يعيِّن Staff البنود.
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto bg-white rounded-lg border border-indigo-100">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-indigo-50 text-indigo-900 text-xs">
+                                <th class="p-2 text-right">البند المالي الافتراضي</th>
+                                <th class="p-2 text-center">السعر</th>
+                                <th class="p-2 text-center">أيام فعّالة</th>
+                                <th class="p-2 text-center">عدد المرشحين</th>
+                                <th class="p-2 text-center">المجموع (ر.ع)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr>
+                                <td class="p-2"><div class="font-semibold">تكلفة الدورة</div><div class="text-xs text-slate-400">ثابت</div></td>
+                                <td class="text-center p-2">1,800</td>
+                                <td class="text-center p-2 text-slate-400">—</td>
+                                <td class="text-center p-2 text-slate-400">—</td>
+                                <td class="text-center p-2 font-bold text-indigo-700">1,800.000</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2"><div class="font-semibold">علاوة انتقال محلي</div><div class="text-xs text-slate-400">IsPerDay · IsPerNominee</div></td>
+                                <td class="text-center p-2">25</td>
+                                <td class="text-center p-2">5</td>
+                                <td class="text-center p-2">3</td>
+                                <td class="text-center p-2 font-bold text-indigo-700">375.000</td>
+                            </tr>
+                            <tr>
+                                <td class="p-2"><div class="font-semibold">وجبات</div><div class="text-xs text-slate-400">IsPerDay · IsPerNominee</div></td>
+                                <td class="text-center p-2">15</td>
+                                <td class="text-center p-2">5</td>
+                                <td class="text-center p-2">3</td>
+                                <td class="text-center p-2 font-bold text-indigo-700">225.000</td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="bg-gradient-to-l from-indigo-100 to-purple-100 font-bold">
+                                <td colspan="4" class="p-3 text-right text-indigo-900">🧮 التقدير الإجمالي الافتراضي</td>
+                                <td class="p-3 text-center text-lg text-indigo-900">2,400.000</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="bg-white rounded-lg p-3 border border-slate-200">
+                        <div class="text-xs text-slate-500">تقدير UTM المبدئي</div>
+                        <div class="text-xl font-bold text-slate-700">2,200 ر.ع</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border-2 border-indigo-300">
+                        <div class="text-xs text-indigo-600">التقدير الافتراضي (هذا العرض)</div>
+                        <div class="text-xl font-bold text-indigo-700">2,400 ر.ع</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions — UGM level, no cost gate -->
+            <div class="flex gap-3 justify-end">
+                <button class="btn-danger px-5 py-2.5 rounded-xl text-sm font-semibold">❌ رفض</button>
+                <button class="btn-amber px-5 py-2.5 rounded-xl text-sm font-semibold">🔙 إعادة لـ UTM</button>
+                <button class="btn-success px-5 py-2.5 rounded-xl text-sm font-semibold">✅ اعتماد الوحدة ← إلى Staff</button>
+            </div>
+        </div>
+
+        <!-- TD View -->
+        <div class="card p-6 mb-6">
+            <div class="flex justify-between items-start mb-5">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">✅ اعتماد الدورة العرضية — مستوى مديرية التدريب</h2>
+                    <p class="text-gray-500 text-sm mt-1">الأمن السيبراني المتقدم · اللواء الأول — <span class="role-pill role-td">TD (مدير مديرية التدريب)</span></p>
+                </div>
+                <div class="flex gap-2 items-center">
+                    <span class="status-badge status-staff-reviewed">مُراجع من Staff</span>
+                    <button class="bg-slate-100 text-slate-700 px-3 py-2 rounded-lg text-sm">📝 الملاحظات <span class="bg-primary-500 text-white text-xs px-1.5 rounded-full ml-1">3</span></button>
+                </div>
+            </div>
+
+            <!-- Cost gate indicator -->
+            <div class="cost-gate-ok rounded-xl p-4 mb-5 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="bg-green-500 text-white w-10 h-10 rounded-full flex items-center justify-center text-lg">✓</div>
+                    <div>
+                        <div class="font-bold text-green-800">🚪 بوابة التكلفة: مفتوحة</div>
+                        <div class="text-xs text-green-700">التكلفة الإجمالية مُدخلة — الاعتماد ممكن</div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-xs text-green-700">EstimatedTotalCost</div>
+                    <div class="text-2xl font-bold text-green-800">5,580.000 ر.ع</div>
+                </div>
+            </div>
+
+            <!-- Course summary (read-only) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <h4 class="font-bold text-slate-800 mb-3">📚 معلومات الدورة</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between"><span class="text-slate-500">الدورة:</span><span class="font-semibold">الأمن السيبراني المتقدم</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">النوع:</span><span class="font-semibold">خارجية دولية</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">المدة:</span><span class="font-semibold">5 أيام (15–19 يونيو 2026)</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">الأولوية:</span><span class="font-semibold text-red-700">1 — عالية جدًا</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">المبرر:</span><span class="font-semibold text-xs">حاجة ملحة قبل مشروع شمس 2</span></div>
+                    </div>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <h4 class="font-bold text-slate-800 mb-3">💰 ملخص التمويل</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between"><span class="text-slate-500">FundingSource:</span><span class="font-mono text-xs">wew-232-343-2</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">السيناريو:</span><span class="font-semibold">2 — تمويل للدورة + بنود للسفر</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">تكلفة الدورة:</span><span class="font-semibold">3,000 ر.ع (من التمويل)</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">بنود السفر:</span><span class="font-semibold">2,580 ر.ع (من البنود)</span></div>
+                        <div class="flex justify-between border-t pt-2 mt-2"><span class="text-slate-500 font-bold">الإجمالي:</span><span class="font-bold text-green-700 text-lg">5,580.000 ر.ع</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nominations summary + Financial items read-only -->
+            <div class="bg-white rounded-xl p-4 mb-5 border border-slate-200">
+                <h4 class="font-bold text-slate-800 mb-3">👥 المرشحون (2)</h4>
+                <div class="flex flex-wrap gap-2">
+                    <span class="nominee-chip">سالم بن أحمد — نقيب · ضابط</span>
+                    <span class="nominee-chip">خالد بن محمد — رقيب · فرد</span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl p-4 mb-5 border border-slate-200">
+                <h4 class="font-bold text-slate-800 mb-3">🏦 البنود المالية (للقراءة فقط)</h4>
+                <table class="w-full text-sm">
+                    <thead><tr class="bg-slate-50 text-xs text-slate-500">
+                        <th class="p-2 text-right">البند</th><th class="p-2 text-center">المصدر</th>
+                        <th class="p-2 text-center">المبلغ (ر.ع)</th><th class="p-2 text-right">الملاحظات</th>
+                    </tr></thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <tr><td class="p-2">تكلفة الدورة</td><td class="text-center p-2"><span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">FundingSource</span></td><td class="text-center p-2 font-semibold">3,000.000</td><td class="p-2 text-xs text-slate-500">سيناريو 2</td></tr>
+                        <tr><td class="p-2">علاوة الغربة</td><td class="text-center p-2"><span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">FinancialItem</span></td><td class="text-center p-2 font-semibold">1,120.000</td><td class="p-2 text-xs text-slate-500">5 + 1 + 1 أيام × 2 مرشح × 80</td></tr>
+                        <tr><td class="p-2">تذاكر السفر</td><td class="text-center p-2"><span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">FinancialItem</span></td><td class="text-center p-2 font-semibold">1,300.000</td><td class="p-2 text-xs text-slate-500">650 × 2 مرشح</td></tr>
+                        <tr><td class="p-2">التأمين الصحي</td><td class="text-center p-2"><span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">FinancialItem</span></td><td class="text-center p-2 font-semibold">160.000</td><td class="p-2 text-xs text-slate-500">80 × 2 مرشح</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex gap-3 justify-end">
+                <button class="btn-danger px-5 py-2.5 rounded-xl text-sm font-semibold">❌ رفض</button>
+                <button class="btn-amber px-5 py-2.5 rounded-xl text-sm font-semibold">🔙 إعادة لـ UTM</button>
+                <button class="btn-success px-5 py-2.5 rounded-xl text-sm font-semibold">✅ اعتماد ← إلى TH</button>
+            </div>
+        </div>
+
+        <!-- Cost gate — BLOCKED variant (example) -->
+        <div class="card p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <h3 class="font-bold text-slate-800 text-lg">🚫 مثال — الاعتماد محظور (عندما لا تُدخَل التكلفة)</h3>
+                <span class="scope-badge">حالة حافة</span>
+            </div>
+            <div class="cost-gate-block rounded-xl p-4 flex items-center justify-between mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-red-500 text-white w-10 h-10 rounded-full flex items-center justify-center text-lg">⛔</div>
+                    <div>
+                        <div class="font-bold text-red-800">🚪 بوابة التكلفة: مغلقة</div>
+                        <div class="text-xs text-red-700">التكلفة الإجمالية غير مُدخلة — لا يمكن الاعتماد حتى يُكملها Staff</div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-xs text-red-700">EstimatedTotalCost</div>
+                    <div class="text-2xl font-bold text-red-800">— ر.ع</div>
+                </div>
+            </div>
+            <div class="flex gap-3 justify-end">
+                <button class="btn-amber px-5 py-2.5 rounded-xl text-sm font-semibold">🔙 إعادة لـ Staff</button>
+                <button class="btn-disabled px-5 py-2.5 rounded-xl text-sm font-semibold" disabled title="التكلفة غير مُدخلة — لا يمكن الاعتماد">✅ اعتماد (معطل)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB 6: RETURNED VIEW (UTM) -->
+    <!-- ============================================================ -->
+    <div id="returned-view" class="screen">
+        <div class="card p-6 mb-6">
+            <div class="flex justify-between items-start mb-5">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">🔙 طلب دورة عرضية — مُعاد للتعديل</h2>
+                    <p class="text-gray-500 text-sm mt-1">إدارة المشاريع الاحترافية — PMP · المُقدِّم الأصلي: <span class="role-pill role-utm">UTM</span></p>
+                </div>
+                <span class="status-badge status-returned">🔙 مُعاد لـ UTM</span>
+            </div>
+
+            <!-- Return banner -->
+            <div class="returned-banner mb-5">
+                <div class="flex items-start gap-3">
+                    <div class="text-3xl">⚠️</div>
+                    <div class="flex-1">
+                        <div class="font-bold text-amber-900 mb-1">تم إرجاع هذا الطلب — يرجى معالجة الملاحظة ثم إعادة الإرسال</div>
+                        <div class="text-sm text-amber-800 mb-2 flex items-center gap-3 flex-wrap">
+                            <span>المُرجِع: <span class="role-pill role-staff">Staff · أحمد الفارسي</span></span>
+                            <span class="text-slate-400">·</span>
+                            <span>قبل 3 ساعات</span>
+                            <span class="text-slate-400">·</span>
+                            <span class="bg-white border border-amber-300 rounded-full px-2 py-0.5 text-xs">
+                                <code class="text-amber-900">ReturnedFromStatus = UnderReview</code>
+                            </span>
+                        </div>
+                        <div class="bg-white border border-amber-300 rounded-lg p-3 text-sm text-slate-700 italic">
+                            "المبرر غير كافٍ — يرجى توضيح: (1) لماذا لا يمكن تأجيل الطلب للخطة السنوية 2027؟ (2) ما الأثر على مشروع شمس 2 إذا لم يحضر المرشحون هذه الدورة تحديدًا؟"
+                        </div>
+                        <div class="mt-2 text-xs text-green-800 bg-green-50 border border-green-200 rounded-lg px-3 py-2 flex items-center gap-2">
+                            <span>🎯</span>
+                            <span>عند إعادة الإرسال — سيعود الطلب مباشرة إلى <b class="text-green-900">UnderReview</b> (نفس المرحلة التي أعادته) — لا يستأنف من البداية.</span>
+                        </div>
+                    </div>
+                    <button class="bg-white border border-amber-400 text-amber-800 px-3 py-2 rounded-lg text-xs">📝 كل الملاحظات</button>
+                </div>
+            </div>
+
+            <!-- Fields (editable) - condensed view -->
+            <div class="bg-white rounded-xl p-5 mb-4 border border-slate-200">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="section-label">بيانات الدورة</span>
+                    <span class="text-xs text-slate-500">(قابلة للتعديل)</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-xs text-slate-600 mb-1 block">الدورة</label>
+                        <select class="input-field w-full px-3 py-2 text-sm"><option>إدارة المشاريع الاحترافية — PMP</option></select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-600 mb-1 block">النوع</label>
+                        <select class="input-field w-full px-3 py-2 text-sm"><option>خارجية محلية</option></select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-600 mb-1 block">الأولوية</label>
+                        <select class="input-field w-full px-3 py-2 text-sm"><option>2 — عالية</option></select>
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="text-xs text-slate-600 mb-1 block flex items-center gap-2">
+                            المبرر *
+                            <span class="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">🎯 نقطة التعديل المطلوبة</span>
+                        </label>
+                        <textarea class="input-field w-full px-3 py-2 text-sm border-2 border-amber-400" rows="3" placeholder="عالج ملاحظة Staff هنا...">لا يمكن تأجيله للخطة السنوية 2027 لأن مشروع شمس 2 يبدأ في أكتوبر 2026 ويتطلب 3 حاملي PMP. 5 من المرشحين سيتفرغون بعد مشروع PMP السابق، وتأجيلهم سيؤخر مرحلة المشروع الرئيسية (أثر مالي ~350,000 ر.ع).</textarea>
+                        <p class="text-xs text-green-700 mt-1">✏️ تم توضيح النقاط المطلوبة — جاهز لإعادة الإرسال</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nominations (editable — can add/remove in returned state) -->
+            <div class="bg-white rounded-xl p-4 mb-4 border border-slate-200">
+                <h4 class="font-bold text-slate-800 mb-3">👥 المرشحون (3) — قابل للتعديل</h4>
+                <div class="flex flex-wrap gap-2">
+                    <span class="nominee-chip">خالد بن أحمد — رائد <span class="remove">✕</span></span>
+                    <span class="nominee-chip">سعيد بن محمد — نقيب <span class="remove">✕</span></span>
+                    <span class="nominee-chip">ناصر بن علي — ملازم أول <span class="remove">✕</span></span>
+                    <button class="text-xs text-primary-700 border border-dashed border-primary-300 px-3 py-1 rounded-full hover:bg-primary-50">+ إضافة مرشح</button>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex gap-3 justify-end">
+                <button class="bg-slate-100 text-slate-700 px-5 py-2.5 rounded-xl text-sm">إلغاء</button>
+                <button class="bg-white border-2 border-slate-300 text-slate-700 px-5 py-2.5 rounded-xl text-sm font-semibold">💾 حفظ بدون إرسال</button>
+                <button class="btn-success px-5 py-2.5 rounded-xl text-sm font-semibold">📤 إعادة الإرسال ← يعود لـ UnderReview</button>
+            </div>
+        </div>
+
+        <!-- Sample Return Modal (shown hovering to demonstrate design) -->
+        <div class="card p-6">
+            <div class="flex items-center gap-2 mb-4">
+                <h3 class="font-bold text-slate-800 text-lg">📣 نموذج — Modal "إعادة" (مُستعار من Phase 3)</h3>
+                <span class="scope-badge">مكون مشترك</span>
+            </div>
+            <div class="bg-slate-100 rounded-xl p-6 flex justify-center items-center min-h-[280px]">
+                <div class="modal-box open bg-white rounded-2xl p-6 max-w-md w-full" style="display:block; position:relative; box-shadow: 0 20px 60px rgba(0,0,0,0.15);">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="text-2xl">🔙</span>
+                        <h3 class="font-bold text-slate-800">إعادة الطلب لمقدمه</h3>
+                    </div>
+                    <p class="text-sm text-slate-600 mb-4">سيُعاد الطلب إلى UTM مع سبب واضح. UTM سيُعدِّل ثم يعيد الإرسال.</p>
+                    <div class="mb-4">
+                        <label class="text-xs text-slate-600 mb-1 block">سبب الإعادة <span class="text-red-500">*</span></label>
+                        <textarea class="input-field w-full px-3 py-2 text-sm" rows="4" placeholder="اشرح باختصار ما الذي يحتاج إلى تعديل..."></textarea>
+                    </div>
+                    <div class="flex justify-end gap-2">
+                        <button class="bg-slate-100 text-slate-700 px-4 py-2 rounded-lg text-sm">إلغاء</button>
+                        <button class="btn-amber px-4 py-2 rounded-lg text-sm font-semibold">🔙 تأكيد الإعادة</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- FOOTER -->
+    <!-- ============================================================ -->
+    <div class="mt-6 text-center text-xs text-slate-500">
+        GTMS — Phase 4A — Casual Courses Foundation Mockup · v1.0 · 23 أبريل 2026 · مُستند تصميم لموافقة OmanAI قبل الإنتاج
+    </div>
+
+    <script>
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            event.target.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleUnit(id) {
+            const body = document.getElementById(id);
+            const chevron = event.currentTarget.querySelector('.chevron');
+            if (body.style.display === 'none') {
+                body.style.display = 'block';
+                chevron.classList.add('open');
+            } else {
+                body.style.display = 'none';
+                chevron.classList.remove('open');
+            }
+        }
+
+        function onCourseTypeChange(sel) {
+            // Placeholder — in real app, would toggle FundingSource requirement visually
+            console.log('CourseType changed:', sel.value);
+        }
+    </script>
+
+</body>
+</html>
