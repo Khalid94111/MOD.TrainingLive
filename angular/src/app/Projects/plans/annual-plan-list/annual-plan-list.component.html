@@ -64,6 +64,9 @@
                   }
                 }
                 @case (PlanStatus.UnderReview) {
+                  @if (canReview) {
+                    <button class="btn-icon" title="مراجعة" (click)="navigateToReview(plan.id)">🔍</button>
+                  }
                   @if (canApprove) {
                     <button class="btn-icon" title="اعتماد" (click)="navigateToApproval(plan.id)">✅</button>
                   }

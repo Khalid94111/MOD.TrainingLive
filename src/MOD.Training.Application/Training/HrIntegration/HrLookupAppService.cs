@@ -27,7 +27,7 @@ public class HrLookupAppService(
     /// </summary>
     public async Task<List<EmployeeLookupDto>> GetEmployeesByUnitAsync(Guid unitId)
     {
-        var employees = await employeeResolver.GetEmployeesByUnitAsync(unitId);
+        var employees = await employeeResolver.GetEmployeesByUnitAsync(unitId, CurrentTenant.Id.Value);
         return employees.Select(e => new EmployeeLookupDto
         {
             Id = e.Id,

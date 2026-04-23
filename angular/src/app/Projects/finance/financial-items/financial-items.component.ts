@@ -13,6 +13,10 @@ import { HrLookupService } from 'src/app/proxy/training/hr-integration/hr-lookup
 import { RankLookupDto } from 'src/app/proxy/training/hr-integration/models';
 import { TrainingLocalizationHelper } from '../../shared';
 
+interface ParentItemView extends FinancialItemDto {
+  children: FinancialItemDto[];
+}
+
 @Component({
   selector: 'app-financial-items',
   standalone: true,
@@ -35,9 +39,13 @@ export class FinancialItemsComponent implements OnInit {
   filterPerDay = signal<'all' | 'yes' | 'no'>('all');
   filterPerNominee = signal<'all' | 'yes' | 'no'>('all');
 
+  // Rank-overrides inline panel (any row — parent or child)
   expandedItemId = signal<string | null>(null);
   rankAmountsMap = signal(new Map<string, FinancialItemRankAmountDto[]>());
   loadingItemId = signal<string | null>(null);
+
+  // Parent-children tree expansion (independent of rank-overrides)
+  expandedParentIds = signal<Set<string>>(new Set());
 
   // Item dialog
   isDialogOpen = signal(false);
@@ -64,34 +72,65 @@ export class FinancialItemsComponent implements OnInit {
 
   parentItems = computed(() => this.items().filter(i => !i.parentId));
 
-  filteredItems = computed(() => {
-    const q = this.searchText().trim().toLowerCase();
-    const act = this.filterActive();
-    const day = this.filterPerDay();
-    const nom = this.filterPerNominee();
-    return this.items().filter(i => {
-      if (q) {
-        const hit =
-          (i.nameAr ?? '').toLowerCase().includes(q) ||
-          (i.nameEn ?? '').toLowerCase().includes(q) ||
-          (i.code ?? '').toLowerCase().includes(q) ||
-          (i.voteCode ?? '').toLowerCase().includes(q);
-        if (!hit) return false;
-      }
-      if (act === 'active' && !i.isActive) return false;
-      if (act === 'inactive' && i.isActive) return false;
-      if (day === 'yes' && !i.isPerDay) return false;
-      if (day === 'no' && i.isPerDay) return false;
-      if (nom === 'yes' && !i.isPerNominee) return false;
-      if (nom === 'no' && i.isPerNominee) return false;
-      return true;
+  parentsWithChildren = computed<ParentItemView[]>(() => {
+    const all = this.items();
+    const parents = all.filter(i => !i.parentId);
+    const childrenByParent = new Map<string, FinancialItemDto[]>();
+    all.filter(i => i.parentId).forEach(c => {
+      const arr = childrenByParent.get(c.parentId!) ?? [];
+      arr.push(c);
+      childrenByParent.set(c.parentId!, arr);
     });
+    return parents.map(p => ({ ...p, children: childrenByParent.get(p.id!) ?? [] }));
+  });
+
+  filteredParentsWithChildren = computed<ParentItemView[]>(() => {
+    const q = this.searchText().trim().toLowerCase();
+    const result: ParentItemView[] = [];
+    for (const p of this.parentsWithChildren()) {
+      const parentMatchesSearch = this.matchesSearch(p, q);
+      const parentPassesFilters = this.matchesNonSearchFilters(p);
+      const matchingChildren = p.children.filter(c =>
+        this.matchesNonSearchFilters(c) && this.matchesSearch(c, q),
+      );
+
+      if (parentPassesFilters && parentMatchesSearch) {
+        const visibleChildren = p.children.filter(c => this.matchesNonSearchFilters(c));
+        result.push({ ...p, children: visibleChildren });
+      } else if (matchingChildren.length > 0) {
+        result.push({ ...p, children: matchingChildren });
+      }
+    }
+    return result;
   });
 
   totalCount = computed(() => this.items().length);
   perDayCount = computed(() => this.items().filter(i => i.isPerDay).length);
   perNomineeCount = computed(() => this.items().filter(i => i.isPerNominee).length);
   activeCount = computed(() => this.items().filter(i => i.isActive).length);
+
+  private matchesSearch(i: FinancialItemDto, q: string): boolean {
+    if (!q) return true;
+    return (
+      (i.nameAr ?? '').toLowerCase().includes(q) ||
+      (i.nameEn ?? '').toLowerCase().includes(q) ||
+      (i.code ?? '').toLowerCase().includes(q) ||
+      (i.voteCode ?? '').toLowerCase().includes(q)
+    );
+  }
+
+  private matchesNonSearchFilters(i: FinancialItemDto): boolean {
+    const act = this.filterActive();
+    const day = this.filterPerDay();
+    const nom = this.filterPerNominee();
+    if (act === 'active' && !i.isActive) return false;
+    if (act === 'inactive' && i.isActive) return false;
+    if (day === 'yes' && !i.isPerDay) return false;
+    if (day === 'no' && i.isPerDay) return false;
+    if (nom === 'yes' && !i.isPerNominee) return false;
+    if (nom === 'no' && i.isPerNominee) return false;
+    return true;
+  }
 
   ngOnInit(): void {
     this.loadData();
@@ -192,8 +231,42 @@ export class FinancialItemsComponent implements OnInit {
     await this.loadData();
   }
 
-  // ── Expand row ──
-  async toggleExpand(itemId: string): Promise<void> {
+  // ── Parent tree expansion ──
+  onParentRowClick(parent: ParentItemView, event: Event): void {
+    // Empty parents have no children to toggle — fall back to rank-overrides expansion
+    if (parent.children.length === 0) {
+      void this.toggleExpand(parent.id!, event);
+      return;
+    }
+    this.toggleParent(parent.id!, event);
+  }
+
+  toggleParent(parentId: string, event: Event): void {
+    event.stopPropagation();
+    this.expandedParentIds.update(set => {
+      const next = new Set(set);
+      if (next.has(parentId)) next.delete(parentId);
+      else next.add(parentId);
+      return next;
+    });
+  }
+
+  isParentExpanded(parentId: string): boolean {
+    if (this.expandedParentIds().has(parentId)) return true;
+    // Auto-expand when a child matches the search but the parent itself doesn't
+    const q = this.searchText().trim().toLowerCase();
+    if (!q) return false;
+    const parent = this.parentsWithChildren().find(p => p.id === parentId);
+    if (!parent) return false;
+    if (this.matchesSearch(parent, q) && this.matchesNonSearchFilters(parent)) return false;
+    return parent.children.some(c =>
+      this.matchesNonSearchFilters(c) && this.matchesSearch(c, q),
+    );
+  }
+
+  // ── Rank-overrides row expansion ──
+  async toggleExpand(itemId: string, event: Event): Promise<void> {
+    event.stopPropagation();
     if (this.expandedItemId() === itemId) { this.expandedItemId.set(null); return; }
     this.expandedItemId.set(itemId);
     this.loadingItemId.set(itemId);

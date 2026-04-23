@@ -45,7 +45,7 @@
             <th style="width: 36px;"></th>
             <th>الكود</th>
             <th>الاسم</th>
-            <th>البند الأب</th>
+            <th>البنود الفرعية</th>
             <th class="center">🗓️ يومي</th>
             <th class="center">👤 لكل مرشح</th>
             <th class="center">💰 الافتراضي (ر.ع)</th>
@@ -61,115 +61,137 @@
                 <td colspan="10"><div class="skel-bar"></div></td>
               </tr>
             }
-          } @else if (filteredItems().length === 0) {
+          } @else if (filteredParentsWithChildren().length === 0) {
             <tr>
               <td colspan="10" class="empty-cell">
                 <div class="empty-state"><div class="empty-icon">📭</div><div>لا توجد بنود مطابقة</div></div>
               </td>
             </tr>
           } @else {
-            @for (item of filteredItems(); track trackById($index, item)) {
-              <tr class="expand-row fi-row" [class.expanded]="isExpanded(item.id!)" (click)="toggleExpand(item.id!)">
-                <td>
-                  <span class="expand-arrow" [class.open]="isExpanded(item.id!)">▸</span>
+            @for (parent of filteredParentsWithChildren(); track trackById($index, parent)) {
+              <tr class="expand-row fi-row parent-row"
+                  [class.expanded]="isExpanded(parent.id!)"
+                  [class.tree-open]="isParentExpanded(parent.id!)"
+                  [class.no-toggle]="parent.children.length === 0"
+                  (click)="onParentRowClick(parent, $event)">
+                <td class="tree-cell">
+                  @if (parent.children.length > 0) {
+                    <span class="tree-chevron"
+                          [class.open]="isParentExpanded(parent.id!)"
+                          [title]="isParentExpanded(parent.id!) ? 'طيّ البنود الفرعية' : 'توسيع البنود الفرعية'">
+                      ▸
+                    </span>
+                  }
                 </td>
-                <td class="cell-bold">{{ item.voteCode ?? '—' }}</td>
+                <td class="cell-bold">{{ parent.voteCode ?? '—' }}</td>
                 <td>
-                  <div class="cell-bold">{{ item.nameAr }}</div>
-                  @if (item.nameEn) { <span class="cell-sub">{{ item.nameEn }}</span> }
+                  <div class="cell-bold">{{ parent.nameAr }}</div>
+                  @if (parent.nameEn) { <span class="cell-sub">{{ parent.nameEn }}</span> }
                 </td>
-                <td class="cell-sub-cell">{{ getParentName(item.parentId) }}</td>
+                <td>
+                  @if (parent.children.length > 0) {
+                    <span class="children-count-badge"
+                          [class.active]="isParentExpanded(parent.id!)">
+                      📂 {{ parent.children.length }} بنود فرعية
+                    </span>
+                  } @else {
+                    <span class="cell-sub-cell">—</span>
+                  }
+                </td>
                 <td class="center">
-                  @if (item.isPerDay) {
+                  @if (parent.isPerDay) {
                     <span class="flag-pill flag-yes" [title]="'يتكرر بعدد الأيام'">
                       ✓ نعم
-                      @if (item.extraDaysBefore || item.extraDaysAfter) {
-                        <span class="flag-extra">+{{ (item.extraDaysBefore || 0) + (item.extraDaysAfter || 0) }}</span>
+                      @if (parent.extraDaysBefore || parent.extraDaysAfter) {
+                        <span class="flag-extra">+{{ (parent.extraDaysBefore || 0) + (parent.extraDaysAfter || 0) }}</span>
                       }
                     </span>
                   } @else { <span class="flag-pill flag-no">—</span> }
                 </td>
                 <td class="center">
-                  @if (item.isPerNominee) { <span class="flag-pill flag-yes">✓ نعم</span> }
+                  @if (parent.isPerNominee) { <span class="flag-pill flag-yes">✓ نعم</span> }
                   @else { <span class="flag-pill flag-no">—</span> }
                 </td>
-                <td class="center cell-money">{{ formatMoney(item.defaultAmountOMR) }}</td>
+                <td class="center cell-money">{{ formatMoney(parent.defaultAmountOMR) }}</td>
                 <td class="center">
-                  <span class="rank-count-pill">
-                    📊 {{ getRankAmountsFor(item.id!).length || 0 }}
-                  </span>
+                  <button type="button"
+                          class="rank-count-pill"
+                          [class.active]="isExpanded(parent.id!)"
+                          (click)="toggleExpand(parent.id!, $event)"
+                          title="عرض مبالغ الرتب">
+                    📊 {{ getRankAmountsFor(parent.id!).length || 0 }}
+                  </button>
                 </td>
                 <td class="center">
-                  @if (item.isActive) { <span class="badge badge-approved">نشط</span> }
+                  @if (parent.isActive) { <span class="badge badge-approved">نشط</span> }
                   @else { <span class="badge badge-draft">معطّل</span> }
                 </td>
                 <td class="center">
-                  <button class="btn-icon" (click)="onEdit(item, $event)" title="تعديل">✏️</button>
-                  <button class="btn-icon" (click)="onDelete(item.id!, $event)" title="حذف">🗑️</button>
+                  <button class="btn-icon" (click)="onEdit(parent, $event)" title="تعديل">✏️</button>
+                  <button class="btn-icon" (click)="onDelete(parent.id!, $event)" title="حذف">🗑️</button>
                 </td>
               </tr>
 
-              @if (isExpanded(item.id!)) {
+              @if (isExpanded(parent.id!)) {
                 <tr class="detail-row">
                   <td colspan="10" class="detail-panel">
-                    <div class="rank-panel">
-                      <div class="panel-header">
-                        <div>
-                          <span class="panel-title">👥 المبالغ حسب الرتبة</span>
-                          <span class="panel-sub">تخصيص مبلغ لكل رتبة — إن لم يوجد، يُستخدم المبلغ الافتراضي</span>
-                        </div>
-                        <button class="btn btn-primary btn-sm" (click)="openAddRankDialog(item.id!, $event)">
-                          ➕ إضافة مبلغ لرتبة
-                        </button>
-                      </div>
-
-                      @if (isRowLoading(item.id!)) {
-                        <div class="skel-ranks">
-                          @for (_ of [1,2,3]; track $index) { <div class="skel-bar"></div> }
-                        </div>
-                      } @else if (getRankAmountsFor(item.id!).length === 0) {
-                        <div class="empty-rank-state">
-                          <span class="empty-icon">🎖️</span>
-                          <span>لم تُحدَّد مبالغ خاصة بالرتب — الجميع سيحصل على <strong>{{ formatMoney(item.defaultAmountOMR) }} ر.ع</strong></span>
-                        </div>
-                      } @else {
-                        <table class="gtms-table rank-table">
-                          <thead>
-                            <tr>
-                              <th>الرتبة</th>
-                              <th class="center">المبلغ (ر.ع)</th>
-                              <th class="center">إجراءات</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            @for (ra of getRankAmountsFor(item.id!); track trackRankById($index, ra)) {
-                              <tr>
-                                <td>
-                                  <span class="rank-badge">🎖️ {{ ra.rankNameAr ?? getRankName(ra.rankId) }}</span>
-                                </td>
-                                <td class="center cell-money">{{ formatMoney(ra.amountOMR) }}</td>
-                                <td class="center">
-                                  <button class="btn-icon" (click)="openEditRankDialog(ra, $event)" title="تعديل">✏️</button>
-                                  <button class="btn-icon" (click)="onDeleteRankAmount(ra.id!, item.id!, $event)" title="حذف">🗑️</button>
-                                </td>
-                              </tr>
-                            }
-                          </tbody>
-                        </table>
-                      }
-
-                      <!-- Formula card -->
-                      <div class="formula-card">
-                        <div class="formula-title">🧮 مثال على الحساب (5 أيام × 3 مرشحين)</div>
-                        <div class="formula-text">{{ formulaExample(item) }}</div>
-                        <div class="formula-legend">
-                          <span>الصيغة: </span>
-                          <code>المعدل × (الأيام @if (item.isPerDay && (item.extraDaysBefore || item.extraDaysAfter)) { + أيام إضافية }) × العدد</code>
-                        </div>
-                      </div>
-                    </div>
+                    <ng-container *ngTemplateOutlet="rankPanel; context: { $implicit: parent }"></ng-container>
                   </td>
                 </tr>
+              }
+
+              @if (isParentExpanded(parent.id!)) {
+                @for (child of parent.children; track trackById($index, child)) {
+                  <tr class="expand-row fi-row child-row"
+                      [class.expanded]="isExpanded(child.id!)"
+                      (click)="toggleExpand(child.id!, $event)">
+                    <td class="tree-cell">
+                      <span class="child-connector" aria-hidden="true"></span>
+                    </td>
+                    <td class="cell-bold">{{ child.voteCode ?? '—' }}</td>
+                    <td>
+                      <div class="cell-bold">{{ child.nameAr }}</div>
+                      @if (child.nameEn) { <span class="cell-sub">{{ child.nameEn }}</span> }
+                    </td>
+                    <td class="cell-sub-cell">—</td>
+                    <td class="center">
+                      @if (child.isPerDay) {
+                        <span class="flag-pill flag-yes" [title]="'يتكرر بعدد الأيام'">
+                          ✓ نعم
+                          @if (child.extraDaysBefore || child.extraDaysAfter) {
+                            <span class="flag-extra">+{{ (child.extraDaysBefore || 0) + (child.extraDaysAfter || 0) }}</span>
+                          }
+                        </span>
+                      } @else { <span class="flag-pill flag-no">—</span> }
+                    </td>
+                    <td class="center">
+                      @if (child.isPerNominee) { <span class="flag-pill flag-yes">✓ نعم</span> }
+                      @else { <span class="flag-pill flag-no">—</span> }
+                    </td>
+                    <td class="center cell-money">{{ formatMoney(child.defaultAmountOMR) }}</td>
+                    <td class="center">
+                      <span class="rank-count-pill">
+                        📊 {{ getRankAmountsFor(child.id!).length || 0 }}
+                      </span>
+                    </td>
+                    <td class="center">
+                      @if (child.isActive) { <span class="badge badge-approved">نشط</span> }
+                      @else { <span class="badge badge-draft">معطّل</span> }
+                    </td>
+                    <td class="center">
+                      <button class="btn-icon" (click)="onEdit(child, $event)" title="تعديل">✏️</button>
+                      <button class="btn-icon" (click)="onDelete(child.id!, $event)" title="حذف">🗑️</button>
+                    </td>
+                  </tr>
+
+                  @if (isExpanded(child.id!)) {
+                    <tr class="detail-row child-detail-row">
+                      <td colspan="10" class="detail-panel">
+                        <ng-container *ngTemplateOutlet="rankPanel; context: { $implicit: child }"></ng-container>
+                      </td>
+                    </tr>
+                  }
+                }
               }
             }
           }
@@ -178,6 +200,66 @@
     </div>
   </div>
 </div>
+
+<!-- Shared rank-overrides panel (rendered for both parent and child rows) -->
+<ng-template #rankPanel let-item>
+  <div class="rank-panel">
+    <div class="panel-header">
+      <div>
+        <span class="panel-title">👥 المبالغ حسب الرتبة</span>
+        <span class="panel-sub">تخصيص مبلغ لكل رتبة — إن لم يوجد، يُستخدم المبلغ الافتراضي</span>
+      </div>
+      <button class="btn btn-primary btn-sm" (click)="openAddRankDialog(item.id!, $event)">
+        ➕ إضافة مبلغ لرتبة
+      </button>
+    </div>
+
+    @if (isRowLoading(item.id!)) {
+      <div class="skel-ranks">
+        @for (_ of [1,2,3]; track $index) { <div class="skel-bar"></div> }
+      </div>
+    } @else if (getRankAmountsFor(item.id!).length === 0) {
+      <div class="empty-rank-state">
+        <span class="empty-icon">🎖️</span>
+        <span>لم تُحدَّد مبالغ خاصة بالرتب — الجميع سيحصل على <strong>{{ formatMoney(item.defaultAmountOMR) }} ر.ع</strong></span>
+      </div>
+    } @else {
+      <table class="gtms-table rank-table">
+        <thead>
+          <tr>
+            <th>الرتبة</th>
+            <th class="center">المبلغ (ر.ع)</th>
+            <th class="center">إجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (ra of getRankAmountsFor(item.id!); track trackRankById($index, ra)) {
+            <tr>
+              <td>
+                <span class="rank-badge">🎖️ {{ ra.rankNameAr ?? getRankName(ra.rankId) }}</span>
+              </td>
+              <td class="center cell-money">{{ formatMoney(ra.amountOMR) }}</td>
+              <td class="center">
+                <button class="btn-icon" (click)="openEditRankDialog(ra, $event)" title="تعديل">✏️</button>
+                <button class="btn-icon" (click)="onDeleteRankAmount(ra.id!, item.id!, $event)" title="حذف">🗑️</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+
+    <!-- Formula card -->
+    <div class="formula-card">
+      <div class="formula-title">🧮 مثال على الحساب (5 أيام × 3 مرشحين)</div>
+      <div class="formula-text">{{ formulaExample(item) }}</div>
+      <div class="formula-legend">
+        <span>الصيغة: </span>
+        <code>المعدل × (الأيام @if (item.isPerDay && (item.extraDaysBefore || item.extraDaysAfter)) { + أيام إضافية }) × العدد</code>
+      </div>
+    </div>
+  </div>
+</ng-template>
 
 <!-- Item dialog -->
 @if (isDialogOpen()) {

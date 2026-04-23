@@ -449,7 +449,7 @@ export class PlanReviewComponent implements OnInit {
       await this.loadPlan();
     } catch (e: any) {
       this.approveError.set(
-        e?.error?.error?.message ?? e?.message ?? this.l.t('Training.Errors.Generic'),
+        e?.error?.error?.message ?? e?.message ?? this.l.t('::Training.Errors.Generic'),
       );
     } finally {
       this.startingReview.set(false);

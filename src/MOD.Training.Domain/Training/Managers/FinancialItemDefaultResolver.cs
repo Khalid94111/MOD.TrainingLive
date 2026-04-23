@@ -23,6 +23,7 @@ public class FinancialItemDefaultResolver(
         var fi = await financialItemRepo.GetAsync(financialItemId);
         return fi.DefaultAmountOMR;
     }
+  
 
     public async Task<Dictionary<Guid, decimal>> ResolveRatesAsync(
         Guid financialItemId, IEnumerable<Guid> rankIds)

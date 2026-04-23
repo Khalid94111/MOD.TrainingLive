@@ -448,7 +448,7 @@ builder.ConfigureFinancePhase3();
             b.Property(x => x.Notes).HasMaxLength(TrainingConsts.MaxNotesLength);
 
             b.HasIndex(x => x.PlanItemId);
-            b.HasIndex(x => new { x.PlanItemId, x.FinancialItemId }).IsUnique();
+            b.HasIndex(x => new { x.PlanItemId, x.FinancialItemId }).IsUnique().HasFilter("[IsDeleted] = 0");
         });
 
         builder.Entity<PriceQuote>(b =>

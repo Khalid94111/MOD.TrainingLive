@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.MultiTenancy;
 using Volo.Abp.Users;
 
 namespace MOD.Training.Training.Managers;
@@ -74,11 +75,11 @@ public class EmployeeResolver(
     /// <summary>
     /// Gets all active employees in a given OrgUnit (for nomination employee picker).
     /// </summary>
-    public async Task<List<Employee>> GetEmployeesByUnitAsync(Guid unitId)
+    public async Task<List<Employee>> GetEmployeesByUnitAsync(Guid unitId, Guid tenantId)
     {
         var queryable = await employeeRepository.WithDetailsAsync(x => x.Rank!);
         return await employeeRepository.AsyncExecuter.ToListAsync(
-            queryable.Where(x => x.MainUnitId == unitId && x.IsActive));
+            queryable.Where(x => x.MainUnitId == unitId && x.IsActive && x.TenantId==tenantId ));
     }
 
     /// <summary>
