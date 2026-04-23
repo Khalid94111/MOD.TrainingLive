@@ -4281,6 +4281,1932 @@
       "rootPath": "app",
       "remoteServiceName": "Default",
       "controllers": {
+        "MOD.Training.Training.CasualCourses.CasualCourseAppService": {
+          "controllerName": "CasualCourse",
+          "controllerGroupName": "CasualCourse",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "MOD.Training.Training.CasualCourses.CasualCourseAppService",
+          "interfaces": [
+            {
+              "type": "MOD.Training.Training.CasualCourses.ICasualCourseAppService",
+              "name": "ICasualCourseAppService",
+              "methods": [
+                {
+                  "name": "GetEstimatePreviewAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewInput, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewInput",
+                      "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewInput",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewDto",
+                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewDto"
+                  }
+                },
+                {
+                  "name": "GetDetailAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDetailDto",
+                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDetailDto"
+                  }
+                },
+                {
+                  "name": "SubmitAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+                  }
+                },
+                {
+                  "name": "UGMApproveAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "note",
+                      "typeAsString": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                      "typeSimple": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+                  }
+                },
+                {
+                  "name": "StartReviewAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+                  }
+                },
+                {
+                  "name": "AssignScenarioAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.AssignScenarioDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.CasualCourses.Dtos.AssignScenarioDto",
+                      "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.AssignScenarioDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+                  }
+                },
+                {
+                  "name": "TDApproveAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "note",
+                      "typeAsString": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                      "typeSimple": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+                  }
+                },
+                {
+                  "name": "HeadApproveAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "note",
+                      "typeAsString": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                      "typeSimple": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+                  }
+                },
+                {
+                  "name": "ReturnAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                      "typeSimple": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+                  }
+                },
+                {
+                  "name": "ResubmitAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+                  }
+                },
+                {
+                  "name": "RejectAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.RejectDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.CasualCourses.Dtos.RejectDto",
+                      "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.RejectDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+                  }
+                },
+                {
+                  "name": "GetAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+                  }
+                },
+                {
+                  "name": "GetListAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseGetListInput, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseGetListInput",
+                      "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseGetListInput",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto>"
+                  }
+                },
+                {
+                  "name": "CreateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.CreateUpdateCasualCourseDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.CasualCourses.Dtos.CreateUpdateCasualCourseDto",
+                      "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CreateUpdateCasualCourseDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+                  }
+                },
+                {
+                  "name": "UpdateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.CreateUpdateCasualCourseDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.CasualCourses.Dtos.CreateUpdateCasualCourseDto",
+                      "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CreateUpdateCasualCourseDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+                  }
+                },
+                {
+                  "name": "DeleteAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "GetAsyncById": {
+              "uniqueName": "GetAsyncById",
+              "name": "GetAsync",
+              "httpMethod": "GET",
+              "url": "api/app/casual-course/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "Volo.Abp.Application.Services.IReadOnlyAppService<MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto,MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto,System.Guid,MOD.Training.Training.CasualCourses.Dtos.CasualCourseGetListInput>"
+            },
+            "GetDetailAsyncById": {
+              "uniqueName": "GetDetailAsyncById",
+              "name": "GetDetailAsync",
+              "httpMethod": "GET",
+              "url": "api/app/casual-course/{id}/detail",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDetailDto",
+                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDetailDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseAppService"
+            },
+            "GetListAsyncByInput": {
+              "uniqueName": "GetListAsyncByInput",
+              "name": "GetListAsync",
+              "httpMethod": "GET",
+              "url": "api/app/casual-course",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseGetListInput, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseGetListInput",
+                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseGetListInput",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "Year",
+                  "jsonName": null,
+                  "type": "System.Int32?",
+                  "typeSimple": "number?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "Status",
+                  "jsonName": null,
+                  "type": "System.Collections.Generic.List<MOD.Training.Training.Enums.CasualCourseStatus>",
+                  "typeSimple": "[enum]",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "UnitId",
+                  "jsonName": null,
+                  "type": "System.Guid?",
+                  "typeSimple": "string?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "OnlyMyRequests",
+                  "jsonName": null,
+                  "type": "System.Boolean",
+                  "typeSimple": "boolean",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "IsReturnedOnly",
+                  "jsonName": null,
+                  "type": "System.Boolean",
+                  "typeSimple": "boolean",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "Search",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "Sorting",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "SkipCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "MaxResultCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                }
+              ],
+              "returnValue": {
+                "type": "Volo.Abp.Application.Dtos.PagedResultDto<MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto>"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "Volo.Abp.Application.Services.IReadOnlyAppService<MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto,MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto,System.Guid,MOD.Training.Training.CasualCourses.Dtos.CasualCourseGetListInput>"
+            },
+            "GetEstimatePreviewAsyncByInput": {
+              "uniqueName": "GetEstimatePreviewAsyncByInput",
+              "name": "GetEstimatePreviewAsync",
+              "httpMethod": "GET",
+              "url": "api/app/casual-course/estimate-preview",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewInput, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewInput",
+                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewInput",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "TenantCourseId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "CourseType",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.Enums.CourseType",
+                  "typeSimple": "enum",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "DurationDays",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "NomineeCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewDto",
+                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseAppService"
+            },
+            "CreateAsyncByInput": {
+              "uniqueName": "CreateAsyncByInput",
+              "name": "CreateAsync",
+              "httpMethod": "POST",
+              "url": "api/app/casual-course",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.CreateUpdateCasualCourseDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.CasualCourses.Dtos.CreateUpdateCasualCourseDto",
+                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CreateUpdateCasualCourseDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.CasualCourses.Dtos.CreateUpdateCasualCourseDto",
+                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CreateUpdateCasualCourseDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "Volo.Abp.Application.Services.ICreateAppService<MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto,MOD.Training.Training.CasualCourses.Dtos.CreateUpdateCasualCourseDto>"
+            },
+            "UpdateAsyncByIdAndInput": {
+              "uniqueName": "UpdateAsyncByIdAndInput",
+              "name": "UpdateAsync",
+              "httpMethod": "PUT",
+              "url": "api/app/casual-course/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.CreateUpdateCasualCourseDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.CasualCourses.Dtos.CreateUpdateCasualCourseDto",
+                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CreateUpdateCasualCourseDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.CasualCourses.Dtos.CreateUpdateCasualCourseDto",
+                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CreateUpdateCasualCourseDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "Volo.Abp.Application.Services.IUpdateAppService<MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto,System.Guid,MOD.Training.Training.CasualCourses.Dtos.CreateUpdateCasualCourseDto>"
+            },
+            "DeleteAsyncById": {
+              "uniqueName": "DeleteAsyncById",
+              "name": "DeleteAsync",
+              "httpMethod": "DELETE",
+              "url": "api/app/casual-course/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "Volo.Abp.Application.Services.IDeleteAppService<System.Guid>"
+            },
+            "SubmitAsyncById": {
+              "uniqueName": "SubmitAsyncById",
+              "name": "SubmitAsync",
+              "httpMethod": "POST",
+              "url": "api/app/casual-course/{id}/submit",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseAppService"
+            },
+            "UGMApproveAsyncByIdAndNote": {
+              "uniqueName": "UGMApproveAsyncByIdAndNote",
+              "name": "UGMApproveAsync",
+              "httpMethod": "POST",
+              "url": "api/app/casual-course/{id}/u-gMApprove",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "note",
+                  "typeAsString": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "note",
+                  "name": "note",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseAppService"
+            },
+            "StartReviewAsyncById": {
+              "uniqueName": "StartReviewAsyncById",
+              "name": "StartReviewAsync",
+              "httpMethod": "POST",
+              "url": "api/app/casual-course/{id}/start-review",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseAppService"
+            },
+            "AssignScenarioAsyncByIdAndInput": {
+              "uniqueName": "AssignScenarioAsyncByIdAndInput",
+              "name": "AssignScenarioAsync",
+              "httpMethod": "POST",
+              "url": "api/app/casual-course/{id}/assign-scenario",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.AssignScenarioDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.CasualCourses.Dtos.AssignScenarioDto",
+                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.AssignScenarioDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.CasualCourses.Dtos.AssignScenarioDto",
+                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.AssignScenarioDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseAppService"
+            },
+            "TDApproveAsyncByIdAndNote": {
+              "uniqueName": "TDApproveAsyncByIdAndNote",
+              "name": "TDApproveAsync",
+              "httpMethod": "POST",
+              "url": "api/app/casual-course/{id}/t-dApprove",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "note",
+                  "typeAsString": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "note",
+                  "name": "note",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseAppService"
+            },
+            "HeadApproveAsyncByIdAndNote": {
+              "uniqueName": "HeadApproveAsyncByIdAndNote",
+              "name": "HeadApproveAsync",
+              "httpMethod": "POST",
+              "url": "api/app/casual-course/{id}/head-approve",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "note",
+                  "typeAsString": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "note",
+                  "name": "note",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.CreatePlanNoteDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseAppService"
+            },
+            "ReturnAsyncByIdAndInput": {
+              "uniqueName": "ReturnAsyncByIdAndInput",
+              "name": "ReturnAsync",
+              "httpMethod": "POST",
+              "url": "api/app/casual-course/{id}/return",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseAppService"
+            },
+            "ResubmitAsyncById": {
+              "uniqueName": "ResubmitAsyncById",
+              "name": "ResubmitAsync",
+              "httpMethod": "POST",
+              "url": "api/app/casual-course/{id}/resubmit",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseAppService"
+            },
+            "RejectAsyncByIdAndInput": {
+              "uniqueName": "RejectAsyncByIdAndInput",
+              "name": "RejectAsync",
+              "httpMethod": "POST",
+              "url": "api/app/casual-course/{id}/reject",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.RejectDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.CasualCourses.Dtos.RejectDto",
+                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.RejectDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.CasualCourses.Dtos.RejectDto",
+                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.RejectDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseAppService"
+            }
+          }
+        },
+        "MOD.Training.Training.CasualCourses.CasualCourseFinancialAppService": {
+          "controllerName": "CasualCourseFinancial",
+          "controllerGroupName": "CasualCourseFinancial",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "MOD.Training.Training.CasualCourses.CasualCourseFinancialAppService",
+          "interfaces": [
+            {
+              "type": "MOD.Training.Training.CasualCourses.ICasualCourseFinancialAppService",
+              "name": "ICasualCourseFinancialAppService",
+              "methods": [
+                {
+                  "name": "GetListByCasualCourseAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "casualCourseId",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Collections.Generic.List<MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto>",
+                    "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto]"
+                  }
+                },
+                {
+                  "name": "AutoFillFromDefaultsAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "casualCourseId",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Collections.Generic.List<MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto>",
+                    "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto]"
+                  }
+                },
+                {
+                  "name": "AddItemAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "casualCourseId",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialDto",
+                      "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto",
+                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto"
+                  }
+                },
+                {
+                  "name": "UpdateAmountAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.UpdateAmountDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.CasualCourses.Dtos.UpdateAmountDto",
+                      "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.UpdateAmountDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto",
+                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto"
+                  }
+                },
+                {
+                  "name": "DeleteItemAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "GetListByCasualCourseAsyncByCasualCourseId": {
+              "uniqueName": "GetListByCasualCourseAsyncByCasualCourseId",
+              "name": "GetListByCasualCourseAsync",
+              "httpMethod": "GET",
+              "url": "api/app/casual-course-financial/by-casual-course/{casualCourseId}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "casualCourseId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "casualCourseId",
+                  "name": "casualCourseId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Collections.Generic.List<MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto>",
+                "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto]"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseFinancialAppService"
+            },
+            "AutoFillFromDefaultsAsyncByCasualCourseId": {
+              "uniqueName": "AutoFillFromDefaultsAsyncByCasualCourseId",
+              "name": "AutoFillFromDefaultsAsync",
+              "httpMethod": "POST",
+              "url": "api/app/casual-course-financial/auto-fill-from-defaults/{casualCourseId}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "casualCourseId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "casualCourseId",
+                  "name": "casualCourseId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Collections.Generic.List<MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto>",
+                "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto]"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseFinancialAppService"
+            },
+            "AddItemAsyncByCasualCourseIdAndInput": {
+              "uniqueName": "AddItemAsyncByCasualCourseIdAndInput",
+              "name": "AddItemAsync",
+              "httpMethod": "POST",
+              "url": "api/app/casual-course-financial/item/{casualCourseId}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "casualCourseId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialDto",
+                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "casualCourseId",
+                  "name": "casualCourseId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialDto",
+                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto",
+                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseFinancialAppService"
+            },
+            "UpdateAmountAsyncByIdAndInput": {
+              "uniqueName": "UpdateAmountAsyncByIdAndInput",
+              "name": "UpdateAmountAsync",
+              "httpMethod": "PUT",
+              "url": "api/app/casual-course-financial/{id}/amount",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.UpdateAmountDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.CasualCourses.Dtos.UpdateAmountDto",
+                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.UpdateAmountDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.CasualCourses.Dtos.UpdateAmountDto",
+                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.UpdateAmountDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto",
+                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseFinancialAppService"
+            },
+            "DeleteItemAsyncById": {
+              "uniqueName": "DeleteItemAsyncById",
+              "name": "DeleteItemAsync",
+              "httpMethod": "DELETE",
+              "url": "api/app/casual-course-financial/{id}/item",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseFinancialAppService"
+            }
+          }
+        },
+        "MOD.Training.Training.CasualCourses.CasualCourseNominationAppService": {
+          "controllerName": "CasualCourseNomination",
+          "controllerGroupName": "CasualCourseNomination",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "MOD.Training.Training.CasualCourses.CasualCourseNominationAppService",
+          "interfaces": [
+            {
+              "type": "MOD.Training.Training.CasualCourses.ICasualCourseNominationAppService",
+              "name": "ICasualCourseNominationAppService",
+              "methods": [
+                {
+                  "name": "GetListByCasualCourseAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "casualCourseId",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Collections.Generic.List<MOD.Training.Training.CasualCourses.Dtos.CasualCourseNominationDto>",
+                    "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseNominationDto]"
+                  }
+                },
+                {
+                  "name": "AddAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "casualCourseId",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "employeeId",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseNominationDto",
+                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseNominationDto"
+                  }
+                },
+                {
+                  "name": "RemoveAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Void",
+                    "typeSimple": "System.Void"
+                  }
+                },
+                {
+                  "name": "ReturnAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                      "typeSimple": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseNominationDto",
+                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseNominationDto"
+                  }
+                },
+                {
+                  "name": "ReplaceAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "newEmployeeId",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseNominationDto",
+                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseNominationDto"
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "GetListByCasualCourseAsyncByCasualCourseId": {
+              "uniqueName": "GetListByCasualCourseAsyncByCasualCourseId",
+              "name": "GetListByCasualCourseAsync",
+              "httpMethod": "GET",
+              "url": "api/app/casual-course-nomination/by-casual-course/{casualCourseId}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "casualCourseId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "casualCourseId",
+                  "name": "casualCourseId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Collections.Generic.List<MOD.Training.Training.CasualCourses.Dtos.CasualCourseNominationDto>",
+                "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseNominationDto]"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseNominationAppService"
+            },
+            "AddAsyncByCasualCourseIdAndEmployeeId": {
+              "uniqueName": "AddAsyncByCasualCourseIdAndEmployeeId",
+              "name": "AddAsync",
+              "httpMethod": "POST",
+              "url": "api/app/casual-course-nomination",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "casualCourseId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "employeeId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "casualCourseId",
+                  "name": "casualCourseId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "employeeId",
+                  "name": "employeeId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseNominationDto",
+                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseNominationDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseNominationAppService"
+            },
+            "RemoveAsyncById": {
+              "uniqueName": "RemoveAsyncById",
+              "name": "RemoveAsync",
+              "httpMethod": "DELETE",
+              "url": "api/app/casual-course-nomination/{id}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Void",
+                "typeSimple": "System.Void"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseNominationAppService"
+            },
+            "ReturnAsyncByIdAndInput": {
+              "uniqueName": "ReturnAsyncByIdAndInput",
+              "name": "ReturnAsync",
+              "httpMethod": "POST",
+              "url": "api/app/casual-course-nomination/{id}/return",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.ReturnReasonDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseNominationDto",
+                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseNominationDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseNominationAppService"
+            },
+            "ReplaceAsyncByIdAndNewEmployeeId": {
+              "uniqueName": "ReplaceAsyncByIdAndNewEmployeeId",
+              "name": "ReplaceAsync",
+              "httpMethod": "POST",
+              "url": "api/app/casual-course-nomination/{id}/replace/{newEmployeeId}",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "newEmployeeId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "newEmployeeId",
+                  "name": "newEmployeeId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseNominationDto",
+                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseNominationDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseNominationAppService"
+            }
+          }
+        },
         "MOD.Training.Training.Catalog.CourseCatalogAppService": {
           "controllerName": "CourseCatalog",
           "controllerGroupName": "CourseCatalog",
@@ -26105,6 +28031,1471 @@
         }
       ]
     },
+    "MOD.Training.Training.CasualCourses.Dtos.AssignmentLineDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Id",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "FinancialItemId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Amount",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": "0",
+          "maximum": "7.922816251426434E+28",
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Notes",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 500,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        }
+      ]
+    },
+    "MOD.Training.Training.CasualCourses.Dtos.AssignScenarioDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "FundingScenario",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.FundingScenario",
+          "typeSimple": "enum",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "EstimatedTotalCost",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": "0.001",
+          "maximum": "7.922816251426434E+28",
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "FinancialItems",
+          "jsonName": null,
+          "type": "[MOD.Training.Training.CasualCourses.Dtos.AssignmentLineDto]",
+          "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.AssignmentLineDto]",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Commit",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDetailDto": {
+      "baseType": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto",
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Nominations",
+          "jsonName": null,
+          "type": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseNominationDto]",
+          "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseNominationDto]",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Financials",
+          "jsonName": null,
+          "type": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto]",
+          "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto]",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "LatestReturnNote",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Plans.Dtos.PlanNoteDto",
+          "typeSimple": "MOD.Training.Training.Plans.Dtos.PlanNoteDto",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "ConditionSummary",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        }
+      ]
+    },
+    "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto": {
+      "baseType": "Volo.Abp.Application.Dtos.FullAuditedEntityDto<System.Guid>",
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "TenantId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "TenantCourseId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "UnitId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "RequestedById",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "CourseType",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.CourseType",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Priority",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Justification",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "DescriptionAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "ObjectivesAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "DurationYears",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "DurationMonths",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "DurationDays",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "EstimatedDateFrom",
+          "jsonName": null,
+          "type": "System.DateTime",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "EstimatedDateTo",
+          "jsonName": null,
+          "type": "System.DateTime",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "FundingSource",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "EstimatedTotalCost",
+          "jsonName": null,
+          "type": "System.Decimal?",
+          "typeSimple": "number?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "FundingScenario",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.FundingScenario?",
+          "typeSimple": "enum?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "SelectedPriceQuoteId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "Status",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.CasualCourseStatus",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ReturnedFromStatus",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.CasualCourseStatus?",
+          "typeSimple": "enum?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "IsReturned",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "LastReturnNoteId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "RejectedReason",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "CourseNameAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "UnitName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "RequesterName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "NomineesCount",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "FinancialsCount",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "LatestReturnReason",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        }
+      ]
+    },
+    "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto": {
+      "baseType": "Volo.Abp.Application.Dtos.FullAuditedEntityDto<System.Guid>",
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "TenantId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "CasualCourseId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "FinancialItemId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "FinancialItemName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "IsPerDay",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "IsPerNominee",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "EstimatedAmountOMR",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ActualAmountOMR",
+          "jsonName": null,
+          "type": "System.Decimal?",
+          "typeSimple": "number?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "Source",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.FinancialAmountSource",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Notes",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        }
+      ]
+    },
+    "MOD.Training.Training.CasualCourses.Dtos.CasualCourseGetListInput": {
+      "baseType": "Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto",
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Year",
+          "jsonName": null,
+          "type": "System.Int32?",
+          "typeSimple": "number?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "Status",
+          "jsonName": null,
+          "type": "[MOD.Training.Training.Enums.CasualCourseStatus]",
+          "typeSimple": "[enum]",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "UnitId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "OnlyMyRequests",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "IsReturnedOnly",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Search",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        }
+      ]
+    },
+    "MOD.Training.Training.CasualCourses.Dtos.CasualCourseNominationDto": {
+      "baseType": "Volo.Abp.Application.Dtos.FullAuditedEntityDto<System.Guid>",
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "TenantId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "CasualCourseId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "EmployeeId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "EmployeeName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "RankName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "UnitName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "IsReturned",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "LastReturnNote",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "ConditionPassed",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ConditionDetails",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        }
+      ]
+    },
+    "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "FinancialItemId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "EstimatedAmountOMR",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": "0",
+          "maximum": "7.922816251426434E+28",
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Notes",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 500,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        }
+      ]
+    },
+    "MOD.Training.Training.CasualCourses.Dtos.CreateUpdateCasualCourseDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "TenantCourseId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "UnitId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "CourseType",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.CourseType",
+          "typeSimple": "enum",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Priority",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": "1",
+          "maximum": "5",
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Justification",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": 500,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "DescriptionAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 1000,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "ObjectivesAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 1000,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "DurationYears",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "DurationMonths",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "DurationDays",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": "1",
+          "maximum": "2147483647",
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "EstimatedDateFrom",
+          "jsonName": null,
+          "type": "System.DateTime",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "EstimatedDateTo",
+          "jsonName": null,
+          "type": "System.DateTime",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "FundingSource",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 200,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "NomineeEmployeeIds",
+          "jsonName": null,
+          "type": "[System.Guid]",
+          "typeSimple": "[string]",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Items",
+          "jsonName": null,
+          "type": "[MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewItemDto]",
+          "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewItemDto]",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Total",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "CourseType",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.CourseType",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ComputedAt",
+          "jsonName": null,
+          "type": "System.DateTime",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewInput": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "TenantCourseId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "CourseType",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.CourseType",
+          "typeSimple": "enum",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "DurationDays",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": "1",
+          "maximum": "2147483647",
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "NomineeCount",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": "0",
+          "maximum": "2147483647",
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewItemDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "FinancialItemId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "FinancialItemName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "IsPerDay",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "IsPerNominee",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Rate",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "EffectiveDays",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "EffectiveCount",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ComputedAmount",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Training.CasualCourses.Dtos.RejectDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Reason",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": 10,
+          "maxLength": 500,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Training.CasualCourses.Dtos.UpdateAmountDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Amount",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": "0",
+          "maximum": "7.922816251426434E+28",
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Notes",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 500,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        }
+      ]
+    },
     "MOD.Training.Training.Catalog.Dtos.CatalogEnrollmentConditionDto": {
       "baseType": "Volo.Abp.Application.Dtos.EntityDto<System.Guid>",
       "isEnum": false,
@@ -28259,6 +31650,34 @@
       "genericArguments": null,
       "properties": null
     },
+    "MOD.Training.Training.Enums.CasualCourseStatus": {
+      "baseType": "System.Enum",
+      "isEnum": true,
+      "enumNames": [
+        "Draft",
+        "Submitted",
+        "UGMApproved",
+        "UnderReview",
+        "StaffReviewed",
+        "TDApproved",
+        "THApproved",
+        "ReturnedToCreator",
+        "Rejected"
+      ],
+      "enumValues": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "genericArguments": null,
+      "properties": null
+    },
     "MOD.Training.Training.Enums.CenterAssignmentType": {
       "baseType": "System.Enum",
       "isEnum": true,
@@ -28367,6 +31786,36 @@
       "genericArguments": null,
       "properties": null
     },
+    "MOD.Training.Training.Enums.FinancialAmountSource": {
+      "baseType": "System.Enum",
+      "isEnum": true,
+      "enumNames": [
+        "FundingSource",
+        "FinancialItem"
+      ],
+      "enumValues": [
+        0,
+        1
+      ],
+      "genericArguments": null,
+      "properties": null
+    },
+    "MOD.Training.Training.Enums.FundingScenario": {
+      "baseType": "System.Enum",
+      "isEnum": true,
+      "enumNames": [
+        "FundingSourceCoversAll",
+        "FundingSourceCoversCourse",
+        "FinancialItemsCoverAll"
+      ],
+      "enumValues": [
+        1,
+        2,
+        3
+      ],
+      "genericArguments": null,
+      "properties": null
+    },
     "MOD.Training.Training.Enums.NominationStatus": {
       "baseType": "System.Enum",
       "isEnum": true,
@@ -28415,12 +31864,16 @@
       "enumNames": [
         "Plan",
         "PlanItem",
-        "Nomination"
+        "Nomination",
+        "CasualCourse",
+        "CasualCourseNomination"
       ],
       "enumValues": [
         0,
         1,
-        2
+        2,
+        3,
+        4
       ],
       "genericArguments": null,
       "properties": null
@@ -31600,6 +35053,19 @@
           "isRequired": false,
           "minLength": null,
           "maxLength": 256,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "UnitId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
           "minimum": null,
           "maximum": null,
           "regex": null,

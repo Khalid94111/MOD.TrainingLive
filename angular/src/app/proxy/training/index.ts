@@ -1,3 +1,4 @@
+import * as CasualCourses from './casual-courses';
 import * as Catalog from './catalog';
 import * as Centers from './centers';
 import * as CourseFields from './course-fields';
@@ -8,4 +9,4 @@ import * as HrIntegration from './hr-integration';
 import * as Nominations from './nominations';
 import * as Plans from './plans';
 import * as TenantCourses from './tenant-courses';
-export { Catalog, Centers, CourseFields, CourseProposals, Enums, Finance, HrIntegration, Nominations, Plans, TenantCourses };
+export { CasualCourses, Catalog, Centers, CourseFields, CourseProposals, Enums, Finance, HrIntegration, Nominations, Plans, TenantCourses };
