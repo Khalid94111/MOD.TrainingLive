@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { TrainingPlanService, TrainingPlanItemService } from 'src/app/proxy/training/plans';
 import { NominationService } from 'src/app/proxy/training/nominations';
+import { CasualCourseService, CasualCourseNominationService } from 'src/app/proxy/training/casual-courses';
 import { PlanNoteEntityType } from 'src/app/proxy/training/enums/plan-note-entity-type.enum';
 
 @Component({
@@ -16,6 +17,8 @@ export class ReturnModalComponent {
   private planService = inject(TrainingPlanService);
   private itemService = inject(TrainingPlanItemService);
   private nominationService = inject(NominationService);
+  private casualCourseService = inject(CasualCourseService);
+  private casualCourseNominationService = inject(CasualCourseNominationService);
 
   isOpen = input.required<boolean>();
   entityType = input.required<PlanNoteEntityType>();
@@ -60,6 +63,12 @@ export class ReturnModalComponent {
         case PlanNoteEntityType.Nomination:
           await firstValueFrom(this.nominationService.return(this.entityId(), body));
           break;
+        case PlanNoteEntityType.CasualCourse:
+          await firstValueFrom(this.casualCourseService.return(this.entityId(), body));
+          break;
+        case PlanNoteEntityType.CasualCourseNomination:
+          await firstValueFrom(this.casualCourseNominationService.return(this.entityId(), body));
+          break;
       }
       this.confirmed.emit(body.reason);
       this.reset();
@@ -98,12 +107,16 @@ export class ReturnModalComponent {
       [PlanNoteEntityType.Plan]: 'إعادة الخطة إلى مُنشئها',
       [PlanNoteEntityType.PlanItem]: 'إعادة البند إلى مُنشئه',
       [PlanNoteEntityType.Nomination]: 'إعادة الترشيح',
+      [PlanNoteEntityType.CasualCourse]: 'إعادة طلب الدورة العرضية إلى مُنشئه',
+      [PlanNoteEntityType.CasualCourseNomination]: 'إعادة ترشيح الدورة العرضية',
     } as Record<number, string>)[this.entityType()];
   }
 
   get recipientLabel(): string {
-    return this.entityType() === PlanNoteEntityType.Nomination
-      ? 'UTM / مسؤول التدريب بالوحدة'
-      : 'UTM / مُنشئ الخطة';
+    const t = this.entityType();
+    if (t === PlanNoteEntityType.Nomination || t === PlanNoteEntityType.CasualCourseNomination) {
+      return 'UTM / مسؤول التدريب بالوحدة';
+    }
+    return 'UTM / مُنشئ الطلب';
   }
 }
