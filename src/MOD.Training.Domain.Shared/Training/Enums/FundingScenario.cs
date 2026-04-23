@@ -2,7 +2,7 @@ namespace MOD.Training.Training.Enums;
 
 public enum FundingScenario
 {
-    FundingCoversAll = 0,
-    FundingCoversCourseOnly = 1,
-    FinancialCoversAll = 2
+    FundingSourceCoversAll    = 1, // No reallocation (no travel items)
+    FundingSourceCoversCourse = 2, // Travel items via reallocation
+    FinancialItemsCoverAll    = 3  // Full reallocation
 }
