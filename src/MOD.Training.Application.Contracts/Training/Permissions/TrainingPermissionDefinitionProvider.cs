@@ -43,11 +43,16 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
         nominations.AddChild(TrainingPermissions.Nominations.ApproveTD, L("Permission:Nominations.ApproveTD"));
 
         var casual = group.AddPermission(TrainingPermissions.CasualCourses.Default, L("Permission:CasualCourses"));
-        casual.AddChild(TrainingPermissions.CasualCourses.Create, L("Permission:CasualCourses.Create"));
-        casual.AddChild(TrainingPermissions.CasualCourses.ApproveUGM, L("Permission:CasualCourses.ApproveUGM"));
-        casual.AddChild(TrainingPermissions.CasualCourses.Review, L("Permission:CasualCourses.Review"));
-        casual.AddChild(TrainingPermissions.CasualCourses.ApproveTD, L("Permission:CasualCourses.ApproveTD"));
-        casual.AddChild(TrainingPermissions.CasualCourses.ApproveTH, L("Permission:CasualCourses.ApproveTH"));
+        casual.AddChild(TrainingPermissions.CasualCourses.Create,      L("Permission:CasualCourses.Create"));
+        casual.AddChild(TrainingPermissions.CasualCourses.Edit,        L("Permission:CasualCourses.Edit"));
+        casual.AddChild(TrainingPermissions.CasualCourses.Delete,      L("Permission:CasualCourses.Delete"));
+        casual.AddChild(TrainingPermissions.CasualCourses.Submit,      L("Permission:CasualCourses.Submit"));
+        casual.AddChild(TrainingPermissions.CasualCourses.Approve,     L("Permission:CasualCourses.Approve"));
+        casual.AddChild(TrainingPermissions.CasualCourses.Review,      L("Permission:CasualCourses.Review"));
+        casual.AddChild(TrainingPermissions.CasualCourses.TDApprove,   L("Permission:CasualCourses.TDApprove"));
+        casual.AddChild(TrainingPermissions.CasualCourses.HeadApprove, L("Permission:CasualCourses.HeadApprove"));
+        casual.AddChild(TrainingPermissions.CasualCourses.Return,      L("Permission:CasualCourses.Return"));
+        casual.AddChild(TrainingPermissions.CasualCourses.Reject,      L("Permission:CasualCourses.Reject"));
 
         var finance = group.AddPermission(TrainingPermissions.Finance.Default, L("Permission:Finance"));
         finance.AddChild(TrainingPermissions.Finance.ManageItems, L("Permission:Finance.ManageItems"));
