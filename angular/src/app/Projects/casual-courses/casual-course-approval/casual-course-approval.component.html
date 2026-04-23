@@ -1,0 +1,193 @@
+<div class="p-6 max-w-6xl mx-auto" dir="rtl">
+  <!-- Header -->
+  <div class="mb-5 flex items-center justify-between">
+    <div>
+      <a routerLink="/training/casual-courses" class="text-sm text-slate-500 hover:text-slate-700">
+        ← الدورات العرضية
+      </a>
+      <h1 class="text-2xl font-bold mt-1">اعتماد طلب دورة عرضية</h1>
+      <p class="text-xs text-slate-500 mt-1">دور الاعتماد: <span class="font-medium">{{ actorLabel() }}</span></p>
+    </div>
+    <button
+      type="button"
+      (click)="openNotesDrawer()"
+      class="px-4 py-2 rounded-lg border border-slate-300 text-sm"
+    >
+      📑 الملاحظات
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="card p-12 text-center text-slate-500">
+      <div class="text-4xl mb-3">⏳</div>
+      جاري التحميل...
+    </div>
+  } @else if (!casualCourse()) {
+    <div class="card p-12 text-center text-red-600">
+      <div class="text-4xl mb-3">❌</div>
+      تعذر تحميل الطلب.
+    </div>
+  } @else {
+    @if (error()) {
+      <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700 mb-4">
+        {{ error() }}
+      </div>
+    }
+
+    <!-- Summary panel -->
+    <div class="card p-5 mb-5">
+      <div class="flex items-center justify-between mb-3 pb-2 border-b">
+        <h2 class="font-bold">ملخص الطلب</h2>
+        <span class="status-badge" [class]="statusCss()">{{ statusLabel() }}</span>
+      </div>
+      <div class="grid grid-cols-2 gap-3 text-sm">
+        <div><span class="text-slate-500">اسم الدورة:</span> <span class="font-medium">{{ casualCourse()?.courseNameAr || '—' }}</span></div>
+        <div><span class="text-slate-500">الوحدة:</span> <span class="font-medium">{{ casualCourse()?.unitName || '—' }}</span></div>
+        <div><span class="text-slate-500">مقدم الطلب:</span> <span class="font-medium">{{ casualCourse()?.requesterName || '—' }}</span></div>
+        <div><span class="text-slate-500">الجهة الممولة:</span> <span class="font-medium">{{ casualCourse()?.fundingSource || '—' }}</span></div>
+        <div><span class="text-slate-500">المدة:</span> <span class="font-medium">{{ casualCourse()?.durationDays }} يوم</span></div>
+        <div><span class="text-slate-500">عدد المرشحين:</span> <span class="font-medium">{{ casualCourse()?.nomineesCount ?? 0 }}</span></div>
+        <div><span class="text-slate-500">سيناريو التمويل:</span> <span class="font-medium">{{ scenarioLabel() }}</span></div>
+        <div>
+          <span class="text-slate-500">التكلفة الإجمالية المعتمدة:</span>
+          <span class="font-medium" [class.text-red-600]="costGateBlocked()">
+            {{ totalCost() | number:'1.3-3' }} ر.ع
+          </span>
+        </div>
+        <div class="col-span-2"><span class="text-slate-500">المبرر:</span> <span class="font-medium">{{ casualCourse()?.justification }}</span></div>
+      </div>
+    </div>
+
+    <!-- Financial items read-only -->
+    <div class="card p-5 mb-5">
+      <h2 class="font-bold mb-3 pb-2 border-b">البنود المالية</h2>
+      @if (financials().length === 0) {
+        <p class="text-sm text-slate-500">لا توجد بنود مالية مسجلة.</p>
+      } @else {
+        <table class="w-full text-sm">
+          <thead class="text-slate-600 border-b">
+            <tr>
+              <th class="p-2 text-start">البند</th>
+              <th class="p-2 text-center">المبلغ التقديري (ر.ع)</th>
+              <th class="p-2 text-start">ملاحظات</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (fin of financials(); track fin.id) {
+              <tr class="border-b">
+                <td class="p-2 font-medium">{{ fin.financialItemName }}</td>
+                <td class="p-2 text-center">{{ fin.estimatedAmountOMR | number:'1.3-3' }}</td>
+                <td class="p-2">{{ fin.notes || '—' }}</td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr class="font-bold bg-slate-50">
+              <td class="p-2">الإجمالي</td>
+              <td class="p-2 text-center">{{ grandTotal() | number:'1.3-3' }}</td>
+              <td class="p-2"></td>
+            </tr>
+          </tfoot>
+        </table>
+      }
+    </div>
+
+    <!-- Cost gate banner -->
+    @if (canAct() && costGateBlocked()) {
+      <div class="card p-4 mb-5 cost-gate-block">
+        <div class="flex items-start gap-3">
+          <span class="text-2xl">🚫</span>
+          <div>
+            <div class="font-bold text-red-800 mb-1">لا يمكن الاعتماد</div>
+            <p class="text-sm text-red-700">التكلفة الإجمالية غير محددة أو تساوي صفر. اطلب من Staff/TD مراجعة البنود المالية أولًا.</p>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (canAct() && !costGateBlocked()) {
+      <!-- Approval note -->
+      <div class="card p-5 mb-5">
+        <label class="block">
+          <span class="text-sm text-slate-600 mb-1 block">ملاحظة الاعتماد (اختياري)</span>
+          <textarea
+            rows="3"
+            [value]="approvalNote()"
+            (input)="approvalNote.set($any($event.target).value)"
+            class="input-field px-3 py-2 rounded-lg w-full"
+            placeholder="أي ملاحظة تود إرفاقها مع الاعتماد..."
+          ></textarea>
+        </label>
+      </div>
+    }
+
+    @if (canAct()) {
+      <div class="flex gap-3 justify-end flex-wrap">
+        <button type="button" (click)="openReject()" [disabled]="actionBusy()" class="btn-danger px-5 py-2 rounded-xl text-white">
+          ❌ رفض الطلب
+        </button>
+        <button type="button" (click)="openReturn()" [disabled]="actionBusy()" class="btn-amber px-5 py-2 rounded-xl text-white">
+          🔁 إعادة إلى مُنشئ الطلب
+        </button>
+        <button
+          type="button"
+          (click)="onApprove()"
+          [disabled]="actionBusy() || costGateBlocked()"
+          [class.btn-primary]="!costGateBlocked()"
+          [class.btn-disabled]="costGateBlocked()"
+          [title]="costGateBlocked() ? 'لا يمكن الاعتماد — التكلفة الإجمالية غير محددة' : ''"
+          class="px-5 py-2 rounded-xl text-white"
+        >
+          @if (isTDTurn()) { ✅ اعتماد TD } @else { ✅ اعتماد نهائي TH }
+        </button>
+      </div>
+    } @else {
+      <div class="card p-4 bg-slate-50 text-center text-sm text-slate-600">
+        هذه الصفحة للعرض فقط — الطلب في حالة "{{ statusLabel() }}" ولا يتطلب إجراءً في هذه المرحلة.
+      </div>
+    }
+  }
+</div>
+
+<gtms-notes-drawer
+  [isOpen]="notesOpen()"
+  [entityType]="PlanNoteEntityType.CasualCourse"
+  [entityId]="courseId()"
+  [title]="'ملاحظات الطلب'"
+  (closeDrawer)="closeNotesDrawer()"
+></gtms-notes-drawer>
+
+<gtms-return-modal
+  [isOpen]="returnModalOpen()"
+  [entityType]="PlanNoteEntityType.CasualCourse"
+  [entityId]="courseId()"
+  (cancelled)="onReturnCancelled()"
+  (confirmed)="onReturnConfirmed()"
+></gtms-return-modal>
+
+@if (rejectOpen()) {
+  <div class="modal-overlay open" (click)="closeReject()">
+    <div class="modal-box" (click)="$event.stopPropagation()" dir="rtl">
+      <h3 class="font-bold text-lg mb-2">رفض الطلب</h3>
+      <p class="text-sm text-slate-600 mb-3">أدخل سبب الرفض (10 أحرف على الأقل). هذا الإجراء نهائي.</p>
+      <textarea
+        rows="4"
+        [value]="rejectReason()"
+        (input)="rejectReason.set($any($event.target).value)"
+        class="input-field px-3 py-2 rounded-lg w-full mb-3"
+        placeholder="سبب الرفض..."
+      ></textarea>
+      <div class="flex gap-2 justify-end">
+        <button type="button" (click)="closeReject()" class="px-4 py-2 rounded-lg border">إلغاء</button>
+        <button
+          type="button"
+          (click)="onConfirmReject()"
+          [disabled]="rejectReason().trim().length < 10 || rejectSubmitting()"
+          class="btn-danger px-4 py-2 rounded-lg text-white"
+        >
+          تأكيد الرفض
+        </button>
+      </div>
+    </div>
+  </div>
+}
