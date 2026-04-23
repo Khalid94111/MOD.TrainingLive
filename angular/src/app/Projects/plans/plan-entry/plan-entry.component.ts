@@ -13,6 +13,7 @@ import {
 import { TenantCourseService } from 'src/app/proxy/training/tenant-courses';
 import { HrLookupService } from 'src/app/proxy/training/hr-integration/hr-lookup.service';
 import { NominationService } from 'src/app/proxy/training/nominations/nomination.service';
+import { NominationDto } from 'src/app/proxy/training/nominations/dtos';
 import { PlanNoteEntityType } from 'src/app/proxy/training/enums/plan-note-entity-type.enum';
 import {
   NominationPickerComponent,
@@ -86,6 +87,12 @@ export class PlanEntryComponent implements OnInit {
   fNomineeIds = signal<string[]>([]);
   pickerResetKey = signal(0); // bump to remount picker between dialog opens
   fUnitId = signal<string>(''); // only used by Staff/TD/TH when accordions are shown
+
+  // Existing nominations for the item being edited (read-only display).
+  // Adding/removing nominees from an existing item needs a separate endpoint;
+  // users are pointed to the review screen for nominee changes.
+  editNominations = signal<NominationDto[]>([]);
+  loadingEditNominations = signal(false);
 
   // Conditions preview (for new item dialog — from tenant course)
   dialogConditions = signal<any[]>([]);
@@ -354,11 +361,18 @@ export class PlanEntryComponent implements OnInit {
       const first = this.uniqueUnits()[0];
       if (first) this.fUnitId.set(first.id);
     }
+    // Default EstimatedDateFrom to Q1 start of the plan year so the user sees a
+    // sensible value up front; recomputes as soon as they pick a different quarter.
+    const year = this.plan()?.year;
+    if (year) {
+      this.fEstimatedDateFrom.set(this.dateToInputValue(this.quarterStartDate(year, 1)));
+      this.recomputeDateTo();
+    }
     this.pickerResetKey.update(v => v + 1);
     this.isDialogOpen.set(true);
   }
 
-  openEditDialog(item: TrainingPlanItemDto, event: Event): void {
+  async openEditDialog(item: TrainingPlanItemDto, event: Event): Promise<void> {
     event.stopPropagation();
     this.isEditMode.set(true);
     this.editItemId.set(item.id);
@@ -374,12 +388,36 @@ export class PlanEntryComponent implements OnInit {
     this.fDurationYears.set(item.durationYears ?? 0);
     this.fDurationMonths.set(item.durationMonths ?? 0);
     this.fDurationDays.set(item.durationDays ?? 0);
-    this.fEstimatedDateFrom.set(item.estimatedDateFrom ?? '');
-    this.fEstimatedDateTo.set(item.estimatedDateTo ?? '');
+    // <input type="date"> needs yyyy-MM-dd; the DTO returns a full ISO timestamp.
+    this.fEstimatedDateFrom.set(this.toDateInputValue(item.estimatedDateFrom));
+    this.fEstimatedDateTo.set(this.toDateInputValue(item.estimatedDateTo));
     this.fFundingSource.set(item.fundingSource ?? '');
-    this.fNomineeIds.set([]); // TODO: load existing nominations if edit flow needs them
+    // Pin the picker to the item's unit (works for both UTM and Staff viewers).
+    this.fUnitId.set(item.unitId ?? '');
+    this.fNomineeIds.set([]);
+    this.editNominations.set([]);
     this.pickerResetKey.update(v => v + 1);
     this.isDialogOpen.set(true);
+
+    // Load existing nominations and preselect them in the picker so the user
+    // can toggle additions/removals. Backend UpdateAsync diffs the list.
+    if (item.id) await this.loadEditNominations(item.id);
+  }
+
+  private async loadEditNominations(planItemId: string): Promise<void> {
+    this.loadingEditNominations.set(true);
+    try {
+      const r = await firstValueFrom(
+        this.nominationService.getList({ planItemId, maxResultCount: 500 }),
+      );
+      const list = r.items ?? [];
+      this.editNominations.set(list);
+      this.fNomineeIds.set(list.map(n => n.employeeId).filter((x): x is string => !!x));
+    } catch {
+      this.editNominations.set([]);
+    } finally {
+      this.loadingEditNominations.set(false);
+    }
   }
 
   resetForm(): void {
@@ -391,6 +429,7 @@ export class PlanEntryComponent implements OnInit {
     this.fEstimatedDateFrom.set(''); this.fEstimatedDateTo.set(''); this.fFundingSource.set('');
     this.fUnitId.set('');
     this.fNomineeIds.set([]);
+    this.editNominations.set([]);
     this.dialogConditions.set([]);
     this.saveError.set(null);
   }
@@ -401,13 +440,62 @@ export class PlanEntryComponent implements OnInit {
     this.dialogConditions.set(tc?.conditions ?? []);
   }
 
+  // ── Date auto-fill ──
+  // Selecting a preferred quarter snaps EstimatedDateFrom to the first day of
+  // that quarter within the plan year; then EstimatedDateTo is recomputed as
+  // EstimatedDateFrom + duration (years + months + days). Changing any duration
+  // field or typing a different EstimatedDateFrom also re-derives DateTo.
+  onQuarterChange(quarter: number): void {
+    this.fPreferredQuarter.set(quarter);
+    const year = this.plan()?.year;
+    if (year) {
+      this.fEstimatedDateFrom.set(this.dateToInputValue(this.quarterStartDate(year, quarter)));
+    }
+    this.recomputeDateTo();
+  }
+
+  onDurationChange(): void {
+    this.recomputeDateTo();
+  }
+
+  onDateFromChange(value: string): void {
+    this.fEstimatedDateFrom.set(value);
+    this.recomputeDateTo();
+  }
+
+  private recomputeDateTo(): void {
+    const from = this.fEstimatedDateFrom();
+    if (!from) return;
+    const parts = from.split('-').map(Number);
+    if (parts.length !== 3 || parts.some(isNaN)) return;
+    const [y, m, d] = parts;
+    const start = new Date(y, m - 1, d);
+    start.setFullYear(start.getFullYear() + (this.fDurationYears() || 0));
+    start.setMonth(start.getMonth() + (this.fDurationMonths() || 0));
+    start.setDate(start.getDate() + (this.fDurationDays() || 0));
+    this.fEstimatedDateTo.set(this.dateToInputValue(start));
+  }
+
+  private quarterStartDate(year: number, quarter: number): Date {
+    // Q1 → Jan (month 0), Q2 → Apr (3), Q3 → Jul (6), Q4 → Oct (9)
+    const month = (Math.max(1, Math.min(4, quarter)) - 1) * 3;
+    return new Date(year, month, 1);
+  }
+
+  private dateToInputValue(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
   onNomineesChange(ids: string[]): void { this.fNomineeIds.set(ids); }
 
   get isFormValid(): boolean {
     const baseValid = !!this.fTenantCourseId()
       && !!this.fJustification().trim()
       && this.fPriority() >= 1 && this.fPriority() <= 5
-      && (this.isEditMode() || this.fNomineeIds().length >= 1);
+      && this.fNomineeIds().length >= 1; // ≥1 nominee required for both create and edit
     if (!baseValid) return false;
     // Non-scoped users (multi-unit view) must pick a unit when creating.
     if (!this.isEditMode() && this.showAccordions() && !this.fUnitId()) return false;
@@ -448,7 +536,11 @@ export class PlanEntryComponent implements OnInit {
       await this.loadItems();
       await this.loadReturnedNominationsCount();
     } catch (e: any) {
-      this.saveError.set(e?.error?.error?.message ?? e?.message ?? 'فشل الحفظ');
+      // Surface per-nominee failure details when the backend returns them
+      // via ConditionFailed (data.Failures = "Emp1: reason | Emp2: reason").
+      const msg = e?.error?.error?.message ?? e?.message ?? 'فشل الحفظ';
+      const failures = e?.error?.error?.data?.Failures;
+      this.saveError.set(failures ? `${msg} — ${failures}` : msg);
     } finally {
       this.saving.set(false);
     }
@@ -473,7 +565,7 @@ export class PlanEntryComponent implements OnInit {
       await this.loadPlan();
       await this.loadReturnedNominationsCount();
     } catch (e: any) {
-      this.saveError.set(e?.error?.error?.message ?? e?.message ?? this.l.t('Training.Errors.Generic'));
+      this.saveError.set(e?.error?.error?.message ?? e?.message ?? this.l.t('::Training.Errors.Generic'));
     } finally {
       this.resubmitting.set(false);
     }
@@ -503,6 +595,13 @@ export class PlanEntryComponent implements OnInit {
   getQuarterText(q: number): string { return ({ 1: 'الربع الأول', 2: 'الربع الثاني', 3: 'الربع الثالث', 4: 'الربع الرابع' } as Record<number, string>)[q] ?? ''; }
   getConditionTypeName(t: number): string { return ({ 0: 'الرتبة', 1: 'العمر', 2: 'سنوات الخدمة', 3: 'المؤهل', 4: 'لياقة طبية', 5: 'تصريح أمني', 6: 'لغة', 7: 'دورة سابقة', 8: 'مخصص' } as Record<number, string>)[t] ?? ''; }
   formatDate(d?: string | null): string { if (!d) return '—'; return new Date(d).toLocaleDateString('ar-OM'); }
+
+  // Convert an ISO date/datetime string from the API into the yyyy-MM-dd slice
+  // that <input type="date"> expects. Returns '' for null/undefined/empty input.
+  private toDateInputValue(d?: string | null): string {
+    if (!d) return '';
+    return d.length >= 10 ? d.substring(0, 10) : '';
+  }
   getDurationText(i: TrainingPlanItemDto): string {
     const p: string[] = [];
     if ((i.durationYears ?? 0) > 0) p.push(`${i.durationYears} سنة`);

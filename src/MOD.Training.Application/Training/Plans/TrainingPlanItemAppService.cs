@@ -231,9 +231,79 @@ public class TrainingPlanItemAppService(
         if (oldDays != input.DurationDays)
             await rankBreakdownManager.RefreshForDaysChangeAsync(entity.Id);
 
+        // Diff nominees after item fields are saved so condition validation and
+        // the rank-breakdown cascade see the latest duration/dates.
+        var nominationChanged = await DiffNominationsAsync(entity, input.NomineeEmployeeIds);
+        if (nominationChanged)
+            await rankBreakdownManager.RefreshForNomineeChangeAsync(entity.Id);
+
         var dto = toDtoMapper.Map(entity);
         await EnrichSingleDtoAsync(dto, entity);
         return dto;
+    }
+
+    /// <summary>
+    /// Diffs the requested nominee list against existing nominations for this plan item.
+    /// Preserves untouched rows (keeping their IDs, IsReturned flag, and any post-course
+    /// result data), deletes nominees no longer in the list (unless a result has already
+    /// been entered), and creates new nominations for additions after running the same
+    /// condition validation used by CreateAsync. Returns true when any row changed.
+    /// The whole update runs inside the ABP UoW, so any throw here rolls back the item
+    /// field updates too.
+    /// </summary>
+    private async Task<bool> DiffNominationsAsync(
+        TrainingPlanItem entity, List<Guid> newNomineeEmployeeIds)
+    {
+        var requested = newNomineeEmployeeIds.Distinct().ToHashSet();
+
+        var nomQ = await nominationRepository.GetQueryableAsync();
+        var existing = await AsyncExecuter.ToListAsync(
+            nomQ.Where(x => x.PlanItemId == entity.Id));
+        var existingByEmployee = existing.ToDictionary(x => x.EmployeeId);
+
+        var toRemove = existing.Where(n => !requested.Contains(n.EmployeeId)).ToList();
+        var toAdd = requested.Where(id => !existingByEmployee.ContainsKey(id)).ToList();
+
+        if (!toRemove.Any() && !toAdd.Any()) return false;
+
+        var finalCount = existing.Count - toRemove.Count + toAdd.Count;
+        if (finalCount == 0)
+            throw new Volo.Abp.BusinessException(
+                "Training:TrainingPlanItem:AtLeastOneNomineeRequired");
+
+        foreach (var nom in toRemove)
+        {
+            if (nom.ResultType.HasValue || nom.AttendanceStatus.HasValue)
+                throw new Volo.Abp.BusinessException("Training:Nomination:CannotRemoveWithResult")
+                    .WithData("EmployeeId", nom.EmployeeId);
+            await nominationRepository.DeleteAsync(nom);
+        }
+
+        var failures = new List<string>();
+        foreach (var employeeId in toAdd)
+        {
+            var results = await conditionValidator.ValidateByPlanItemAsync(entity.Id, employeeId);
+            var failed = results.Where(r => !r.Passed).ToList();
+            if (failed.Any())
+            {
+                var emp = await employeeResolver.GetByIdAsync(employeeId);
+                failures.Add($"{emp?.FullNameAr ?? employeeId.ToString()}: " +
+                             string.Join(", ", failed.Select(f => f.Details)));
+                continue;
+            }
+
+            await nominationRepository.InsertAsync(
+                new Nomination(GuidGenerator.Create(), entity.Id, employeeId, CurrentUser.Id!.Value),
+                autoSave: true);
+        }
+
+        if (failures.Any())
+        {
+            throw new Volo.Abp.BusinessException("Training:Nomination:ConditionFailed")
+                .WithData("Failures", string.Join(" | ", failures));
+        }
+
+        return true;
     }
 
     [Authorize(TrainingPermissions.TrainingPlanItem.Delete)]

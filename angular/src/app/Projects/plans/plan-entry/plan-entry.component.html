@@ -303,16 +303,18 @@
               <select class="form-input"
                       [value]="fTenantCourseId()"
                       (change)="fTenantCourseId.set($any($event.target).value); onCourseSelected()">
-                <option value="">اختر دورة...</option>
-                @for (tc of tenantCourses(); track tc.id) { <option [value]="tc.id">{{ tc.catalogCourseNameAr }}</option> }
+                <option value="" [selected]="!fTenantCourseId()">اختر دورة...</option>
+                @for (tc of tenantCourses(); track tc.id) {
+                  <option [value]="tc.id" [selected]="tc.id === fTenantCourseId()">{{ tc.catalogCourseNameAr }}</option>
+                }
               </select>
             </div>
             <div class="form-group">
               <label class="form-label">نوع الدورة <span class="required">*</span></label>
               <select class="form-input" [value]="fCourseType()" (change)="fCourseType.set(+$any($event.target).value)">
-                <option [value]="0">داخلية</option>
-                <option [value]="1">خارجية محلية</option>
-                <option [value]="2">خارجية دولية</option>
+                <option [value]="0" [selected]="fCourseType() === 0">داخلية</option>
+                <option [value]="1" [selected]="fCourseType() === 1">خارجية محلية</option>
+                <option [value]="2" [selected]="fCourseType() === 2">خارجية دولية</option>
               </select>
             </div>
           </div>
@@ -324,11 +326,11 @@
             </div>
             <div class="form-group">
               <label class="form-label">الربع المفضل <span class="required">*</span></label>
-              <select class="form-input" [value]="fPreferredQuarter()" (change)="fPreferredQuarter.set(+$any($event.target).value)">
-                <option [value]="1">الربع الأول</option>
-                <option [value]="2">الربع الثاني</option>
-                <option [value]="3">الربع الثالث</option>
-                <option [value]="4">الربع الرابع</option>
+              <select class="form-input" [value]="fPreferredQuarter()" (change)="onQuarterChange(+$any($event.target).value)">
+                <option [value]="1" [selected]="fPreferredQuarter() === 1">الربع الأول</option>
+                <option [value]="2" [selected]="fPreferredQuarter() === 2">الربع الثاني</option>
+                <option [value]="3" [selected]="fPreferredQuarter() === 3">الربع الثالث</option>
+                <option [value]="4" [selected]="fPreferredQuarter() === 4">الربع الرابع</option>
               </select>
             </div>
           </div>
@@ -353,23 +355,28 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">سنوات</label>
-              <input type="number" class="form-input" min="0" [value]="fDurationYears()" (input)="fDurationYears.set(+$any($event.target).value || 0)">
+              <input type="number" class="form-input" min="0" [value]="fDurationYears()"
+                     (input)="fDurationYears.set(+$any($event.target).value || 0); onDurationChange()">
             </div>
             <div class="form-group">
               <label class="form-label">أشهر</label>
-              <input type="number" class="form-input" min="0" max="11" [value]="fDurationMonths()" (input)="fDurationMonths.set(+$any($event.target).value || 0)">
+              <input type="number" class="form-input" min="0" max="11" [value]="fDurationMonths()"
+                     (input)="fDurationMonths.set(+$any($event.target).value || 0); onDurationChange()">
             </div>
             <div class="form-group">
               <label class="form-label">أيام</label>
-              <input type="number" class="form-input" min="0" [value]="fDurationDays()" (input)="fDurationDays.set(+$any($event.target).value || 0)">
+              <input type="number" class="form-input" min="0" [value]="fDurationDays()"
+                     (input)="fDurationDays.set(+$any($event.target).value || 0); onDurationChange()">
             </div>
             <div class="form-group">
               <label class="form-label">بدء متوقع</label>
-              <input type="date" class="form-input" [value]="fEstimatedDateFrom()" (input)="fEstimatedDateFrom.set($any($event.target).value)">
+              <input type="date" class="form-input" [value]="fEstimatedDateFrom()"
+                     (input)="onDateFromChange($any($event.target).value)">
             </div>
             <div class="form-group">
               <label class="form-label">انتهاء متوقع</label>
-              <input type="date" class="form-input" [value]="fEstimatedDateTo()" (input)="fEstimatedDateTo.set($any($event.target).value)">
+              <input type="date" class="form-input" [value]="fEstimatedDateTo()"
+                     (input)="fEstimatedDateTo.set($any($event.target).value)">
             </div>
           </div>
 
@@ -391,43 +398,36 @@
           }
         </div>
 
-        <!-- Section B: Nominees -->
-        @if (!isEditMode()) {
-          <div class="dialog-section">
-            <div class="section-label"><span class="section-num">B</span> المرشحون <span class="required">*</span></div>
-            <div class="section-sub">اختر مرشحاً واحداً على الأقل. سيتم التحقق من توفر شروط الالتحاق لكل مرشح تلقائياً.</div>
-
-            @if (showAccordions()) {
-              @if (fUnitId()) {
-                <gtms-nomination-picker
-                  [unitId]="fUnitId()"
-                  [minCount]="1"
-                  [initialSelection]="fNomineeIds()"
-                  (selectionChange)="onNomineesChange($event)">
-                </gtms-nomination-picker>
-              } @else {
-                <div class="alert alert-info">
-                  <span class="alert-icon">ℹ️</span> اختر الوحدة أولاً لعرض المرشحين المتاحين.
-                </div>
-              }
-            } @else if (myUnitId()) {
-              <gtms-nomination-picker
-                [unitId]="myUnitId()"
-                [minCount]="1"
-                [initialSelection]="fNomineeIds()"
-                (selectionChange)="onNomineesChange($event)">
-              </gtms-nomination-picker>
+        <!-- Section B: Nominees (same picker for both create and edit; edit prefills from the backend) -->
+        <div class="dialog-section">
+          <div class="section-label"><span class="section-num">B</span> المرشحون <span class="required">*</span></div>
+          <div class="section-sub">
+            @if (isEditMode()) {
+              يمكنك إضافة أو إزالة مرشحين. لا يمكن حذف مرشح أُدخلت نتيجته بالفعل.
             } @else {
-              <div class="alert alert-warning">
-                <span class="alert-icon">⚠️</span> لم يتم تحديد وحدتك — تحقق من ملفك الشخصي في نظام الموارد البشرية
-              </div>
+              اختر مرشحاً واحداً على الأقل. سيتم التحقق من شروط الالتحاق لكل مرشح تلقائياً.
             }
           </div>
-        } @else {
-          <div class="alert alert-info">
-            <span class="alert-icon">ℹ️</span> لتعديل المرشحين، استخدم شاشة المراجعة بعد الإرسال
-          </div>
-        }
+
+          @if (loadingEditNominations()) {
+            <div class="alert alert-info"><span class="alert-icon">⏳</span> جارٍ تحميل المرشحين…</div>
+          } @else if (fUnitId() || myUnitId(); as pickerUnit) {
+            <gtms-nomination-picker
+              [unitId]="pickerUnit"
+              [minCount]="1"
+              [initialSelection]="fNomineeIds()"
+              (selectionChange)="onNomineesChange($event)">
+            </gtms-nomination-picker>
+          } @else if (!isEditMode() && showAccordions()) {
+            <div class="alert alert-info">
+              <span class="alert-icon">ℹ️</span> اختر الوحدة أولاً لعرض المرشحين المتاحين.
+            </div>
+          } @else {
+            <div class="alert alert-warning">
+              <span class="alert-icon">⚠️</span> لم يتم تحديد الوحدة — تحقق من ملفك الشخصي في نظام الموارد البشرية
+            </div>
+          }
+        </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-outline" (click)="isDialogOpen.set(false)">إلغاء</button>
