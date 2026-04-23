@@ -25,9 +25,9 @@ export enum ResultType {
 }
 
 export enum FundingScenario {
-  FundingCoversAll = 0,
-  FundingCoversCourseOnly = 1,
-  FinancialCoversAll = 2,
+  FundingSourceCoversAll = 1,
+  FundingSourceCoversCourse = 2,
+  FinancialItemsCoverAll = 3,
 }
 
 export enum PaymentStatus {
@@ -76,10 +76,19 @@ export enum PlanStatus {
 
 export enum CasualCourseStatus {
   Draft = 0,
-  UGMApproved = 1,
-  StaffReviewed = 2,
-  TDApproved = 3,
-  THApproved = 4,
+  Submitted = 1,
+  UGMApproved = 2,
+  UnderReview = 3,
+  StaffReviewed = 4,
+  TDApproved = 5,
+  THApproved = 6,
+  ReturnedToCreator = 7,
+  Rejected = 8,
+}
+
+export enum FinancialAmountSource {
+  FundingSource = 0,
+  FinancialItem = 1,
 }
 
 export enum NominationStatus {
@@ -132,4 +141,22 @@ export const CATEGORY_OPTIONS = [
 export const NATURE_OPTIONS = [
   { value: 'Mandatory', key: '::Training.Nature.Mandatory' },
   { value: 'Qualifying', key: '::Training.Nature.Qualifying' },
+];
+
+export const CASUAL_COURSE_STATUS_OPTIONS = [
+  { value: CasualCourseStatus.Draft,             key: '::Training.CasualCourseStatus.Draft',             cssClass: 'status-draft' },
+  { value: CasualCourseStatus.Submitted,         key: '::Training.CasualCourseStatus.Submitted',         cssClass: 'status-submitted' },
+  { value: CasualCourseStatus.UGMApproved,       key: '::Training.CasualCourseStatus.UGMApproved',       cssClass: 'status-ugm-approved' },
+  { value: CasualCourseStatus.UnderReview,       key: '::Training.CasualCourseStatus.UnderReview',       cssClass: 'status-under-review' },
+  { value: CasualCourseStatus.StaffReviewed,     key: '::Training.CasualCourseStatus.StaffReviewed',     cssClass: 'status-staff-reviewed' },
+  { value: CasualCourseStatus.TDApproved,        key: '::Training.CasualCourseStatus.TDApproved',        cssClass: 'status-td-approved' },
+  { value: CasualCourseStatus.THApproved,        key: '::Training.CasualCourseStatus.THApproved',        cssClass: 'status-th-approved' },
+  { value: CasualCourseStatus.ReturnedToCreator, key: '::Training.CasualCourseStatus.ReturnedToCreator', cssClass: 'status-returned' },
+  { value: CasualCourseStatus.Rejected,          key: '::Training.CasualCourseStatus.Rejected',          cssClass: 'status-rejected' },
+];
+
+export const FUNDING_SCENARIO_OPTIONS = [
+  { value: FundingScenario.FundingSourceCoversAll,    key: '::Training.FundingScenario.FundingSourceCoversAll',    hint: '::Training.FundingScenario.NoReallocation' },
+  { value: FundingScenario.FundingSourceCoversCourse, key: '::Training.FundingScenario.FundingSourceCoversCourse', hint: '::Training.FundingScenario.PartialReallocation' },
+  { value: FundingScenario.FinancialItemsCoverAll,    key: '::Training.FundingScenario.FinancialItemsCoverAll',    hint: '::Training.FundingScenario.FullReallocation' },
 ];
