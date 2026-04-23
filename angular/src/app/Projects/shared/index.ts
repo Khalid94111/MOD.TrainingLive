@@ -43,3 +43,19 @@ export type {
   TenantCourseGetListInput,
   TenantCourseConditionDto,
 } from '../../proxy/training/tenant-courses/dtos';
+export type {
+  CasualCourseDto,
+  CasualCourseDetailDto,
+  CreateUpdateCasualCourseDto,
+  CasualCourseGetListInput,
+  AssignScenarioDto,
+  AssignmentLineDto,
+  EstimatePreviewInput,
+  EstimatePreviewDto,
+  EstimatePreviewItemDto,
+  CasualCourseFinancialDto,
+  CreateCasualCourseFinancialDto,
+  UpdateAmountDto,
+  CasualCourseNominationDto,
+  RejectDto,
+} from '../../proxy/training/casual-courses/dtos';

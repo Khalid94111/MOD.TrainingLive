@@ -166,6 +166,17 @@ export const TRAINING_ROUTE_PROVIDER = {
         order: 4,
         requiredPolicy: 'Training.TrainingProvider',
       },
+      // ──────────────────────────────────
+      // Phase 4A: Casual Courses
+      // ──────────────────────────────────
+      {
+        path: '/training/casual-courses',
+        name: '::Training.Menu.CasualCourses',
+        parentName: '::Training.Menu.Training',
+        iconClass: 'fas fa-bullseye',
+        order: 6,
+        requiredPolicy: 'Training.CasualCourses',
+      },
         // ── Phase 2 (uncomment when ready) ──
         // {
         //   path: '/training/finance/items',
