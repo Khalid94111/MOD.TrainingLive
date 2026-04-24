@@ -158,7 +158,10 @@
     <div class="gtms-card">
       <div class="section-header">
         <h3 class="section-title">المرشحون</h3>
-        <span class="section-meta">عدد مختارين: {{ nomineeCount() }}</span>
+        <span class="section-meta">
+          عدد مختارين: {{ nomineeCount() }}
+          @if (autosaving()) { <span class="autosave-chip">حفظ تلقائي...</span> }
+        </span>
       </div>
       @if (currentUnitId()) {
         <gtms-nomination-picker
@@ -174,59 +177,128 @@
       }
     </div>
 
-    <!-- Section E — Cost preview (aggregate for UTM; rank-aware server-side) -->
-    <div class="gtms-card">
-      <h3 class="section-title">معاينة التكلفة التقديرية</h3>
-      @if (previewLoading()) {
-        <div class="empty-state small"><span>جاري حساب التقدير...</span></div>
-      } @else if (!preview()) {
-        <div class="empty-state small">
-          اختر الدورة وأضف مرشحًا واحدًا على الأقل لعرض التقدير.
+    <!-- Section E — Financial items (per-rank entry) -->
+    @if (hasFinancials() || id()) {
+      <div class="gtms-card">
+        <div class="section-header">
+          <h3 class="section-title">البنود المالية</h3>
+          <span class="section-meta">
+            مجموع مقدَّر: <b>{{ grandTotal() | number:'1.3-3' }}</b> ر.ع
+          </span>
         </div>
-      } @else {
-        <div class="gtms-table-wrap">
-          <table class="gtms-table">
-            <thead>
-              <tr>
-                <th>البند</th>
-                <th class="center">النوع</th>
-                <th class="center">أيام فعّالة</th>
-                <th class="center">المرشحون</th>
-                <th class="center">المجموع (ر.ع)</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (item of preview()?.items ?? []; track item.financialItemId) {
-                <tr>
-                  <td>{{ item.financialItemName }}</td>
-                  <td class="center">
-                    <span class="chip" [class.chip-info]="item.isPerNominee" [class.chip-neutral]="!item.isPerNominee">
-                      {{ item.isPerNominee ? 'حسب الرتبة' : 'ثابت' }}
-                    </span>
-                  </td>
-                  <td class="center">{{ item.effectiveDays }}</td>
-                  <td class="center">{{ item.isPerNominee ? nomineeCount() : '—' }}</td>
-                  <td class="center cell-money">{{ item.totalAmountOMR | number:'1.3-3' }}</td>
-                </tr>
-              }
-            </tbody>
-            <tfoot>
-              <tr class="total-row">
-                <td colspan="4">الإجمالي</td>
-                <td class="center cell-money">{{ preview()?.total | number:'1.3-3' }} ر.ع</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-        <div class="alert alert-info mt-2">
-          <span class="alert-icon">ℹ️</span>
-          البنود المرتبطة بالرتبة تُعرض كمجموع واحد لمرشحيك. التفصيل حسب الرتبة مرئي للمراجعين الأعلى.
-        </div>
-        <p class="preview-caption">
-          {{ l.t('::Training.CasualCourse.EstimateDisclaimer') }}
-        </p>
-      }
-    </div>
+
+        @if (!hasFinancials()) {
+          <div class="empty-state small">
+            أضف مرشحًا واحدًا على الأقل لتعبئة البنود المالية تلقائيًا.
+          </div>
+        } @else {
+          <div class="alert alert-info">
+            <span class="alert-icon">ℹ️</span>
+            تم تعبئة البنود من الافتراضيات — يمكنك تعديل المعدلات لكل رتبة قبل الإرسال.
+            سيناريو التمويل سيتم اختياره من قبل مكتب التدريب عند المراجعة.
+          </div>
+
+          <div class="fin-accordion">
+            @for (fin of financials(); track fin.id) {
+              <div class="fin-item" [id]="'fin-' + fin.id" [class.missing]="(fin.estimatedAmountOMR ?? 0) <= 0">
+                <div class="fin-head"
+                  [class.clickable]="!isFlatItem(fin)"
+                  (click)="!isFlatItem(fin) && toggleExpand(fin.id)">
+                  <div class="fin-head-left">
+                    @if (!isFlatItem(fin)) {
+                      <span class="fin-chevron">{{ isExpanded(fin.id) ? '▾' : '▸' }}</span>
+                    } @else {
+                      <span class="fin-chevron-flat">●</span>
+                    }
+                    <span class="fin-name">{{ fin.financialItemName }}</span>
+                    @if (fin.isPerDay) {
+                      <span class="chip chip-neutral">لكل يوم</span>
+                    }
+                    @if (fin.isPerNominee) {
+                      <span class="chip chip-info">حسب الرتبة</span>
+                    } @else {
+                      <span class="chip chip-neutral">ثابت</span>
+                    }
+                    <span class="chip chip-days">أيام فعّالة: {{ fin.effectiveDays ?? '—' }}</span>
+                  </div>
+                  <div class="fin-head-right">
+                    <span class="fin-total cell-money">{{ fin.estimatedAmountOMR | number:'1.3-3' }} ر.ع</span>
+                  </div>
+                </div>
+
+                @if (isExpanded(fin.id) && !isFlatItem(fin)) {
+                  <div class="fin-body">
+                    <div class="days-explainer">
+                      <span class="lbl">تفصيل الأيام الفعّالة:</span>
+                      <span class="val">{{ effectiveDaysExplainer(fin) }}</span>
+                    </div>
+
+                    @if (!fin.ranks || fin.ranks.length === 0) {
+                      <div class="empty-state small">
+                        لا توجد رتب — قد تكون قائمة المرشحين فارغة.
+                      </div>
+                    } @else {
+                      <div class="gtms-table-wrap">
+                        <table class="gtms-table rank-table">
+                          <thead>
+                            <tr>
+                              <th>الرتبة</th>
+                              <th class="center">العدد</th>
+                              <th class="center">أيام فعّالة</th>
+                              <th class="center">السعر (ر.ع)</th>
+                              <th class="center">المجموع (ر.ع)</th>
+                              <th class="center">المصدر</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            @for (row of fin.ranks; track row.id) {
+                              <tr>
+                                <td class="cell-bold">{{ row.rankNameAr }}</td>
+                                <td class="center">{{ row.nomineeCount }}</td>
+                                <td class="center">{{ fin.effectiveDays }}</td>
+                                <td class="center">
+                                  @if (!isReadOnlyFinancials()) {
+                                    <input type="number" min="0" step="0.001" class="form-input form-input-inline"
+                                      [value]="row.ratePerUnitOMR ?? 0"
+                                      (input)="onRateInput(row.id, $any($event.target).value)" />
+                                  } @else {
+                                    <span>{{ row.ratePerUnitOMR | number:'1.3-3' }}</span>
+                                  }
+                                </td>
+                                <td class="center cell-money">{{ row.subtotalOMR | number:'1.3-3' }}</td>
+                                <td class="center">
+                                  <span class="chip"
+                                        [class.chip-info]="row.rateSource === 'RankOverride'"
+                                        [class.chip-neutral]="row.rateSource !== 'RankOverride'">
+                                    {{ rateSourceLabel(row.rateSource) }}
+                                  </span>
+                                </td>
+                              </tr>
+                            }
+                          </tbody>
+                          <tfoot>
+                            <tr class="total-row">
+                              <td colspan="4">مجموع البند</td>
+                              <td class="center cell-money">{{ fin.estimatedAmountOMR | number:'1.3-3' }}</td>
+                              <td></td>
+                            </tr>
+                          </tfoot>
+                        </table>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
+            <div class="fin-grand-total">
+              <span class="lbl">المجموع الكلي</span>
+              <span class="val cell-money">{{ grandTotal() | number:'1.3-3' }} ر.ع</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
 
     <!-- Section F — Actions -->
     @if (submitError()) {
@@ -241,6 +313,7 @@
         type="button"
         class="btn btn-primary"
         [disabled]="!canSubmit()"
+        [title]="!hasAnyFinancialValue() ? 'أدخل تكلفة لبند واحد على الأقل قبل الإرسال' : ''"
         (click)="onSave(false)"
       >
         @if (isReturned()) { 🔁 إعادة الإرسال } @else { 📤 إرسال الطلب }

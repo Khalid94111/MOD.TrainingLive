@@ -1,4 +1,4 @@
-import type { AssignScenarioDto, CasualCourseDetailDto, CasualCourseDto, CasualCourseGetListInput, CreateUpdateCasualCourseDto, EstimatePreviewDto, EstimatePreviewInput, RejectDto } from './dtos/models';
+import type { AssignScenarioDto, CasualCourseDetailDto, CasualCourseDto, CasualCourseGetListInput, CreateUpdateCasualCourseDto, RejectDto } from './dtos/models';
 import { RestService, Rest } from '@abp/ng.core';
 import type { PagedResultDto } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
@@ -10,7 +10,7 @@ import type { CreatePlanNoteDto, ReturnReasonDto } from '../plans/dtos/models';
 export class CasualCourseService {
   private restService = inject(RestService);
   apiName = 'Default';
-  
+
 
   assignScenario = (id: string, input: AssignScenarioDto, config?: Partial<Rest.Config>) =>
     this.restService.request<any, CasualCourseDto>({
@@ -19,7 +19,7 @@ export class CasualCourseService {
       body: input,
     },
     { apiName: this.apiName,...config });
-  
+
 
   create = (input: CreateUpdateCasualCourseDto, config?: Partial<Rest.Config>) =>
     this.restService.request<any, CasualCourseDto>({
@@ -28,7 +28,7 @@ export class CasualCourseService {
       body: input,
     },
     { apiName: this.apiName,...config });
-  
+
 
   delete = (id: string, config?: Partial<Rest.Config>) =>
     this.restService.request<any, void>({
@@ -36,7 +36,7 @@ export class CasualCourseService {
       url: `/api/app/casual-course/${id}`,
     },
     { apiName: this.apiName,...config });
-  
+
 
   get = (id: string, config?: Partial<Rest.Config>) =>
     this.restService.request<any, CasualCourseDto>({
@@ -44,7 +44,7 @@ export class CasualCourseService {
       url: `/api/app/casual-course/${id}`,
     },
     { apiName: this.apiName,...config });
-  
+
 
   getDetail = (id: string, config?: Partial<Rest.Config>) =>
     this.restService.request<any, CasualCourseDetailDto>({
@@ -52,16 +52,7 @@ export class CasualCourseService {
       url: `/api/app/casual-course/${id}/detail`,
     },
     { apiName: this.apiName,...config });
-  
 
-  getEstimatePreview = (input: EstimatePreviewInput, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, EstimatePreviewDto>({
-      method: 'GET',
-      url: '/api/app/casual-course/estimate-preview',
-      params: { tenantCourseId: input.tenantCourseId, courseType: input.courseType, durationDays: input.durationDays, nomineeEmployeeIds: input.nomineeEmployeeIds },
-    },
-    { apiName: this.apiName,...config });
-  
 
   getList = (input: CasualCourseGetListInput, config?: Partial<Rest.Config>) =>
     this.restService.request<any, PagedResultDto<CasualCourseDto>>({
@@ -70,7 +61,7 @@ export class CasualCourseService {
       params: { year: input.year, status: input.status, unitId: input.unitId, onlyMyRequests: input.onlyMyRequests, isReturnedOnly: input.isReturnedOnly, search: input.search, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
     },
     { apiName: this.apiName,...config });
-  
+
 
   headApprove = (id: string, note: CreatePlanNoteDto, config?: Partial<Rest.Config>) =>
     this.restService.request<any, CasualCourseDto>({
@@ -79,7 +70,7 @@ export class CasualCourseService {
       body: note,
     },
     { apiName: this.apiName,...config });
-  
+
 
   reject = (id: string, input: RejectDto, config?: Partial<Rest.Config>) =>
     this.restService.request<any, CasualCourseDto>({
@@ -88,7 +79,7 @@ export class CasualCourseService {
       body: input,
     },
     { apiName: this.apiName,...config });
-  
+
 
   resubmit = (id: string, config?: Partial<Rest.Config>) =>
     this.restService.request<any, CasualCourseDto>({
@@ -96,7 +87,7 @@ export class CasualCourseService {
       url: `/api/app/casual-course/${id}/resubmit`,
     },
     { apiName: this.apiName,...config });
-  
+
 
   return = (id: string, input: ReturnReasonDto, config?: Partial<Rest.Config>) =>
     this.restService.request<any, CasualCourseDto>({
@@ -105,7 +96,7 @@ export class CasualCourseService {
       body: input,
     },
     { apiName: this.apiName,...config });
-  
+
 
   startReview = (id: string, config?: Partial<Rest.Config>) =>
     this.restService.request<any, CasualCourseDto>({
@@ -113,7 +104,7 @@ export class CasualCourseService {
       url: `/api/app/casual-course/${id}/start-review`,
     },
     { apiName: this.apiName,...config });
-  
+
 
   submit = (id: string, config?: Partial<Rest.Config>) =>
     this.restService.request<any, CasualCourseDto>({
@@ -121,7 +112,7 @@ export class CasualCourseService {
       url: `/api/app/casual-course/${id}/submit`,
     },
     { apiName: this.apiName,...config });
-  
+
 
   tdApprove = (id: string, note: CreatePlanNoteDto, config?: Partial<Rest.Config>) =>
     this.restService.request<any, CasualCourseDto>({
@@ -130,7 +121,7 @@ export class CasualCourseService {
       body: note,
     },
     { apiName: this.apiName,...config });
-  
+
 
   ugmApprove = (id: string, note: CreatePlanNoteDto, config?: Partial<Rest.Config>) =>
     this.restService.request<any, CasualCourseDto>({
@@ -139,7 +130,7 @@ export class CasualCourseService {
       body: note,
     },
     { apiName: this.apiName,...config });
-  
+
 
   update = (id: string, input: CreateUpdateCasualCourseDto, config?: Partial<Rest.Config>) =>
     this.restService.request<any, CasualCourseDto>({

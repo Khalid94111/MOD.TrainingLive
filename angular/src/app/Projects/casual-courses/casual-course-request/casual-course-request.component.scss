@@ -90,3 +90,118 @@
   flex-wrap: wrap;
   padding: 12px 0;
 }
+
+.autosave-chip {
+  display: inline-block;
+  margin-inline-start: 8px;
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  color: #1e40af;
+  background: #dbeafe;
+  border-radius: 999px;
+}
+
+// ── Financial items accordion (mirrors review page) ───────────────
+.fin-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fin-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  overflow: hidden;
+
+  &.missing {
+    border-inline-start: 3px solid #f59e0b;
+    background: #fffbeb;
+  }
+}
+
+.fin-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  gap: 12px;
+  user-select: none;
+
+  &.clickable { cursor: pointer; }
+  &.clickable:hover { background: #f8fafc; }
+}
+
+.fin-head-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.fin-head-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.fin-chevron { font-size: 0.8rem; color: #64748b; min-width: 14px; }
+.fin-chevron-flat { font-size: 0.5rem; color: #94a3b8; min-width: 14px; }
+.fin-name { font-weight: 700; color: #1e293b; font-size: 0.92rem; }
+.fin-total { font-weight: 700; color: #0f766e; }
+
+.fin-body {
+  padding: 10px 16px 14px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+.days-explainer {
+  font-size: 0.8rem;
+  margin-bottom: 10px;
+
+  .lbl { color: #64748b; margin-inline-end: 6px; }
+  .val { color: #1e293b; font-weight: 600; font-family: monospace; }
+}
+
+.rank-table { margin-top: 6px; }
+
+.fin-grand-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  margin-top: 6px;
+  border-radius: 10px;
+  background: #0f172a;
+  color: #f8fafc;
+
+  .lbl { font-size: 0.85rem; opacity: 0.85; }
+  .val { font-size: 1.1rem; font-weight: 700; }
+}
+
+.form-input-inline {
+  padding: 5px 10px !important;
+  font-size: 0.82rem !important;
+  width: 100%;
+  max-width: 160px;
+}
+
+.chip {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  border-radius: 999px;
+  line-height: 1.4;
+  font-weight: 500;
+
+  &.chip-info { background: #dbeafe; color: #1e40af; }
+  &.chip-neutral { background: #e2e8f0; color: #475569; }
+  &.chip-days { background: #fef3c7; color: #92400e; }
+}
+
+@media (max-width: 768px) {
+  .fin-head { flex-direction: column; align-items: flex-start; }
+  .fin-head-right { align-self: stretch; justify-content: space-between; }
+}

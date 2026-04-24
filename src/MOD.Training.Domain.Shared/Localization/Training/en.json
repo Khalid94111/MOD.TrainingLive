@@ -804,7 +804,7 @@
     "Training:CasualCourse:CannotDeleteInThisStatus": "Casual course can only be deleted while in Draft status",
     "Training:CasualCourse:CannotEditInThisStatus": "Casual course can only be edited in Draft or Returned-to-Creator status",
     "Training:CasualCourse:DuplicateNominee": "This employee is already nominated for this casual course",
-    "Training:CasualCourse:NoNomineesForPreview": "Cannot preview cost — no nominees selected.",
+    "Training:CasualCourse:NoFinancialDetail": "Cannot submit — please enter cost details first",
     "Training:CasualCourse:UnknownFundingScenario": "Unknown funding scenario.",
 
     "Training.CasualCourseStatus.Draft": "Draft",

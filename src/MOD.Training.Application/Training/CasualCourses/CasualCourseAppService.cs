@@ -26,24 +26,21 @@ public class CasualCourseAppService(
     IRepository<CasualCourseFinancial, Guid> financialRepo,
     IRepository<CasualCourseFinancialItemRank, Guid> rankRepo,
     IRepository<CasualCourseNomination, Guid> nominationRepo,
-    IRepository<TenantCourse, Guid> tenantCourseRepo,
     IRepository<FinancialItem, Guid> financialItemRepo,
-    IRepository<CourseTypeFinancialItemDefault, Guid> defaultsRepo,
     IRepository<PlanNote, Guid> planNoteRepo,
     IOrganizationUnitRepository orgUnitRepository,
     CasualCourseValidator validator,
     NominationConditionValidator conditionValidator,
-    FinancialItemDefaultResolver defaultResolver,
     FundingScenarioSourceResolver scenarioSourceResolver,
     CasualCourseRankBreakdownManager rankManager,
     EmployeeResolver employeeResolver,
     CourseNameResolver courseNameResolver,
     CasualCourseUnitScope unitScope,
     IPlanNoteAppService planNoteAppService,
+    CasualCourseFinancialAppService financialAppService,
     CasualCourseToDtoMapper toDtoMapper,
     CasualCourseFinancialToDtoMapper financialToDtoMapper,
-    CasualCourseNominationToDtoMapper nominationToDtoMapper,
-    CreateUpdateCasualCourseToEntityMapper fromCreateMapper)
+    CasualCourseNominationToDtoMapper nominationToDtoMapper)
     : ApplicationService, ICasualCourseAppService
 {
     // ─── READ ──────────────────────────────────────────────────────────
@@ -158,109 +155,8 @@ public class CasualCourseAppService(
         return new PagedResultDto<CasualCourseDto>(totalCount, dtos);
     }
 
-    public async Task<EstimatePreviewDto> GetEstimatePreviewAsync(EstimatePreviewInput input)
-    {
-        // UTM/Employee callers see aggregate totals only; UGM + above see the per-rank breakdown.
-        // Role names match the seeder (GtmsRoleNames isn't defined as a constants class).
-        var includeRankBreakdown = await employeeResolver.IsCallerInRolesAsync(
-            "UnitGeneralManager",
-            "TrainingDirectorateStaff",
-            "TrainingDirector",
-            "TenantHead");
-
-        if (input.NomineeEmployeeIds == null || input.NomineeEmployeeIds.Count == 0)
-            throw new BusinessException("Training:CasualCourse:NoNomineesForPreview");
-
-        var nominees = await employeeResolver.GetEmployeesWithRanksAsync(
-            input.NomineeEmployeeIds.Distinct().ToList());
-        if (nominees.Count == 0)
-            throw new BusinessException("Training:CasualCourse:NoNomineesForPreview");
-
-        var nomineesByRank = nominees.GroupBy(n => n.RankId).ToList();
-
-        var defQ = await defaultsRepo.WithDetailsAsync(x => x.FinancialItem);
-        var defaults = await AsyncExecuter.ToListAsync(
-            defQ.Where(x => x.CourseType == input.CourseType).OrderBy(x => x.SortOrder));
-
-        var items = new List<EstimatePreviewItemDto>();
-        decimal grandTotal = 0m;
-
-        foreach (var def in defaults)
-        {
-            var fi = def.FinancialItem;
-            var effectiveDays = fi.IsPerDay
-                ? input.DurationDays + fi.ExtraDaysBefore + fi.ExtraDaysAfter
-                : 1;
-
-            var itemDto = new EstimatePreviewItemDto
-            {
-                FinancialItemId = fi.Id,
-                FinancialItemName = fi.NameAr,
-                IsPerDay = fi.IsPerDay,
-                IsPerNominee = fi.IsPerNominee,
-                EffectiveDays = effectiveDays,
-                RankBreakdown = includeRankBreakdown ? new List<RankBreakdownRowDto>() : null,
-            };
-
-            decimal itemTotal = 0m;
-
-            if (!fi.IsPerNominee)
-            {
-                // Flat item — rate doesn't depend on rank. Single synthetic "ثابت" row for UGM view.
-                var (rate, source) = await defaultResolver.ResolveRateWithSourceAsync(fi.Id, rankId: null);
-                itemTotal = rate * effectiveDays;
-
-                if (includeRankBreakdown)
-                {
-                    itemDto.RankBreakdown!.Add(new RankBreakdownRowDto
-                    {
-                        RankId = Guid.Empty,
-                        RankNameAr = "ثابت",
-                        NomineeCount = 1,
-                        RatePerUnitOMR = rate,
-                        RateSource = source,
-                        SubtotalOMR = itemTotal,
-                    });
-                }
-            }
-            else
-            {
-                foreach (var rankGroup in nomineesByRank)
-                {
-                    var count = rankGroup.Count();
-                    var (rate, source) = await defaultResolver.ResolveRateWithSourceAsync(fi.Id, rankGroup.Key);
-                    var subtotal = rate * effectiveDays * count;
-                    itemTotal += subtotal;
-
-                    if (includeRankBreakdown)
-                    {
-                        itemDto.RankBreakdown!.Add(new RankBreakdownRowDto
-                        {
-                            RankId = rankGroup.Key,
-                            RankNameAr = rankGroup.First().RankNameAr,
-                            NomineeCount = count,
-                            RatePerUnitOMR = rate,
-                            RateSource = source,
-                            SubtotalOMR = subtotal,
-                        });
-                    }
-                }
-            }
-
-            itemDto.TotalAmountOMR = itemTotal;
-            grandTotal += itemTotal;
-            items.Add(itemDto);
-        }
-
-        return new EstimatePreviewDto
-        {
-            Items = items,
-            Total = grandTotal,
-            CourseType = input.CourseType,
-            ComputedFor = includeRankBreakdown ? "RankBreakdown" : "Aggregate",
-            ComputedAt = Clock.Now,
-        };
-    }
+    // Patch 4 — GetEstimatePreviewAsync removed. UTM now enters the full breakdown at creation
+    // and UGM/TD/TH read the real CasualCourseFinancials; there's no "preview" to serve anymore.
 
     // ─── CREATE / UPDATE / DELETE ──────────────────────────────────────
 
@@ -309,7 +205,41 @@ public class CasualCourseAppService(
                 autoSave: true);
         }
 
+        // Patch 4 — auto-populate the full financial breakdown at creation time.
+        // Runs as system (Draft status, no scenario yet — uses FinancialItem placeholder Source).
+        if (input.NomineeEmployeeIds.Any())
+        {
+            await financialAppService.AutoFillInternalAsync(entity.Id, runAsSystem: true);
+
+            if (input.FinancialOverrides != null && input.FinancialOverrides.Count > 0)
+                await ApplyUtmFinancialOverridesAsync(entity.Id, input.FinancialOverrides);
+        }
+
         return await BuildDtoAsync(entity);
+    }
+
+    private async Task ApplyUtmFinancialOverridesAsync(
+        Guid casualCourseId, List<FinancialOverrideDto> overrides)
+    {
+        var parentQ = await financialRepo.GetQueryableAsync();
+        var parents = (await AsyncExecuter.ToListAsync(
+                parentQ.Where(x => x.CasualCourseId == casualCourseId)))
+            .ToDictionary(p => p.FinancialItemId);
+
+        var rankQ = await rankRepo.GetQueryableAsync();
+
+        foreach (var ov in overrides)
+        {
+            if (!parents.TryGetValue(ov.FinancialItemId, out var parent)) continue;
+
+            var row = await AsyncExecuter.FirstOrDefaultAsync(
+                rankQ.Where(r =>
+                    r.CasualCourseFinancialId == parent.Id &&
+                    r.RankId == ov.RankId));
+            if (row == null) continue;
+
+            await rankManager.UpdateRateAsync(row.Id, ov.RatePerUnitOMR);
+        }
     }
 
     [Authorize(TrainingPermissions.CasualCourses.Edit)]
@@ -320,6 +250,13 @@ public class CasualCourseAppService(
 
         if (entity.Status != CasualCourseStatus.Draft && entity.Status != CasualCourseStatus.ReturnedToCreator)
             throw new BusinessException("Training:CasualCourse:CannotEditInThisStatus");
+
+        var priorNomineeIdsQ = await nominationRepo.GetQueryableAsync();
+        var priorNomineeIds = (await AsyncExecuter.ToListAsync(
+                priorNomineeIdsQ.Where(n => n.CasualCourseId == entity.Id)))
+            .Select(n => n.EmployeeId)
+            .ToHashSet();
+        var priorDurationDays = entity.DurationDays;
 
         entity.TenantCourseId = input.TenantCourseId;
         entity.UnitId = input.UnitId;
@@ -338,6 +275,22 @@ public class CasualCourseAppService(
         await repository.UpdateAsync(entity, autoSave: true);
 
         await DiffNomineesAsync(entity, input.NomineeEmployeeIds);
+
+        // Patch 4 — keep rank rows in sync with the nominee list + re-apply per-day formulas
+        // when the duration changes. Also top up with any new defaults (e.g. if CourseType flipped).
+        var newNomineeIds = input.NomineeEmployeeIds.Distinct().ToHashSet();
+        var nomineesChanged = !newNomineeIds.SetEquals(priorNomineeIds);
+        var durationChanged = priorDurationDays != entity.DurationDays;
+
+        if (nomineesChanged || durationChanged)
+        {
+            await rankManager.RefreshForNomineeChangeAsync(entity.Id);
+        }
+
+        if (input.FinancialOverrides != null && input.FinancialOverrides.Count > 0)
+        {
+            await ApplyUtmFinancialOverridesAsync(entity.Id, input.FinancialOverrides);
+        }
 
         return await BuildDtoAsync(entity);
     }
@@ -423,127 +376,57 @@ public class CasualCourseAppService(
         if (entity.Status != CasualCourseStatus.UnderReview)
             throw new BusinessException("Training:CasualCourse:InvalidStatusTransition");
 
+        // Patch 4 — scenario is now committed on every AssignScenario call, even Commit=false.
+        // The picker on PAGE 4.3 fires this with Commit=false on each click.
         entity.FundingScenario = input.FundingScenario;
+        await repository.UpdateAsync(entity, autoSave: true);
 
-        // Pre-load FinancialItems referenced in this assignment.
-        var reqFiIds = input.FinancialItems.Select(x => x.FinancialItemId).Distinct().ToList();
-        var fiQ = await financialItemRepo.GetQueryableAsync();
-        var fis = (await AsyncExecuter.ToListAsync(fiQ.Where(x => reqFiIds.Contains(x.Id))))
-            .ToDictionary(x => x.Id);
-
-        // Existing parents + rank rows for diff-based upsert.
+        // Re-derive Source on every parent (scenario-dependent) from the canonical resolver.
         var parentQ = await financialRepo.GetQueryableAsync();
-        var existingParents = await AsyncExecuter.ToListAsync(parentQ.Where(x => x.CasualCourseId == id));
-        var parentById = existingParents.ToDictionary(x => x.Id);
-        var inputParentIds = input.FinancialItems.Where(x => x.Id.HasValue).Select(x => x.Id!.Value).ToHashSet();
+        var parents = await AsyncExecuter.ToListAsync(parentQ.Where(x => x.CasualCourseId == id));
 
-        // Orphan parents — cascade rank rows via DB-level FK cascade.
-        foreach (var orphan in existingParents.Where(e => !inputParentIds.Contains(e.Id)))
-            await financialRepo.DeleteAsync(orphan, autoSave: true);
-
-        foreach (var line in input.FinancialItems)
+        if (parents.Count > 0)
         {
-            fis.TryGetValue(line.FinancialItemId, out var fi);
-            // Source derivation lives in FundingScenarioSourceResolver — single source of truth.
-            // For unknown FIs we fall back to FundingSource (defensive; should not happen with valid input).
-            var src = fi != null
-                ? scenarioSourceResolver.Resolve(input.FundingScenario, fi)
-                : FinancialAmountSource.FundingSource;
+            var fiIds = parents.Select(p => p.FinancialItemId).Distinct().ToList();
+            var fiQ = await financialItemRepo.GetQueryableAsync();
+            var fis = (await AsyncExecuter.ToListAsync(fiQ.Where(x => fiIds.Contains(x.Id))))
+                .ToDictionary(x => x.Id);
 
-            CasualCourseFinancial parent;
-            if (line.Id.HasValue && parentById.TryGetValue(line.Id.Value, out var existing))
+            foreach (var parent in parents)
             {
-                existing.FinancialItemId = line.FinancialItemId;
-                existing.Notes = line.Notes;
-                existing.Source = src;
-                await financialRepo.UpdateAsync(existing, autoSave: true);
-                parent = existing;
+                if (fis.TryGetValue(parent.FinancialItemId, out var fi))
+                {
+                    parent.Source = scenarioSourceResolver.Resolve(input.FundingScenario, fi);
+                    await financialRepo.UpdateAsync(parent);
+                }
             }
-            else
-            {
-                parent = await financialRepo.InsertAsync(
-                    new CasualCourseFinancial(
-                        GuidGenerator.Create(),
-                        id,
-                        line.FinancialItemId,
-                        estimatedAmount: 0m,
-                        src)
-                    {
-                        Notes = line.Notes,
-                    },
-                    autoSave: true);
-            }
-
-            await UpsertRankRowsAsync(parent, fi, entity.DurationDays, line.Ranks);
-
-            // Recompute parent total from the freshly-written rank rows.
-            var rankQ = await rankRepo.GetQueryableAsync();
-            var rows = await AsyncExecuter.ToListAsync(
-                rankQ.Where(x => x.CasualCourseFinancialId == parent.Id));
-            parent.EstimatedAmountOMR = rows.Sum(r => r.SubtotalOMR);
-            await financialRepo.UpdateAsync(parent, autoSave: true);
         }
 
-        // Course-level total.
-        var allParentsQ = await financialRepo.GetQueryableAsync();
-        var allParents = await AsyncExecuter.ToListAsync(
-            allParentsQ.Where(x => x.CasualCourseId == id));
-        entity.EstimatedTotalCost = allParents.Sum(p => p.EstimatedAmountOMR);
+        // Apply targeted Staff adjustments — each mutates one rank row + refreshes parent/course totals.
+        if (input.Adjustments != null && input.Adjustments.Count > 0)
+        {
+            foreach (var adj in input.Adjustments)
+            {
+                await rankManager.UpdateRateAsync(adj.CasualCourseFinancialItemRankId, adj.NewRatePerUnitOMR);
+            }
+        }
+
+        // Recompute course total (rankManager.UpdateRateAsync already did this, but recompute here
+        // once for the no-adjustment path too — cheap and keeps the invariant obvious).
+        await rankManager.RefreshCourseTotalAsync(id);
+
+        // Reload the course — RefreshCourseTotalAsync wrote EstimatedTotalCost on a fresh load.
+        entity = await repository.GetAsync(id);
 
         if (input.Commit)
         {
-            if (entity.EstimatedTotalCost <= 0)
+            if (!entity.EstimatedTotalCost.HasValue || entity.EstimatedTotalCost.Value <= 0)
                 throw new BusinessException("Training:CasualCourse:CostRequired");
             entity.Status = CasualCourseStatus.StaffReviewed;
+            await repository.UpdateAsync(entity, autoSave: true);
         }
 
-        await repository.UpdateAsync(entity, autoSave: true);
         return await BuildDtoAsync(entity);
-    }
-
-    private async Task UpsertRankRowsAsync(
-        CasualCourseFinancial parent, FinancialItem? fi, int durationDays, List<AssignmentRankLineDto> lines)
-    {
-        var rankQ = await rankRepo.GetQueryableAsync();
-        var existing = (await AsyncExecuter.ToListAsync(
-            rankQ.Where(x => x.CasualCourseFinancialId == parent.Id)))
-            .ToDictionary(x => x.Id);
-
-        var keptIds = lines.Where(l => l.Id.HasValue).Select(l => l.Id!.Value).ToHashSet();
-        foreach (var orphan in existing.Values.Where(r => !keptIds.Contains(r.Id)))
-            await rankRepo.DeleteAsync(orphan);
-
-        foreach (var line in lines)
-        {
-            var isPerDay = fi?.IsPerDay ?? false;
-            var isPerNominee = fi?.IsPerNominee ?? false;
-            var extraBefore = fi?.ExtraDaysBefore ?? 0;
-            var extraAfter = fi?.ExtraDaysAfter ?? 0;
-            var subtotal = defaultResolver.ComputeSubtotal(
-                line.RatePerUnitOMR, isPerDay, isPerNominee,
-                durationDays, extraBefore, extraAfter, line.NomineeCount);
-
-            if (line.Id.HasValue && existing.TryGetValue(line.Id.Value, out var row))
-            {
-                row.RankId = line.RankId;
-                row.NomineeCount = line.NomineeCount;
-                row.RatePerUnitOMR = line.RatePerUnitOMR;
-                row.SubtotalOMR = subtotal;
-                await rankRepo.UpdateAsync(row);
-            }
-            else
-            {
-                await rankRepo.InsertAsync(
-                    new CasualCourseFinancialItemRank(
-                        GuidGenerator.Create(),
-                        parent.Id,
-                        line.RankId,
-                        line.NomineeCount,
-                        line.RatePerUnitOMR,
-                        subtotal,
-                        FinancialItemDefaultResolver.RateSourceDefaultAmount));
-            }
-        }
     }
 
     [Authorize(TrainingPermissions.CasualCourses.TDApprove)]
@@ -605,7 +488,39 @@ public class CasualCourseAppService(
     }
 
     [Authorize(TrainingPermissions.CasualCourses.Submit)]
-    public Task<CasualCourseDto> ResubmitAsync(Guid id) => SubmitAsync(id);
+    public async Task<CasualCourseDto> ResubmitAsync(Guid id)
+    {
+        var entity = await repository.GetAsync(id);
+        await unitScope.EnsureCanAccessAsync(entity);
+
+        if (entity.Status != CasualCourseStatus.ReturnedToCreator)
+            throw new BusinessException("Training:CasualCourse:InvalidStatusTransition");
+
+        // Patch 4 — decision Q3 locked: no auto-fill on resubmit.
+        // UTM's edited rates (after return) must be preserved; AutoFillFromDefaultsAsync is only
+        // additive so a stray invocation would be harmless, but we keep it explicit for clarity.
+        await validator.ValidateForSubmitAsync(id);
+
+        var target = entity.ReturnedFromStatus ?? CasualCourseStatus.Submitted;
+
+        entity.Status = target;
+        entity.IsReturned = false;
+        entity.LastReturnNoteId = null;
+        entity.ReturnedFromStatus = null;
+        await repository.UpdateAsync(entity, autoSave: true);
+
+        var nomQ = await nominationRepo.GetQueryableAsync();
+        var returnedNoms = await AsyncExecuter.ToListAsync(
+            nomQ.Where(x => x.CasualCourseId == id && x.IsReturned));
+        foreach (var n in returnedNoms)
+        {
+            n.IsReturned = false;
+            n.LastReturnNoteId = null;
+            await nominationRepo.UpdateAsync(n, autoSave: true);
+        }
+
+        return await BuildDtoAsync(entity);
+    }
 
     [Authorize(TrainingPermissions.CasualCourses.Reject)]
     public async Task<CasualCourseDto> RejectAsync(Guid id, RejectDto input)

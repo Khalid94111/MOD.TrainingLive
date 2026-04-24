@@ -754,7 +754,7 @@
     "Training:CasualCourse:CannotDeleteInThisStatus": "لا يمكن حذف الدورة العارضة إلا في حالة المسودة",
     "Training:CasualCourse:CannotEditInThisStatus": "لا يمكن تعديل الدورة العارضة إلا في حالة المسودة أو الإرجاع",
     "Training:CasualCourse:DuplicateNominee": "هذا الموظف مرشح بالفعل لهذه الدورة",
-    "Training:CasualCourse:NoNomineesForPreview": "لا يمكن حساب التقدير — لم يتم اختيار مرشحين.",
+    "Training:CasualCourse:NoFinancialDetail": "لا يمكن تقديم الطلب — يرجى إدخال تفاصيل التكلفة أولًا",
     "Training:CasualCourse:UnknownFundingScenario": "سيناريو التمويل غير معروف.",
 
     "Training.CasualCourseStatus.Draft": "مسودة",

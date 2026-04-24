@@ -1,8 +1,10 @@
 # GTMS Phase 4A — API List (Gate 2)
 
-**Date:** April 23, 2026
+**Date:** April 23, 2026 — last updated April 24, 2026 (v4.6.0, Patch 4)
 **Scope:** Casual Courses foundation — 3 AppServices, 24 endpoints
 **Prerequisites:** Phase 4A Implementation Prompt v1.1 approved, all 8 Round-1 decisions locked
+
+> **v4.6.0 (Patch 4) changes:** UTM now enters the full financial breakdown at creation; PAGE 4.3 mirrors PAGE 3.3. The live preview endpoint (#2 below) is removed — staff review works on the real `CasualCourseFinancials` tree instead. `AssignScenarioDto` shape also simplified (`FundingScenario + Adjustments[] + Commit`).
 
 ---
 
@@ -10,34 +12,33 @@
 
 | AppService | Endpoints | Purpose |
 |---|---|---|
-| `CasualCourseAppService` | 15 | CRUD + 8 workflow transitions + default cost preview (for UTM form + UGM approval) |
+| `CasualCourseAppService` | 14 | CRUD + 8 workflow transitions (preview endpoint removed in v4.6.0) |
 | `CasualCourseFinancialAppService` | 5 | Staff assigns & edits per-item amounts (CHG-07 formula) |
 | `CasualCourseNominationAppService` | 5 | Add / remove / replace / return nominees with condition validation |
-| **Total** | **25** | — |
+| **Total** | **24** | — |
 
 ---
 
-## 1. `CasualCourseAppService` — 15 endpoints
+## 1. `CasualCourseAppService` — 14 endpoints
 
 Extends `CrudAppService<CasualCourse, CasualCourseDto, Guid, CasualCourseGetListInput, CreateUpdateCasualCourseDto>`. All list / get queries respect `EmployeeResolver.IsCurrentUserUnitScopedAsync` (UTM / UGM see their unit only).
 
 | # | Method | Route | Purpose | Role(s) | Request DTO | Response DTO | Permission |
 |---|---|---|---|---|---|---|---|
-| 1 | `POST` | `/api/app/casual-courses` | Create request (Draft). Requires ≥ 1 nominee with passing conditions; `FundingSource` required when `CourseType ≠ Internal`. | UTM | `CreateUpdateCasualCourseDto` | `CasualCourseDto` | `CasualCourses.Create` |
-| 2 | `POST` | `/api/app/casual-courses/estimate-preview` | **Default cost preview (no DB write).** Computes per-item subtotals and grand total from `CourseTypeFinancialItemDefaults` × CHG-07 formula. Used live by UTM form + UGM approval view. No permission check beyond authenticated user — pure calculator. | UTM / UGM / Staff / TD / TH | `EstimatePreviewInput { tenantCourseId, courseType, durationDays, nomineeCount }` | `EstimatePreviewDto { items[], total }` | `CasualCourses.Default` |
-| 3 | `GET` | `/api/app/casual-courses` | Paged list with filters: `Year`, `Status[]`, `UnitId?`, `OnlyMyRequests`, `IsReturnedOnly`, `Search`. | all | `CasualCourseGetListInput` | `PagedResultDto<CasualCourseListItemDto>` | `CasualCourses.Default` |
-| 4 | `GET` | `/api/app/casual-courses/{id}` | Full detail: course + nominations + financials + latest return note. | all | — | `CasualCourseDetailDto` | `CasualCourses.Default` |
-| 5 | `PUT` | `/api/app/casual-courses/{id}` | Update while `Draft` or `ReturnedToCreator`. Diff-based nominee handling (preserve / add / remove). | UTM | `CreateUpdateCasualCourseDto` | `CasualCourseDto` | `CasualCourses.Edit` |
-| 6 | `DELETE` | `/api/app/casual-courses/{id}` | Delete only when `Draft`. Cascade to financials + nominations in single UoW. | UTM | — | — | `CasualCourses.Delete` |
-| 7 | `POST` | `/api/app/casual-courses/{id}/submit` | `Draft → Submitted` (first submit) or `ReturnedToCreator → <ReturnedFromStatus>` (resubmit per tweak 2). Runs `CasualCourseValidator.ValidateForSubmitAsync`. | UTM | — | `CasualCourseDto` | `CasualCourses.Submit` |
-| 8 | `POST` | `/api/app/casual-courses/{id}/ugm-approve` | `Submitted → UGMApproved`. Optional approval note. | UGM | `NoteDto?` | `CasualCourseDto` | `CasualCourses.Approve` |
-| 9 | `POST` | `/api/app/casual-courses/{id}/start-review` | `UGMApproved → UnderReview`. Explicit Staff action (avoids the Phase 3 bug #6 trap). | Staff | — | `CasualCourseDto` | `CasualCourses.Review` |
-| 10 | `PUT` | `/api/app/casual-courses/{id}/assign-scenario` | Write `FundingScenario` + `EstimatedTotalCost` + upsert financial assignments (with `Source` derived from scenario). `Commit=false` stays in `UnderReview`; `Commit=true` transitions to `StaffReviewed` (tweak 1). | Staff | `AssignScenarioDto { commit, ... }` | `CasualCourseDetailDto` | `CasualCourses.Review` |
-| 11 | `POST` | `/api/app/casual-courses/{id}/td-approve` | Cost gate (`EstimatedTotalCost > 0`). `StaffReviewed → TDApproved`. | TD | `NoteDto?` | `CasualCourseDto` | `CasualCourses.TDApprove` |
-| 12 | `POST` | `/api/app/casual-courses/{id}/head-approve` | Cost gate (double-check). `TDApproved → THApproved`. Terminal approval. | TH | `NoteDto?` | `CasualCourseDto` | `CasualCourses.HeadApprove` |
-| 13 | `POST` | `/api/app/casual-courses/{id}/return` | Any stage → `ReturnedToCreator`. Writes `AppPlanNote` (type `CasualCourse`), sets `IsReturned=true`, stores `LastReturnNoteId` + `ReturnedFromStatus` (tweak 2). | UGM / Staff / TD / TH | `ReturnDto` (reason required, min 10 chars) | `CasualCourseDto` | `CasualCourses.Return` |
-| 14 | `POST` | `/api/app/casual-courses/{id}/resubmit` | Alias of `Submit` when status is `ReturnedToCreator`. Clears `IsReturned` + resumes at `ReturnedFromStatus` (tweak 2). | UTM | — | `CasualCourseDto` | `CasualCourses.Submit` |
-| 15 | `POST` | `/api/app/casual-courses/{id}/reject` | Any approval stage → `Rejected` (terminal). Writes `RejectedReason`. | UGM / Staff / TD / TH | `RejectDto` (reason required) | `CasualCourseDto` | `CasualCourses.Reject` |
+| 1 | `POST` | `/api/app/casual-courses` | Create request (Draft). Auto-populates the full `CasualCourseFinancials` tree from defaults (v4.6.0). Accepts optional `FinancialOverrides`. | UTM | `CreateUpdateCasualCourseDto` | `CasualCourseDto` | `CasualCourses.Create` |
+| 2 | `GET` | `/api/app/casual-courses` | Paged list with filters: `Year`, `Status[]`, `UnitId?`, `OnlyMyRequests`, `IsReturnedOnly`, `Search`. | all | `CasualCourseGetListInput` | `PagedResultDto<CasualCourseListItemDto>` | `CasualCourses.Default` |
+| 3 | `GET` | `/api/app/casual-courses/{id}` | Full detail: course + nominations + financials + latest return note. | all | — | `CasualCourseDetailDto` | `CasualCourses.Default` |
+| 4 | `PUT` | `/api/app/casual-courses/{id}` | Update while `Draft` or `ReturnedToCreator`. Diff-based nominee handling; refreshes rank rows if nominees or duration changed. Accepts optional `FinancialOverrides`. | UTM | `CreateUpdateCasualCourseDto` | `CasualCourseDto` | `CasualCourses.Edit` |
+| 5 | `DELETE` | `/api/app/casual-courses/{id}` | Delete only when `Draft`. Cascade to financials + nominations in single UoW. | UTM | — | — | `CasualCourses.Delete` |
+| 6 | `POST` | `/api/app/casual-courses/{id}/submit` | `Draft → Submitted`. Enforces `TotalAmountOMR > 0` on at least one item (v4.6.0). Runs `CasualCourseValidator.ValidateForSubmitAsync`. | UTM | — | `CasualCourseDto` | `CasualCourses.Submit` |
+| 7 | `POST` | `/api/app/casual-courses/{id}/ugm-approve` | `Submitted → UGMApproved`. Optional approval note. | UGM | `NoteDto?` | `CasualCourseDto` | `CasualCourses.Approve` |
+| 8 | `POST` | `/api/app/casual-courses/{id}/start-review` | `UGMApproved → UnderReview`. Explicit Staff action. | Staff | — | `CasualCourseDto` | `CasualCourses.Review` |
+| 9 | `PUT` | `/api/app/casual-courses/{id}/assign-scenario` | v4.6.0 simplified shape: pick `FundingScenario` + optional rank-row `Adjustments[]`. Server re-derives `Source` on all parents; recomputes `EstimatedTotalCost`. `Commit=true` transitions `UnderReview → StaffReviewed`. | Staff | `AssignScenarioDto { fundingScenario, adjustments?, commit }` | `CasualCourseDto` | `CasualCourses.Review` |
+| 10 | `POST` | `/api/app/casual-courses/{id}/td-approve` | Cost gate (`EstimatedTotalCost > 0`). `StaffReviewed → TDApproved`. | TD | `NoteDto?` | `CasualCourseDto` | `CasualCourses.TDApprove` |
+| 11 | `POST` | `/api/app/casual-courses/{id}/head-approve` | Cost gate (double-check). `TDApproved → THApproved`. Terminal approval. | TH | `NoteDto?` | `CasualCourseDto` | `CasualCourses.HeadApprove` |
+| 12 | `POST` | `/api/app/casual-courses/{id}/return` | Any stage → `ReturnedToCreator`. Writes `AppPlanNote` (type `CasualCourse`), sets `IsReturned=true`, stores `LastReturnNoteId` + `ReturnedFromStatus`. | UGM / Staff / TD / TH | `ReturnDto` (reason required, min 10 chars) | `CasualCourseDto` | `CasualCourses.Return` |
+| 13 | `POST` | `/api/app/casual-courses/{id}/resubmit` | `ReturnedToCreator → <ReturnedFromStatus>`. Clears return flags. **Preserves UTM's edited rates — no auto-fill (v4.6.0, Q3).** | UTM | — | `CasualCourseDto` | `CasualCourses.Submit` |
+| 14 | `POST` | `/api/app/casual-courses/{id}/reject` | Any approval stage → `Rejected` (terminal). Writes `RejectedReason`. | UGM / Staff / TD / TH | `RejectDto` (reason required) | `CasualCourseDto` | `CasualCourses.Reject` |
 
 ---
 

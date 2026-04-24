@@ -50,105 +50,105 @@
       </div>
     </div>
 
-    <!-- Financial items read-only -->
+    <!-- Financial items (read-only rank-aware accordion) -->
     <div class="gtms-card">
-      <h3 class="section-title">البنود المالية</h3>
+      <div class="section-header">
+        <h3 class="section-title">البنود المالية</h3>
+        <span class="section-meta">
+          الإجمالي: <b>{{ grandTotal() | number:'1.3-3' }}</b> ر.ع
+        </span>
+      </div>
       @if (financials().length === 0) {
         <div class="empty-state small">لا توجد بنود مالية مسجلة.</div>
       } @else {
-        <div class="gtms-table-wrap">
-          <table class="gtms-table">
-            <thead>
-              <tr>
-                <th>البند</th>
-                <th class="center">المبلغ التقديري (ر.ع)</th>
-                <th>ملاحظات</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (fin of financials(); track fin.id) {
-                <tr>
-                  <td class="cell-bold">{{ fin.financialItemName }}</td>
-                  <td class="center cell-money">{{ fin.estimatedAmountOMR | number:'1.3-3' }}</td>
-                  <td>{{ fin.notes || '—' }}</td>
-                </tr>
+        <div class="fin-accordion">
+          @for (fin of financials(); track fin.id) {
+            <div class="fin-item" [id]="'fin-' + fin.id">
+              <div class="fin-head"
+                [class.clickable]="!isFlatItem(fin)"
+                (click)="!isFlatItem(fin) && toggleExpand(fin.id)">
+                <div class="fin-head-left">
+                  @if (!isFlatItem(fin)) {
+                    <span class="fin-chevron">{{ isExpanded(fin.id) ? '▾' : '▸' }}</span>
+                  } @else {
+                    <span class="fin-chevron-flat">●</span>
+                  }
+                  <span class="fin-name">{{ fin.financialItemName }}</span>
+                  @if (fin.isPerDay) { <span class="chip chip-neutral">لكل يوم</span> }
+                  @if (fin.isPerNominee) {
+                    <span class="chip chip-info">حسب الرتبة</span>
+                  } @else {
+                    <span class="chip chip-neutral">ثابت</span>
+                  }
+                  <span class="chip chip-days">أيام فعّالة: {{ fin.effectiveDays ?? '—' }}</span>
+                </div>
+                <div class="fin-head-right">
+                  <span class="fin-total cell-money">{{ fin.estimatedAmountOMR | number:'1.3-3' }} ر.ع</span>
+                </div>
+              </div>
+
+              @if (isExpanded(fin.id) && !isFlatItem(fin)) {
+                <div class="fin-body">
+                  <div class="days-explainer">
+                    <span class="lbl">تفصيل الأيام الفعّالة:</span>
+                    <span class="val">{{ effectiveDaysExplainer(fin) }}</span>
+                  </div>
+
+                  @if (!fin.ranks || fin.ranks.length === 0) {
+                    <div class="empty-state small">لا توجد رتب مسجلة لهذا البند.</div>
+                  } @else {
+                    <div class="gtms-table-wrap">
+                      <table class="gtms-table rank-table">
+                        <thead>
+                          <tr>
+                            <th>الرتبة</th>
+                            <th class="center">العدد</th>
+                            <th class="center">أيام فعّالة</th>
+                            <th class="center">السعر (ر.ع)</th>
+                            <th class="center">المجموع (ر.ع)</th>
+                            <th class="center">المصدر</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (row of fin.ranks; track row.id) {
+                            <tr>
+                              <td class="cell-bold">{{ row.rankNameAr }}</td>
+                              <td class="center">{{ row.nomineeCount }}</td>
+                              <td class="center">{{ fin.effectiveDays }}</td>
+                              <td class="center">{{ row.ratePerUnitOMR | number:'1.3-3' }}</td>
+                              <td class="center cell-money">{{ row.subtotalOMR | number:'1.3-3' }}</td>
+                              <td class="center">
+                                <span class="chip"
+                                      [class.chip-info]="row.rateSource === 'RankOverride'"
+                                      [class.chip-neutral]="row.rateSource !== 'RankOverride'">
+                                  {{ rateSourceLabel(row.rateSource) }}
+                                </span>
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                        <tfoot>
+                          <tr class="total-row">
+                            <td colspan="4">مجموع البند</td>
+                            <td class="center cell-money">{{ fin.estimatedAmountOMR | number:'1.3-3' }}</td>
+                            <td></td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  }
+                </div>
               }
-            </tbody>
-            <tfoot>
-              <tr class="total-row">
-                <td>الإجمالي</td>
-                <td class="center cell-money">{{ grandTotal() | number:'1.3-3' }}</td>
-                <td></td>
-              </tr>
-            </tfoot>
-          </table>
+            </div>
+          }
+
+          <div class="fin-grand-total">
+            <span class="lbl">المجموع الكلي</span>
+            <span class="val cell-money">{{ grandTotal() | number:'1.3-3' }} ر.ع</span>
+          </div>
         </div>
       }
     </div>
-
-    <!-- Rank-aware estimate preview (UGM+ view) -->
-    @if (preview(); as p) {
-      <div class="gtms-card">
-        <div class="section-header">
-          <h3 class="section-title">معاينة التكلفة حسب الرتبة</h3>
-          <span class="section-meta">الإجمالي المقدَّر: {{ p.total | number:'1.3-3' }} ر.ع</span>
-        </div>
-        <div class="gtms-table-wrap">
-          <table class="gtms-table">
-            <thead>
-              <tr>
-                <th>البند / الرتبة</th>
-                <th class="center">السعر (ر.ع)</th>
-                <th class="center">أيام فعّالة</th>
-                <th class="center">العدد</th>
-                <th class="center">المجموع (ر.ع)</th>
-                <th class="center">المصدر</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (item of p.items ?? []; track item.financialItemId) {
-                <tr class="cell-bold">
-                  <td>{{ item.financialItemName }}</td>
-                  <td class="center">—</td>
-                  <td class="center">{{ item.effectiveDays }}</td>
-                  <td class="center">—</td>
-                  <td class="center cell-money">{{ item.totalAmountOMR | number:'1.3-3' }}</td>
-                  <td class="center">—</td>
-                </tr>
-                @if (item.rankBreakdown && item.rankBreakdown.length > 0) {
-                  @for (row of item.rankBreakdown; track row.rankId) {
-                    <tr class="rank-row">
-                      <td class="indent-1">└── {{ row.rankNameAr }}</td>
-                      <td class="center">{{ row.ratePerUnitOMR | number:'1.3-3' }}</td>
-                      <td class="center">{{ item.effectiveDays }}</td>
-                      <td class="center">{{ row.nomineeCount }}</td>
-                      <td class="center cell-money">{{ row.subtotalOMR | number:'1.3-3' }}</td>
-                      <td class="center">
-                        <span class="chip"
-                              [class.chip-info]="row.rateSource === 'RankOverride'"
-                              [class.chip-neutral]="row.rateSource !== 'RankOverride'">
-                          {{ rateSourceLabel(row.rateSource) }}
-                        </span>
-                      </td>
-                    </tr>
-                  }
-                }
-              }
-            </tbody>
-            <tfoot>
-              <tr class="total-row">
-                <td colspan="4">الإجمالي المقدَّر</td>
-                <td class="center cell-money">{{ p.total | number:'1.3-3' }} ر.ع</td>
-                <td></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-        <p class="preview-caption">
-          إسقاط تقديري — ليس التزامًا ماليًا. الأرقام النهائية تُعتمد من البنود المالية أعلاه.
-        </p>
-      </div>
-    }
 
     @if (canAct() && !isUGMTurn() && costGateBlocked()) {
       <div class="alert alert-danger">

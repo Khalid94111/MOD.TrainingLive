@@ -1,5 +1,4 @@
 import type { CasualCourseFinancialDto, CreateCasualCourseFinancialDto } from './dtos/models';
-import type { FundingScenario } from '../enums/funding-scenario.enum';
 import { RestService, Rest } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
 
@@ -20,11 +19,11 @@ export class CasualCourseFinancialService {
     { apiName: this.apiName,...config });
 
 
-  autoFillFromDefaults = (casualCourseId: string, scenario: FundingScenario, config?: Partial<Rest.Config>) =>
+  autoFillFromDefaults = (casualCourseId: string, runAsSystem: boolean = false, config?: Partial<Rest.Config>) =>
     this.restService.request<any, CasualCourseFinancialDto[]>({
       method: 'POST',
       url: `/api/app/casual-course-financial/auto-fill-from-defaults/${casualCourseId}`,
-      params: { scenario },
+      params: { runAsSystem },
     },
     { apiName: this.apiName,...config });
 

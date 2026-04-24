@@ -1,5 +1,4 @@
 using MOD.Training.Training.CasualCourses.Dtos;
-using MOD.Training.Training.Enums;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -13,10 +12,16 @@ public interface ICasualCourseFinancialAppService : IApplicationService
 
     /// <summary>
     /// Auto-fills CasualCourseFinancials from CourseTypeFinancialItemDefaults.
-    /// The scenario is committed to the course as a side effect — the picker on PAGE 4.3
-    /// updates a local signal only, and clicking Auto-fill is the moment Staff confirms it.
+    /// <para>
+    /// runAsSystem = true: invoked by CasualCourseAppService.CreateAsync while the course
+    /// is Draft. Scenario is not yet picked; rank rows use the scenario-agnostic default Source.
+    /// </para>
+    /// <para>
+    /// runAsSystem = false: Staff invokes during UnderReview to add any missing defaults.
+    /// Requires FundingScenario to already be set (via AssignScenarioAsync).
+    /// </para>
     /// </summary>
-    Task<List<CasualCourseFinancialDto>> AutoFillFromDefaultsAsync(Guid casualCourseId, FundingScenario scenario);
+    Task<List<CasualCourseFinancialDto>> AutoFillFromDefaultsAsync(Guid casualCourseId, bool runAsSystem = false);
 
     Task<CasualCourseFinancialDto> AddItemAsync(Guid casualCourseId, CreateCasualCourseFinancialDto input);
 

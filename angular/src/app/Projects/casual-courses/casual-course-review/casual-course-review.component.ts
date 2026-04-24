@@ -10,13 +10,11 @@ import {
   CasualCourseFinancialItemRankService,
 } from 'src/app/proxy/training/casual-courses';
 import type {
-  AssignmentLineDto,
-  AssignmentRankLineDto,
   AssignScenarioDto,
   CasualCourseDetailDto,
   CasualCourseFinancialDto,
-  CasualCourseFinancialItemRankDto,
   CasualCourseNominationDto,
+  StaffAdjustmentDto,
 } from 'src/app/proxy/training/casual-courses/dtos/models';
 import { FinancialItemService } from 'src/app/proxy/training/finance/financial-item.service';
 import type { FinancialItemDto } from 'src/app/proxy/training/finance/dtos/models';
@@ -70,6 +68,11 @@ export class CasualCourseReviewComponent implements OnInit {
 
   fScenario = signal<FundingScenario | null>(null);
   expandedItemId = signal<string | null>(null);
+
+  // Patch 4 — Staff adjustments collected between the last server sync and the next
+  // Save/Finalize click. Keyed by rank-row id so a second edit on the same row just
+  // overwrites the previous pending value.
+  private pendingAdjustments = new Map<string, StaffAdjustmentDto>();
 
   notesOpen = signal(false);
   returnModalOpen = signal(false);
@@ -177,9 +180,35 @@ export class CasualCourseReviewComponent implements OnInit {
     return item?.itemType === FinancialItemType.CourseCost;
   }
 
-  onScenarioSelect(scenario: FundingScenario): void {
+  async onScenarioSelect(scenario: FundingScenario): Promise<void> {
     if (this.isReadOnly()) return;
+    if (this.fScenario() === scenario) return;
     this.fScenario.set(scenario);
+
+    if (!this.isReviewable()) return;
+    // Patch 4 — the picker persists immediately so Source chips on the rows reflect
+    // the chosen scenario. Any in-flight adjustments go along for the ride.
+    this.actionBusy.set(true);
+    this.error.set(null);
+    try {
+      const adjustments = Array.from(this.pendingAdjustments.values());
+      await firstValueFrom(
+        this.service.assignScenario(this.courseId(), {
+          fundingScenario: scenario,
+          adjustments,
+          commit: false,
+        }),
+      );
+      this.pendingAdjustments.clear();
+      // Reload to pick up new Source values + recomputed totals.
+      await this.loadAll();
+    } catch (e: unknown) {
+      this.error.set(this.mapError(e));
+      // Roll back the local pick if the server refused it (e.g. status changed).
+      await this.loadAll();
+    } finally {
+      this.actionBusy.set(false);
+    }
   }
 
   scenarioNum(s: FundingScenario): number {
@@ -245,6 +274,12 @@ export class CasualCourseReviewComponent implements OnInit {
       }),
     );
 
+    // Patch 4 — rate edits land in pendingAdjustments and flush via Save/Finalize
+    // (or inline via rankService.updateRate for immediate persistence).
+    this.pendingAdjustments.set(rankRowId, {
+      casualCourseFinancialItemRankId: rankRowId,
+      newRatePerUnitOMR: newRate,
+    });
     this.rateEdits$.next({ rankRowId, newRate });
   }
 
@@ -253,10 +288,10 @@ export class CasualCourseReviewComponent implements OnInit {
       const updated = await firstValueFrom(
         this.rankService.updateRate(edit.rankRowId, { ratePerUnitOMR: edit.newRate }),
       );
-      // Reconcile with server response (rates may have been clamped, source chips may have shifted).
+      // Server accepted; drop from pending set so Save/Finalize doesn't double-apply.
+      this.pendingAdjustments.delete(edit.rankRowId);
       this.financials.update(list => list.map(f => (f.id === updated.id ? updated : f)));
     } catch (e: unknown) {
-      // Rollback by refetching the full list.
       this.error.set(this.mapError(e));
       await this.refreshFinancials();
     }
@@ -277,17 +312,16 @@ export class CasualCourseReviewComponent implements OnInit {
 
   async onAutoFill(): Promise<void> {
     if (this.actionBusy() || !this.isReviewable()) return;
-    const scenario = this.fScenario();
-    if (scenario === null) return;  // button should already be disabled; belt-and-braces
+    // Patch 4 — scenario must already be set (via scenario picker) before auto-fill.
+    // Staff-invoked auto-fill is now just a top-up for any defaults added since creation.
+    if (this.fScenario() === null) return;
     this.actionBusy.set(true);
     this.error.set(null);
     try {
       const items = await firstValueFrom(
-        this.financialService.autoFillFromDefaults(this.courseId(), scenario),
+        this.financialService.autoFillFromDefaults(this.courseId(), false),
       );
       this.financials.set(items);
-      // Scenario was persisted server-side as a side effect — reflect it on the detail view.
-      this.casualCourse.update(cc => (cc ? { ...cc, fundingScenario: scenario } : cc));
     } catch (e: unknown) {
       this.error.set(this.mapError(e));
     } finally {
@@ -369,23 +403,17 @@ export class CasualCourseReviewComponent implements OnInit {
     this.actionBusy.set(true);
     this.error.set(null);
     try {
-      const lines: AssignmentLineDto[] = this.financials().map(f => ({
-        id: f.id,
-        financialItemId: f.financialItemId ?? '',
-        notes: f.notes ?? undefined,
-        ranks: (f.ranks ?? []).map<AssignmentRankLineDto>(r => ({
-          id: r.id,
-          rankId: r.rankId ?? '00000000-0000-0000-0000-000000000000',
-          nomineeCount: r.nomineeCount ?? 0,
-          ratePerUnitOMR: r.ratePerUnitOMR ?? 0,
-        })),
-      }));
+      // Patch 4 — send scenario + any pending adjustments in one shot.
+      // Individual rate edits may already have been persisted via rankService
+      // (flushRateEdit), but the pendingAdjustments map is the source of truth
+      // for anything still in flight.
       const body: AssignScenarioDto = {
         fundingScenario: scenario,
-        financialItems: lines,
+        adjustments: Array.from(this.pendingAdjustments.values()),
         commit,
       };
       await firstValueFrom(this.service.assignScenario(this.courseId(), body));
+      this.pendingAdjustments.clear();
       if (commit) {
         this.router.navigate(['/training/casual-courses']);
       } else {

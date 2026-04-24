@@ -39,19 +39,32 @@ public class CasualCourseFinancialAppService(
     }
 
     [Authorize(TrainingPermissions.CasualCourses.Review)]
-    public async Task<List<CasualCourseFinancialDto>> AutoFillFromDefaultsAsync(
-        Guid casualCourseId, FundingScenario scenario)
+    public Task<List<CasualCourseFinancialDto>> AutoFillFromDefaultsAsync(
+        Guid casualCourseId, bool runAsSystem = false)
+        => AutoFillInternalAsync(casualCourseId, runAsSystem);
+
+    /// <summary>
+    /// Internal entry point used by CasualCourseAppService.CreateAsync with runAsSystem=true.
+    /// Not exposed via ABP dynamic API (internal), so UTM's Create permission is sufficient.
+    /// </summary>
+    internal async Task<List<CasualCourseFinancialDto>> AutoFillInternalAsync(
+        Guid casualCourseId, bool runAsSystem)
     {
         var cc = await casualCourseRepo.GetAsync(casualCourseId);
-        if (cc.Status != CasualCourseStatus.UnderReview)
-            throw new BusinessException("Training:CasualCourse:InvalidStatusTransition");
 
-        // Side effect — committing the scenario is part of the auto-fill action.
-        // PAGE 4.3's scenario cards update a local signal only; this is the persistence point.
-        if (cc.FundingScenario != scenario)
+        if (runAsSystem)
         {
-            cc.FundingScenario = scenario;
-            await casualCourseRepo.UpdateAsync(cc, autoSave: true);
+            if (cc.Status != CasualCourseStatus.Draft)
+                throw new InvalidOperationException(
+                    "AutoFillFromDefaultsAsync(runAsSystem:true) requires Draft status.");
+        }
+        else
+        {
+            // Staff path — UnderReview + scenario must already be picked via AssignScenarioAsync.
+            if (cc.Status != CasualCourseStatus.UnderReview)
+                throw new BusinessException("Training:CasualCourse:InvalidStatusTransition");
+            if (!cc.FundingScenario.HasValue)
+                throw new BusinessException("Training:CasualCourse:ScenarioRequiredBeforeAutoFill");
         }
 
         var defQ = await defaultsRepo.WithDetailsAsync(x => x.FinancialItem);
@@ -67,7 +80,11 @@ public class CasualCourseFinancialAppService(
         foreach (var def in defaults.Where(d => !existingFiIds.Contains(d.FinancialItemId)))
         {
             var fi = def.FinancialItem;
-            var src = scenarioSourceResolver.Resolve(scenario, fi);
+            // System path on Draft: scenario not yet picked — use FinancialItem as placeholder
+            // Source. AssignScenarioAsync re-derives every row's Source once Staff picks the scenario.
+            var src = cc.FundingScenario.HasValue
+                ? scenarioSourceResolver.Resolve(cc.FundingScenario.Value, fi)
+                : FinancialAmountSource.FinancialItem;
 
             var parent = await repository.InsertAsync(
                 new CasualCourseFinancial(
@@ -92,8 +109,8 @@ public class CasualCourseFinancialAppService(
         if (cc.Status != CasualCourseStatus.UnderReview)
             throw new BusinessException("Training:CasualCourse:InvalidStatusTransition");
 
-        // If scenario already chosen, derive Source via resolver; otherwise default to FundingSource
-        // (Staff will get the right value once they pick a scenario and re-save assignments).
+        // If scenario already chosen, derive Source via resolver; otherwise use the
+        // scenario-agnostic placeholder (AssignScenarioAsync re-derives every row on scenario pick).
         FinancialAmountSource src;
         if (cc.FundingScenario.HasValue)
         {
@@ -102,7 +119,7 @@ public class CasualCourseFinancialAppService(
         }
         else
         {
-            src = FinancialAmountSource.FundingSource;
+            src = FinancialAmountSource.FinancialItem;
         }
 
         var parent = await repository.InsertAsync(

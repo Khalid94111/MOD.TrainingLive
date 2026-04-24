@@ -1,15 +1,18 @@
 import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { toObservable } from '@angular/core/rxjs-interop';
-import { firstValueFrom, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { Subject, firstValueFrom } from 'rxjs';
+import { debounceTime, groupBy, mergeMap } from 'rxjs/operators';
 
-import { CasualCourseService } from 'src/app/proxy/training/casual-courses';
+import {
+  CasualCourseService,
+  CasualCourseFinancialService,
+  CasualCourseFinancialItemRankService,
+} from 'src/app/proxy/training/casual-courses';
 import type {
   CasualCourseDetailDto,
+  CasualCourseFinancialDto,
   CreateUpdateCasualCourseDto,
-  EstimatePreviewDto,
 } from 'src/app/proxy/training/casual-courses/dtos/models';
 import { TenantCourseService } from 'src/app/proxy/training/tenant-courses/tenant-course.service';
 import type { TenantCourseDto } from 'src/app/proxy/training/tenant-courses/dtos/models';
@@ -20,6 +23,11 @@ import { NominationPickerComponent } from '../../shared/components/nomination-pi
 import { NotesDrawerComponent } from '../../shared/components/notes-drawer/notes-drawer.component';
 import { PlanNoteEntityType } from 'src/app/proxy/training/enums/plan-note-entity-type.enum';
 
+interface RateEdit {
+  rankRowId: string;
+  newRate: number;
+}
+
 @Component({
   standalone: true,
   selector: 'app-casual-course-request',
@@ -29,6 +37,8 @@ import { PlanNoteEntityType } from 'src/app/proxy/training/enums/plan-note-entit
 })
 export class CasualCourseRequestComponent implements OnInit {
   private service = inject(CasualCourseService);
+  private financialService = inject(CasualCourseFinancialService);
+  private rankService = inject(CasualCourseFinancialItemRankService);
   private tenantCourseService = inject(TenantCourseService);
   private hrService = inject(HrLookupService);
   private route = inject(ActivatedRoute);
@@ -41,9 +51,12 @@ export class CasualCourseRequestComponent implements OnInit {
 
   id = signal<string | null>(null);
   casualCourse = signal<CasualCourseDetailDto | null>(null);
+  financials = signal<CasualCourseFinancialDto[]>([]);
   loading = signal(false);
+  autosaving = signal(false);
   submitError = signal<string | null>(null);
   notesOpen = signal(false);
+  expandedItemId = signal<string | null>(null);
 
   tenantCourses = signal<TenantCourseDto[]>([]);
   currentUnitId = signal<string>('');
@@ -62,13 +75,18 @@ export class CasualCourseRequestComponent implements OnInit {
   fFundingSource = signal<string>('');
   fNomineeIds = signal<string[]>([]);
 
-  preview = signal<EstimatePreviewDto | null>(null);
-  previewLoading = signal(false);
+  // Debounced per-rank rate edits keyed by rank-row id to avoid cross-talk.
+  private rateEdits$ = new Subject<RateEdit>();
 
   isEdit = computed(() => !!this.id());
   isReturned = computed(() => this.casualCourse()?.status === CasualCourseStatus.ReturnedToCreator);
   showFundingSource = computed(() => this.fCourseType() !== CourseType.Internal);
   nomineeCount = computed(() => this.fNomineeIds().length);
+  hasFinancials = computed(() => this.financials().length > 0);
+  grandTotal = computed(() =>
+    this.financials().reduce((sum, f) => sum + (f.estimatedAmountOMR ?? 0), 0),
+  );
+  hasAnyFinancialValue = computed(() => this.grandTotal() > 0);
 
   computedDateTo = computed(() => {
     const from = this.fDateFrom();
@@ -92,49 +110,18 @@ export class CasualCourseRequestComponent implements OnInit {
       !!this.fDateTo() &&
       this.fDurationDays() > 0 &&
       this.fNomineeIds().length > 0 &&
-      (this.fCourseType() === CourseType.Internal || this.fFundingSource().trim().length > 0)
+      (this.fCourseType() === CourseType.Internal || this.fFundingSource().trim().length > 0) &&
+      this.hasAnyFinancialValue()
     );
   });
 
-  private previewInputs = computed(() => ({
-    tenantCourseId: this.fTenantCourseId(),
-    courseType: this.fCourseType(),
-    durationDays: this.fDurationDays(),
-    nomineeEmployeeIds: this.fNomineeIds(),
-  }));
-
   constructor() {
-    toObservable(this.previewInputs)
+    this.rateEdits$
       .pipe(
-        debounceTime(400),
-        distinctUntilChanged(
-          (a, b) =>
-            a.tenantCourseId === b.tenantCourseId &&
-            a.courseType === b.courseType &&
-            a.durationDays === b.durationDays &&
-            a.nomineeEmployeeIds.length === b.nomineeEmployeeIds.length &&
-            a.nomineeEmployeeIds.every((id, i) => id === b.nomineeEmployeeIds[i]),
-        ),
-        switchMap(inputs => {
-          if (!inputs.tenantCourseId || (inputs.durationDays ?? 0) < 1 || inputs.nomineeEmployeeIds.length < 1) {
-            this.preview.set(null);
-            this.previewLoading.set(false);
-            return of(null);
-          }
-          this.previewLoading.set(true);
-          return this.service.getEstimatePreview(inputs);
-        }),
+        groupBy(e => e.rankRowId),
+        mergeMap(group => group.pipe(debounceTime(400))),
       )
-      .subscribe(result => {
-        if (result) this.preview.set(result);
-        this.previewLoading.set(false);
-      });
-
-    effect(() => {
-      if (!this.fTenantCourseId()) {
-        this.preview.set(null);
-      }
-    });
+      .subscribe(edit => this.flushRateEdit(edit));
 
     effect(() => {
       const next = this.computedDateTo();
@@ -194,6 +181,19 @@ export class CasualCourseRequestComponent implements OnInit {
       .filter((v): v is string => !!v);
     this.fNomineeIds.set(ids);
     if (detail.unitId) this.currentUnitId.set(detail.unitId);
+
+    await this.refreshFinancials();
+  }
+
+  private async refreshFinancials(): Promise<void> {
+    const id = this.id();
+    if (!id) { this.financials.set([]); return; }
+    try {
+      const rows = await firstValueFrom(this.financialService.getListByCasualCourse(id));
+      this.financials.set(rows);
+    } catch {
+      /* non-fatal — shows empty panel */
+    }
   }
 
   onTenantCourseChange(value: string): void {
@@ -208,8 +208,147 @@ export class CasualCourseRequestComponent implements OnInit {
     this.fCourseType.set(+value as CourseType);
   }
 
-  onNomineesChange(ids: string[]): void {
+  async onNomineesChange(ids: string[]): Promise<void> {
+    const prevCount = this.fNomineeIds().length;
     this.fNomineeIds.set(ids);
+
+    // Option P — first nominee add triggers silent autosave so financial panel appears.
+    // On subsequent changes (while id is set), persist the nominee diff so the backend
+    // recomputes rank rows.
+    if (!this.id() && ids.length > 0) {
+      await this.ensureDraftSaved();
+    } else if (this.id() && (ids.length !== prevCount || !this.sameIds(ids))) {
+      await this.persistUpdateAndRefresh();
+    }
+  }
+
+  private sameIds(next: string[]): boolean {
+    const prev = this.fNomineeIds();
+    if (prev.length !== next.length) return false;
+    const setA = new Set(prev);
+    return next.every(id => setA.has(id));
+  }
+
+  private async ensureDraftSaved(): Promise<void> {
+    if (this.id() || this.autosaving()) return;
+    const dto = this.buildDto();
+    this.autosaving.set(true);
+    this.submitError.set(null);
+    try {
+      const saved = await firstValueFrom(this.service.create(dto));
+      if (saved.id) {
+        this.id.set(saved.id);
+        await this.loadExisting(saved.id);
+      }
+    } catch (e: unknown) {
+      this.submitError.set(this.mapError(e));
+    } finally {
+      this.autosaving.set(false);
+    }
+  }
+
+  private async persistUpdateAndRefresh(): Promise<void> {
+    const id = this.id();
+    if (!id) return;
+    const dto = this.buildDto();
+    try {
+      await firstValueFrom(this.service.update(id, dto));
+      await this.refreshFinancials();
+    } catch (e: unknown) {
+      this.submitError.set(this.mapError(e));
+    }
+  }
+
+  private buildDto(): CreateUpdateCasualCourseDto {
+    return {
+      tenantCourseId: this.fTenantCourseId(),
+      unitId: this.currentUnitId(),
+      courseType: this.fCourseType(),
+      priority: this.fPriority(),
+      justification: this.fJustification().trim() || 'مسودة',
+      descriptionAr: this.fDescriptionAr().trim() || undefined,
+      objectivesAr: this.fObjectivesAr().trim() || undefined,
+      durationYears: this.fDurationYears(),
+      durationMonths: this.fDurationMonths(),
+      durationDays: this.fDurationDays(),
+      estimatedDateFrom: this.fDateFrom(),
+      estimatedDateTo: this.fDateTo(),
+      fundingSource: this.fFundingSource().trim() || undefined,
+      nomineeEmployeeIds: this.fNomineeIds(),
+    };
+  }
+
+  // ── Financial items panel ────────────────────────────────────────
+
+  isFlatItem(fin: CasualCourseFinancialDto): boolean {
+    return !fin.isPerNominee;
+  }
+
+  isExpanded(id: string | undefined): boolean {
+    return !!id && this.expandedItemId() === id;
+  }
+
+  toggleExpand(id: string | undefined): void {
+    if (!id) return;
+    this.expandedItemId.update(cur => (cur === id ? null : id));
+  }
+
+  effectiveDaysExplainer(fin: CasualCourseFinancialDto): string {
+    if (!fin.isPerDay) return 'ليس لكل يوم';
+    const days = this.fDurationDays();
+    const before = fin.extraDaysBefore ?? 0;
+    const after = fin.extraDaysAfter ?? 0;
+    return `${days} + ${before} + ${after} = ${fin.effectiveDays ?? days + before + after}`;
+  }
+
+  rateSourceLabel(source: string | undefined): string {
+    if (source === 'RankOverride') return 'معدل الرتبة';
+    if (source === 'DefaultAmount') return 'افتراضي';
+    return source ?? '—';
+  }
+
+  onRateInput(rankRowId: string | undefined, raw: string): void {
+    if (!rankRowId || this.isReadOnlyFinancials()) return;
+    const newRate = +raw;
+    if (Number.isNaN(newRate) || newRate < 0) return;
+
+    // Optimistic update so the subtotal + grand total re-render immediately.
+    this.financials.update(list =>
+      list.map(f => {
+        if (!f.ranks) return f;
+        const match = f.ranks.find(r => r.id === rankRowId);
+        if (!match) return f;
+        const effDays = f.effectiveDays ?? (f.isPerDay ? this.fDurationDays() : 1);
+        const newSubtotal = newRate * effDays * (match.nomineeCount ?? 0);
+        const newRanks = f.ranks.map(r =>
+          r.id === rankRowId ? { ...r, ratePerUnitOMR: newRate, subtotalOMR: newSubtotal } : r,
+        );
+        const newTotal = newRanks.reduce((s, r) => s + (r.subtotalOMR ?? 0), 0);
+        return { ...f, ranks: newRanks, estimatedAmountOMR: newTotal };
+      }),
+    );
+
+    this.rateEdits$.next({ rankRowId, newRate });
+  }
+
+  /** UTM can edit rates only while the course is still theirs (Draft or ReturnedToCreator). */
+  isReadOnlyFinancials(): boolean {
+    const s = this.casualCourse()?.status;
+    return s !== undefined &&
+      s !== CasualCourseStatus.Draft &&
+      s !== CasualCourseStatus.ReturnedToCreator;
+  }
+
+  private async flushRateEdit(edit: RateEdit): Promise<void> {
+    try {
+      const updated = await firstValueFrom(
+        this.rankService.updateRate(edit.rankRowId, { ratePerUnitOMR: edit.newRate }),
+      );
+      this.financials.update(list => list.map(f => (f.id === updated.id ? updated : f)));
+    } catch (e: unknown) {
+      this.submitError.set(this.mapError(e));
+      await this.refreshFinancials();
+    }
   }
 
   openNotesDrawer(): void {
@@ -223,35 +362,24 @@ export class CasualCourseRequestComponent implements OnInit {
   async onSave(isDraft: boolean): Promise<void> {
     if (!isDraft && !this.canSubmit()) return;
     this.submitError.set(null);
-    const dto: CreateUpdateCasualCourseDto = {
-      tenantCourseId: this.fTenantCourseId(),
-      unitId: this.currentUnitId(),
-      courseType: this.fCourseType(),
-      priority: this.fPriority(),
-      justification: this.fJustification().trim(),
-      descriptionAr: this.fDescriptionAr().trim() || undefined,
-      objectivesAr: this.fObjectivesAr().trim() || undefined,
-      durationYears: this.fDurationYears(),
-      durationMonths: this.fDurationMonths(),
-      durationDays: this.fDurationDays(),
-      estimatedDateFrom: this.fDateFrom(),
-      estimatedDateTo: this.fDateTo(),
-      fundingSource: this.fFundingSource().trim() || undefined,
-      nomineeEmployeeIds: this.fNomineeIds(),
-    };
+    const dto = this.buildDto();
 
     try {
       const wasReturned = this.isReturned();
-      const currentId = this.id();
-      const saved = currentId
-        ? await firstValueFrom(this.service.update(currentId, dto))
-        : await firstValueFrom(this.service.create(dto));
+      let currentId = this.id();
+      if (currentId) {
+        await firstValueFrom(this.service.update(currentId, dto));
+      } else {
+        const saved = await firstValueFrom(this.service.create(dto));
+        currentId = saved.id ?? null;
+        if (currentId) this.id.set(currentId);
+      }
 
-      if (!isDraft && saved.id) {
+      if (!isDraft && currentId) {
         if (wasReturned) {
-          await firstValueFrom(this.service.resubmit(saved.id));
+          await firstValueFrom(this.service.resubmit(currentId));
         } else {
-          await firstValueFrom(this.service.submit(saved.id));
+          await firstValueFrom(this.service.submit(currentId));
         }
       }
       this.router.navigate(['/training/casual-courses']);

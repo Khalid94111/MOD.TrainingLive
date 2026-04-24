@@ -45,4 +45,10 @@ public class CreateUpdateCasualCourseDto
     public string? FundingSource { get; set; }
 
     public List<Guid> NomineeEmployeeIds { get; set; } = new();
+
+    /// <summary>
+    /// Optional — UTM's overrides on auto-populated default rates (v4.6.0).
+    /// Each entry targets one rank row under one financial item.
+    /// </summary>
+    public List<FinancialOverrideDto>? FinancialOverrides { get; set; }
 }

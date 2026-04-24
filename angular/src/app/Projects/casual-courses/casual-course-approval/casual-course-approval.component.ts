@@ -7,7 +7,6 @@ import { CasualCourseService, CasualCourseFinancialService } from 'src/app/proxy
 import type {
   CasualCourseDetailDto,
   CasualCourseFinancialDto,
-  EstimatePreviewDto,
 } from 'src/app/proxy/training/casual-courses/dtos/models';
 
 import {
@@ -41,10 +40,10 @@ export class CasualCourseApprovalComponent implements OnInit {
   courseId = signal<string>('');
   casualCourse = signal<CasualCourseDetailDto | null>(null);
   financials = signal<CasualCourseFinancialDto[]>([]);
-  preview = signal<EstimatePreviewDto | null>(null);
   loading = signal(true);
   error = signal<string | null>(null);
   actionBusy = signal(false);
+  expandedItemId = signal<string | null>(null);
 
   approvalNote = signal<string>('');
   notesOpen = signal(false);
@@ -111,7 +110,6 @@ export class CasualCourseApprovalComponent implements OnInit {
       ]);
       this.casualCourse.set(detail);
       this.financials.set(financials);
-      await this.loadPreview(detail);
     } catch (e: unknown) {
       this.error.set(this.mapError(e));
     } finally {
@@ -119,39 +117,31 @@ export class CasualCourseApprovalComponent implements OnInit {
     }
   }
 
-  private async loadPreview(detail: CasualCourseDetailDto): Promise<void> {
-    const nomineeIds = (detail.nominations ?? [])
-      .map(n => n.employeeId)
-      .filter((v): v is string => !!v);
-    if (
-      !detail.tenantCourseId ||
-      detail.courseType === undefined ||
-      !detail.durationDays ||
-      nomineeIds.length === 0
-    ) {
-      this.preview.set(null);
-      return;
-    }
-    try {
-      const result = await firstValueFrom(
-        this.service.getEstimatePreview({
-          tenantCourseId: detail.tenantCourseId,
-          courseType: detail.courseType,
-          durationDays: detail.durationDays,
-          nomineeEmployeeIds: nomineeIds,
-        }),
-      );
-      this.preview.set(result);
-    } catch {
-      // Preview is informational; swallow failures so the page still renders.
-      this.preview.set(null);
-    }
-  }
-
   rateSourceLabel(source: string | undefined): string {
     if (source === 'RankOverride') return 'معدل الرتبة';
     if (source === 'DefaultAmount') return 'افتراضي';
     return source ?? '—';
+  }
+
+  isFlatItem(fin: CasualCourseFinancialDto): boolean {
+    return !fin.isPerNominee;
+  }
+
+  isExpanded(id: string | undefined): boolean {
+    return !!id && this.expandedItemId() === id;
+  }
+
+  toggleExpand(id: string | undefined): void {
+    if (!id) return;
+    this.expandedItemId.update(cur => (cur === id ? null : id));
+  }
+
+  effectiveDaysExplainer(fin: CasualCourseFinancialDto): string {
+    if (!fin.isPerDay) return 'ليس لكل يوم';
+    const days = this.casualCourse()?.durationDays ?? 0;
+    const before = fin.extraDaysBefore ?? 0;
+    const after = fin.extraDaysAfter ?? 0;
+    return `${days} + ${before} + ${after} = ${fin.effectiveDays ?? days + before + after}`;
   }
 
   async onApprove(): Promise<void> {

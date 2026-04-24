@@ -7,22 +7,21 @@ import type { FinancialAmountSource } from '../../enums/financial-amount-source.
 
 export interface AssignScenarioDto {
   fundingScenario: FundingScenario;
-  financialItems?: AssignmentLineDto[];
+  adjustments?: StaffAdjustmentDto[] | null;
   commit?: boolean;
 }
 
-export interface AssignmentLineDto {
-  id?: string | null;
-  financialItemId: string;
-  notes?: string | null;
-  ranks?: AssignmentRankLineDto[];
+export interface StaffAdjustmentDto {
+  casualCourseFinancialItemRankId: string;
+  newRatePerUnitOMR: number;
+  adjustmentNote?: string | null;
 }
 
-export interface AssignmentRankLineDto {
-  id?: string | null;
+export interface FinancialOverrideDto {
+  financialItemId: string;
   rankId: string;
-  nomineeCount?: number;
-  ratePerUnitOMR?: number;
+  ratePerUnitOMR: number;
+  notes?: string | null;
 }
 
 export interface UpdateRankRateDto {
@@ -138,40 +137,7 @@ export interface CreateUpdateCasualCourseDto {
   estimatedDateTo: string;
   fundingSource?: string | null;
   nomineeEmployeeIds?: string[];
-}
-
-export interface EstimatePreviewDto {
-  items?: EstimatePreviewItemDto[];
-  total?: number;
-  courseType?: CourseType;
-  computedFor?: string;
-  computedAt?: string;
-}
-
-export interface EstimatePreviewInput {
-  tenantCourseId: string;
-  courseType: CourseType;
-  durationDays?: number;
-  nomineeEmployeeIds: string[];
-}
-
-export interface EstimatePreviewItemDto {
-  financialItemId?: string;
-  financialItemName?: string;
-  isPerDay?: boolean;
-  isPerNominee?: boolean;
-  effectiveDays?: number;
-  totalAmountOMR?: number;
-  rankBreakdown?: RankBreakdownRowDto[] | null;
-}
-
-export interface RankBreakdownRowDto {
-  rankId?: string;
-  rankNameAr?: string;
-  nomineeCount?: number;
-  ratePerUnitOMR?: number;
-  rateSource?: string;
-  subtotalOMR?: number;
+  financialOverrides?: FinancialOverrideDto[] | null;
 }
 
 export interface RejectDto {

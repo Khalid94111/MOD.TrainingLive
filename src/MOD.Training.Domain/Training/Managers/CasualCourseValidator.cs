@@ -13,6 +13,7 @@ namespace MOD.Training.Training.Managers;
 public class CasualCourseValidator(
     IRepository<CasualCourse, Guid> casualCourseRepo,
     IRepository<CasualCourseNomination, Guid> nominationRepo,
+    IRepository<CasualCourseFinancial, Guid> financialRepo,
     NominationConditionValidator conditionValidator)
     : DomainService
 {
@@ -32,6 +33,13 @@ public class CasualCourseValidator(
 
         if (cc.CourseType != CourseType.Internal && string.IsNullOrWhiteSpace(cc.FundingSource))
             throw new BusinessException("Training:CasualCourse:FundingSourceRequired");
+
+        // Patch 4 — UTM now enters financial detail up front; block submit if no item has a value.
+        var finQ = await financialRepo.GetQueryableAsync();
+        var hasFinancialDetail = await AsyncExecuter.AnyAsync(
+            finQ.Where(f => f.CasualCourseId == casualCourseId && f.EstimatedAmountOMR > 0));
+        if (!hasFinancialDetail)
+            throw new BusinessException("Training:CasualCourse:NoFinancialDetail");
 
         var nomQ = await nominationRepo.GetQueryableAsync();
         var nominations = await AsyncExecuter.ToListAsync(

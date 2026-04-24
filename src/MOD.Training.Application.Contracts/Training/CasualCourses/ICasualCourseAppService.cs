@@ -13,8 +13,6 @@ public interface ICasualCourseAppService : ICrudAppService<
     CasualCourseGetListInput,
     CreateUpdateCasualCourseDto>
 {
-    Task<EstimatePreviewDto> GetEstimatePreviewAsync(EstimatePreviewInput input);
-
     Task<CasualCourseDetailDto> GetDetailAsync(Guid id);
 
     Task<CasualCourseDto> SubmitAsync(Guid id);
