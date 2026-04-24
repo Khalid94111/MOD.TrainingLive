@@ -24,6 +24,7 @@ namespace MOD.Training.Training.CasualCourses;
 public class CasualCourseAppService(
     IRepository<CasualCourse, Guid> repository,
     IRepository<CasualCourseFinancial, Guid> financialRepo,
+    IRepository<CasualCourseFinancialItemRank, Guid> rankRepo,
     IRepository<CasualCourseNomination, Guid> nominationRepo,
     IRepository<TenantCourse, Guid> tenantCourseRepo,
     IRepository<FinancialItem, Guid> financialItemRepo,
@@ -33,6 +34,8 @@ public class CasualCourseAppService(
     CasualCourseValidator validator,
     NominationConditionValidator conditionValidator,
     FinancialItemDefaultResolver defaultResolver,
+    FundingScenarioSourceResolver scenarioSourceResolver,
+    CasualCourseRankBreakdownManager rankManager,
     EmployeeResolver employeeResolver,
     CourseNameResolver courseNameResolver,
     CasualCourseUnitScope unitScope,
@@ -43,14 +46,6 @@ public class CasualCourseAppService(
     CreateUpdateCasualCourseToEntityMapper fromCreateMapper)
     : ApplicationService, ICasualCourseAppService
 {
-    // Hardcoded travel-item code set — Phase 4B will replace with FinancialItem.IsTravel flag
-    private static readonly HashSet<string> TravelItemCodes = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "TRAVEL_ALLOWANCE",
-        "ACCOMMODATION",
-        "TRANSPORT",
-    };
-
     // ─── READ ──────────────────────────────────────────────────────────
 
     public async Task<CasualCourseDto> GetAsync(Guid id)
@@ -165,42 +160,105 @@ public class CasualCourseAppService(
 
     public async Task<EstimatePreviewDto> GetEstimatePreviewAsync(EstimatePreviewInput input)
     {
+        // UTM/Employee callers see aggregate totals only; UGM + above see the per-rank breakdown.
+        // Role names match the seeder (GtmsRoleNames isn't defined as a constants class).
+        var includeRankBreakdown = await employeeResolver.IsCallerInRolesAsync(
+            "UnitGeneralManager",
+            "TrainingDirectorateStaff",
+            "TrainingDirector",
+            "TenantHead");
+
+        if (input.NomineeEmployeeIds == null || input.NomineeEmployeeIds.Count == 0)
+            throw new BusinessException("Training:CasualCourse:NoNomineesForPreview");
+
+        var nominees = await employeeResolver.GetEmployeesWithRanksAsync(
+            input.NomineeEmployeeIds.Distinct().ToList());
+        if (nominees.Count == 0)
+            throw new BusinessException("Training:CasualCourse:NoNomineesForPreview");
+
+        var nomineesByRank = nominees.GroupBy(n => n.RankId).ToList();
+
         var defQ = await defaultsRepo.WithDetailsAsync(x => x.FinancialItem);
         var defaults = await AsyncExecuter.ToListAsync(
             defQ.Where(x => x.CourseType == input.CourseType).OrderBy(x => x.SortOrder));
 
         var items = new List<EstimatePreviewItemDto>();
-        decimal total = 0;
+        decimal grandTotal = 0m;
+
         foreach (var def in defaults)
         {
             var fi = def.FinancialItem;
-            var rate = fi.DefaultAmountOMR;
-            var effectiveDays = fi.IsPerDay ? (input.DurationDays + fi.ExtraDaysBefore + fi.ExtraDaysAfter) : 1;
-            var effectiveCount = fi.IsPerNominee ? input.NomineeCount : 1;
-            var amount = defaultResolver.ComputeSubtotal(
-                rate, fi.IsPerDay, fi.IsPerNominee,
-                input.DurationDays, fi.ExtraDaysBefore, fi.ExtraDaysAfter, input.NomineeCount);
+            var effectiveDays = fi.IsPerDay
+                ? input.DurationDays + fi.ExtraDaysBefore + fi.ExtraDaysAfter
+                : 1;
 
-            items.Add(new EstimatePreviewItemDto
+            var itemDto = new EstimatePreviewItemDto
             {
                 FinancialItemId = fi.Id,
                 FinancialItemName = fi.NameAr,
                 IsPerDay = fi.IsPerDay,
                 IsPerNominee = fi.IsPerNominee,
-                Rate = rate,
                 EffectiveDays = effectiveDays,
-                EffectiveCount = effectiveCount,
-                ComputedAmount = amount,
-            });
-            total += amount;
+                RankBreakdown = includeRankBreakdown ? new List<RankBreakdownRowDto>() : null,
+            };
+
+            decimal itemTotal = 0m;
+
+            if (!fi.IsPerNominee)
+            {
+                // Flat item — rate doesn't depend on rank. Single synthetic "ثابت" row for UGM view.
+                var (rate, source) = await defaultResolver.ResolveRateWithSourceAsync(fi.Id, rankId: null);
+                itemTotal = rate * effectiveDays;
+
+                if (includeRankBreakdown)
+                {
+                    itemDto.RankBreakdown!.Add(new RankBreakdownRowDto
+                    {
+                        RankId = Guid.Empty,
+                        RankNameAr = "ثابت",
+                        NomineeCount = 1,
+                        RatePerUnitOMR = rate,
+                        RateSource = source,
+                        SubtotalOMR = itemTotal,
+                    });
+                }
+            }
+            else
+            {
+                foreach (var rankGroup in nomineesByRank)
+                {
+                    var count = rankGroup.Count();
+                    var (rate, source) = await defaultResolver.ResolveRateWithSourceAsync(fi.Id, rankGroup.Key);
+                    var subtotal = rate * effectiveDays * count;
+                    itemTotal += subtotal;
+
+                    if (includeRankBreakdown)
+                    {
+                        itemDto.RankBreakdown!.Add(new RankBreakdownRowDto
+                        {
+                            RankId = rankGroup.Key,
+                            RankNameAr = rankGroup.First().RankNameAr,
+                            NomineeCount = count,
+                            RatePerUnitOMR = rate,
+                            RateSource = source,
+                            SubtotalOMR = subtotal,
+                        });
+                    }
+                }
+            }
+
+            itemDto.TotalAmountOMR = itemTotal;
+            grandTotal += itemTotal;
+            items.Add(itemDto);
         }
 
         return new EstimatePreviewDto
         {
             Items = items,
-            Total = total,
+            Total = grandTotal,
             CourseType = input.CourseType,
-            ComputedAt = DateTime.UtcNow,
+            ComputedFor = includeRankBreakdown ? "RankBreakdown" : "Aggregate",
+            ComputedAt = Clock.Now,
         };
     }
 
@@ -366,51 +424,126 @@ public class CasualCourseAppService(
             throw new BusinessException("Training:CasualCourse:InvalidStatusTransition");
 
         entity.FundingScenario = input.FundingScenario;
-        entity.EstimatedTotalCost = input.EstimatedTotalCost;
 
-        // Build travel-FI lookup for Source derivation
+        // Pre-load FinancialItems referenced in this assignment.
         var reqFiIds = input.FinancialItems.Select(x => x.FinancialItemId).Distinct().ToList();
         var fiQ = await financialItemRepo.GetQueryableAsync();
-        var fis = await AsyncExecuter.ToListAsync(fiQ.Where(x => reqFiIds.Contains(x.Id)));
-        var travelFiIds = fis.Where(f => TravelItemCodes.Contains(f.Code)).Select(f => f.Id).ToHashSet();
+        var fis = (await AsyncExecuter.ToListAsync(fiQ.Where(x => reqFiIds.Contains(x.Id))))
+            .ToDictionary(x => x.Id);
 
-        // Upsert + delete diff
-        var existingQ = await financialRepo.GetQueryableAsync();
-        var existing = await AsyncExecuter.ToListAsync(
-            existingQ.Where(x => x.CasualCourseId == id));
-        var existingById = existing.ToDictionary(x => x.Id);
-        var inputIds = input.FinancialItems.Where(x => x.Id.HasValue).Select(x => x.Id!.Value).ToHashSet();
+        // Existing parents + rank rows for diff-based upsert.
+        var parentQ = await financialRepo.GetQueryableAsync();
+        var existingParents = await AsyncExecuter.ToListAsync(parentQ.Where(x => x.CasualCourseId == id));
+        var parentById = existingParents.ToDictionary(x => x.Id);
+        var inputParentIds = input.FinancialItems.Where(x => x.Id.HasValue).Select(x => x.Id!.Value).ToHashSet();
 
-        foreach (var orphan in existing.Where(e => !inputIds.Contains(e.Id)))
+        // Orphan parents — cascade rank rows via DB-level FK cascade.
+        foreach (var orphan in existingParents.Where(e => !inputParentIds.Contains(e.Id)))
             await financialRepo.DeleteAsync(orphan, autoSave: true);
 
         foreach (var line in input.FinancialItems)
         {
-            var src = DeriveSource(input.FundingScenario, travelFiIds.Contains(line.FinancialItemId));
-            if (line.Id.HasValue && existingById.TryGetValue(line.Id.Value, out var row))
+            fis.TryGetValue(line.FinancialItemId, out var fi);
+            // Source derivation lives in FundingScenarioSourceResolver — single source of truth.
+            // For unknown FIs we fall back to FundingSource (defensive; should not happen with valid input).
+            var src = fi != null
+                ? scenarioSourceResolver.Resolve(input.FundingScenario, fi)
+                : FinancialAmountSource.FundingSource;
+
+            CasualCourseFinancial parent;
+            if (line.Id.HasValue && parentById.TryGetValue(line.Id.Value, out var existing))
             {
-                row.FinancialItemId = line.FinancialItemId;
-                row.EstimatedAmountOMR = line.Amount;
-                row.Notes = line.Notes;
-                row.Source = src;
-                await financialRepo.UpdateAsync(row, autoSave: true);
+                existing.FinancialItemId = line.FinancialItemId;
+                existing.Notes = line.Notes;
+                existing.Source = src;
+                await financialRepo.UpdateAsync(existing, autoSave: true);
+                parent = existing;
             }
             else
             {
-                var newRow = new CasualCourseFinancial(
-                    GuidGenerator.Create(), id, line.FinancialItemId, line.Amount, src)
-                {
-                    Notes = line.Notes,
-                };
-                await financialRepo.InsertAsync(newRow, autoSave: true);
+                parent = await financialRepo.InsertAsync(
+                    new CasualCourseFinancial(
+                        GuidGenerator.Create(),
+                        id,
+                        line.FinancialItemId,
+                        estimatedAmount: 0m,
+                        src)
+                    {
+                        Notes = line.Notes,
+                    },
+                    autoSave: true);
             }
+
+            await UpsertRankRowsAsync(parent, fi, entity.DurationDays, line.Ranks);
+
+            // Recompute parent total from the freshly-written rank rows.
+            var rankQ = await rankRepo.GetQueryableAsync();
+            var rows = await AsyncExecuter.ToListAsync(
+                rankQ.Where(x => x.CasualCourseFinancialId == parent.Id));
+            parent.EstimatedAmountOMR = rows.Sum(r => r.SubtotalOMR);
+            await financialRepo.UpdateAsync(parent, autoSave: true);
         }
 
+        // Course-level total.
+        var allParentsQ = await financialRepo.GetQueryableAsync();
+        var allParents = await AsyncExecuter.ToListAsync(
+            allParentsQ.Where(x => x.CasualCourseId == id));
+        entity.EstimatedTotalCost = allParents.Sum(p => p.EstimatedAmountOMR);
+
         if (input.Commit)
+        {
+            if (entity.EstimatedTotalCost <= 0)
+                throw new BusinessException("Training:CasualCourse:CostRequired");
             entity.Status = CasualCourseStatus.StaffReviewed;
+        }
 
         await repository.UpdateAsync(entity, autoSave: true);
         return await BuildDtoAsync(entity);
+    }
+
+    private async Task UpsertRankRowsAsync(
+        CasualCourseFinancial parent, FinancialItem? fi, int durationDays, List<AssignmentRankLineDto> lines)
+    {
+        var rankQ = await rankRepo.GetQueryableAsync();
+        var existing = (await AsyncExecuter.ToListAsync(
+            rankQ.Where(x => x.CasualCourseFinancialId == parent.Id)))
+            .ToDictionary(x => x.Id);
+
+        var keptIds = lines.Where(l => l.Id.HasValue).Select(l => l.Id!.Value).ToHashSet();
+        foreach (var orphan in existing.Values.Where(r => !keptIds.Contains(r.Id)))
+            await rankRepo.DeleteAsync(orphan);
+
+        foreach (var line in lines)
+        {
+            var isPerDay = fi?.IsPerDay ?? false;
+            var isPerNominee = fi?.IsPerNominee ?? false;
+            var extraBefore = fi?.ExtraDaysBefore ?? 0;
+            var extraAfter = fi?.ExtraDaysAfter ?? 0;
+            var subtotal = defaultResolver.ComputeSubtotal(
+                line.RatePerUnitOMR, isPerDay, isPerNominee,
+                durationDays, extraBefore, extraAfter, line.NomineeCount);
+
+            if (line.Id.HasValue && existing.TryGetValue(line.Id.Value, out var row))
+            {
+                row.RankId = line.RankId;
+                row.NomineeCount = line.NomineeCount;
+                row.RatePerUnitOMR = line.RatePerUnitOMR;
+                row.SubtotalOMR = subtotal;
+                await rankRepo.UpdateAsync(row);
+            }
+            else
+            {
+                await rankRepo.InsertAsync(
+                    new CasualCourseFinancialItemRank(
+                        GuidGenerator.Create(),
+                        parent.Id,
+                        line.RankId,
+                        line.NomineeCount,
+                        line.RatePerUnitOMR,
+                        subtotal,
+                        FinancialItemDefaultResolver.RateSourceDefaultAmount));
+            }
+        }
     }
 
     [Authorize(TrainingPermissions.CasualCourses.TDApprove)]
@@ -499,14 +632,6 @@ public class CasualCourseAppService(
     }
 
     // ─── PRIVATE HELPERS ───────────────────────────────────────────────
-
-    private static FinancialAmountSource DeriveSource(FundingScenario scenario, bool isTravelItem) => scenario switch
-    {
-        FundingScenario.FundingSourceCoversAll    => FinancialAmountSource.FundingSource,
-        FundingScenario.FundingSourceCoversCourse => isTravelItem ? FinancialAmountSource.FinancialItem : FinancialAmountSource.FundingSource,
-        FundingScenario.FinancialItemsCoverAll    => FinancialAmountSource.FinancialItem,
-        _ => FinancialAmountSource.FundingSource,
-    };
 
     private async Task DiffNomineesAsync(CasualCourse entity, List<Guid> newNomineeEmployeeIds)
     {

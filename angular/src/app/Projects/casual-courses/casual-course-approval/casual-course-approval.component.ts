@@ -7,6 +7,7 @@ import { CasualCourseService, CasualCourseFinancialService } from 'src/app/proxy
 import type {
   CasualCourseDetailDto,
   CasualCourseFinancialDto,
+  EstimatePreviewDto,
 } from 'src/app/proxy/training/casual-courses/dtos/models';
 
 import {
@@ -40,6 +41,7 @@ export class CasualCourseApprovalComponent implements OnInit {
   courseId = signal<string>('');
   casualCourse = signal<CasualCourseDetailDto | null>(null);
   financials = signal<CasualCourseFinancialDto[]>([]);
+  preview = signal<EstimatePreviewDto | null>(null);
   loading = signal(true);
   error = signal<string | null>(null);
   actionBusy = signal(false);
@@ -51,11 +53,13 @@ export class CasualCourseApprovalComponent implements OnInit {
   rejectReason = signal('');
   rejectSubmitting = signal(false);
 
+  isUGMTurn = computed(() => this.casualCourse()?.status === CasualCourseStatus.Submitted);
   isTDTurn = computed(() => this.casualCourse()?.status === CasualCourseStatus.StaffReviewed);
   isTHTurn = computed(() => this.casualCourse()?.status === CasualCourseStatus.TDApproved);
-  canAct = computed(() => this.isTDTurn() || this.isTHTurn());
+  canAct = computed(() => this.isUGMTurn() || this.isTDTurn() || this.isTHTurn());
 
   actorLabel = computed(() => {
+    if (this.isUGMTurn()) return 'مدير عام الوحدة (UGM)';
     if (this.isTDTurn()) return 'مدير التدريب (TD)';
     if (this.isTHTurn()) return 'رئيس التدريب (TH)';
     return 'عرض فقط';
@@ -107,6 +111,7 @@ export class CasualCourseApprovalComponent implements OnInit {
       ]);
       this.casualCourse.set(detail);
       this.financials.set(financials);
+      await this.loadPreview(detail);
     } catch (e: unknown) {
       this.error.set(this.mapError(e));
     } finally {
@@ -114,8 +119,45 @@ export class CasualCourseApprovalComponent implements OnInit {
     }
   }
 
+  private async loadPreview(detail: CasualCourseDetailDto): Promise<void> {
+    const nomineeIds = (detail.nominations ?? [])
+      .map(n => n.employeeId)
+      .filter((v): v is string => !!v);
+    if (
+      !detail.tenantCourseId ||
+      detail.courseType === undefined ||
+      !detail.durationDays ||
+      nomineeIds.length === 0
+    ) {
+      this.preview.set(null);
+      return;
+    }
+    try {
+      const result = await firstValueFrom(
+        this.service.getEstimatePreview({
+          tenantCourseId: detail.tenantCourseId,
+          courseType: detail.courseType,
+          durationDays: detail.durationDays,
+          nomineeEmployeeIds: nomineeIds,
+        }),
+      );
+      this.preview.set(result);
+    } catch {
+      // Preview is informational; swallow failures so the page still renders.
+      this.preview.set(null);
+    }
+  }
+
+  rateSourceLabel(source: string | undefined): string {
+    if (source === 'RankOverride') return 'معدل الرتبة';
+    if (source === 'DefaultAmount') return 'افتراضي';
+    return source ?? '—';
+  }
+
   async onApprove(): Promise<void> {
-    if (!this.canAct() || this.costGateBlocked() || this.actionBusy()) return;
+    if (!this.canAct() || this.actionBusy()) return;
+    // UGM approves on Submitted; cost isn't assigned yet, so skip the cost gate for UGM.
+    if (!this.isUGMTurn() && this.costGateBlocked()) return;
     this.actionBusy.set(true);
     this.error.set(null);
     try {
@@ -125,7 +167,9 @@ export class CasualCourseApprovalComponent implements OnInit {
         note: this.approvalNote().trim() || 'معتمد',
         isReturnReason: false,
       };
-      if (this.isTDTurn()) {
+      if (this.isUGMTurn()) {
+        await firstValueFrom(this.service.ugmApprove(this.courseId(), note));
+      } else if (this.isTDTurn()) {
         await firstValueFrom(this.service.tdApprove(this.courseId(), note));
       } else {
         await firstValueFrom(this.service.headApprove(this.courseId(), note));

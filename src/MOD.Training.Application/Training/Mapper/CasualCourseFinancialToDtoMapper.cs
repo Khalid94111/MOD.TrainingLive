@@ -11,6 +11,10 @@ public partial class CasualCourseFinancialToDtoMapper : MapperBase<CasualCourseF
     [MapperIgnoreTarget(nameof(CasualCourseFinancialDto.FinancialItemName))]
     [MapperIgnoreTarget(nameof(CasualCourseFinancialDto.IsPerDay))]
     [MapperIgnoreTarget(nameof(CasualCourseFinancialDto.IsPerNominee))]
+    [MapperIgnoreTarget(nameof(CasualCourseFinancialDto.ExtraDaysBefore))]
+    [MapperIgnoreTarget(nameof(CasualCourseFinancialDto.ExtraDaysAfter))]
+    [MapperIgnoreTarget(nameof(CasualCourseFinancialDto.EffectiveDays))]
+    [MapperIgnoreTarget(nameof(CasualCourseFinancialDto.Ranks))]
     public override partial CasualCourseFinancialDto Map(CasualCourseFinancial source);
     public override partial void Map(CasualCourseFinancial source, CasualCourseFinancialDto destination);
 }

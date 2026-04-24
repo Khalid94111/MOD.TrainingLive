@@ -174,7 +174,7 @@
       }
     </div>
 
-    <!-- Section E — Cost preview -->
+    <!-- Section E — Cost preview (aggregate for UTM; rank-aware server-side) -->
     <div class="gtms-card">
       <h3 class="section-title">معاينة التكلفة التقديرية</h3>
       @if (previewLoading()) {
@@ -189,20 +189,24 @@
             <thead>
               <tr>
                 <th>البند</th>
-                <th class="center">المعدل</th>
-                <th class="center">الأيام</th>
-                <th class="center">العدد</th>
-                <th class="center">المبلغ</th>
+                <th class="center">النوع</th>
+                <th class="center">أيام فعّالة</th>
+                <th class="center">المرشحون</th>
+                <th class="center">المجموع (ر.ع)</th>
               </tr>
             </thead>
             <tbody>
               @for (item of preview()?.items ?? []; track item.financialItemId) {
                 <tr>
                   <td>{{ item.financialItemName }}</td>
-                  <td class="center">{{ item.rate }}</td>
+                  <td class="center">
+                    <span class="chip" [class.chip-info]="item.isPerNominee" [class.chip-neutral]="!item.isPerNominee">
+                      {{ item.isPerNominee ? 'حسب الرتبة' : 'ثابت' }}
+                    </span>
+                  </td>
                   <td class="center">{{ item.effectiveDays }}</td>
-                  <td class="center">{{ item.effectiveCount }}</td>
-                  <td class="center cell-money">{{ item.computedAmount | number:'1.3-3' }}</td>
+                  <td class="center">{{ item.isPerNominee ? nomineeCount() : '—' }}</td>
+                  <td class="center cell-money">{{ item.totalAmountOMR | number:'1.3-3' }}</td>
                 </tr>
               }
             </tbody>
@@ -213,6 +217,10 @@
               </tr>
             </tfoot>
           </table>
+        </div>
+        <div class="alert alert-info mt-2">
+          <span class="alert-icon">ℹ️</span>
+          البنود المرتبطة بالرتبة تُعرض كمجموع واحد لمرشحيك. التفصيل حسب الرتبة مرئي للمراجعين الأعلى.
         </div>
         <p class="preview-caption">
           {{ l.t('::Training.CasualCourse.EstimateDisclaimer') }}

@@ -1,5 +1,6 @@
 import type { EntityDto, FullAuditedEntityDto, PagedAndSortedResultRequestDto } from '@abp/ng.core';
 import type { CourseType } from '../../enums/course-type.enum';
+import type { FinancialItemType } from '../../enums/financial-item-type.enum';
 import type { PricingType } from '../../enums/pricing-type.enum';
 import type { ApprovalStatus } from '../../enums/approval-status.enum';
 
@@ -35,6 +36,7 @@ export interface CreateUpdateFinancialItemDto {
   isPerNominee?: boolean;
   extraDaysBefore?: number;
   extraDaysAfter?: number;
+  itemType?: FinancialItemType | null;
 }
 
 export interface CreateUpdateFinancialItemRankAmountDto {
@@ -88,6 +90,7 @@ export interface FinancialItemDto extends EntityDto<string> {
   isPerNominee?: boolean;
   extraDaysBefore?: number;
   extraDaysAfter?: number;
+  itemType?: FinancialItemType | null;
 }
 
 export interface FinancialItemGetListInput extends PagedAndSortedResultRequestDto {

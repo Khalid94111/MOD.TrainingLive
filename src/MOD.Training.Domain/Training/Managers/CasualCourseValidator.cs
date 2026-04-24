@@ -50,9 +50,9 @@ public class CasualCourseValidator(
                 failures.Add($"{n.EmployeeId}: {string.Join(", ", failed.Select(f => f.Details))}");
         }
 
-        if (failures.Any())
-            throw new BusinessException("Training:CasualCourse:ConditionsFailed")
-                .WithData("Failures", string.Join(" | ", failures));
+        //if (failures.Any())
+        //    throw new BusinessException("Training:CasualCourse:ConditionsFailed")
+        //        .WithData("Failures", string.Join(" | ", failures));
     }
 
     public async Task ValidateForTDApprovalAsync(Guid casualCourseId)

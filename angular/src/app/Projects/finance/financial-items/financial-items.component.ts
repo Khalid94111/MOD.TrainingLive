@@ -9,9 +9,30 @@ import {
   FinancialItemRankAmountDto,
   CreateUpdateFinancialItemRankAmountDto,
 } from 'src/app/proxy/training/finance/dtos';
+import { FinancialItemType } from 'src/app/proxy/training/enums/financial-item-type.enum';
 import { HrLookupService } from 'src/app/proxy/training/hr-integration/hr-lookup.service';
 import { RankLookupDto } from 'src/app/proxy/training/hr-integration/models';
 import { TrainingLocalizationHelper } from '../../shared';
+
+const ITEM_TYPE_LABELS_AR: Record<FinancialItemType, string> = {
+  [FinancialItemType.Other]: 'أخرى',
+  [FinancialItemType.CourseCost]: 'تكلفة الدورة',
+  [FinancialItemType.Ticket]: 'تذكرة',
+  [FinancialItemType.Insurance]: 'تأمين',
+  [FinancialItemType.Visa]: 'تأشيرة',
+  [FinancialItemType.Allowance]: 'بدل سفر',
+  [FinancialItemType.Clothing]: 'بدل ملابس',
+};
+
+const ITEM_TYPE_ORDER: FinancialItemType[] = [
+  FinancialItemType.CourseCost,
+  FinancialItemType.Ticket,
+  FinancialItemType.Allowance,
+  FinancialItemType.Clothing,
+  FinancialItemType.Insurance,
+  FinancialItemType.Visa,
+  FinancialItemType.Other,
+];
 
 interface ParentItemView extends FinancialItemDto {
   children: FinancialItemDto[];
@@ -62,6 +83,10 @@ export class FinancialItemsComponent implements OnInit {
   fIsPerNominee = signal(false);
   fExtraDaysBefore = signal(0);
   fExtraDaysAfter = signal(0);
+  fItemType = signal<FinancialItemType | null>(null);
+
+  FinancialItemType = FinancialItemType;
+  itemTypeOptions = ITEM_TYPE_ORDER;
 
   // Rank amount dialog
   isRankDialogOpen = signal(false);
@@ -184,6 +209,7 @@ export class FinancialItemsComponent implements OnInit {
     this.fIsPerNominee.set(item.isPerNominee ?? false);
     this.fExtraDaysBefore.set(item.extraDaysBefore ?? 0);
     this.fExtraDaysAfter.set(item.extraDaysAfter ?? 0);
+    this.fItemType.set(item.itemType ?? null);
     this.isDialogOpen.set(true);
   }
 
@@ -198,12 +224,17 @@ export class FinancialItemsComponent implements OnInit {
     this.fIsPerNominee.set(false);
     this.fExtraDaysBefore.set(0);
     this.fExtraDaysAfter.set(0);
+    this.fItemType.set(null);
   }
 
   async onSave(): Promise<void> {
     if (!this.fNameAr().trim() || !this.fVoteCode().trim()) return;
+    const parentId = this.fParentId() || undefined;
+    // Parents are grouping containers — ItemType lives on leaves only. The server
+    // enforces this too, but mirror the rule client-side so the payload is clean.
+    const itemType = parentId ? this.fItemType() : null;
     const data: CreateUpdateFinancialItemDto = {
-      parentId: this.fParentId() || undefined,
+      parentId,
       nameAr: this.fNameAr().trim(),
       nameEn: this.fNameEn().trim() || undefined,
       voteCode: this.fVoteCode().trim(),
@@ -213,6 +244,7 @@ export class FinancialItemsComponent implements OnInit {
       isPerNominee: this.fIsPerNominee(),
       extraDaysBefore: this.fIsPerDay() ? this.fExtraDaysBefore() : 0,
       extraDaysAfter: this.fIsPerDay() ? this.fExtraDaysAfter() : 0,
+      itemType,
     };
     if (this.isEditMode() && this.editingId()) {
       await firstValueFrom(this.fiService.update(this.editingId()!, data));
@@ -383,6 +415,17 @@ export class FinancialItemsComponent implements OnInit {
     if (!parentId) return '—';
     const p = this.items().find(x => x.id === parentId);
     return p?.nameAr ?? '—';
+  }
+
+  itemTypeLabel(type: FinancialItemType | null | undefined): string {
+    if (type == null) return '—';
+    return ITEM_TYPE_LABELS_AR[type] ?? '—';
+  }
+
+  onItemTypeChange(raw: string): void {
+    if (raw === '') { this.fItemType.set(null); return; }
+    const parsed = +raw;
+    this.fItemType.set(Number.isFinite(parsed) ? (parsed as FinancialItemType) : null);
   }
 
   trackById(_: number, i: FinancialItemDto): string { return i.id ?? ''; }

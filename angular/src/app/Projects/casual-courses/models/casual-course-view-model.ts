@@ -15,7 +15,7 @@ export function actionForRow(row: CasualCourseDto): CasualCourseRowAction {
     case CasualCourseStatus.Draft:
       return { labelAr: 'تعديل / إرسال', route: id => `/training/casual-courses/${id}/edit`, allowedFor: 'utm' };
     case CasualCourseStatus.Submitted:
-      return { labelAr: 'اعتماد UGM', route: id => `/training/casual-courses/${id}/review`, allowedFor: 'ugm' };
+      return { labelAr: 'اعتماد UGM', route: id => `/training/casual-courses/${id}/approve`, allowedFor: 'ugm' };
     case CasualCourseStatus.UGMApproved:
       return { labelAr: 'بدء المراجعة', route: id => `/training/casual-courses/${id}/review`, allowedFor: 'staff' };
     case CasualCourseStatus.UnderReview:

@@ -1,4 +1,5 @@
 using System;
+using MOD.Training.Training.Enums;
 using Volo.Abp.Domain.Entities.Auditing;
 using Volo.Abp.MultiTenancy;
 
@@ -8,11 +9,11 @@ public class FinancialItem : FullAuditedEntity<Guid>, IMultiTenant
 {
     public FinancialItem(Guid id) : base(id)
     {
-        
+
     }
     public FinancialItem()
     {
-        
+
     }
     public Guid? TenantId { get; set; }
     public Guid? ParentId { get; set; }
@@ -22,6 +23,13 @@ public class FinancialItem : FullAuditedEntity<Guid>, IMultiTenant
     public string VoteCode { get; set; } = default!;
     public bool IsGeneral { get; set; }
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// Classification for scenario-aware source derivation. NULL for parent (grouping)
+    /// rows — a row is a parent iff its Id appears as someone else's ParentId. Leaves
+    /// carry a concrete value; unclassifiable leaves use <see cref="FinancialItemType.Other"/>.
+    /// </summary>
+    public FinancialItemType? ItemType { get; set; }
 
     // CHG-02 + CHG-07
     public decimal DefaultAmountOMR { get; set; }

@@ -235,6 +235,26 @@
   font-weight: 700;
 }
 
+/* Classification chip — identifies a leaf as course-cost vs a travel/ancillary item. */
+.type-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-inline-start: 6px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: #eef2ff;
+  color: #4338ca;
+  vertical-align: middle;
+}
+
+.type-chip-cost {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color: #92400e;
+}
+
 .rank-count-pill {
   display: inline-flex;
   align-items: center;

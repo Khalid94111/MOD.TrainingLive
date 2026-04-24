@@ -17,7 +17,11 @@
       "Bash(npx tsc *)",
       "Bash(npx ng *)",
       "Bash(grep -rE \"\\\\\"Training:.*\\\\\"|\\\\\"Training\\\\\\\\.[A-Z].*\\\\\"\" D:/Training/MOD.Training/src/MOD.Training.Application/Training/)",
-      "Bash(grep -oE \"\\\\\"Training:[^\\\\\"]+\\\\\"|\\\\\"Training\\\\\\\\.[^\\\\\"]+\\\\\"\")"
+      "Bash(grep -oE \"\\\\\"Training:[^\\\\\"]+\\\\\"|\\\\\"Training\\\\\\\\.[^\\\\\"]+\\\\\"\")",
+      "Bash(git -C .. add angular/src/app/Projects/casual-courses/)",
+      "Bash(git -C .. commit -m ' *)",
+      "Bash(git -C .. add angular/src/app/Projects/casual-courses/casual-course-request/)",
+      "Bash(./node_modules/.bin/ng build *)"
     ]
   }
 }

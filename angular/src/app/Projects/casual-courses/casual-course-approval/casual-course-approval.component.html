@@ -86,7 +86,71 @@
       }
     </div>
 
-    @if (canAct() && costGateBlocked()) {
+    <!-- Rank-aware estimate preview (UGM+ view) -->
+    @if (preview(); as p) {
+      <div class="gtms-card">
+        <div class="section-header">
+          <h3 class="section-title">معاينة التكلفة حسب الرتبة</h3>
+          <span class="section-meta">الإجمالي المقدَّر: {{ p.total | number:'1.3-3' }} ر.ع</span>
+        </div>
+        <div class="gtms-table-wrap">
+          <table class="gtms-table">
+            <thead>
+              <tr>
+                <th>البند / الرتبة</th>
+                <th class="center">السعر (ر.ع)</th>
+                <th class="center">أيام فعّالة</th>
+                <th class="center">العدد</th>
+                <th class="center">المجموع (ر.ع)</th>
+                <th class="center">المصدر</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of p.items ?? []; track item.financialItemId) {
+                <tr class="cell-bold">
+                  <td>{{ item.financialItemName }}</td>
+                  <td class="center">—</td>
+                  <td class="center">{{ item.effectiveDays }}</td>
+                  <td class="center">—</td>
+                  <td class="center cell-money">{{ item.totalAmountOMR | number:'1.3-3' }}</td>
+                  <td class="center">—</td>
+                </tr>
+                @if (item.rankBreakdown && item.rankBreakdown.length > 0) {
+                  @for (row of item.rankBreakdown; track row.rankId) {
+                    <tr class="rank-row">
+                      <td class="indent-1">└── {{ row.rankNameAr }}</td>
+                      <td class="center">{{ row.ratePerUnitOMR | number:'1.3-3' }}</td>
+                      <td class="center">{{ item.effectiveDays }}</td>
+                      <td class="center">{{ row.nomineeCount }}</td>
+                      <td class="center cell-money">{{ row.subtotalOMR | number:'1.3-3' }}</td>
+                      <td class="center">
+                        <span class="chip"
+                              [class.chip-info]="row.rateSource === 'RankOverride'"
+                              [class.chip-neutral]="row.rateSource !== 'RankOverride'">
+                          {{ rateSourceLabel(row.rateSource) }}
+                        </span>
+                      </td>
+                    </tr>
+                  }
+                }
+              }
+            </tbody>
+            <tfoot>
+              <tr class="total-row">
+                <td colspan="4">الإجمالي المقدَّر</td>
+                <td class="center cell-money">{{ p.total | number:'1.3-3' }} ر.ع</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <p class="preview-caption">
+          إسقاط تقديري — ليس التزامًا ماليًا. الأرقام النهائية تُعتمد من البنود المالية أعلاه.
+        </p>
+      </div>
+    }
+
+    @if (canAct() && !isUGMTurn() && costGateBlocked()) {
       <div class="alert alert-danger">
         <span class="alert-icon">🚫</span>
         <div>
@@ -96,7 +160,7 @@
       </div>
     }
 
-    @if (canAct() && !costGateBlocked()) {
+    @if (canAct() && (isUGMTurn() || !costGateBlocked())) {
       <div class="gtms-card">
         <label class="form-label">ملاحظة الاعتماد (اختياري)</label>
         <textarea
@@ -118,10 +182,12 @@
           🔁 إعادة إلى مُنشئ الطلب
         </button>
         <button type="button" class="btn btn-success"
-          [disabled]="actionBusy() || costGateBlocked()"
-          [title]="costGateBlocked() ? 'لا يمكن الاعتماد — التكلفة الإجمالية غير محددة' : ''"
+          [disabled]="actionBusy() || (!isUGMTurn() && costGateBlocked())"
+          [title]="(!isUGMTurn() && costGateBlocked()) ? 'لا يمكن الاعتماد — التكلفة الإجمالية غير محددة' : ''"
           (click)="onApprove()">
-          @if (isTDTurn()) { ✅ اعتماد TD } @else { ✅ اعتماد نهائي TH }
+          @if (isUGMTurn()) { ✅ اعتماد UGM }
+          @else if (isTDTurn()) { ✅ اعتماد TD }
+          @else { ✅ اعتماد نهائي TH }
         </button>
       </div>
     } @else {

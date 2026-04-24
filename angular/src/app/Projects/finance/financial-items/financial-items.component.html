@@ -152,6 +152,11 @@
                     <td>
                       <div class="cell-bold">{{ child.nameAr }}</div>
                       @if (child.nameEn) { <span class="cell-sub">{{ child.nameEn }}</span> }
+                      @if (child.itemType != null) {
+                        <span class="type-chip" [class.type-chip-cost]="child.itemType === FinancialItemType.CourseCost">
+                          🏷️ {{ itemTypeLabel(child.itemType) }}
+                        </span>
+                      }
                     </td>
                     <td class="cell-sub-cell">—</td>
                     <td class="center">
@@ -308,6 +313,26 @@
             <span class="form-hint">يُستخدم عند غياب مبلغ مخصص للرتبة</span>
           </div>
         </div>
+
+        @if (fParentId()) {
+          <div class="form-row">
+            <div class="form-group flex-2">
+              <label class="form-label">🏷️ التصنيف</label>
+              <select class="form-input"
+                      [value]="fItemType() ?? ''"
+                      (change)="onItemTypeChange($any($event.target).value)">
+                <option value="">— غير مصنّف —</option>
+                @for (t of itemTypeOptions; track t) {
+                  <option [value]="t">{{ itemTypeLabel(t) }}</option>
+                }
+              </select>
+              <span class="form-hint">
+                يستخدمه سيناريو التمويل الثاني للتمييز بين <strong>تكلفة الدورة</strong> (الجهة الممولة) وبنود السفر (البند المالي).
+                البنود الرئيسية (بدون أب) لا تُصنَّف.
+              </span>
+            </div>
+          </div>
+        }
 
         <div class="flags-section">
           <div class="flag-card" [class.flag-active]="fIsPerDay()">

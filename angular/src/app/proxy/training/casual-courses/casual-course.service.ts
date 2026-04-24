@@ -58,7 +58,7 @@ export class CasualCourseService {
     this.restService.request<any, EstimatePreviewDto>({
       method: 'GET',
       url: '/api/app/casual-course/estimate-preview',
-      params: { tenantCourseId: input.tenantCourseId, courseType: input.courseType, durationDays: input.durationDays, nomineeCount: input.nomineeCount },
+      params: { tenantCourseId: input.tenantCourseId, courseType: input.courseType, durationDays: input.durationDays, nomineeEmployeeIds: input.nomineeEmployeeIds },
     },
     { apiName: this.apiName,...config });
   

@@ -76,6 +76,9 @@ public class FinancialItemAppService(
         entity.Code = GenerateCode(input.NameEn);
         entity.IsGeneral = !input.ParentId.HasValue; // Parents are general, sub-items are not
 
+        // Parent rows are grouping containers — ItemType lives on leaves only.
+        if (!input.ParentId.HasValue) entity.ItemType = null;
+
         await financialItemRepo.InsertAsync(entity, autoSave: true);
 
         if (!input.ParentId.HasValue)
@@ -107,6 +110,9 @@ public class FinancialItemAppService(
         toEntityMapper.Map(input, entity);
         entity.Code = GenerateCode(input.NameAr);
         entity.IsGeneral = !input.ParentId.HasValue;
+
+        // Parent rows are grouping containers — ItemType lives on leaves only.
+        if (!input.ParentId.HasValue) entity.ItemType = null;
 
         await financialItemRepo.UpdateAsync(entity);
         return toDtoMapper.Map(entity);

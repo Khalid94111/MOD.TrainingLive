@@ -4,6 +4,7 @@ using MOD.Training.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Volo.Abp.EntityFrameworkCore;
 
@@ -12,9 +13,11 @@ using Volo.Abp.EntityFrameworkCore;
 namespace MOD.Training.Migrations
 {
     [DbContext(typeof(TrainingDbContext))]
-    partial class TrainingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260424040936_v4_5_2_CasualCourseFinancialItemRanks")]
+    partial class v4_5_2_CasualCourseFinancialItemRanks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -205,8 +208,7 @@ namespace MOD.Training.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CasualCourseId", "FinancialItemId")
-                        .IsUnique()
-                        .HasFilter("[IsDeleted] = 0");
+                        .IsUnique();
 
                     b.ToTable("AppCasualCourseFinancials", (string)null);
                 });
@@ -685,7 +687,7 @@ namespace MOD.Training.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("CenterPlanWindows", (string)null);
+                    b.ToTable("CenterPlanWindows");
                 });
 
             modelBuilder.Entity("MOD.Training.Training.Centers.CenterRoleAssignment", b =>
@@ -747,7 +749,7 @@ namespace MOD.Training.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("CenterRoleAssignments", (string)null);
+                    b.ToTable("CenterRoleAssignments");
                 });
 
             modelBuilder.Entity("MOD.Training.Training.Centers.TrainingCenter", b =>
@@ -820,7 +822,7 @@ namespace MOD.Training.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TrainingCenters", (string)null);
+                    b.ToTable("TrainingCenters");
                 });
 
             modelBuilder.Entity("MOD.Training.Training.Centers.TrainingCenterPlan", b =>
@@ -903,7 +905,7 @@ namespace MOD.Training.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TrainingCenterPlans", (string)null);
+                    b.ToTable("TrainingCenterPlans");
                 });
 
             modelBuilder.Entity("MOD.Training.Training.Centers.TrainingCenterPlanItem", b =>
@@ -970,7 +972,7 @@ namespace MOD.Training.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TrainingCenterPlanItems", (string)null);
+                    b.ToTable("TrainingCenterPlanItems");
                 });
 
             modelBuilder.Entity("MOD.Training.Training.Centers.TrainingCenterPlanItemUnit", b =>
@@ -986,7 +988,7 @@ namespace MOD.Training.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("TrainingCenterPlanItemUnits", (string)null);
+                    b.ToTable("TrainingCenterPlanItemUnits");
                 });
 
             modelBuilder.Entity("MOD.Training.Training.Finance.CourseTypeFinancialItemDefault", b =>
@@ -1105,9 +1107,6 @@ namespace MOD.Training.Migrations
 
                     b.Property<bool>("IsPerNominee")
                         .HasColumnType("bit");
-
-                    b.Property<int?>("ItemType")
-                        .HasColumnType("int");
 
                     b.Property<DateTime?>("LastModificationTime")
                         .HasColumnType("datetime2")
@@ -4998,7 +4997,7 @@ namespace MOD.Training.Migrations
 
                             b1.HasKey("IdentityUserPasskeyCredentialId");
 
-                            b1.ToTable("AbpUserPasskeys", (string)null);
+                            b1.ToTable("AbpUserPasskeys");
 
                             b1
                                 .ToJson("Data")

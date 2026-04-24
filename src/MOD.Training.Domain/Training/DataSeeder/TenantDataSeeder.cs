@@ -66,6 +66,7 @@ public class TenantDataSeeder(
     IRepository<FinancialItemRankAmount, Guid> financialItemRankAmountRepo,
     IRepository<CasualCourse, Guid> casualCourseRepo,
     IRepository<CasualCourseFinancial, Guid> casualCourseFinancialRepo,
+    IRepository<CasualCourseFinancialItemRank, Guid> casualCourseFinancialRankRepo,
     IRepository<CasualCourseNomination, Guid> casualCourseNominationRepo,
     IRepository<PlanNote, Guid> planNoteRepo,
     FinancialItemDefaultResolver financialItemDefaultResolver,
@@ -312,18 +313,18 @@ private async Task SeedFinancialItemsAsync(Guid tenantId)
 
         await financialItemRepo.InsertManyAsync(new List<FinancialItem>
     {
-        // Parents (no ParentId)
+        // Parents (no ParentId, ItemType = null — they are grouping containers, not billable)
         new (_fiIds["Travel"])            { TenantId=tenantId,  NameAr = "التدريب الخارجي",  NameEn = "External Training",    Code = "ET",    VoteCode = "VOT-CC-001", IsActive = true },
         new (_fiIds["CourseCost"])        { TenantId=tenantId,  NameAr = "التدريب الداخلي",   NameEn = "Internal Training", Code = "IT",    VoteCode = "VOT-TE-001", IsActive = true },
          // Children of Course Cost
-        new (_fiIds["Tuition"])           { TenantId=tenantId,  NameAr = "تكلفة الدورات",     NameEn = "Course Cost",       Code = "CC-TF", VoteCode = "VOT-CC-TF", ParentId = _fiIds["CourseCost"],    IsActive = true },
+        new (_fiIds["Tuition"])           { TenantId=tenantId,  NameAr = "تكلفة الدورات",     NameEn = "Course Cost",       Code = "CC-TF", VoteCode = "VOT-CC-TF", ParentId = _fiIds["CourseCost"],    IsActive = true, ItemType = FinancialItemType.CourseCost },
 
         // Children of Travel — with IsPerDay/IsPerNominee flags
-        new (_fiIds["Tickets"])          { TenantId=tenantId, NameAr = "التذاكر",       NameEn = "Tickets",            Code = "TE-TK", VoteCode = "VOT-TE-TK", ParentId = _fiIds["Travel"], IsActive = true, IsPerNominee = true, DefaultAmountOMR = 200m },
-        new(_fiIds["TravelAllowance"]) { TenantId = tenantId, NameAr = "بدل السفر", NameEn = "Travel Allowance", Code = "TE-TA", VoteCode = "VOT-TE-TA", ParentId = _fiIds["Travel"], IsActive = true, IsPerDay = true, IsPerNominee = true, DefaultAmountOMR = 15m, ExtraDaysBefore = 1, ExtraDaysAfter = 1 },
-        new(_fiIds["ClothingAllowance"]) { TenantId = tenantId, NameAr = "بدل الملابس", NameEn = "Clothing Allowance", Code = "TE-CA", VoteCode = "VOT-TE-CA", ParentId = _fiIds["Travel"], IsActive = true, IsPerNominee = true, DefaultAmountOMR = 75m },
-        new(_fiIds["Insurance"]) { TenantId = tenantId, NameAr = "التأمين", NameEn = "Insurance", Code = "TE-IN", VoteCode = "VOT-TE-IN", ParentId = _fiIds["Travel"], IsActive = true, IsPerNominee = true, DefaultAmountOMR = 50m },
-        new(_fiIds["Visa"]) { TenantId = tenantId, NameAr = "التأشيرة", NameEn = "Visa", Code = "TE-VS", VoteCode = "VOT-TE-VS", ParentId = _fiIds["Travel"], IsActive = true, IsPerNominee = true, DefaultAmountOMR = 25m },
+        new (_fiIds["Tickets"])          { TenantId=tenantId, NameAr = "التذاكر",       NameEn = "Tickets",            Code = "TE-TK", VoteCode = "VOT-TE-TK", ParentId = _fiIds["Travel"], IsActive = true, IsPerNominee = true, DefaultAmountOMR = 200m, ItemType = FinancialItemType.Ticket },
+        new(_fiIds["TravelAllowance"]) { TenantId = tenantId, NameAr = "بدل السفر", NameEn = "Travel Allowance", Code = "TE-TA", VoteCode = "VOT-TE-TA", ParentId = _fiIds["Travel"], IsActive = true, IsPerDay = true, IsPerNominee = true, DefaultAmountOMR = 15m, ExtraDaysBefore = 1, ExtraDaysAfter = 1, ItemType = FinancialItemType.Allowance },
+        new(_fiIds["ClothingAllowance"]) { TenantId = tenantId, NameAr = "بدل الملابس", NameEn = "Clothing Allowance", Code = "TE-CA", VoteCode = "VOT-TE-CA", ParentId = _fiIds["Travel"], IsActive = true, IsPerNominee = true, DefaultAmountOMR = 75m, ItemType = FinancialItemType.Clothing },
+        new(_fiIds["Insurance"]) { TenantId = tenantId, NameAr = "التأمين", NameEn = "Insurance", Code = "TE-IN", VoteCode = "VOT-TE-IN", ParentId = _fiIds["Travel"], IsActive = true, IsPerNominee = true, DefaultAmountOMR = 50m, ItemType = FinancialItemType.Insurance },
+        new(_fiIds["Visa"]) { TenantId = tenantId, NameAr = "التأشيرة", NameEn = "Visa", Code = "TE-VS", VoteCode = "VOT-TE-VS", ParentId = _fiIds["Travel"], IsActive = true, IsPerNominee = true, DefaultAmountOMR = 25m, ItemType = FinancialItemType.Visa },
 
     }, autoSave: true);
 
@@ -644,10 +645,12 @@ private async Task SeedFinancialItemsAsync(Guid tenantId)
 
             await casualCourseRepo.InsertAsync(cc, autoSave: true);
 
-            // Nominations (2 or 3 depending on scenario)
+            // Nominations (2 or 3 depending on scenario) — inserted BEFORE financials so we
+            // can group by rank when seeding per-rank rows for the THApproved course.
             var nomineeCount = s.status == CasualCourseStatus.THApproved ? 3 : 2;
             var employees = await employeeRepo.GetListAsync(x => x.TenantId == tenantId && x.IsActive);
-            foreach (var emp in employees.Take(nomineeCount))
+            var selectedNominees = employees.Take(nomineeCount).ToList();
+            foreach (var emp in selectedNominees)
             {
                 await casualCourseNominationRepo.InsertAsync(
                     new CasualCourseNomination(guidGenerator.Create(), cc.Id, emp.Id)
@@ -657,25 +660,73 @@ private async Task SeedFinancialItemsAsync(Guid tenantId)
                     autoSave: true);
             }
 
-            // Financial rows for THApproved
-            if (s.status == CasualCourseStatus.THApproved && cc.EstimatedTotalCost.HasValue)
+            // Financial rows for THApproved — parent CasualCourseFinancial plus per-rank children.
+            if (s.status == CasualCourseStatus.THApproved)
             {
                 var defaults = await financialDefaultRepo.GetListAsync(x => x.CourseType == s.courseType && x.TenantId == tenantId);
+                var nomineesByRank = selectedNominees.GroupBy(e => e.RankId).ToList();
+                decimal courseTotal = 0m;
+
                 foreach (var def in defaults)
                 {
                     var fi = await financialItemRepo.FindAsync(def.FinancialItemId);
                     if (fi == null) continue;
-                    var amount = financialItemDefaultResolver.ComputeSubtotal(
-                        fi.DefaultAmountOMR, fi.IsPerDay, fi.IsPerNominee,
-                        s.durationDays, fi.ExtraDaysBefore, fi.ExtraDaysAfter, nomineeCount: 3);
-                    await casualCourseFinancialRepo.InsertAsync(
+
+                    var parent = await casualCourseFinancialRepo.InsertAsync(
                         new CasualCourseFinancial(
-                            guidGenerator.Create(), cc.Id, fi.Id, amount, FinancialAmountSource.FundingSource)
+                            guidGenerator.Create(), cc.Id, fi.Id,
+                            estimatedAmount: 0m,  // set after rank rows are written
+                            FinancialAmountSource.FundingSource)
                         {
                             TenantId = tenantId,
                         },
                         autoSave: true);
+
+                    decimal parentTotal = 0m;
+
+                    if (!fi.IsPerNominee)
+                    {
+                        // Flat item — single synthetic row
+                        var effectiveDays = fi.IsPerDay ? s.durationDays + fi.ExtraDaysBefore + fi.ExtraDaysAfter : 1;
+                        var rate = fi.DefaultAmountOMR;
+                        var subtotal = rate * effectiveDays;
+                        await casualCourseFinancialRankRepo.InsertAsync(
+                            new CasualCourseFinancialItemRank(
+                                guidGenerator.Create(), parent.Id, Guid.Empty, 1, rate, subtotal,
+                                FinancialItemDefaultResolver.RateSourceDefaultAmount)
+                            {
+                                TenantId = tenantId,
+                            },
+                            autoSave: true);
+                        parentTotal = subtotal;
+                    }
+                    else
+                    {
+                        foreach (var grp in nomineesByRank)
+                        {
+                            var count = grp.Count();
+                            var (rate, source) = await financialItemDefaultResolver.ResolveRateWithSourceAsync(fi.Id, grp.Key);
+                            var subtotal = financialItemDefaultResolver.ComputeSubtotal(
+                                rate, fi.IsPerDay, fi.IsPerNominee,
+                                s.durationDays, fi.ExtraDaysBefore, fi.ExtraDaysAfter, count);
+                            await casualCourseFinancialRankRepo.InsertAsync(
+                                new CasualCourseFinancialItemRank(
+                                    guidGenerator.Create(), parent.Id, grp.Key, count, rate, subtotal, source)
+                                {
+                                    TenantId = tenantId,
+                                },
+                                autoSave: true);
+                            parentTotal += subtotal;
+                        }
+                    }
+
+                    parent.EstimatedAmountOMR = parentTotal;
+                    await casualCourseFinancialRepo.UpdateAsync(parent, autoSave: true);
+                    courseTotal += parentTotal;
                 }
+
+                cc.EstimatedTotalCost = courseTotal;
+                await casualCourseRepo.UpdateAsync(cc, autoSave: true);
             }
 
             // Approval-chain notes on UnderReview and THApproved

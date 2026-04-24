@@ -9,6 +9,7 @@ export * from './completion-status.enum';
 export * from './condition-type.enum';
 export * from './course-type.enum';
 export * from './financial-amount-source.enum';
+export * from './financial-item-type.enum';
 export * from './funding-scenario.enum';
 export * from './nomination-status.enum';
 export * from './plan-note-author-role.enum';

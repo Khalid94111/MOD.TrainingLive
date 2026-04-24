@@ -117,4 +117,45 @@ public class EmployeeResolver(
         return await rankRepository.AsyncExecuter.ToListAsync(
             queryable.Where(x => x.IsActive).OrderBy(x => x.SortOrder));
     }
+
+    /// <summary>
+    /// Checks whether the current user is in any of the given role names.
+    /// Reads from the ICurrentUser.Roles claim (token) — no DB hit.
+    /// </summary>
+    public Task<bool> IsCallerInRolesAsync(params string[] roleNames)
+    {
+        if (roleNames == null || roleNames.Length == 0) return Task.FromResult(false);
+        var roles = currentUser.Roles ?? Array.Empty<string>();
+        return Task.FromResult(roles.Any(r => roleNames.Contains(r)));
+    }
+
+    /// <summary>
+    /// Batch-loads employees with their rank for a list of employee IDs.
+    /// Used by estimate preview to group by rank.
+    /// </summary>
+    public async Task<List<EmployeeWithRankInfo>> GetEmployeesWithRanksAsync(List<Guid> employeeIds)
+    {
+        if (employeeIds == null || employeeIds.Count == 0)
+            return new List<EmployeeWithRankInfo>();
+
+        var queryable = await employeeRepository.WithDetailsAsync(x => x.Rank!);
+        var employees = await employeeRepository.AsyncExecuter.ToListAsync(
+            queryable.Where(x => employeeIds.Contains(x.Id) && x.IsActive));
+
+        return employees.Select(e => new EmployeeWithRankInfo
+        {
+            EmployeeId = e.Id,
+            RankId = e.RankId,
+            RankNameAr = e.Rank?.NameAr ?? string.Empty,
+            FullNameAr = e.FullNameAr,
+        }).ToList();
+    }
+}
+
+public class EmployeeWithRankInfo
+{
+    public Guid EmployeeId { get; set; }
+    public Guid RankId { get; set; }
+    public string RankNameAr { get; set; } = string.Empty;
+    public string FullNameAr { get; set; } = string.Empty;
 }

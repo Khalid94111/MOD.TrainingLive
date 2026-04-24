@@ -1,14 +1,21 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { Subject, firstValueFrom } from 'rxjs';
+import { debounceTime, groupBy, mergeMap } from 'rxjs/operators';
 
-import { CasualCourseService, CasualCourseFinancialService } from 'src/app/proxy/training/casual-courses';
+import {
+  CasualCourseService,
+  CasualCourseFinancialService,
+  CasualCourseFinancialItemRankService,
+} from 'src/app/proxy/training/casual-courses';
 import type {
   AssignmentLineDto,
+  AssignmentRankLineDto,
   AssignScenarioDto,
   CasualCourseDetailDto,
   CasualCourseFinancialDto,
+  CasualCourseFinancialItemRankDto,
   CasualCourseNominationDto,
 } from 'src/app/proxy/training/casual-courses/dtos/models';
 import { FinancialItemService } from 'src/app/proxy/training/finance/financial-item.service';
@@ -23,11 +30,13 @@ import {
 } from '../../shared';
 import { NotesDrawerComponent } from '../../shared/components/notes-drawer/notes-drawer.component';
 import { ReturnModalComponent } from '../../shared/components/return-modal/return-modal.component';
+import { FinancialItemType } from 'src/app/proxy/training/enums/financial-item-type.enum';
 import { PlanNoteEntityType } from 'src/app/proxy/training/enums/plan-note-entity-type.enum';
 
-// Travel-item codes — keep in lockstep with backend CasualCourseFinancialManager.TRAVEL_CODES.
-// If either side changes, update both in the same commit (Risk #2 of Phase 4A Frontend Prompt).
-const TRAVEL_ITEM_CODES = new Set(['TRAVEL_ALLOWANCE', 'ACCOMMODATION', 'TRANSPORT']);
+interface RateEdit {
+  rankRowId: string;
+  newRate: number;
+}
 
 @Component({
   standalone: true,
@@ -39,6 +48,7 @@ const TRAVEL_ITEM_CODES = new Set(['TRAVEL_ALLOWANCE', 'ACCOMMODATION', 'TRANSPO
 export class CasualCourseReviewComponent implements OnInit {
   private service = inject(CasualCourseService);
   private financialService = inject(CasualCourseFinancialService);
+  private rankService = inject(CasualCourseFinancialItemRankService);
   private financialItemService = inject(FinancialItemService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -59,6 +69,7 @@ export class CasualCourseReviewComponent implements OnInit {
   actionBusy = signal(false);
 
   fScenario = signal<FundingScenario | null>(null);
+  expandedItemId = signal<string | null>(null);
 
   notesOpen = signal(false);
   returnModalOpen = signal(false);
@@ -71,7 +82,9 @@ export class CasualCourseReviewComponent implements OnInit {
 
   addItemSelectOpen = signal(false);
   addItemId = signal<string>('');
-  addItemAmount = signal<number>(0);
+
+  // Debounced per-rank rate edits. keyed by rank-row id to avoid cross-talk.
+  private rateEdits$ = new Subject<RateEdit>();
 
   isReviewable = computed(() => this.casualCourse()?.status === CasualCourseStatus.UnderReview);
   canStartReview = computed(() => this.casualCourse()?.status === CasualCourseStatus.UGMApproved);
@@ -84,7 +97,27 @@ export class CasualCourseReviewComponent implements OnInit {
     this.financials().reduce((sum, f) => sum + (f.estimatedAmountOMR ?? 0), 0),
   );
 
+  totalItems = computed(() => this.financials().length);
+  itemsMissingCost = computed(() =>
+    this.financials().filter(f => (f.estimatedAmountOMR ?? 0) <= 0).length,
+  );
+  itemsComplete = computed(() => this.totalItems() - this.itemsMissingCost());
+  progressPct = computed(() => {
+    const t = this.totalItems();
+    if (t === 0) return 0;
+    return Math.round((this.itemsComplete() / t) * 100);
+  });
+
   nominations = computed(() => this.casualCourse()?.nominations ?? []);
+
+  constructor() {
+    this.rateEdits$
+      .pipe(
+        groupBy(e => e.rankRowId),
+        mergeMap(group => group.pipe(debounceTime(400))),
+      )
+      .subscribe(edit => this.flushRateEdit(edit));
+  }
 
   async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id') ?? '';
@@ -114,14 +147,18 @@ export class CasualCourseReviewComponent implements OnInit {
     }
   }
 
+  // ── Scenario + source derivation ─────────────────────────────────
+
+  // Mirrors backend FundingScenarioSourceResolver. Under scenario 2 a leaf whose
+  // itemType is null or non-CourseCost falls to FinancialItem (the safe default).
   sourceFor(financialItemId: string | undefined): FinancialAmountSource {
     const scenario = this.fScenario();
-    const isTravel = this.isTravelItem(financialItemId);
+    const isCourseCost = this.isCourseCostItem(financialItemId);
     switch (scenario) {
       case FundingScenario.FundingSourceCoversAll:
         return FinancialAmountSource.FundingSource;
       case FundingScenario.FundingSourceCoversCourse:
-        return isTravel ? FinancialAmountSource.FinancialItem : FinancialAmountSource.FundingSource;
+        return isCourseCost ? FinancialAmountSource.FundingSource : FinancialAmountSource.FinancialItem;
       case FundingScenario.FinancialItemsCoverAll:
         return FinancialAmountSource.FinancialItem;
       case null:
@@ -134,10 +171,10 @@ export class CasualCourseReviewComponent implements OnInit {
     return src === FinancialAmountSource.FundingSource ? 'الجهة الممولة' : 'بند مالي';
   }
 
-  private isTravelItem(financialItemId: string | undefined): boolean {
+  private isCourseCostItem(financialItemId: string | undefined): boolean {
     if (!financialItemId) return false;
     const item = this.financialItems().find(i => i.id === financialItemId);
-    return item?.code ? TRAVEL_ITEM_CODES.has(item.code) : false;
+    return item?.itemType === FinancialItemType.CourseCost;
   }
 
   onScenarioSelect(scenario: FundingScenario): void {
@@ -145,27 +182,112 @@ export class CasualCourseReviewComponent implements OnInit {
     this.fScenario.set(scenario);
   }
 
-  onAmountInput(fin: CasualCourseFinancialDto, raw: string): void {
-    const value = +raw;
-    if (Number.isNaN(value)) return;
-    this.financials.update(list =>
-      list.map(f => (f.id === fin.id ? { ...f, estimatedAmountOMR: value } : f)),
-    );
+  scenarioNum(s: FundingScenario): number {
+    return s;
   }
 
-  onNotesInput(fin: CasualCourseFinancialDto, raw: string): void {
-    this.financials.update(list =>
-      list.map(f => (f.id === fin.id ? { ...f, notes: raw } : f)),
-    );
+  // ── Accordion control ────────────────────────────────────────────
+
+  isExpanded(id: string | undefined): boolean {
+    return !!id && this.expandedItemId() === id;
   }
+
+  toggleExpand(id: string | undefined): void {
+    if (!id) return;
+    this.expandedItemId.update(cur => (cur === id ? null : id));
+  }
+
+  /** Flat items are rendered without accordion affordance. */
+  isFlatItem(fin: CasualCourseFinancialDto): boolean {
+    return !fin.isPerNominee;
+  }
+
+  financialItemName(id: string | undefined): string {
+    if (!id) return '—';
+    return this.financialItems().find(i => i.id === id)?.nameAr ?? '—';
+  }
+
+  effectiveDaysExplainer(fin: CasualCourseFinancialDto): string {
+    if (!fin.isPerDay) return 'ليس لكل يوم';
+    const days = this.casualCourse()?.durationDays ?? 0;
+    const before = fin.extraDaysBefore ?? 0;
+    const after = fin.extraDaysAfter ?? 0;
+    return `${days} + ${before} + ${after} = ${fin.effectiveDays ?? days + before + after}`;
+  }
+
+  rateSourceLabel(source: string | undefined): string {
+    if (source === 'RankOverride') return 'معدل الرتبة';
+    if (source === 'DefaultAmount') return 'افتراضي';
+    return source ?? '—';
+  }
+
+  // ── Per-rank inline rate edit ────────────────────────────────────
+
+  onRateInput(rankRowId: string | undefined, raw: string): void {
+    if (!rankRowId || !this.isReviewable()) return;
+    const newRate = +raw;
+    if (Number.isNaN(newRate) || newRate < 0) return;
+
+    // Optimistic: update local signal immediately so the subtotal re-renders.
+    this.financials.update(list =>
+      list.map(f => {
+        if (!f.ranks) return f;
+        const match = f.ranks.find(r => r.id === rankRowId);
+        if (!match) return f;
+        const duration = this.casualCourse()?.durationDays ?? 0;
+        const effDays = f.effectiveDays ?? (f.isPerDay ? duration : 1);
+        const newSubtotal = newRate * effDays * (match.nomineeCount ?? 0);
+        const newRanks = f.ranks.map(r =>
+          r.id === rankRowId ? { ...r, ratePerUnitOMR: newRate, subtotalOMR: newSubtotal } : r,
+        );
+        const newTotal = newRanks.reduce((s, r) => s + (r.subtotalOMR ?? 0), 0);
+        return { ...f, ranks: newRanks, estimatedAmountOMR: newTotal };
+      }),
+    );
+
+    this.rateEdits$.next({ rankRowId, newRate });
+  }
+
+  private async flushRateEdit(edit: RateEdit): Promise<void> {
+    try {
+      const updated = await firstValueFrom(
+        this.rankService.updateRate(edit.rankRowId, { ratePerUnitOMR: edit.newRate }),
+      );
+      // Reconcile with server response (rates may have been clamped, source chips may have shifted).
+      this.financials.update(list => list.map(f => (f.id === updated.id ? updated : f)));
+    } catch (e: unknown) {
+      // Rollback by refetching the full list.
+      this.error.set(this.mapError(e));
+      await this.refreshFinancials();
+    }
+  }
+
+  private async refreshFinancials(): Promise<void> {
+    try {
+      const financials = await firstValueFrom(
+        this.financialService.getListByCasualCourse(this.courseId()),
+      );
+      this.financials.set(financials);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  // ── Auto-fill + add + delete ─────────────────────────────────────
 
   async onAutoFill(): Promise<void> {
     if (this.actionBusy() || !this.isReviewable()) return;
+    const scenario = this.fScenario();
+    if (scenario === null) return;  // button should already be disabled; belt-and-braces
     this.actionBusy.set(true);
     this.error.set(null);
     try {
-      const items = await firstValueFrom(this.financialService.autoFillFromDefaults(this.courseId()));
+      const items = await firstValueFrom(
+        this.financialService.autoFillFromDefaults(this.courseId(), scenario),
+      );
       this.financials.set(items);
+      // Scenario was persisted server-side as a side effect — reflect it on the detail view.
+      this.casualCourse.update(cc => (cc ? { ...cc, fundingScenario: scenario } : cc));
     } catch (e: unknown) {
       this.error.set(this.mapError(e));
     } finally {
@@ -175,7 +297,7 @@ export class CasualCourseReviewComponent implements OnInit {
 
   async onDeleteLine(fin: CasualCourseFinancialDto): Promise<void> {
     if (!fin.id || this.actionBusy()) return;
-    if (!confirm('هل تريد حذف هذا البند؟')) return;
+    if (!confirm('هل تريد حذف هذا البند؟ سيتم حذف تفاصيل الرتب المرتبطة به.')) return;
     this.actionBusy.set(true);
     try {
       await firstValueFrom(this.financialService.deleteItem(fin.id));
@@ -190,20 +312,18 @@ export class CasualCourseReviewComponent implements OnInit {
   toggleAddItem(): void {
     this.addItemSelectOpen.update(v => !v);
     this.addItemId.set('');
-    this.addItemAmount.set(0);
   }
 
   async onConfirmAddItem(): Promise<void> {
     if (!this.addItemId() || this.actionBusy()) return;
     this.actionBusy.set(true);
     try {
-      const line = await firstValueFrom(
+      await firstValueFrom(
         this.financialService.addItem(this.courseId(), {
           financialItemId: this.addItemId(),
-          estimatedAmountOMR: this.addItemAmount(),
         }),
       );
-      this.financials.update(list => [...list, line]);
+      await this.refreshFinancials();
       this.toggleAddItem();
     } catch (e: unknown) {
       this.error.set(this.mapError(e));
@@ -211,6 +331,20 @@ export class CasualCourseReviewComponent implements OnInit {
       this.actionBusy.set(false);
     }
   }
+
+  // ── Jump-to-next-incomplete ──────────────────────────────────────
+
+  jumpToNextIncomplete(): void {
+    const target = this.financials().find(f => (f.estimatedAmountOMR ?? 0) <= 0);
+    if (target?.id) {
+      this.expandedItemId.set(target.id);
+      setTimeout(() => {
+        document.getElementById(`fin-${target.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 0);
+    }
+  }
+
+  // ── Save / Finalize ──────────────────────────────────────────────
 
   async onStartReview(): Promise<void> {
     if (!this.canStartReview() || this.actionBusy()) return;
@@ -238,12 +372,16 @@ export class CasualCourseReviewComponent implements OnInit {
       const lines: AssignmentLineDto[] = this.financials().map(f => ({
         id: f.id,
         financialItemId: f.financialItemId ?? '',
-        amount: f.estimatedAmountOMR ?? 0,
         notes: f.notes ?? undefined,
+        ranks: (f.ranks ?? []).map<AssignmentRankLineDto>(r => ({
+          id: r.id,
+          rankId: r.rankId ?? '00000000-0000-0000-0000-000000000000',
+          nomineeCount: r.nomineeCount ?? 0,
+          ratePerUnitOMR: r.ratePerUnitOMR ?? 0,
+        })),
       }));
       const body: AssignScenarioDto = {
         fundingScenario: scenario,
-        estimatedTotalCost: this.grandTotal(),
         financialItems: lines,
         commit,
       };
@@ -259,6 +397,8 @@ export class CasualCourseReviewComponent implements OnInit {
       this.actionBusy.set(false);
     }
   }
+
+  // ── Return / Reject / Notes (unchanged) ──────────────────────────
 
   openReturnCourse(): void {
     this.returnTargetType.set(PlanNoteEntityType.CasualCourse);
@@ -314,15 +454,6 @@ export class CasualCourseReviewComponent implements OnInit {
   }
   closeNotesDrawer(): void {
     this.notesOpen.set(false);
-  }
-
-  scenarioNum(s: FundingScenario): number {
-    return s;
-  }
-
-  financialItemName(id: string | undefined): string {
-    if (!id) return '—';
-    return this.financialItems().find(i => i.id === id)?.nameAr ?? '—';
   }
 
   private mapError(e: unknown): string {

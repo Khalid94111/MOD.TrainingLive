@@ -1,4 +1,5 @@
 using System;
+using MOD.Training.Training.Enums;
 using Volo.Abp.Application.Dtos;
 
 namespace MOD.Training.Training.Finance.Dtos;
@@ -19,6 +20,8 @@ public class FinancialItemDto : EntityDto<Guid>
     public bool IsPerNominee { get; set; }
     public int ExtraDaysBefore { get; set; }
     public int ExtraDaysAfter { get; set; }
+
+    public FinancialItemType? ItemType { get; set; }
 }
 
 public class CreateUpdateFinancialItemDto
@@ -35,6 +38,8 @@ public class CreateUpdateFinancialItemDto
     public bool IsPerNominee { get; set; }
     public int ExtraDaysBefore { get; set; }
     public int ExtraDaysAfter { get; set; }
+
+    public FinancialItemType? ItemType { get; set; }
 }
 
 public class FinancialItemGetListInput : PagedAndSortedResultRequestDto

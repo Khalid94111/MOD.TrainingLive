@@ -7,7 +7,6 @@ import type { FinancialAmountSource } from '../../enums/financial-amount-source.
 
 export interface AssignScenarioDto {
   fundingScenario: FundingScenario;
-  estimatedTotalCost?: number;
   financialItems?: AssignmentLineDto[];
   commit?: boolean;
 }
@@ -15,8 +14,19 @@ export interface AssignScenarioDto {
 export interface AssignmentLineDto {
   id?: string | null;
   financialItemId: string;
-  amount?: number;
   notes?: string | null;
+  ranks?: AssignmentRankLineDto[];
+}
+
+export interface AssignmentRankLineDto {
+  id?: string | null;
+  rankId: string;
+  nomineeCount?: number;
+  ratePerUnitOMR?: number;
+}
+
+export interface UpdateRankRateDto {
+  ratePerUnitOMR?: number;
 }
 
 export interface CasualCourseDetailDto extends CasualCourseDto {
@@ -65,10 +75,25 @@ export interface CasualCourseFinancialDto extends FullAuditedEntityDto<string> {
   financialItemName?: string;
   isPerDay?: boolean;
   isPerNominee?: boolean;
+  extraDaysBefore?: number;
+  extraDaysAfter?: number;
+  effectiveDays?: number;
   estimatedAmountOMR?: number;
   actualAmountOMR?: number | null;
   source?: FinancialAmountSource;
   notes?: string | null;
+  ranks?: CasualCourseFinancialItemRankDto[];
+}
+
+export interface CasualCourseFinancialItemRankDto {
+  id?: string;
+  casualCourseFinancialId?: string;
+  rankId?: string;
+  rankNameAr?: string;
+  nomineeCount?: number;
+  ratePerUnitOMR?: number;
+  subtotalOMR?: number;
+  rateSource?: string;
 }
 
 export interface CasualCourseGetListInput extends PagedAndSortedResultRequestDto {
@@ -95,7 +120,6 @@ export interface CasualCourseNominationDto extends FullAuditedEntityDto<string> 
 
 export interface CreateCasualCourseFinancialDto {
   financialItemId: string;
-  estimatedAmountOMR?: number;
   notes?: string | null;
 }
 
@@ -120,6 +144,7 @@ export interface EstimatePreviewDto {
   items?: EstimatePreviewItemDto[];
   total?: number;
   courseType?: CourseType;
+  computedFor?: string;
   computedAt?: string;
 }
 
@@ -127,7 +152,7 @@ export interface EstimatePreviewInput {
   tenantCourseId: string;
   courseType: CourseType;
   durationDays?: number;
-  nomineeCount?: number;
+  nomineeEmployeeIds: string[];
 }
 
 export interface EstimatePreviewItemDto {
@@ -135,17 +160,20 @@ export interface EstimatePreviewItemDto {
   financialItemName?: string;
   isPerDay?: boolean;
   isPerNominee?: boolean;
-  rate?: number;
   effectiveDays?: number;
-  effectiveCount?: number;
-  computedAmount?: number;
+  totalAmountOMR?: number;
+  rankBreakdown?: RankBreakdownRowDto[] | null;
+}
+
+export interface RankBreakdownRowDto {
+  rankId?: string;
+  rankNameAr?: string;
+  nomineeCount?: number;
+  ratePerUnitOMR?: number;
+  rateSource?: string;
+  subtotalOMR?: number;
 }
 
 export interface RejectDto {
   reason: string;
-}
-
-export interface UpdateAmountDto {
-  amount?: number;
-  notes?: string | null;
 }

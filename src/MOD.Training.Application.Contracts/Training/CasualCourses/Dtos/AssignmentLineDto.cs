@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace MOD.Training.Training.CasualCourses.Dtos;
@@ -10,9 +11,8 @@ public class AssignmentLineDto
     [Required]
     public Guid FinancialItemId { get; set; }
 
-    [Range(0.0, (double)decimal.MaxValue)]
-    public decimal Amount { get; set; }
-
     [MaxLength(500)]
     public string? Notes { get; set; }
+
+    public List<AssignmentRankLineDto> Ranks { get; set; } = new();
 }

@@ -100,7 +100,7 @@ export class CasualCourseRequestComponent implements OnInit {
     tenantCourseId: this.fTenantCourseId(),
     courseType: this.fCourseType(),
     durationDays: this.fDurationDays(),
-    nomineeCount: this.fNomineeIds().length,
+    nomineeEmployeeIds: this.fNomineeIds(),
   }));
 
   constructor() {
@@ -112,10 +112,11 @@ export class CasualCourseRequestComponent implements OnInit {
             a.tenantCourseId === b.tenantCourseId &&
             a.courseType === b.courseType &&
             a.durationDays === b.durationDays &&
-            a.nomineeCount === b.nomineeCount,
+            a.nomineeEmployeeIds.length === b.nomineeEmployeeIds.length &&
+            a.nomineeEmployeeIds.every((id, i) => id === b.nomineeEmployeeIds[i]),
         ),
         switchMap(inputs => {
-          if (!inputs.tenantCourseId || (inputs.durationDays ?? 0) < 1 || (inputs.nomineeCount ?? 0) < 1) {
+          if (!inputs.tenantCourseId || (inputs.durationDays ?? 0) < 1 || inputs.nomineeEmployeeIds.length < 1) {
             this.preview.set(null);
             this.previewLoading.set(false);
             return of(null);
