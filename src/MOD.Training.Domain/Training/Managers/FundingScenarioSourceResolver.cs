@@ -7,7 +7,7 @@ namespace MOD.Training.Training.Managers;
 
 /// <summary>
 /// Single source of truth for mapping (<see cref="FundingScenario"/>, <see cref="FinancialItem.ItemType"/>)
-/// → <see cref="FinancialAmountSource"/> on a CasualCourseFinancial row. Used by
+/// → <see cref="FinancialAmountSource"/> on a CasualCourseFinancialItem row. Used by
 /// AssignScenarioAsync and AutoFillFromDefaultsAsync so the rule lives in one place.
 ///
 /// Under scenario 2 a leaf whose ItemType is NULL is treated as "not course cost" —

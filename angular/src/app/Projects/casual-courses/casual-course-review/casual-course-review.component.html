@@ -51,9 +51,22 @@
         <div><span class="lbl">اسم الدورة:</span> <span class="val">{{ casualCourse()?.courseNameAr || '—' }}</span></div>
         <div><span class="lbl">الوحدة:</span> <span class="val">{{ casualCourse()?.unitName || '—' }}</span></div>
         <div><span class="lbl">مقدم الطلب:</span> <span class="val">{{ casualCourse()?.requesterName || '—' }}</span></div>
-        <div><span class="lbl">الجهة الممولة:</span> <span class="val">{{ casualCourse()?.fundingSource || '—' }}</span></div>
+        <div>
+          <span class="lbl">الجهة الممولة:</span>
+          <span class="val">
+            @if (casualCourse()?.fundingSourceName || casualCourse()?.fundingSourceVoteCode) {
+              {{ casualCourse()?.fundingSourceName || '—' }}
+              @if (casualCourse()?.fundingSourceVoteCode) {
+                <span class="muted"> ({{ casualCourse()?.fundingSourceVoteCode }})</span>
+              }
+            } @else { — }
+          </span>
+        </div>
         <div><span class="lbl">المدة:</span> <span class="val">{{ casualCourse()?.durationDays }} يوم</span></div>
         <div><span class="lbl">عدد المرشحين:</span> <span class="val">{{ casualCourse()?.nomineesCount ?? 0 }}</span></div>
+        @if (casualCourse()?.courseCost != null) {
+          <div><span class="lbl">تكلفة الدورة (UTM):</span> <span class="val">{{ casualCourse()?.courseCost | number:'1.3-3' }} ر.ع</span></div>
+        }
         <div class="summary-wide"><span class="lbl">المبرر:</span> <span class="val">{{ casualCourse()?.justification }}</span></div>
       </div>
     </div>
@@ -196,9 +209,15 @@
       }
 
       @if (financials().length === 0) {
-        <div class="empty-state small">
-          لا توجد بنود مالية بعد — استخدم "تعبئة تلقائية" أو أضف بنودًا يدويًا.
-        </div>
+        @if (fScenario() === null) {
+          <div class="empty-state small">
+            اختر سيناريو التمويل أعلاه أولًا — البنود المالية تُعبَّأ تلقائيًا عند أول اختيار.
+          </div>
+        } @else {
+          <div class="empty-state small">
+            لا توجد بنود مالية بعد — استخدم "تعبئة تلقائية" أو أضف بنودًا يدويًا.
+          </div>
+        }
       } @else {
         <div class="fin-accordion">
           @for (fin of financials(); track fin.id) {
@@ -276,12 +295,19 @@
                                 } @else {
                                   <span>{{ row.ratePerUnitOMR | number:'1.3-3' }}</span>
                                 }
+                                @if (isFromUtmForm(row.rateSource)) {
+                                  <span class="chip chip-warning utm-chip"
+                                        title="مأخوذة من نموذج UTM. يمكنك تعديلها إذا لزم الأمر.">
+                                    ← UTM
+                                  </span>
+                                }
                               </td>
                               <td class="center cell-money">{{ row.subtotalOMR | number:'1.3-3' }}</td>
                               <td class="center">
                                 <span class="chip"
                                       [class.chip-info]="row.rateSource === 'RankOverride'"
-                                      [class.chip-neutral]="row.rateSource !== 'RankOverride'">
+                                      [class.chip-warning]="row.rateSource === 'FromUTMForm'"
+                                      [class.chip-neutral]="row.rateSource !== 'RankOverride' && row.rateSource !== 'FromUTMForm'">
                                   {{ rateSourceLabel(row.rateSource) }}
                                 </span>
                               </td>

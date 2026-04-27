@@ -7,7 +7,8 @@ public class CasualCourseListItemDto
 {
     public Guid Id { get; set; }
     public string CourseNameAr { get; set; } = "";
-    public string? FundingSource { get; set; }
+    public string? FundingSourceName { get; set; }
+    public string? FundingSourceVoteCode { get; set; }
     public string UnitName { get; set; } = "";
     public string RequesterName { get; set; } = "";
     public int NomineesCount { get; set; }

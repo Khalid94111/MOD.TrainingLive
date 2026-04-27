@@ -80,7 +80,16 @@
           @for (row of filteredRows(); track row.id) {
             <tr class="row-clickable" [class.returned-row]="row.isReturned" (click)="onRowClick(row)">
               <td class="cell-bold">{{ row.courseNameAr || '—' }}</td>
-              <td>{{ row.fundingSource || '—' }}</td>
+              <td>
+                @if (row.fundingSourceName || row.fundingSourceVoteCode) {
+                  {{ row.fundingSourceName || '—' }}
+                  @if (row.fundingSourceVoteCode) {
+                    <span class="muted"> ({{ row.fundingSourceVoteCode }})</span>
+                  }
+                } @else {
+                  —
+                }
+              </td>
               <td>{{ row.unitName || '—' }}</td>
               <td>{{ row.requesterName || '—' }}</td>
               <td class="center">{{ row.nomineesCount ?? 0 }}</td>

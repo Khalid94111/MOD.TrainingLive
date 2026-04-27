@@ -39,7 +39,7 @@ public partial class CreateUpdateCasualCourseToEntityMapper(ICurrentUser current
     [MapperIgnoreTarget(nameof(CasualCourse.FundingScenario))]
     [MapperIgnoreTarget(nameof(CasualCourse.SelectedPriceQuoteId))]
     [MapperIgnoreTarget(nameof(CasualCourse.RejectedReason))]
-    [MapperIgnoreTarget(nameof(CasualCourse.Financials))]
+    [MapperIgnoreTarget(nameof(CasualCourse.FinancialItems))]
     [MapperIgnoreTarget(nameof(CasualCourse.Nominations))]
     [MapperIgnoreTarget(nameof(CasualCourse.CreationTime))]
     [MapperIgnoreTarget(nameof(CasualCourse.CreatorId))]

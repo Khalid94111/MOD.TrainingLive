@@ -89,7 +89,7 @@ public DbSet<PlanNote> PlanNotes { get; set; }
 
 // Phase 4A additions
 public DbSet<CasualCourse>                    CasualCourses                    { get; set; }
-public DbSet<CasualCourseFinancial>           CasualCourseFinancials           { get; set; }
+public DbSet<CasualCourseFinancialItem>       CasualCourseFinancialItems       { get; set; }
 public DbSet<CasualCourseFinancialItemRank>   CasualCourseFinancialItemRanks   { get; set; }
 public DbSet<CasualCourseNomination>          CasualCourseNominations          { get; set; }
 

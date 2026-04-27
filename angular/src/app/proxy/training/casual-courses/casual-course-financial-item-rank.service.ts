@@ -1,4 +1,4 @@
-import type { CasualCourseFinancialDto, UpdateRankRateDto } from './dtos/models';
+import type { CasualCourseFinancialItemDto, UpdateRankRateDto } from './dtos/models';
 import { RestService, Rest } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
 
@@ -8,10 +8,10 @@ import { Injectable, inject } from '@angular/core';
 export class CasualCourseFinancialItemRankService {
   private restService = inject(RestService);
   apiName = 'Default';
-
+  
 
   updateRate = (id: string, input: UpdateRankRateDto, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, CasualCourseFinancialDto>({
+    this.restService.request<any, CasualCourseFinancialItemDto>({
       method: 'PUT',
       url: `/api/app/casual-course-financial-item-rank/${id}/rate`,
       body: input,

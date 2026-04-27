@@ -15,6 +15,7 @@ public class FinancialItemDefaultResolver(
 {
     public const string RateSourceRankOverride = "RankOverride";
     public const string RateSourceDefaultAmount = "DefaultAmount";
+    public const string RateSourceFromUTMForm = "FromUTMForm";
 
     public async Task<decimal> ResolveRateAsync(Guid financialItemId, Guid rankId)
     {

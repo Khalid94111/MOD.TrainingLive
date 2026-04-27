@@ -13,7 +13,6 @@ namespace MOD.Training.Training.Managers;
 public class CasualCourseValidator(
     IRepository<CasualCourse, Guid> casualCourseRepo,
     IRepository<CasualCourseNomination, Guid> nominationRepo,
-    IRepository<CasualCourseFinancial, Guid> financialRepo,
     NominationConditionValidator conditionValidator)
     : DomainService
 {
@@ -31,15 +30,16 @@ public class CasualCourseValidator(
         if (cc.EstimatedDateFrom > cc.EstimatedDateTo)
             throw new BusinessException("Training:CasualCourse:DateRangeInvalid");
 
-        if (cc.CourseType != CourseType.Internal && string.IsNullOrWhiteSpace(cc.FundingSource))
-            throw new BusinessException("Training:CasualCourse:FundingSourceRequired");
+        if (cc.CourseType != CourseType.Internal)
+        {
+            if (string.IsNullOrWhiteSpace(cc.FundingSourceName))
+                throw new BusinessException("Training:CasualCourse:FundingSourceNameRequired");
+            if (string.IsNullOrWhiteSpace(cc.FundingSourceVoteCode))
+                throw new BusinessException("Training:CasualCourse:FundingSourceVoteCodeRequired");
+        }
 
-        // Patch 4 — UTM now enters financial detail up front; block submit if no item has a value.
-        var finQ = await financialRepo.GetQueryableAsync();
-        var hasFinancialDetail = await AsyncExecuter.AnyAsync(
-            finQ.Where(f => f.CasualCourseId == casualCourseId && f.EstimatedAmountOMR > 0));
-        if (!hasFinancialDetail)
-            throw new BusinessException("Training:CasualCourse:NoFinancialDetail");
+        // Patch 5 — UTM no longer enters financial rows; Staff creates them after scenario pick
+        // during review. Submit no longer requires any CasualCourseFinancialItem rows to exist.
 
         var nomQ = await nominationRepo.GetQueryableAsync();
         var nominations = await AsyncExecuter.ToListAsync(

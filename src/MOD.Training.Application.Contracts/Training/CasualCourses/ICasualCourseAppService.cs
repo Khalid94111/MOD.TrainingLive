@@ -15,6 +15,14 @@ public interface ICasualCourseAppService : ICrudAppService<
 {
     Task<CasualCourseDetailDto> GetDetailAsync(Guid id);
 
+    /// <summary>
+    /// Patch 5 — server-side calculator. Returns the projected cost breakdown for a casual
+    /// course request without touching the database. Drives PAGE 4.2 Section E (UTM, live
+    /// updates) and PAGE 4.4 UGM variant (static, on page load). FundingScenario is not part
+    /// of the input — it isn't picked yet at this stage.
+    /// </summary>
+    Task<CalculatePreviewDto> CalculatePreviewAsync(CalculatePreviewInput input);
+
     Task<CasualCourseDto> SubmitAsync(Guid id);
     Task<CasualCourseDto> UGMApproveAsync(Guid id, CreatePlanNoteDto? note);
     Task<CasualCourseDto> StartReviewAsync(Guid id);

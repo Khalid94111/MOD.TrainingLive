@@ -4294,23 +4294,6 @@
               "name": "ICasualCourseAppService",
               "methods": [
                 {
-                  "name": "GetEstimatePreviewAsync",
-                  "parametersOnMethod": [
-                    {
-                      "name": "input",
-                      "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewInput, MOD.Training.Application.Contracts",
-                      "type": "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewInput",
-                      "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewInput",
-                      "isOptional": false,
-                      "defaultValue": null
-                    }
-                  ],
-                  "returnValue": {
-                    "type": "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewDto",
-                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewDto"
-                  }
-                },
-                {
                   "name": "GetDetailAsync",
                   "parametersOnMethod": [
                     {
@@ -4325,6 +4308,23 @@
                   "returnValue": {
                     "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDetailDto",
                     "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseDetailDto"
+                  }
+                },
+                {
+                  "name": "CalculatePreviewAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.CalculatePreviewInput, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.CasualCourses.Dtos.CalculatePreviewInput",
+                      "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CalculatePreviewInput",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.CasualCourses.Dtos.CalculatePreviewDto",
+                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CalculatePreviewDto"
                   }
                 },
                 {
@@ -4832,18 +4832,18 @@
               "allowAnonymous": false,
               "implementFrom": "Volo.Abp.Application.Services.IReadOnlyAppService<MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto,MOD.Training.Training.CasualCourses.Dtos.CasualCourseDto,System.Guid,MOD.Training.Training.CasualCourses.Dtos.CasualCourseGetListInput>"
             },
-            "GetEstimatePreviewAsyncByInput": {
-              "uniqueName": "GetEstimatePreviewAsyncByInput",
-              "name": "GetEstimatePreviewAsync",
-              "httpMethod": "GET",
-              "url": "api/app/casual-course/estimate-preview",
+            "CalculatePreviewAsyncByInput": {
+              "uniqueName": "CalculatePreviewAsyncByInput",
+              "name": "CalculatePreviewAsync",
+              "httpMethod": "POST",
+              "url": "api/app/casual-course/calculate-preview",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
                   "name": "input",
-                  "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewInput, MOD.Training.Application.Contracts",
-                  "type": "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewInput",
-                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewInput",
+                  "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.CalculatePreviewInput, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.CasualCourses.Dtos.CalculatePreviewInput",
+                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CalculatePreviewInput",
                   "isOptional": false,
                   "defaultValue": null
                 }
@@ -4851,56 +4851,20 @@
               "parameters": [
                 {
                   "nameOnMethod": "input",
-                  "name": "TenantCourseId",
+                  "name": "input",
                   "jsonName": null,
-                  "type": "System.Guid",
-                  "typeSimple": "string",
+                  "type": "MOD.Training.Training.CasualCourses.Dtos.CalculatePreviewInput",
+                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CalculatePreviewInput",
                   "isOptional": false,
                   "defaultValue": null,
                   "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "CourseType",
-                  "jsonName": null,
-                  "type": "MOD.Training.Training.Enums.CourseType",
-                  "typeSimple": "enum",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "DurationDays",
-                  "jsonName": null,
-                  "type": "System.Int32",
-                  "typeSimple": "number",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "NomineeCount",
-                  "jsonName": null,
-                  "type": "System.Int32",
-                  "typeSimple": "number",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "ModelBinding",
-                  "descriptorName": "input"
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
                 }
               ],
               "returnValue": {
-                "type": "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewDto",
-                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewDto"
+                "type": "MOD.Training.Training.CasualCourses.Dtos.CalculatePreviewDto",
+                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CalculatePreviewDto"
               },
               "allowAnonymous": false,
               "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseAppService"
@@ -5491,17 +5455,17 @@
             }
           }
         },
-        "MOD.Training.Training.CasualCourses.CasualCourseFinancialAppService": {
-          "controllerName": "CasualCourseFinancial",
-          "controllerGroupName": "CasualCourseFinancial",
+        "MOD.Training.Training.CasualCourses.CasualCourseFinancialItemAppService": {
+          "controllerName": "CasualCourseFinancialItem",
+          "controllerGroupName": "CasualCourseFinancialItem",
           "isRemoteService": true,
           "isIntegrationService": false,
           "apiVersion": null,
-          "type": "MOD.Training.Training.CasualCourses.CasualCourseFinancialAppService",
+          "type": "MOD.Training.Training.CasualCourses.CasualCourseFinancialItemAppService",
           "interfaces": [
             {
-              "type": "MOD.Training.Training.CasualCourses.ICasualCourseFinancialAppService",
-              "name": "ICasualCourseFinancialAppService",
+              "type": "MOD.Training.Training.CasualCourses.ICasualCourseFinancialItemAppService",
+              "name": "ICasualCourseFinancialItemAppService",
               "methods": [
                 {
                   "name": "GetListByCasualCourseAsync",
@@ -5516,8 +5480,8 @@
                     }
                   ],
                   "returnValue": {
-                    "type": "System.Collections.Generic.List<MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto>",
-                    "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto]"
+                    "type": "System.Collections.Generic.List<MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialItemDto>",
+                    "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialItemDto]"
                   }
                 },
                 {
@@ -5530,11 +5494,27 @@
                       "typeSimple": "string",
                       "isOptional": false,
                       "defaultValue": null
+                    },
+                    {
+                      "name": "runAsSystem",
+                      "typeAsString": "System.Boolean, System.Private.CoreLib",
+                      "type": "System.Boolean",
+                      "typeSimple": "boolean",
+                      "isOptional": true,
+                      "defaultValue": false
+                    },
+                    {
+                      "name": "courseCostSeed",
+                      "typeAsString": "System.Nullable`1[[System.Decimal, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib",
+                      "type": "System.Decimal?",
+                      "typeSimple": "number?",
+                      "isOptional": true,
+                      "defaultValue": null
                     }
                   ],
                   "returnValue": {
-                    "type": "System.Collections.Generic.List<MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto>",
-                    "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto]"
+                    "type": "System.Collections.Generic.List<MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialItemDto>",
+                    "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialItemDto]"
                   }
                 },
                 {
@@ -5550,41 +5530,16 @@
                     },
                     {
                       "name": "input",
-                      "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialDto, MOD.Training.Application.Contracts",
-                      "type": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialDto",
-                      "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialDto",
+                      "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialItemDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialItemDto",
+                      "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialItemDto",
                       "isOptional": false,
                       "defaultValue": null
                     }
                   ],
                   "returnValue": {
-                    "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto",
-                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto"
-                  }
-                },
-                {
-                  "name": "UpdateAmountAsync",
-                  "parametersOnMethod": [
-                    {
-                      "name": "id",
-                      "typeAsString": "System.Guid, System.Private.CoreLib",
-                      "type": "System.Guid",
-                      "typeSimple": "string",
-                      "isOptional": false,
-                      "defaultValue": null
-                    },
-                    {
-                      "name": "input",
-                      "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.UpdateAmountDto, MOD.Training.Application.Contracts",
-                      "type": "MOD.Training.Training.CasualCourses.Dtos.UpdateAmountDto",
-                      "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.UpdateAmountDto",
-                      "isOptional": false,
-                      "defaultValue": null
-                    }
-                  ],
-                  "returnValue": {
-                    "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto",
-                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto"
+                    "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialItemDto",
+                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialItemDto"
                   }
                 },
                 {
@@ -5612,7 +5567,7 @@
               "uniqueName": "GetListByCasualCourseAsyncByCasualCourseId",
               "name": "GetListByCasualCourseAsync",
               "httpMethod": "GET",
-              "url": "api/app/casual-course-financial/by-casual-course/{casualCourseId}",
+              "url": "api/app/casual-course-financial-item/by-casual-course/{casualCourseId}",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -5639,17 +5594,17 @@
                 }
               ],
               "returnValue": {
-                "type": "System.Collections.Generic.List<MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto>",
-                "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto]"
+                "type": "System.Collections.Generic.List<MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialItemDto>",
+                "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialItemDto]"
               },
               "allowAnonymous": false,
-              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseFinancialAppService"
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseFinancialItemAppService"
             },
-            "AutoFillFromDefaultsAsyncByCasualCourseId": {
-              "uniqueName": "AutoFillFromDefaultsAsyncByCasualCourseId",
+            "AutoFillFromDefaultsAsyncByCasualCourseIdAndRunAsSystemAndCourseCostSeed": {
+              "uniqueName": "AutoFillFromDefaultsAsyncByCasualCourseIdAndRunAsSystemAndCourseCostSeed",
               "name": "AutoFillFromDefaultsAsync",
               "httpMethod": "POST",
-              "url": "api/app/casual-course-financial/auto-fill-from-defaults/{casualCourseId}",
+              "url": "api/app/casual-course-financial-item/auto-fill-from-defaults/{casualCourseId}",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -5658,6 +5613,22 @@
                   "type": "System.Guid",
                   "typeSimple": "string",
                   "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "runAsSystem",
+                  "typeAsString": "System.Boolean, System.Private.CoreLib",
+                  "type": "System.Boolean",
+                  "typeSimple": "boolean",
+                  "isOptional": true,
+                  "defaultValue": false
+                },
+                {
+                  "name": "courseCostSeed",
+                  "typeAsString": "System.Nullable`1[[System.Decimal, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib",
+                  "type": "System.Decimal?",
+                  "typeSimple": "number?",
+                  "isOptional": true,
                   "defaultValue": null
                 }
               ],
@@ -5673,20 +5644,44 @@
                   "constraintTypes": [],
                   "bindingSourceId": "Path",
                   "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "runAsSystem",
+                  "name": "runAsSystem",
+                  "jsonName": null,
+                  "type": "System.Boolean",
+                  "typeSimple": "boolean",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "courseCostSeed",
+                  "name": "courseCostSeed",
+                  "jsonName": null,
+                  "type": "System.Decimal?",
+                  "typeSimple": "number?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": ""
                 }
               ],
               "returnValue": {
-                "type": "System.Collections.Generic.List<MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto>",
-                "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto]"
+                "type": "System.Collections.Generic.List<MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialItemDto>",
+                "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialItemDto]"
               },
               "allowAnonymous": false,
-              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseFinancialAppService"
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseFinancialItemAppService"
             },
             "AddItemAsyncByCasualCourseIdAndInput": {
               "uniqueName": "AddItemAsyncByCasualCourseIdAndInput",
               "name": "AddItemAsync",
               "httpMethod": "POST",
-              "url": "api/app/casual-course-financial/item/{casualCourseId}",
+              "url": "api/app/casual-course-financial-item/item/{casualCourseId}",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -5699,9 +5694,9 @@
                 },
                 {
                   "name": "input",
-                  "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialDto, MOD.Training.Application.Contracts",
-                  "type": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialDto",
-                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialDto",
+                  "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialItemDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialItemDto",
+                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialItemDto",
                   "isOptional": false,
                   "defaultValue": null
                 }
@@ -5723,8 +5718,8 @@
                   "nameOnMethod": "input",
                   "name": "input",
                   "jsonName": null,
-                  "type": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialDto",
-                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialDto",
+                  "type": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialItemDto",
+                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialItemDto",
                   "isOptional": false,
                   "defaultValue": null,
                   "constraintTypes": null,
@@ -5733,74 +5728,17 @@
                 }
               ],
               "returnValue": {
-                "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto",
-                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto"
+                "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialItemDto",
+                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialItemDto"
               },
               "allowAnonymous": false,
-              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseFinancialAppService"
-            },
-            "UpdateAmountAsyncByIdAndInput": {
-              "uniqueName": "UpdateAmountAsyncByIdAndInput",
-              "name": "UpdateAmountAsync",
-              "httpMethod": "PUT",
-              "url": "api/app/casual-course-financial/{id}/amount",
-              "supportedVersions": [],
-              "parametersOnMethod": [
-                {
-                  "name": "id",
-                  "typeAsString": "System.Guid, System.Private.CoreLib",
-                  "type": "System.Guid",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null
-                },
-                {
-                  "name": "input",
-                  "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.UpdateAmountDto, MOD.Training.Application.Contracts",
-                  "type": "MOD.Training.Training.CasualCourses.Dtos.UpdateAmountDto",
-                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.UpdateAmountDto",
-                  "isOptional": false,
-                  "defaultValue": null
-                }
-              ],
-              "parameters": [
-                {
-                  "nameOnMethod": "id",
-                  "name": "id",
-                  "jsonName": null,
-                  "type": "System.Guid",
-                  "typeSimple": "string",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": [],
-                  "bindingSourceId": "Path",
-                  "descriptorName": ""
-                },
-                {
-                  "nameOnMethod": "input",
-                  "name": "input",
-                  "jsonName": null,
-                  "type": "MOD.Training.Training.CasualCourses.Dtos.UpdateAmountDto",
-                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.UpdateAmountDto",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "Body",
-                  "descriptorName": ""
-                }
-              ],
-              "returnValue": {
-                "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto",
-                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto"
-              },
-              "allowAnonymous": false,
-              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseFinancialAppService"
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseFinancialItemAppService"
             },
             "DeleteItemAsyncById": {
               "uniqueName": "DeleteItemAsyncById",
               "name": "DeleteItemAsync",
               "httpMethod": "DELETE",
-              "url": "api/app/casual-course-financial/{id}/item",
+              "url": "api/app/casual-course-financial-item/{id}/item",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -5831,7 +5769,107 @@
                 "typeSimple": "System.Void"
               },
               "allowAnonymous": false,
-              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseFinancialAppService"
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseFinancialItemAppService"
+            }
+          }
+        },
+        "MOD.Training.Training.CasualCourses.CasualCourseFinancialItemRankAppService": {
+          "controllerName": "CasualCourseFinancialItemRank",
+          "controllerGroupName": "CasualCourseFinancialItemRank",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "MOD.Training.Training.CasualCourses.CasualCourseFinancialItemRankAppService",
+          "interfaces": [
+            {
+              "type": "MOD.Training.Training.CasualCourses.ICasualCourseFinancialItemRankAppService",
+              "name": "ICasualCourseFinancialItemRankAppService",
+              "methods": [
+                {
+                  "name": "UpdateRateAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.UpdateRankRateDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.CasualCourses.Dtos.UpdateRankRateDto",
+                      "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.UpdateRankRateDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialItemDto",
+                    "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialItemDto"
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "UpdateRateAsyncByIdAndInput": {
+              "uniqueName": "UpdateRateAsyncByIdAndInput",
+              "name": "UpdateRateAsync",
+              "httpMethod": "PUT",
+              "url": "api/app/casual-course-financial-item-rank/{id}/rate",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.CasualCourses.Dtos.UpdateRankRateDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.CasualCourses.Dtos.UpdateRankRateDto",
+                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.UpdateRankRateDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.CasualCourses.Dtos.UpdateRankRateDto",
+                  "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.UpdateRankRateDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialItemDto",
+                "typeSimple": "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialItemDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.CasualCourses.ICasualCourseFinancialItemRankAppService"
             }
           }
         },
@@ -28031,67 +28069,6 @@
         }
       ]
     },
-    "MOD.Training.Training.CasualCourses.Dtos.AssignmentLineDto": {
-      "baseType": null,
-      "isEnum": false,
-      "enumNames": null,
-      "enumValues": null,
-      "genericArguments": null,
-      "properties": [
-        {
-          "name": "Id",
-          "jsonName": null,
-          "type": "System.Guid?",
-          "typeSimple": "string?",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": true
-        },
-        {
-          "name": "FinancialItemId",
-          "jsonName": null,
-          "type": "System.Guid",
-          "typeSimple": "string",
-          "isRequired": true,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "Amount",
-          "jsonName": null,
-          "type": "System.Decimal",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": "0",
-          "maximum": "7.922816251426434E+28",
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "Notes",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": 500,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": true
-        }
-      ]
-    },
     "MOD.Training.Training.CasualCourses.Dtos.AssignScenarioDto": {
       "baseType": null,
       "isEnum": false,
@@ -28113,30 +28090,17 @@
           "isNullable": false
         },
         {
-          "name": "EstimatedTotalCost",
+          "name": "Adjustments",
           "jsonName": null,
-          "type": "System.Decimal",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": "0.001",
-          "maximum": "7.922816251426434E+28",
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "FinancialItems",
-          "jsonName": null,
-          "type": "[MOD.Training.Training.CasualCourses.Dtos.AssignmentLineDto]",
-          "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.AssignmentLineDto]",
+          "type": "[MOD.Training.Training.CasualCourses.Dtos.StaffAdjustmentDto]",
+          "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.StaffAdjustmentDto]",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
           "minimum": null,
           "maximum": null,
           "regex": null,
-          "isNullable": false
+          "isNullable": true
         },
         {
           "name": "Commit",
@@ -28150,6 +28114,128 @@
           "maximum": null,
           "regex": null,
           "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Training.CasualCourses.Dtos.CalculatePreviewDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Items",
+          "jsonName": null,
+          "type": "[MOD.Training.Training.CasualCourses.Dtos.PreviewItemDto]",
+          "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.PreviewItemDto]",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "TotalOMR",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "CourseType",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.CourseType",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ComputedAt",
+          "jsonName": null,
+          "type": "System.DateTime",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Training.CasualCourses.Dtos.CalculatePreviewInput": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "CourseType",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.CourseType",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "DurationDays",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "NomineeEmployeeIds",
+          "jsonName": null,
+          "type": "[System.Guid]",
+          "typeSimple": "[string]",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "CourseCost",
+          "jsonName": null,
+          "type": "System.Decimal?",
+          "typeSimple": "number?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
         }
       ]
     },
@@ -28174,10 +28260,10 @@
           "isNullable": false
         },
         {
-          "name": "Financials",
+          "name": "FinancialItems",
           "jsonName": null,
-          "type": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto]",
-          "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto]",
+          "type": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialItemDto]",
+          "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialItemDto]",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -28404,10 +28490,36 @@
           "isNullable": false
         },
         {
-          "name": "FundingSource",
+          "name": "FundingSourceName",
           "jsonName": null,
           "type": "System.String",
           "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "FundingSourceVoteCode",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "CourseCost",
+          "jsonName": null,
+          "type": "System.Decimal?",
+          "typeSimple": "number?",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -28573,7 +28685,7 @@
           "isNullable": false
         },
         {
-          "name": "FinancialsCount",
+          "name": "FinancialItemsCount",
           "jsonName": null,
           "type": "System.Int32",
           "typeSimple": "number",
@@ -28600,7 +28712,7 @@
         }
       ]
     },
-    "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialDto": {
+    "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialItemDto": {
       "baseType": "Volo.Abp.Application.Dtos.FullAuditedEntityDto<System.Guid>",
       "isEnum": false,
       "enumNames": null,
@@ -28686,6 +28798,45 @@
           "isNullable": false
         },
         {
+          "name": "ExtraDaysBefore",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ExtraDaysAfter",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "EffectiveDays",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
           "name": "EstimatedAmountOMR",
           "jsonName": null,
           "type": "System.Decimal",
@@ -28736,6 +28887,119 @@
           "maximum": null,
           "regex": null,
           "isNullable": true
+        },
+        {
+          "name": "Ranks",
+          "jsonName": null,
+          "type": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialItemRankDto]",
+          "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialItemRankDto]",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Training.CasualCourses.Dtos.CasualCourseFinancialItemRankDto": {
+      "baseType": "Volo.Abp.Application.Dtos.EntityDto<System.Guid>",
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "CasualCourseFinancialItemId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "RankId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "RankNameAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "NomineeCount",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "RatePerUnitOMR",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "SubtotalOMR",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "RateSource",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
         }
       ]
     },
@@ -28965,7 +29229,7 @@
         }
       ]
     },
-    "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialDto": {
+    "MOD.Training.Training.CasualCourses.Dtos.CreateCasualCourseFinancialItemDto": {
       "baseType": null,
       "isEnum": false,
       "enumNames": null,
@@ -28982,19 +29246,6 @@
           "maxLength": null,
           "minimum": null,
           "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "EstimatedAmountOMR",
-          "jsonName": null,
-          "type": "System.Decimal",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": "0",
-          "maximum": "7.922816251426434E+28",
           "regex": null,
           "isNullable": false
         },
@@ -29177,13 +29428,39 @@
           "isNullable": false
         },
         {
-          "name": "FundingSource",
+          "name": "FundingSourceName",
           "jsonName": null,
           "type": "System.String",
           "typeSimple": "string",
           "isRequired": false,
           "minLength": null,
           "maxLength": 200,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "FundingSourceVoteCode",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 100,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "CourseCost",
+          "jsonName": null,
+          "type": "System.Decimal?",
+          "typeSimple": "number?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
           "minimum": null,
           "maximum": null,
           "regex": null,
@@ -29204,129 +29481,7 @@
         }
       ]
     },
-    "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewDto": {
-      "baseType": null,
-      "isEnum": false,
-      "enumNames": null,
-      "enumValues": null,
-      "genericArguments": null,
-      "properties": [
-        {
-          "name": "Items",
-          "jsonName": null,
-          "type": "[MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewItemDto]",
-          "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewItemDto]",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "Total",
-          "jsonName": null,
-          "type": "System.Decimal",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "CourseType",
-          "jsonName": null,
-          "type": "MOD.Training.Training.Enums.CourseType",
-          "typeSimple": "enum",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "ComputedAt",
-          "jsonName": null,
-          "type": "System.DateTime",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        }
-      ]
-    },
-    "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewInput": {
-      "baseType": null,
-      "isEnum": false,
-      "enumNames": null,
-      "enumValues": null,
-      "genericArguments": null,
-      "properties": [
-        {
-          "name": "TenantCourseId",
-          "jsonName": null,
-          "type": "System.Guid",
-          "typeSimple": "string",
-          "isRequired": true,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "CourseType",
-          "jsonName": null,
-          "type": "MOD.Training.Training.Enums.CourseType",
-          "typeSimple": "enum",
-          "isRequired": true,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "DurationDays",
-          "jsonName": null,
-          "type": "System.Int32",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": "1",
-          "maximum": "2147483647",
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "NomineeCount",
-          "jsonName": null,
-          "type": "System.Int32",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": "0",
-          "maximum": "2147483647",
-          "regex": null,
-          "isNullable": false
-        }
-      ]
-    },
-    "MOD.Training.Training.CasualCourses.Dtos.EstimatePreviewItemDto": {
+    "MOD.Training.Training.CasualCourses.Dtos.PreviewItemDto": {
       "baseType": null,
       "isEnum": false,
       "enumNames": null,
@@ -29347,7 +29502,7 @@
           "isNullable": false
         },
         {
-          "name": "FinancialItemName",
+          "name": "FinancialItemNameAr",
           "jsonName": null,
           "type": "System.String",
           "typeSimple": "string",
@@ -29386,19 +29541,6 @@
           "isNullable": false
         },
         {
-          "name": "Rate",
-          "jsonName": null,
-          "type": "System.Decimal",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
           "name": "EffectiveDays",
           "jsonName": null,
           "type": "System.Int32",
@@ -29412,7 +29554,68 @@
           "isNullable": false
         },
         {
-          "name": "EffectiveCount",
+          "name": "SubtotalOMR",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "RankBreakdown",
+          "jsonName": null,
+          "type": "[MOD.Training.Training.CasualCourses.Dtos.PreviewRankRowDto]",
+          "typeSimple": "[MOD.Training.Training.CasualCourses.Dtos.PreviewRankRowDto]",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        }
+      ]
+    },
+    "MOD.Training.Training.CasualCourses.Dtos.PreviewRankRowDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "RankId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "RankNameAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "NomineeCount",
           "jsonName": null,
           "type": "System.Int32",
           "typeSimple": "number",
@@ -29425,7 +29628,20 @@
           "isNullable": false
         },
         {
-          "name": "ComputedAmount",
+          "name": "RatePerUnitOMR",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "SubtotalOMR",
           "jsonName": null,
           "type": "System.Decimal",
           "typeSimple": "number",
@@ -29461,7 +29677,7 @@
         }
       ]
     },
-    "MOD.Training.Training.CasualCourses.Dtos.UpdateAmountDto": {
+    "MOD.Training.Training.CasualCourses.Dtos.StaffAdjustmentDto": {
       "baseType": null,
       "isEnum": false,
       "enumNames": null,
@@ -29469,7 +29685,55 @@
       "genericArguments": null,
       "properties": [
         {
-          "name": "Amount",
+          "name": "CasualCourseFinancialItemRankId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "NewRatePerUnitOMR",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "AdjustmentNote",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        }
+      ]
+    },
+    "MOD.Training.Training.CasualCourses.Dtos.UpdateRankRateDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "RatePerUnitOMR",
           "jsonName": null,
           "type": "System.Decimal",
           "typeSimple": "number",
@@ -29480,19 +29744,6 @@
           "maximum": "7.922816251426434E+28",
           "regex": null,
           "isNullable": false
-        },
-        {
-          "name": "Notes",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": 500,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": true
         }
       ]
     },
@@ -31800,6 +32051,30 @@
       "genericArguments": null,
       "properties": null
     },
+    "MOD.Training.Training.Enums.FinancialItemType": {
+      "baseType": "System.Enum",
+      "isEnum": true,
+      "enumNames": [
+        "Other",
+        "CourseCost",
+        "Ticket",
+        "Insurance",
+        "Visa",
+        "Allowance",
+        "Clothing"
+      ],
+      "enumValues": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "genericArguments": null,
+      "properties": null
+    },
     "MOD.Training.Training.Enums.FundingScenario": {
       "baseType": "System.Enum",
       "isEnum": true,
@@ -32309,6 +32584,19 @@
           "maximum": null,
           "regex": null,
           "isNullable": false
+        },
+        {
+          "name": "ItemType",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.FinancialItemType?",
+          "typeSimple": "enum?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
         }
       ]
     },
@@ -32817,6 +33105,19 @@
           "maximum": null,
           "regex": null,
           "isNullable": false
+        },
+        {
+          "name": "ItemType",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.FinancialItemType?",
+          "typeSimple": "enum?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
         }
       ]
     },

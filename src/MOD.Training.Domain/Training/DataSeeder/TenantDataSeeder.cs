@@ -65,7 +65,7 @@ public class TenantDataSeeder(
     IRepository<CourseProposal, Guid> proposalRepo,
     IRepository<FinancialItemRankAmount, Guid> financialItemRankAmountRepo,
     IRepository<CasualCourse, Guid> casualCourseRepo,
-    IRepository<CasualCourseFinancial, Guid> casualCourseFinancialRepo,
+    IRepository<CasualCourseFinancialItem, Guid> casualCourseFinancialRepo,
     IRepository<CasualCourseFinancialItemRank, Guid> casualCourseFinancialRankRepo,
     IRepository<CasualCourseNomination, Guid> casualCourseNominationRepo,
     IRepository<PlanNote, Guid> planNoteRepo,
@@ -616,7 +616,8 @@ private async Task SeedFinancialItemsAsync(Guid tenantId)
                 to: to)
             {
                 TenantId = tenantId,
-                FundingSource = s.fundingCode,
+                FundingSourceName = s.fundingCode is null ? null : "مصدر تمويل تجريبي",
+                FundingSourceVoteCode = s.fundingCode,
                 Status = s.status,
                 DescriptionAr = "بيانات تجريبية لأغراض العرض",
                 ObjectivesAr = "تجربة تدفق الدورات العارضة",
@@ -660,7 +661,7 @@ private async Task SeedFinancialItemsAsync(Guid tenantId)
                     autoSave: true);
             }
 
-            // Financial rows for THApproved — parent CasualCourseFinancial plus per-rank children.
+            // Financial rows for THApproved — parent CasualCourseFinancialItem plus per-rank children.
             if (s.status == CasualCourseStatus.THApproved)
             {
                 var defaults = await financialDefaultRepo.GetListAsync(x => x.CourseType == s.courseType && x.TenantId == tenantId);
@@ -673,7 +674,7 @@ private async Task SeedFinancialItemsAsync(Guid tenantId)
                     if (fi == null) continue;
 
                     var parent = await casualCourseFinancialRepo.InsertAsync(
-                        new CasualCourseFinancial(
+                        new CasualCourseFinancialItem(
                             guidGenerator.Create(), cc.Id, fi.Id,
                             estimatedAmount: 0m,  // set after rank rows are written
                             FinancialAmountSource.FundingSource)

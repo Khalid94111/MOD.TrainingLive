@@ -25,7 +25,10 @@ public class CasualCourseDto : FullAuditedEntityDto<Guid>
     public DateTime EstimatedDateFrom { get; set; }
     public DateTime EstimatedDateTo { get; set; }
 
-    public string? FundingSource { get; set; }
+    public string? FundingSourceName { get; set; }
+    public string? FundingSourceVoteCode { get; set; }
+
+    public decimal? CourseCost { get; set; }
 
     public decimal? EstimatedTotalCost { get; set; }
     public FundingScenario? FundingScenario { get; set; }
@@ -45,6 +48,6 @@ public class CasualCourseDto : FullAuditedEntityDto<Guid>
     public string UnitName { get; set; } = "";
     public string RequesterName { get; set; } = "";
     public int NomineesCount { get; set; }
-    public int FinancialsCount { get; set; }
+    public int FinancialItemsCount { get; set; }
     public string? LatestReturnReason { get; set; }
 }

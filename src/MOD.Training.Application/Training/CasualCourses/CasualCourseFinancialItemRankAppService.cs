@@ -16,16 +16,16 @@ namespace MOD.Training.Training.CasualCourses;
 [Authorize(TrainingPermissions.CasualCourses.Review)]
 public class CasualCourseFinancialItemRankAppService(
     IRepository<CasualCourseFinancialItemRank, Guid> rankRepo,
-    IRepository<CasualCourseFinancial, Guid> financialRepo,
+    IRepository<CasualCourseFinancialItem, Guid> financialRepo,
     IRepository<CasualCourse, Guid> casualCourseRepo,
     CasualCourseRankBreakdownManager rankManager,
-    ICasualCourseFinancialAppService financialAppService)
+    ICasualCourseFinancialItemAppService financialAppService)
     : ApplicationService, ICasualCourseFinancialItemRankAppService
 {
-    public async Task<CasualCourseFinancialDto> UpdateRateAsync(Guid id, UpdateRankRateDto input)
+    public async Task<CasualCourseFinancialItemDto> UpdateRateAsync(Guid id, UpdateRankRateDto input)
     {
         var row = await rankRepo.GetAsync(id);
-        var parent = await financialRepo.GetAsync(row.CasualCourseFinancialId);
+        var parent = await financialRepo.GetAsync(row.CasualCourseFinancialItemId);
         var cc = await casualCourseRepo.GetAsync(parent.CasualCourseId);
 
         if (cc.Status != CasualCourseStatus.UnderReview)

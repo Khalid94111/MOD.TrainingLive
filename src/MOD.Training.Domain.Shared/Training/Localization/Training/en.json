@@ -188,6 +188,9 @@
     "Training:CourseProposal:AlreadyReviewed": "This proposal has already been reviewed.",
     "Training:TenantCourse:NotFound": "Tenant course not found.",
     "Training:TenantCourse:AlreadyAdded": "This course has already been added to the tenant.",
-    "Training:TenantCourse:CatalogCourseInactive": "Cannot add an inactive catalog course."
+    "Training:TenantCourse:CatalogCourseInactive": "Cannot add an inactive catalog course.",
+    "Training:CasualCourse:FundingSourceNameRequired": "Funding source name is required for external courses.",
+    "Training:CasualCourse:FundingSourceVoteCodeRequired": "Funding source vote code is required for external courses.",
+    "Training:CasualCourse:ScenarioRequiredBeforeFinancials": "Select the funding scenario first."
   }
 }

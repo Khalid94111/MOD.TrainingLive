@@ -12,7 +12,7 @@ public partial class CasualCourseToDtoMapper : MapperBase<CasualCourse, CasualCo
     [MapperIgnoreTarget(nameof(CasualCourseDto.UnitName))]
     [MapperIgnoreTarget(nameof(CasualCourseDto.RequesterName))]
     [MapperIgnoreTarget(nameof(CasualCourseDto.NomineesCount))]
-    [MapperIgnoreTarget(nameof(CasualCourseDto.FinancialsCount))]
+    [MapperIgnoreTarget(nameof(CasualCourseDto.FinancialItemsCount))]
     [MapperIgnoreTarget(nameof(CasualCourseDto.LatestReturnReason))]
     public override partial CasualCourseDto Map(CasualCourse source);
     public override partial void Map(CasualCourse source, CasualCourseDto destination);

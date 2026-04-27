@@ -6,13 +6,13 @@ import { debounceTime, groupBy, mergeMap } from 'rxjs/operators';
 
 import {
   CasualCourseService,
-  CasualCourseFinancialService,
+  CasualCourseFinancialItemService,
   CasualCourseFinancialItemRankService,
 } from 'src/app/proxy/training/casual-courses';
 import type {
   AssignScenarioDto,
   CasualCourseDetailDto,
-  CasualCourseFinancialDto,
+  CasualCourseFinancialItemDto,
   CasualCourseNominationDto,
   StaffAdjustmentDto,
 } from 'src/app/proxy/training/casual-courses/dtos/models';
@@ -45,7 +45,7 @@ interface RateEdit {
 })
 export class CasualCourseReviewComponent implements OnInit {
   private service = inject(CasualCourseService);
-  private financialService = inject(CasualCourseFinancialService);
+  private financialService = inject(CasualCourseFinancialItemService);
   private rankService = inject(CasualCourseFinancialItemRankService);
   private financialItemService = inject(FinancialItemService);
   private route = inject(ActivatedRoute);
@@ -60,7 +60,7 @@ export class CasualCourseReviewComponent implements OnInit {
 
   courseId = signal<string>('');
   casualCourse = signal<CasualCourseDetailDto | null>(null);
-  financials = signal<CasualCourseFinancialDto[]>([]);
+  financials = signal<CasualCourseFinancialItemDto[]>([]);
   financialItems = signal<FinancialItemDto[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
@@ -227,7 +227,7 @@ export class CasualCourseReviewComponent implements OnInit {
   }
 
   /** Flat items are rendered without accordion affordance. */
-  isFlatItem(fin: CasualCourseFinancialDto): boolean {
+  isFlatItem(fin: CasualCourseFinancialItemDto): boolean {
     return !fin.isPerNominee;
   }
 
@@ -236,7 +236,7 @@ export class CasualCourseReviewComponent implements OnInit {
     return this.financialItems().find(i => i.id === id)?.nameAr ?? '—';
   }
 
-  effectiveDaysExplainer(fin: CasualCourseFinancialDto): string {
+  effectiveDaysExplainer(fin: CasualCourseFinancialItemDto): string {
     if (!fin.isPerDay) return 'ليس لكل يوم';
     const days = this.casualCourse()?.durationDays ?? 0;
     const before = fin.extraDaysBefore ?? 0;
@@ -247,7 +247,12 @@ export class CasualCourseReviewComponent implements OnInit {
   rateSourceLabel(source: string | undefined): string {
     if (source === 'RankOverride') return 'معدل الرتبة';
     if (source === 'DefaultAmount') return 'افتراضي';
+    if (source === 'FromUTMForm') return 'من UTM';
     return source ?? '—';
+  }
+
+  isFromUtmForm(source: string | undefined): boolean {
+    return source === 'FromUTMForm';
   }
 
   // ── Per-rank inline rate edit ────────────────────────────────────
@@ -318,8 +323,12 @@ export class CasualCourseReviewComponent implements OnInit {
     this.actionBusy.set(true);
     this.error.set(null);
     try {
+      // Patch 5 — pass UTM's CourseCost as the seed; backend uses it to set the
+      // course-cost row's rate (with RateSource = "FromUTMForm"). Null is OK if
+      // UTM didn't enter a value.
+      const seed = this.casualCourse()?.courseCost ?? undefined;
       const items = await firstValueFrom(
-        this.financialService.autoFillFromDefaults(this.courseId(), false),
+        this.financialService.autoFillFromDefaults(this.courseId(), false, seed),
       );
       this.financials.set(items);
     } catch (e: unknown) {
@@ -329,7 +338,7 @@ export class CasualCourseReviewComponent implements OnInit {
     }
   }
 
-  async onDeleteLine(fin: CasualCourseFinancialDto): Promise<void> {
+  async onDeleteLine(fin: CasualCourseFinancialItemDto): Promise<void> {
     if (!fin.id || this.actionBusy()) return;
     if (!confirm('هل تريد حذف هذا البند؟ سيتم حذف تفاصيل الرتب المرتبطة به.')) return;
     this.actionBusy.set(true);

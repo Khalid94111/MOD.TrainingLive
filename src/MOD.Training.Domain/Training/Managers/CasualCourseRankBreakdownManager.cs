@@ -11,11 +11,11 @@ namespace MOD.Training.Training.Managers;
 
 /// <summary>
 /// Mirrors PlanItemRankBreakdownManager for casual-course financials.
-/// Creates / refreshes / updates rank sub-rows under CasualCourseFinancial and
+/// Creates / refreshes / updates rank sub-rows under CasualCourseFinancialItem and
 /// keeps the parent EstimatedAmountOMR and course EstimatedTotalCost in sync.
 /// </summary>
 public class CasualCourseRankBreakdownManager(
-    IRepository<CasualCourseFinancial, Guid> financialRepo,
+    IRepository<CasualCourseFinancialItem, Guid> financialRepo,
     IRepository<CasualCourseFinancialItemRank, Guid> rankRepo,
     IRepository<CasualCourse, Guid> casualCourseRepo,
     IRepository<CasualCourseNomination, Guid> nominationRepo,
@@ -25,7 +25,7 @@ public class CasualCourseRankBreakdownManager(
     : DomainService
 {
     /// <summary>
-    /// Creates rank rows for a newly-inserted CasualCourseFinancial parent.
+    /// Creates rank rows for a newly-inserted CasualCourseFinancialItem parent.
     /// Flat items get one synthetic row (RankId = Guid.Empty, NomineeCount = 1).
     /// Per-nominee items get one row per rank present in the nominee list.
     /// </summary>
@@ -73,7 +73,7 @@ public class CasualCourseRankBreakdownManager(
     public async Task UpdateRateAsync(Guid rankRowId, decimal newRate)
     {
         var row = await rankRepo.GetAsync(rankRowId);
-        var parent = await financialRepo.GetAsync(row.CasualCourseFinancialId);
+        var parent = await financialRepo.GetAsync(row.CasualCourseFinancialItemId);
         var fi = await financialItemRepo.GetAsync(parent.FinancialItemId);
         var course = await casualCourseRepo.GetAsync(parent.CasualCourseId);
 
@@ -105,7 +105,7 @@ public class CasualCourseRankBreakdownManager(
 
             var rankQ = await rankRepo.GetQueryableAsync();
             var existing = (await AsyncExecuter.ToListAsync(
-                rankQ.Where(x => x.CasualCourseFinancialId == parent.Id)))
+                rankQ.Where(x => x.CasualCourseFinancialItemId == parent.Id)))
                 .ToDictionary(x => x.RankId);
 
             foreach (var (rankId, count) in rankCounts)
@@ -141,11 +141,11 @@ public class CasualCourseRankBreakdownManager(
     /// Re-reads rank rows for a parent and writes the sum into parent.EstimatedAmountOMR,
     /// then refreshes the course's EstimatedTotalCost.
     /// </summary>
-    public async Task RefreshParentTotalAsync(CasualCourseFinancial parent)
+    public async Task RefreshParentTotalAsync(CasualCourseFinancialItem parent)
     {
         var rankQ = await rankRepo.GetQueryableAsync();
         var rows = await AsyncExecuter.ToListAsync(
-            rankQ.Where(x => x.CasualCourseFinancialId == parent.Id));
+            rankQ.Where(x => x.CasualCourseFinancialItemId == parent.Id));
         parent.EstimatedAmountOMR = rows.Sum(x => x.SubtotalOMR);
         await financialRepo.UpdateAsync(parent, autoSave: true);
 

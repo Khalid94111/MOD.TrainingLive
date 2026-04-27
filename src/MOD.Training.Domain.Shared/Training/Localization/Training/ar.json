@@ -188,6 +188,9 @@
     "Training:CourseProposal:AlreadyReviewed": "تمت مراجعة هذا الاقتراح مسبقاً.",
     "Training:TenantCourse:NotFound": "دورة الجهة غير موجودة.",
     "Training:TenantCourse:AlreadyAdded": "تمت إضافة هذه الدورة للجهة مسبقاً.",
-    "Training:TenantCourse:CatalogCourseInactive": "لا يمكن إضافة دورة غير نشطة من الكتالوج."
+    "Training:TenantCourse:CatalogCourseInactive": "لا يمكن إضافة دورة غير نشطة من الكتالوج.",
+    "Training:CasualCourse:FundingSourceNameRequired": "اسم مصدر التمويل مطلوب للدورات الخارجية.",
+    "Training:CasualCourse:FundingSourceVoteCodeRequired": "كود نبراس لمصدر التمويل مطلوب للدورات الخارجية.",
+    "Training:CasualCourse:ScenarioRequiredBeforeFinancials": "يجب اختيار سيناريو التمويل أولًا."
   }
 }

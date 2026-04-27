@@ -1,7 +1,7 @@
 import type { FundingScenario } from '../../enums/funding-scenario.enum';
-import type { PlanNoteDto } from '../../plans/dtos/models';
-import type { FullAuditedEntityDto, PagedAndSortedResultRequestDto } from '@abp/ng.core';
 import type { CourseType } from '../../enums/course-type.enum';
+import type { PlanNoteDto } from '../../plans/dtos/models';
+import type { EntityDto, FullAuditedEntityDto, PagedAndSortedResultRequestDto } from '@abp/ng.core';
 import type { CasualCourseStatus } from '../../enums/casual-course-status.enum';
 import type { FinancialAmountSource } from '../../enums/financial-amount-source.enum';
 
@@ -11,26 +11,23 @@ export interface AssignScenarioDto {
   commit?: boolean;
 }
 
-export interface StaffAdjustmentDto {
-  casualCourseFinancialItemRankId: string;
-  newRatePerUnitOMR: number;
-  adjustmentNote?: string | null;
+export interface CalculatePreviewDto {
+  items?: PreviewItemDto[];
+  totalOMR?: number;
+  courseType?: CourseType;
+  computedAt?: string;
 }
 
-export interface FinancialOverrideDto {
-  financialItemId: string;
-  rankId: string;
-  ratePerUnitOMR: number;
-  notes?: string | null;
-}
-
-export interface UpdateRankRateDto {
-  ratePerUnitOMR?: number;
+export interface CalculatePreviewInput {
+  courseType?: CourseType;
+  durationDays?: number;
+  nomineeEmployeeIds?: string[];
+  courseCost?: number | null;
 }
 
 export interface CasualCourseDetailDto extends CasualCourseDto {
   nominations?: CasualCourseNominationDto[];
-  financials?: CasualCourseFinancialDto[];
+  financialItems?: CasualCourseFinancialItemDto[];
   latestReturnNote?: PlanNoteDto | null;
   conditionSummary?: string | null;
 }
@@ -50,7 +47,9 @@ export interface CasualCourseDto extends FullAuditedEntityDto<string> {
   durationDays?: number;
   estimatedDateFrom?: string;
   estimatedDateTo?: string;
-  fundingSource?: string | null;
+  fundingSourceName?: string | null;
+  fundingSourceVoteCode?: string | null;
+  courseCost?: number | null;
   estimatedTotalCost?: number | null;
   fundingScenario?: FundingScenario | null;
   selectedPriceQuoteId?: string | null;
@@ -63,11 +62,11 @@ export interface CasualCourseDto extends FullAuditedEntityDto<string> {
   unitName?: string;
   requesterName?: string;
   nomineesCount?: number;
-  financialsCount?: number;
+  financialItemsCount?: number;
   latestReturnReason?: string | null;
 }
 
-export interface CasualCourseFinancialDto extends FullAuditedEntityDto<string> {
+export interface CasualCourseFinancialItemDto extends FullAuditedEntityDto<string> {
   tenantId?: string | null;
   casualCourseId?: string;
   financialItemId?: string;
@@ -84,9 +83,8 @@ export interface CasualCourseFinancialDto extends FullAuditedEntityDto<string> {
   ranks?: CasualCourseFinancialItemRankDto[];
 }
 
-export interface CasualCourseFinancialItemRankDto {
-  id?: string;
-  casualCourseFinancialId?: string;
+export interface CasualCourseFinancialItemRankDto extends EntityDto<string> {
+  casualCourseFinancialItemId?: string;
   rankId?: string;
   rankNameAr?: string;
   nomineeCount?: number;
@@ -117,7 +115,7 @@ export interface CasualCourseNominationDto extends FullAuditedEntityDto<string> 
   conditionDetails?: string | null;
 }
 
-export interface CreateCasualCourseFinancialDto {
+export interface CreateCasualCourseFinancialItemDto {
   financialItemId: string;
   notes?: string | null;
 }
@@ -135,11 +133,40 @@ export interface CreateUpdateCasualCourseDto {
   durationDays?: number;
   estimatedDateFrom: string;
   estimatedDateTo: string;
-  fundingSource?: string | null;
+  fundingSourceName?: string | null;
+  fundingSourceVoteCode?: string | null;
+  courseCost?: number | null;
   nomineeEmployeeIds?: string[];
-  financialOverrides?: FinancialOverrideDto[] | null;
+}
+
+export interface PreviewItemDto {
+  financialItemId?: string;
+  financialItemNameAr?: string;
+  isPerDay?: boolean;
+  isPerNominee?: boolean;
+  effectiveDays?: number;
+  subtotalOMR?: number;
+  rankBreakdown?: PreviewRankRowDto[] | null;
+}
+
+export interface PreviewRankRowDto {
+  rankId?: string;
+  rankNameAr?: string;
+  nomineeCount?: number;
+  ratePerUnitOMR?: number;
+  subtotalOMR?: number;
 }
 
 export interface RejectDto {
   reason: string;
+}
+
+export interface StaffAdjustmentDto {
+  casualCourseFinancialItemRankId?: string;
+  newRatePerUnitOMR?: number;
+  adjustmentNote?: string | null;
+}
+
+export interface UpdateRankRateDto {
+  ratePerUnitOMR?: number;
 }

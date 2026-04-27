@@ -12,5 +12,5 @@ public interface ICasualCourseFinancialItemRankAppService : IApplicationService
     /// parent TotalAmount, and the course-level EstimatedTotalCost.
     /// Returns the refreshed parent (with Ranks hydrated).
     /// </summary>
-    Task<CasualCourseFinancialDto> UpdateRateAsync(Guid id, UpdateRankRateDto input);
+    Task<CasualCourseFinancialItemDto> UpdateRateAsync(Guid id, UpdateRankRateDto input);
 }

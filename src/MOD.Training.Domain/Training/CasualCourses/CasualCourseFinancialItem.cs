@@ -5,7 +5,7 @@ using Volo.Abp.MultiTenancy;
 
 namespace MOD.Training.Training.CasualCourses;
 
-public class CasualCourseFinancial : FullAuditedEntity<Guid>, IMultiTenant
+public class CasualCourseFinancialItem : FullAuditedEntity<Guid>, IMultiTenant
 {
     public Guid? TenantId { get; set; }
     public Guid CasualCourseId { get; set; }
@@ -17,9 +17,9 @@ public class CasualCourseFinancial : FullAuditedEntity<Guid>, IMultiTenant
     public FinancialAmountSource Source { get; set; }
     public string? Notes { get; set; }
 
-    protected CasualCourseFinancial() { }
+    protected CasualCourseFinancialItem() { }
 
-    public CasualCourseFinancial(
+    public CasualCourseFinancialItem(
         Guid id,
         Guid casualCourseId,
         Guid financialItemId,

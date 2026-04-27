@@ -7,7 +7,7 @@ namespace MOD.Training.Training.CasualCourses;
 public class CasualCourseFinancialItemRank : FullAuditedEntity<Guid>, IMultiTenant
 {
     public Guid? TenantId { get; set; }
-    public Guid CasualCourseFinancialId { get; set; }
+    public Guid CasualCourseFinancialItemId { get; set; }
     public Guid RankId { get; set; }
     public int NomineeCount { get; set; }
     public decimal RatePerUnitOMR { get; set; }
@@ -18,14 +18,14 @@ public class CasualCourseFinancialItemRank : FullAuditedEntity<Guid>, IMultiTena
 
     public CasualCourseFinancialItemRank(
         Guid id,
-        Guid casualCourseFinancialId,
+        Guid casualCourseFinancialItemId,
         Guid rankId,
         int nomineeCount,
         decimal ratePerUnit,
         decimal subtotal,
         string rateSource) : base(id)
     {
-        CasualCourseFinancialId = casualCourseFinancialId;
+        CasualCourseFinancialItemId = casualCourseFinancialItemId;
         RankId = rankId;
         NomineeCount = nomineeCount;
         RatePerUnitOMR = ratePerUnit;

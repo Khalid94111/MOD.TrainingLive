@@ -5,7 +5,7 @@ namespace MOD.Training.Training.CasualCourses.Dtos;
 
 public class CasualCourseFinancialItemRankDto : EntityDto<Guid>
 {
-    public Guid CasualCourseFinancialId { get; set; }
+    public Guid CasualCourseFinancialItemId { get; set; }
     public Guid RankId { get; set; }
     public string RankNameAr { get; set; } = "";
     public int NomineeCount { get; set; }

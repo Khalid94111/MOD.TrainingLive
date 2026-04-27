@@ -21,7 +21,14 @@
       "Bash(git -C .. add angular/src/app/Projects/casual-courses/)",
       "Bash(git -C .. commit -m ' *)",
       "Bash(git -C .. add angular/src/app/Projects/casual-courses/casual-course-request/)",
-      "Bash(./node_modules/.bin/ng build *)"
+      "Bash(./node_modules/.bin/ng build *)",
+      "Bash(git *)",
+      "Bash(xargs cat *)",
+      "Bash(grep -E \"\\\\.\\(cs|ts\\)$\")",
+      "Bash(grep -E \"\\\\.\\(cs|json\\)$\")",
+      "Bash(grep -E \"\\(\\\\\\\\b[Ee]rror\\\\\\\\b|Build succeeded|Build FAILED|Time Elapsed\\)\")",
+      "Bash(npx --prefix angular ng build --configuration development)",
+      "Bash(tee /tmp/ngbuild.log)"
     ]
   }
 }

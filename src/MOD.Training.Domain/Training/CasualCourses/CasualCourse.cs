@@ -27,7 +27,10 @@ public class CasualCourse : FullAuditedEntity<Guid>, IMultiTenant
     public DateTime EstimatedDateFrom { get; set; }
     public DateTime EstimatedDateTo { get; set; }
 
-    public string? FundingSource { get; set; }
+    public string? FundingSourceName { get; set; }
+    public string? FundingSourceVoteCode { get; set; }
+
+    public decimal? CourseCost { get; set; }
 
     public decimal? EstimatedTotalCost { get; set; }
     public FundingScenario? FundingScenario { get; set; }
@@ -42,7 +45,7 @@ public class CasualCourse : FullAuditedEntity<Guid>, IMultiTenant
 
     public string? RejectedReason { get; set; }
 
-    public ICollection<CasualCourseFinancial>? Financials { get; set; }
+    public ICollection<CasualCourseFinancialItem>? FinancialItems { get; set; }
     public ICollection<CasualCourseNomination>? Nominations { get; set; }
 
     protected CasualCourse() { }

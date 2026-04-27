@@ -42,8 +42,9 @@ export class CasualCoursesListComponent implements OnInit {
       if (status !== '' && r.status !== +status) return false;
       if (q) {
         const name = (r.courseNameAr ?? '').toLowerCase();
-        const funding = (r.fundingSource ?? '').toLowerCase();
-        if (!name.includes(q) && !funding.includes(q)) return false;
+        const fundingName = (r.fundingSourceName ?? '').toLowerCase();
+        const fundingCode = (r.fundingSourceVoteCode ?? '').toLowerCase();
+        if (!name.includes(q) && !fundingName.includes(q) && !fundingCode.includes(q)) return false;
       }
       return true;
     });

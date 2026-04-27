@@ -5,7 +5,7 @@ using Volo.Abp.Application.Dtos;
 
 namespace MOD.Training.Training.CasualCourses.Dtos;
 
-public class CasualCourseFinancialDto : FullAuditedEntityDto<Guid>
+public class CasualCourseFinancialItemDto : FullAuditedEntityDto<Guid>
 {
     public Guid? TenantId { get; set; }
     public Guid CasualCourseId { get; set; }

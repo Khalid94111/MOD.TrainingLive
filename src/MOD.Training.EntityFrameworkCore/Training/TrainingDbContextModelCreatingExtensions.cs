@@ -545,12 +545,14 @@ builder.ConfigureCasualCoursesPhase4A();
             b.Property(x => x.DurationDays).IsRequired();
             b.Property(x => x.EstimatedDateFrom).IsRequired();
             b.Property(x => x.EstimatedDateTo).IsRequired();
-            b.Property(x => x.FundingSource).HasMaxLength(200);
+            b.Property(x => x.FundingSourceName).HasMaxLength(200);
+            b.Property(x => x.FundingSourceVoteCode).HasMaxLength(100);
+            b.Property(x => x.CourseCost).HasColumnType("decimal(18,3)");
             b.Property(x => x.EstimatedTotalCost).HasColumnType("decimal(18,3)");
             b.Property(x => x.RejectedReason).HasMaxLength(500);
             b.Property(x => x.Status).IsRequired();
 
-            b.HasMany(x => x.Financials).WithOne()
+            b.HasMany(x => x.FinancialItems).WithOne()
                 .HasForeignKey(x => x.CasualCourseId).OnDelete(DeleteBehavior.Cascade);
             b.HasMany(x => x.Nominations).WithOne()
                 .HasForeignKey(x => x.CasualCourseId).OnDelete(DeleteBehavior.Cascade);
@@ -559,9 +561,9 @@ builder.ConfigureCasualCoursesPhase4A();
             b.HasIndex(x => new { x.TenantId, x.UnitId });
         });
 
-        builder.Entity<CasualCourseFinancial>(b =>
+        builder.Entity<CasualCourseFinancialItem>(b =>
         {
-            b.ToTable(TrainingConsts.DbTablePrefix + "CasualCourseFinancials", TrainingConsts.DbSchema);
+            b.ToTable(TrainingConsts.DbTablePrefix + "CasualCourseFinancialItems", TrainingConsts.DbSchema);
             b.ConfigureByConvention();
 
             b.Property(x => x.CasualCourseId).IsRequired();
@@ -589,14 +591,14 @@ builder.ConfigureCasualCoursesPhase4A();
         {
             b.ToTable(TrainingConsts.DbTablePrefix + "CasualCourseFinancialItemRanks", TrainingConsts.DbSchema);
             b.ConfigureByConvention();
-            b.Property(x => x.CasualCourseFinancialId).IsRequired();
+            b.Property(x => x.CasualCourseFinancialItemId).IsRequired();
             b.Property(x => x.RankId).IsRequired();
             b.Property(x => x.NomineeCount).IsRequired();
             b.Property(x => x.RatePerUnitOMR).IsRequired().HasColumnType("decimal(18,3)");
             b.Property(x => x.SubtotalOMR).IsRequired().HasColumnType("decimal(18,3)");
             b.Property(x => x.RateSource).IsRequired().HasMaxLength(20);
-            b.HasOne<CasualCourseFinancial>().WithMany().HasForeignKey(x => x.CasualCourseFinancialId).OnDelete(DeleteBehavior.Cascade);
-            b.HasIndex(x => new { x.TenantId, x.CasualCourseFinancialId, x.RankId }).IsUnique();
+            b.HasOne<CasualCourseFinancialItem>().WithMany().HasForeignKey(x => x.CasualCourseFinancialItemId).OnDelete(DeleteBehavior.Cascade);
+            b.HasIndex(x => new { x.TenantId, x.CasualCourseFinancialItemId, x.RankId }).IsUnique();
         });
     }
 }

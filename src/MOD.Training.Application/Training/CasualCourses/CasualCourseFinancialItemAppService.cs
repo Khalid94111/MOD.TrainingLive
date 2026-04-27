@@ -16,56 +16,51 @@ using Volo.Abp.Domain.Repositories;
 namespace MOD.Training.Training.CasualCourses;
 
 [Authorize(TrainingPermissions.CasualCourses.Default)]
-public class CasualCourseFinancialAppService(
-    IRepository<CasualCourseFinancial, Guid> repository,
+public class CasualCourseFinancialItemAppService(
+    IRepository<CasualCourseFinancialItem, Guid> repository,
     IRepository<CasualCourseFinancialItemRank, Guid> rankRepo,
     IRepository<CasualCourse, Guid> casualCourseRepo,
     IRepository<CourseTypeFinancialItemDefault, Guid> defaultsRepo,
     IRepository<FinancialItem, Guid> financialItemRepo,
     IRepository<Rank, Guid> rankRefRepo,
-    CasualCourseRankBreakdownManager rankManager,
+    EmployeeResolver employeeResolver,
+    FinancialItemDefaultResolver rateResolver,
     FundingScenarioSourceResolver scenarioSourceResolver,
-    CasualCourseFinancialToDtoMapper toDtoMapper,
+    CasualCourseRankBreakdownManager rankManager,
+    CasualCourseFinancialItemToDtoMapper toDtoMapper,
     CasualCourseFinancialItemRankToDtoMapper rankToDtoMapper)
-    : ApplicationService, ICasualCourseFinancialAppService
+    : ApplicationService, ICasualCourseFinancialItemAppService
 {
-    public async Task<List<CasualCourseFinancialDto>> GetListByCasualCourseAsync(Guid casualCourseId)
+    public async Task<List<CasualCourseFinancialItemDto>> GetListByCasualCourseAsync(Guid casualCourseId)
     {
         var q = await repository.GetQueryableAsync();
         var items = await AsyncExecuter.ToListAsync(q.Where(x => x.CasualCourseId == casualCourseId));
-        if (items.Count == 0) return new List<CasualCourseFinancialDto>();
+        if (items.Count == 0) return new List<CasualCourseFinancialItemDto>();
 
         return await HydrateAsync(items, casualCourseId);
     }
 
     [Authorize(TrainingPermissions.CasualCourses.Review)]
-    public Task<List<CasualCourseFinancialDto>> AutoFillFromDefaultsAsync(
-        Guid casualCourseId, bool runAsSystem = false)
-        => AutoFillInternalAsync(casualCourseId, runAsSystem);
+    public Task<List<CasualCourseFinancialItemDto>> AutoFillFromDefaultsAsync(
+        Guid casualCourseId, bool runAsSystem = false, decimal? courseCostSeed = null)
+        => AutoFillInternalAsync(casualCourseId, runAsSystem, courseCostSeed);
 
     /// <summary>
-    /// Internal entry point used by CasualCourseAppService.CreateAsync with runAsSystem=true.
-    /// Not exposed via ABP dynamic API (internal), so UTM's Create permission is sufficient.
+    /// Patch 5 — invoked by <c>CasualCourseAppService.AssignScenarioAsync</c> the first
+    /// time Staff picks a scenario. Scenario is already on the course, so every row's
+    /// Source is correctly derived at insertion time. The course-cost row is seeded from
+    /// <paramref name="courseCostSeed"/> (UTM's form value) when provided.
     /// </summary>
-    internal async Task<List<CasualCourseFinancialDto>> AutoFillInternalAsync(
-        Guid casualCourseId, bool runAsSystem)
+    internal async Task<List<CasualCourseFinancialItemDto>> AutoFillInternalAsync(
+        Guid casualCourseId, bool runAsSystem, decimal? courseCostSeed = null)
     {
         var cc = await casualCourseRepo.GetAsync(casualCourseId);
 
-        if (runAsSystem)
-        {
-            if (cc.Status != CasualCourseStatus.Draft)
-                throw new InvalidOperationException(
-                    "AutoFillFromDefaultsAsync(runAsSystem:true) requires Draft status.");
-        }
-        else
-        {
-            // Staff path — UnderReview + scenario must already be picked via AssignScenarioAsync.
-            if (cc.Status != CasualCourseStatus.UnderReview)
-                throw new BusinessException("Training:CasualCourse:InvalidStatusTransition");
-            if (!cc.FundingScenario.HasValue)
-                throw new BusinessException("Training:CasualCourse:ScenarioRequiredBeforeAutoFill");
-        }
+        if (cc.Status != CasualCourseStatus.UnderReview)
+            throw new BusinessException("Training:CasualCourse:InvalidStatusTransition");
+
+        if (!cc.FundingScenario.HasValue)
+            throw new BusinessException("Training:CasualCourse:ScenarioRequiredBeforeFinancials");
 
         var defQ = await defaultsRepo.WithDetailsAsync(x => x.FinancialItem);
         var defaults = await AsyncExecuter.ToListAsync(
@@ -77,17 +72,15 @@ public class CasualCourseFinancialAppService(
             .Select(x => x.FinancialItemId)
             .ToHashSet();
 
+        var nomineesByRank = await GetNomineesByRankAsync(casualCourseId);
+
         foreach (var def in defaults.Where(d => !existingFiIds.Contains(d.FinancialItemId)))
         {
             var fi = def.FinancialItem;
-            // System path on Draft: scenario not yet picked — use FinancialItem as placeholder
-            // Source. AssignScenarioAsync re-derives every row's Source once Staff picks the scenario.
-            var src = cc.FundingScenario.HasValue
-                ? scenarioSourceResolver.Resolve(cc.FundingScenario.Value, fi)
-                : FinancialAmountSource.FinancialItem;
+            var src = scenarioSourceResolver.Resolve(cc.FundingScenario!.Value, fi);
 
             var parent = await repository.InsertAsync(
-                new CasualCourseFinancial(
+                new CasualCourseFinancialItem(
                     GuidGenerator.Create(),
                     casualCourseId,
                     def.FinancialItemId,
@@ -95,22 +88,81 @@ public class CasualCourseFinancialAppService(
                     src),
                 autoSave: true);
 
-            await rankManager.InitializeAsync(parent.Id);
+            decimal parentTotal = 0m;
+
+            if (!fi.IsPerNominee)
+            {
+                decimal rate;
+                string rateSource;
+
+                if (fi.ItemType == FinancialItemType.CourseCost && courseCostSeed.HasValue)
+                {
+                    rate = courseCostSeed.Value;
+                    rateSource = FinancialItemDefaultResolver.RateSourceFromUTMForm;
+                }
+                else
+                {
+                    var resolved = await rateResolver.ResolveRateWithSourceAsync(fi.Id, rankId: null);
+                    rate = resolved.Rate;
+                    rateSource = resolved.Source;
+                }
+
+                var subtotal = rateResolver.ComputeSubtotal(
+                    rate, fi.IsPerDay, fi.IsPerNominee,
+                    cc.DurationDays, fi.ExtraDaysBefore, fi.ExtraDaysAfter, nomineeCount: 1);
+
+                await rankRepo.InsertAsync(
+                    new CasualCourseFinancialItemRank(
+                        GuidGenerator.Create(), parent.Id, Guid.Empty, 1, rate, subtotal, rateSource),
+                    autoSave: true);
+                parentTotal = subtotal;
+            }
+            else
+            {
+                foreach (var grp in nomineesByRank)
+                {
+                    var (rate, rateSource) = await rateResolver.ResolveRateWithSourceAsync(fi.Id, grp.Key);
+                    var subtotal = rateResolver.ComputeSubtotal(
+                        rate, fi.IsPerDay, fi.IsPerNominee,
+                        cc.DurationDays, fi.ExtraDaysBefore, fi.ExtraDaysAfter, grp.Value);
+
+                    await rankRepo.InsertAsync(
+                        new CasualCourseFinancialItemRank(
+                            GuidGenerator.Create(), parent.Id, grp.Key, grp.Value, rate, subtotal, rateSource),
+                        autoSave: true);
+                    parentTotal += subtotal;
+                }
+            }
+
+            parent.EstimatedAmountOMR = parentTotal;
+            await repository.UpdateAsync(parent, autoSave: true);
         }
+
+        await rankManager.RefreshCourseTotalAsync(casualCourseId);
 
         return await GetListByCasualCourseAsync(casualCourseId);
     }
 
+    private async Task<Dictionary<Guid, int>> GetNomineesByRankAsync(Guid casualCourseId)
+    {
+        var withNoms = await casualCourseRepo.WithDetailsAsync(x => x.Nominations!);
+        var course = await AsyncExecuter.FirstOrDefaultAsync(withNoms.Where(x => x.Id == casualCourseId));
+        if (course?.Nominations == null || course.Nominations.Count == 0)
+            return new Dictionary<Guid, int>();
+
+        var employeeIds = course.Nominations.Select(n => n.EmployeeId).ToList();
+        var employees = await employeeResolver.GetEmployeesWithRanksAsync(employeeIds);
+        return employees.GroupBy(e => e.RankId).ToDictionary(g => g.Key, g => g.Count());
+    }
+
     [Authorize(TrainingPermissions.CasualCourses.Review)]
-    public async Task<CasualCourseFinancialDto> AddItemAsync(
-        Guid casualCourseId, CreateCasualCourseFinancialDto input)
+    public async Task<CasualCourseFinancialItemDto> AddItemAsync(
+        Guid casualCourseId, CreateCasualCourseFinancialItemDto input)
     {
         var cc = await casualCourseRepo.GetAsync(casualCourseId);
         if (cc.Status != CasualCourseStatus.UnderReview)
             throw new BusinessException("Training:CasualCourse:InvalidStatusTransition");
 
-        // If scenario already chosen, derive Source via resolver; otherwise use the
-        // scenario-agnostic placeholder (AssignScenarioAsync re-derives every row on scenario pick).
         FinancialAmountSource src;
         if (cc.FundingScenario.HasValue)
         {
@@ -123,7 +175,7 @@ public class CasualCourseFinancialAppService(
         }
 
         var parent = await repository.InsertAsync(
-            new CasualCourseFinancial(
+            new CasualCourseFinancialItem(
                 GuidGenerator.Create(),
                 casualCourseId,
                 input.FinancialItemId,
@@ -136,7 +188,7 @@ public class CasualCourseFinancialAppService(
 
         await rankManager.InitializeAsync(parent.Id);
 
-        var list = await HydrateAsync(new List<CasualCourseFinancial> { parent }, casualCourseId);
+        var list = await HydrateAsync(new List<CasualCourseFinancialItem> { parent }, casualCourseId);
         return list.Single();
     }
 
@@ -153,8 +205,8 @@ public class CasualCourseFinancialAppService(
         await rankManager.RefreshCourseTotalAsync(parentId);
     }
 
-    private async Task<List<CasualCourseFinancialDto>> HydrateAsync(
-        List<CasualCourseFinancial> parents, Guid casualCourseId)
+    private async Task<List<CasualCourseFinancialItemDto>> HydrateAsync(
+        List<CasualCourseFinancialItem> parents, Guid casualCourseId)
     {
         var fiIds = parents.Select(x => x.FinancialItemId).Distinct().ToList();
         var fiQ = await financialItemRepo.GetQueryableAsync();
@@ -164,8 +216,8 @@ public class CasualCourseFinancialAppService(
         var parentIds = parents.Select(x => x.Id).ToList();
         var rankQ = await rankRepo.GetQueryableAsync();
         var rankRows = await AsyncExecuter.ToListAsync(
-            rankQ.Where(x => parentIds.Contains(x.CasualCourseFinancialId)));
-        var ranksByParent = rankRows.GroupBy(r => r.CasualCourseFinancialId).ToDictionary(g => g.Key, g => g.ToList());
+            rankQ.Where(x => parentIds.Contains(x.CasualCourseFinancialItemId)));
+        var ranksByParent = rankRows.GroupBy(r => r.CasualCourseFinancialItemId).ToDictionary(g => g.Key, g => g.ToList());
 
         var rankIds = rankRows.Select(r => r.RankId).Where(id => id != Guid.Empty).Distinct().ToList();
         var rankLookup = new Dictionary<Guid, string>();

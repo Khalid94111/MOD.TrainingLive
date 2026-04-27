@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
-import { CasualCourseService, CasualCourseFinancialService } from 'src/app/proxy/training/casual-courses';
+import { CasualCourseService, CasualCourseFinancialItemService } from 'src/app/proxy/training/casual-courses';
 import type {
+  CalculatePreviewDto,
   CasualCourseDetailDto,
-  CasualCourseFinancialDto,
+  CasualCourseFinancialItemDto,
 } from 'src/app/proxy/training/casual-courses/dtos/models';
 
 import {
@@ -29,7 +30,7 @@ import { PlanNoteEntityType } from 'src/app/proxy/training/enums/plan-note-entit
 })
 export class CasualCourseApprovalComponent implements OnInit {
   private service = inject(CasualCourseService);
-  private financialService = inject(CasualCourseFinancialService);
+  private financialService = inject(CasualCourseFinancialItemService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   l = inject(TrainingLocalizationHelper);
@@ -39,7 +40,11 @@ export class CasualCourseApprovalComponent implements OnInit {
 
   courseId = signal<string>('');
   casualCourse = signal<CasualCourseDetailDto | null>(null);
-  financials = signal<CasualCourseFinancialDto[]>([]);
+  financials = signal<CasualCourseFinancialItemDto[]>([]);
+  // Patch 5 — UGM viewing a Submitted course (before scenario is picked) sees a server-
+  // computed preview instead of real CasualCourseFinancialItem rows. TD/TH still see the
+  // real rows because Staff has finalised review by then.
+  preview = signal<CalculatePreviewDto | null>(null);
   loading = signal(true);
   error = signal<string | null>(null);
   actionBusy = signal(false);
@@ -104,12 +109,32 @@ export class CasualCourseApprovalComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
     try {
-      const [detail, financials] = await Promise.all([
-        firstValueFrom(this.service.getDetail(this.courseId())),
-        firstValueFrom(this.financialService.getListByCasualCourse(this.courseId())),
-      ]);
+      const detail = await firstValueFrom(this.service.getDetail(this.courseId()));
       this.casualCourse.set(detail);
-      this.financials.set(financials);
+
+      const isUgmStage = detail.status === CasualCourseStatus.Submitted;
+      if (isUgmStage) {
+        // Patch 5 — Submitted = pre-scenario; render the calculator preview instead
+        // of querying CasualCourseFinancialItems (which don't exist yet).
+        const nomineeIds = (detail.nominations ?? [])
+          .map(n => n.employeeId)
+          .filter((v): v is string => !!v);
+        if (detail.courseType !== undefined && (detail.durationDays ?? 0) > 0) {
+          this.preview.set(await firstValueFrom(this.service.calculatePreview({
+            courseType: detail.courseType,
+            durationDays: detail.durationDays!,
+            nomineeEmployeeIds: nomineeIds,
+            courseCost: detail.courseCost ?? null,
+          })));
+        }
+        this.financials.set([]);
+      } else {
+        const financials = await firstValueFrom(
+          this.financialService.getListByCasualCourse(this.courseId()),
+        );
+        this.financials.set(financials);
+        this.preview.set(null);
+      }
     } catch (e: unknown) {
       this.error.set(this.mapError(e));
     } finally {
@@ -120,10 +145,17 @@ export class CasualCourseApprovalComponent implements OnInit {
   rateSourceLabel(source: string | undefined): string {
     if (source === 'RankOverride') return 'معدل الرتبة';
     if (source === 'DefaultAmount') return 'افتراضي';
+    if (source === 'FromUTMForm') return 'من UTM';
     return source ?? '—';
   }
 
-  isFlatItem(fin: CasualCourseFinancialDto): boolean {
+  isFromUtmForm(source: string | undefined): boolean {
+    return source === 'FromUTMForm';
+  }
+
+  previewGrandTotal = computed(() => this.preview()?.totalOMR ?? 0);
+
+  isFlatItem(fin: CasualCourseFinancialItemDto): boolean {
     return !fin.isPerNominee;
   }
 
@@ -136,7 +168,7 @@ export class CasualCourseApprovalComponent implements OnInit {
     this.expandedItemId.update(cur => (cur === id ? null : id));
   }
 
-  effectiveDaysExplainer(fin: CasualCourseFinancialDto): string {
+  effectiveDaysExplainer(fin: CasualCourseFinancialItemDto): string {
     if (!fin.isPerDay) return 'ليس لكل يوم';
     const days = this.casualCourse()?.durationDays ?? 0;
     const before = fin.extraDaysBefore ?? 0;
