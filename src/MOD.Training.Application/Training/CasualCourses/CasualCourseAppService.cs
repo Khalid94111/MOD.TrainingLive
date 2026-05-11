@@ -32,6 +32,11 @@ public class CasualCourseAppService(
     IRepository<Rank, Guid> rankRefRepo,
     IRepository<PlanNote, Guid> planNoteRepo,
     IRepository<PriceQuote, Guid> priceQuoteRepo,
+    // Patch 2 — execution-stage compute on GetList reads these aggregates per post-TH course.
+    IRepository<MOD.Training.Training.Execution.TravelInstruction, Guid> travelInstructionRepo,
+    IRepository<MOD.Training.Training.Payments.CoursePayment, Guid> coursePaymentRepo,
+    IRepository<MOD.Training.Training.Payments.TravelAllowancePayment, Guid> travelAllowanceRepo,
+    IRepository<MOD.Training.Training.Payments.BudgetReallocation, Guid> reallocationRepo,
     IOrganizationUnitRepository orgUnitRepository,
     CasualCourseValidator validator,
     NominationConditionValidator conditionValidator,
@@ -162,7 +167,125 @@ public class CasualCourseAppService(
         foreach (var e in entities)
             dtos.Add(await BuildDtoAsync(e));
 
+        await PopulateExecutionStagesAsync(entities, dtos);
+
+        // Apply execution-stage filter post-compute (stage is derived, not a DB column).
+        if (input.ExecutionStage.HasValue)
+        {
+            var filtered = dtos.Where(d => d.ExecutionStage == input.ExecutionStage.Value).ToList();
+            return new PagedResultDto<CasualCourseDto>(filtered.Count, filtered);
+        }
+
         return new PagedResultDto<CasualCourseDto>(totalCount, dtos);
+    }
+
+    // ─── EXECUTION STAGE (Patch 2) ─────────────────────────────────────
+    // Computed once per GetList by batching the four child-entity lookups for the
+    // THApproved subset. Mirrors the documented post-TH lifecycle:
+    //   External: quote → TI → travel allowances → course payment → reallocations → complete
+    //   Internal: payment → complete (skips quote/TI/allowances; no reallocations either)
+
+    private async Task PopulateExecutionStagesAsync(
+        IReadOnlyList<CasualCourse> entities,
+        IReadOnlyList<CasualCourseDto> dtos)
+    {
+        var thApprovedIds = entities
+            .Where(e => e.Status == CasualCourseStatus.THApproved)
+            .Select(e => e.Id)
+            .ToList();
+        if (thApprovedIds.Count == 0) return;
+
+        // Batch-load the four child collections for this page's THApproved rows.
+        var tiQ = await travelInstructionRepo.GetQueryableAsync();
+        var travelInstructions = await AsyncExecuter.ToListAsync(
+            tiQ.Where(x => x.CasualCourseId.HasValue && thApprovedIds.Contains(x.CasualCourseId.Value)));
+        var tiByCourseId = travelInstructions.ToDictionary(t => t.CasualCourseId!.Value);
+
+        var cpQ = await coursePaymentRepo.GetQueryableAsync();
+        var coursePayments = await AsyncExecuter.ToListAsync(
+            cpQ.Where(x => x.CasualCourseId.HasValue && thApprovedIds.Contains(x.CasualCourseId.Value)));
+        var coursePaymentByCourseId = coursePayments.ToDictionary(p => p.CasualCourseId!.Value);
+
+        var taQ = await travelAllowanceRepo.GetQueryableAsync();
+        var travelAllowances = await AsyncExecuter.ToListAsync(
+            taQ.Where(x => x.CasualCourseId.HasValue && thApprovedIds.Contains(x.CasualCourseId.Value)));
+        var allowancesByCourseId = travelAllowances
+            .GroupBy(x => x.CasualCourseId!.Value)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        var raQ = await reallocationRepo.GetQueryableAsync();
+        var reallocations = await AsyncExecuter.ToListAsync(
+            raQ.Where(x => thApprovedIds.Contains(x.CasualCourseId)));
+        var reallocationsByCourseId = reallocations
+            .GroupBy(x => x.CasualCourseId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        // Walk dtos and entities in parallel — same order, same length.
+        for (var i = 0; i < dtos.Count; i++)
+        {
+            var entity = entities[i];
+            if (entity.Status != CasualCourseStatus.THApproved) continue;
+
+            var dto = dtos[i];
+            tiByCourseId.TryGetValue(entity.Id, out var travel);
+            coursePaymentByCourseId.TryGetValue(entity.Id, out var payment);
+            allowancesByCourseId.TryGetValue(entity.Id, out var allowances);
+            reallocationsByCourseId.TryGetValue(entity.Id, out var entityReallocations);
+
+            var nomineesCount = dto.NomineesCount;
+            var (stage, current, total) = ComputeExecutionStage(
+                entity, travel, payment, allowances, entityReallocations, nomineesCount);
+            dto.ExecutionStage = stage;
+            dto.ExecutionStageProgressCurrent = current;
+            dto.ExecutionStageProgressTotal = total;
+        }
+    }
+
+    /// <summary>
+    /// Pure function over already-loaded child collections — no DB calls. Returns
+    /// (stage, progressCurrent, progressTotal). Progress fields are null except for
+    /// the two stages that carry partial-completion semantics.
+    /// </summary>
+    private static (ExecutionStage stage, int? current, int? total) ComputeExecutionStage(
+        CasualCourse course,
+        MOD.Training.Training.Execution.TravelInstruction? travel,
+        MOD.Training.Training.Payments.CoursePayment? payment,
+        List<MOD.Training.Training.Payments.TravelAllowancePayment>? allowances,
+        List<MOD.Training.Training.Payments.BudgetReallocation>? reallocations,
+        int nomineesCount)
+    {
+        // Internal courses skip quote/TI/allowances and don't generate reallocations either.
+        if (course.CourseType == CourseType.Internal)
+        {
+            if (payment == null || payment.Status != PaymentStatus.Confirmed)
+                return (ExecutionStage.AwaitingCoursePayment, null, null);
+            return (ExecutionStage.FinanciallyComplete, null, null);
+        }
+
+        // External flow — five stages.
+        if (course.SelectedPriceQuoteId == null)
+            return (ExecutionStage.AwaitingQuoteSelection, null, null);
+
+        if (travel == null || travel.Status != TravelInstructionStatus.Issued)
+            return (ExecutionStage.AwaitingTravelInstruction, null, null);
+
+        var confirmedAllowances = allowances?.Count(p => p.Status == PaymentStatus.Confirmed) ?? 0;
+        if (confirmedAllowances < nomineesCount)
+            return (ExecutionStage.AwaitingTravelAllowances, confirmedAllowances, nomineesCount);
+
+        if (payment == null || payment.Status != PaymentStatus.Confirmed)
+            return (ExecutionStage.AwaitingCoursePayment, null, null);
+
+        // Scenario 1 (funding source covers everything) generates no reallocations.
+        if (course.FundingScenario == FundingScenario.FundingSourceCoversAll)
+            return (ExecutionStage.FinanciallyComplete, null, null);
+
+        var totalReallocations = reallocations?.Count ?? 0;
+        var approvedReallocations = reallocations?.Count(r => r.Status == ReallocationStatus.Approved) ?? 0;
+        if (totalReallocations > 0 && approvedReallocations < totalReallocations)
+            return (ExecutionStage.AwaitingReallocationApproval, approvedReallocations, totalReallocations);
+
+        return (ExecutionStage.FinanciallyComplete, null, null);
     }
 
     // ─── CALCULATOR (Patch 5) ──────────────────────────────────────────

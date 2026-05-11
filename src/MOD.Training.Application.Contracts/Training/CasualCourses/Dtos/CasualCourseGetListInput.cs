@@ -13,4 +13,8 @@ public class CasualCourseGetListInput : PagedAndSortedResultRequestDto
     public bool OnlyMyRequests { get; set; }
     public bool IsReturnedOnly { get; set; }
     public string? Search { get; set; }
+
+    // Phase 4B-β Patch 2 — filter rows by computed execution stage. Applied post-compute
+    // since the stage isn't a direct DB column. Small enough datasets at this scale.
+    public ExecutionStage? ExecutionStage { get; set; }
 }

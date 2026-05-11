@@ -1083,6 +1083,17 @@
     "Training.CasualCourseStatus.ReturnedToCreator": "Returned to Creator",
     "Training.CasualCourseStatus.Rejected": "Rejected",
 
+    "Training.ExecutionStage.Column": "Execution Stage",
+    "Training.ExecutionStage.AllStages": "All Stages",
+    "Training.ExecutionStage.AwaitingQuoteSelection": "Awaiting Quote Selection",
+    "Training.ExecutionStage.AwaitingTravelInstruction": "Awaiting Travel Instruction",
+    "Training.ExecutionStage.AwaitingTravelAllowances": "Travel Allowances",
+    "Training.ExecutionStage.AwaitingTravelAllowancesProgress": "Travel Allowances: {0}/{1} confirmed",
+    "Training.ExecutionStage.AwaitingCoursePayment": "Awaiting Course Payment",
+    "Training.ExecutionStage.AwaitingReallocationApproval": "Reallocation Approvals",
+    "Training.ExecutionStage.AwaitingReallocationApprovalProgress": "Reallocations: {0}/{1} approved",
+    "Training.ExecutionStage.FinanciallyComplete": "✓ Financially Complete",
+
     "Training.FundingScenario.FundingSourceCoversAll": "Funding source covers all",
     "Training.FundingScenario.FundingSourceCoversCourse": "Funding source covers course only (travel via reallocation)",
     "Training.FundingScenario.FinancialItemsCoverAll": "Full reallocation from financial items",

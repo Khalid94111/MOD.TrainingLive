@@ -1,5 +1,6 @@
 import type { FundingScenario } from '../../enums/funding-scenario.enum';
 import type { CourseType } from '../../enums/course-type.enum';
+import type { ExecutionStage } from '../../enums/execution-stage.enum';
 import type { PlanNoteDto } from '../../plans/dtos/models';
 import type { EntityDto, FullAuditedEntityDto, PagedAndSortedResultRequestDto } from '@abp/ng.core';
 import type { CasualCourseStatus } from '../../enums/casual-course-status.enum';
@@ -66,6 +67,9 @@ export interface CasualCourseDto extends FullAuditedEntityDto<string> {
   nomineesCount?: number;
   financialItemsCount?: number;
   latestReturnReason?: string | null;
+  executionStage?: ExecutionStage | null;
+  executionStageProgressCurrent?: number | null;
+  executionStageProgressTotal?: number | null;
 }
 
 export interface CasualCourseFinancialItemDto extends FullAuditedEntityDto<string> {
@@ -102,6 +106,7 @@ export interface CasualCourseGetListInput extends PagedAndSortedResultRequestDto
   onlyMyRequests?: boolean;
   isReturnedOnly?: boolean;
   search?: string | null;
+  executionStage?: ExecutionStage | null;
 }
 
 export interface CasualCourseNominationDto extends FullAuditedEntityDto<string> {

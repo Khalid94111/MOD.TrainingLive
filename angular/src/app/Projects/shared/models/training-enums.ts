@@ -160,3 +160,25 @@ export const FUNDING_SCENARIO_OPTIONS = [
   { value: FundingScenario.FundingSourceCoversCourse, key: '::Training.FundingScenario.FundingSourceCoversCourse', hint: '::Training.FundingScenario.PartialReallocation' },
   { value: FundingScenario.FinancialItemsCoverAll,    key: '::Training.FundingScenario.FinancialItemsCoverAll',    hint: '::Training.FundingScenario.FullReallocation' },
 ];
+
+// Mirrors ExecutionStage enum in MOD.Training.Domain.Shared/Training/Enums.
+// Pure UI metadata: localization key + badge color class. The progress-bearing
+// stages (AwaitingTravelAllowances, AwaitingReallocationApproval) interpolate
+// {0}/{1} from executionStageProgressCurrent / executionStageProgressTotal at render time.
+export enum ExecutionStage {
+  AwaitingQuoteSelection       = 1,
+  AwaitingTravelInstruction    = 2,
+  AwaitingTravelAllowances     = 3,
+  AwaitingCoursePayment        = 4,
+  AwaitingReallocationApproval = 5,
+  FinanciallyComplete          = 6,
+}
+
+export const EXECUTION_STAGE_OPTIONS = [
+  { value: ExecutionStage.AwaitingQuoteSelection,       key: '::Training.ExecutionStage.AwaitingQuoteSelection',       progressKey: null,                                                            cssClass: 'badge-stage-pending'  },
+  { value: ExecutionStage.AwaitingTravelInstruction,    key: '::Training.ExecutionStage.AwaitingTravelInstruction',    progressKey: null,                                                            cssClass: 'badge-stage-pending'  },
+  { value: ExecutionStage.AwaitingTravelAllowances,     key: '::Training.ExecutionStage.AwaitingTravelAllowances',     progressKey: '::Training.ExecutionStage.AwaitingTravelAllowancesProgress',     cssClass: 'badge-stage-progress' },
+  { value: ExecutionStage.AwaitingCoursePayment,        key: '::Training.ExecutionStage.AwaitingCoursePayment',        progressKey: null,                                                            cssClass: 'badge-stage-pending'  },
+  { value: ExecutionStage.AwaitingReallocationApproval, key: '::Training.ExecutionStage.AwaitingReallocationApproval', progressKey: '::Training.ExecutionStage.AwaitingReallocationApprovalProgress', cssClass: 'badge-stage-progress' },
+  { value: ExecutionStage.FinanciallyComplete,          key: '::Training.ExecutionStage.FinanciallyComplete',          progressKey: null,                                                            cssClass: 'badge-stage-complete' },
+];

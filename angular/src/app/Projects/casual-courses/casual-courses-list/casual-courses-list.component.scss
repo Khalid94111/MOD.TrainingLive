@@ -41,3 +41,19 @@
 .cell-money-col {
   text-align: end;
 }
+
+/* Patch 2 — execution-stage badge palette.
+   Amber = single action awaited; Blue = partial progress; Green = complete. */
+.badge-stage-pending,
+.badge-stage-progress,
+.badge-stage-complete {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-stage-pending  { background: #fef3c7; color: #92400e; }
+.badge-stage-progress { background: #dbeafe; color: #1e40af; }
+.badge-stage-complete { background: #dcfce7; color: #166534; }

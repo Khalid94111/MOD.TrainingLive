@@ -54,4 +54,12 @@ public class CasualCourseDto : FullAuditedEntityDto<Guid>
     public int NomineesCount { get; set; }
     public int FinancialItemsCount { get; set; }
     public string? LatestReturnReason { get; set; }
+
+    // Phase 4B-β Patch 2 — Execution stage (computed server-side; null for pre-THApproved rows).
+    // Frontend resolves the localized label from the enum; for the two progress-bearing stages
+    // (AwaitingTravelAllowances, AwaitingReallocationApproval) the server also surfaces
+    // "current/total" counters so the UI can render "2/5 confirmed" without a second query.
+    public ExecutionStage? ExecutionStage { get; set; }
+    public int? ExecutionStageProgressCurrent { get; set; }
+    public int? ExecutionStageProgressTotal { get; set; }
 }

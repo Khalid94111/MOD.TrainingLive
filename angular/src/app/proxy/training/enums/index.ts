@@ -8,6 +8,7 @@ export * from './center-role-type.enum';
 export * from './completion-status.enum';
 export * from './condition-type.enum';
 export * from './course-type.enum';
+export * from './execution-stage.enum';
 export * from './financial-amount-source.enum';
 export * from './financial-item-type.enum';
 export * from './funding-scenario.enum';

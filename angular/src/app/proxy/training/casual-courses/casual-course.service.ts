@@ -67,7 +67,7 @@ export class CasualCourseService {
     this.restService.request<any, PagedResultDto<CasualCourseDto>>({
       method: 'GET',
       url: '/api/app/casual-course',
-      params: { year: input.year, status: input.status, unitId: input.unitId, onlyMyRequests: input.onlyMyRequests, isReturnedOnly: input.isReturnedOnly, search: input.search, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
+      params: { year: input.year, status: input.status, unitId: input.unitId, onlyMyRequests: input.onlyMyRequests, isReturnedOnly: input.isReturnedOnly, search: input.search, executionStage: input.executionStage, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
     },
     { apiName: this.apiName,...config });
   

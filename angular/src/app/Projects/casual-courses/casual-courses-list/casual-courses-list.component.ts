@@ -8,6 +8,8 @@ import type { CasualCourseDto } from 'src/app/proxy/training/casual-courses/dtos
 import {
   CasualCourseStatus,
   CASUAL_COURSE_STATUS_OPTIONS,
+  ExecutionStage,
+  EXECUTION_STAGE_OPTIONS,
   TrainingLocalizationHelper,
 } from '../../shared';
 import { actionForRow } from '../models/casual-course-view-model';
@@ -26,12 +28,14 @@ export class CasualCoursesListComponent implements OnInit {
   l = inject(TrainingLocalizationHelper);
 
   readonly STATUS_OPTIONS = CASUAL_COURSE_STATUS_OPTIONS;
+  readonly STAGE_OPTIONS = EXECUTION_STAGE_OPTIONS;
 
   rows = signal<CasualCourseDto[]>([]);
   loading = signal(true);
   canCreate = signal(false);
 
   fStatus = signal<string>('');
+  fStage = signal<string>('');
   fSearch = signal<string>('');
   fOnlyMine = signal<boolean>(false);
 
@@ -58,10 +62,12 @@ export class CasualCoursesListComponent implements OnInit {
   async loadRows(): Promise<void> {
     this.loading.set(true);
     try {
+      const stage = this.fStage();
       const result = await firstValueFrom(
         this.service.getList({
           maxResultCount: 1000,
           onlyMyRequests: this.fOnlyMine(),
+          executionStage: stage === '' ? null : (+stage as ExecutionStage),
         }),
       );
       this.rows.set(result.items ?? []);
@@ -72,6 +78,11 @@ export class CasualCoursesListComponent implements OnInit {
 
   onStatusChange(value: string): void {
     this.fStatus.set(value);
+  }
+
+  async onStageChange(value: string): Promise<void> {
+    this.fStage.set(value);
+    await this.loadRows();
   }
 
   onSearchChange(value: string): void {
@@ -92,6 +103,26 @@ export class CasualCoursesListComponent implements OnInit {
     if (s === undefined) return '';
     const opt = this.STATUS_OPTIONS.find(o => o.value === s);
     return opt ? this.l.t(opt.key) : '';
+  }
+
+  stageCss(s: ExecutionStage | null | undefined): string {
+    if (s === null || s === undefined) return '';
+    return this.STAGE_OPTIONS.find(o => o.value === s)?.cssClass ?? '';
+  }
+
+  /** Resolves the localized execution-stage label, interpolating progress counters
+   *  for the two stages that carry partial-completion ({0}/{1}). */
+  stageLabel(row: CasualCourseDto): string {
+    const s = row.executionStage;
+    if (s === null || s === undefined) return '';
+    const opt = this.STAGE_OPTIONS.find(o => o.value === s);
+    if (!opt) return '';
+    const cur = row.executionStageProgressCurrent;
+    const tot = row.executionStageProgressTotal;
+    if (opt.progressKey && cur !== null && cur !== undefined && tot !== null && tot !== undefined) {
+      return this.l.t(opt.progressKey).replace('{0}', String(cur)).replace('{1}', String(tot));
+    }
+    return this.l.t(opt.key);
   }
 
   actionLabel(row: CasualCourseDto): string {

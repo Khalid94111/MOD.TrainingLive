@@ -767,6 +767,17 @@
     "Training.CasualCourseStatus.ReturnedToCreator": "مُعادة للمنشئ",
     "Training.CasualCourseStatus.Rejected": "مرفوضة",
 
+    "Training.ExecutionStage.Column": "مرحلة التنفيذ",
+    "Training.ExecutionStage.AllStages": "كل المراحل",
+    "Training.ExecutionStage.AwaitingQuoteSelection": "بانتظار اختيار العرض",
+    "Training.ExecutionStage.AwaitingTravelInstruction": "بانتظار إصدار تعليمات السفر",
+    "Training.ExecutionStage.AwaitingTravelAllowances": "بدلات السفر",
+    "Training.ExecutionStage.AwaitingTravelAllowancesProgress": "بدلات السفر: {0}/{1} مؤكدة",
+    "Training.ExecutionStage.AwaitingCoursePayment": "بانتظار دفع رسوم الدورة",
+    "Training.ExecutionStage.AwaitingReallocationApproval": "إعادة التخصيص",
+    "Training.ExecutionStage.AwaitingReallocationApprovalProgress": "إعادة التخصيص: {0}/{1} معتمدة",
+    "Training.ExecutionStage.FinanciallyComplete": "✓ مكتملة مالياً",
+
     "Training.FundingScenario.FundingSourceCoversAll": "مصدر التمويل يغطي الكل",
     "Training.FundingScenario.FundingSourceCoversCourse": "مصدر التمويل يغطي الدورة (السفر عبر إعادة التخصيص)",
     "Training.FundingScenario.FinancialItemsCoverAll": "إعادة تخصيص كاملة من البنود المالية",
