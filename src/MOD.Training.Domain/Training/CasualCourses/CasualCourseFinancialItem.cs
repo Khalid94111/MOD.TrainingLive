@@ -1,5 +1,6 @@
 using MOD.Training.Training.Enums;
 using System;
+using System.Collections.Generic;
 using Volo.Abp.Domain.Entities.Auditing;
 using Volo.Abp.MultiTenancy;
 
@@ -16,6 +17,10 @@ public class CasualCourseFinancialItem : FullAuditedEntity<Guid>, IMultiTenant
 
     public FinancialAmountSource Source { get; set; }
     public string? Notes { get; set; }
+
+    // Phase 4B-β — rank breakdown lives in CasualCourseFinancialItemRanks; navigation
+    // added so BudgetReallocationGenerator can sum subtotals via WithDetailsAsync.
+    public ICollection<CasualCourseFinancialItemRank>? Ranks { get; set; }
 
     protected CasualCourseFinancialItem() { }
 

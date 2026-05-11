@@ -1,0 +1,12 @@
+@if (visible()) {
+  <div class="cc-header-action-bar" role="toolbar" aria-label="إجراءات الطلب">
+    @for (btn of buttons(); track trackBtn($index, btn)) {
+      <button type="button"
+              [class]="btn.cssClass"
+              [disabled]="!!btn.disabled"
+              (click)="onClick(btn)">
+        {{ btn.label }}
+      </button>
+    }
+  </div>
+}

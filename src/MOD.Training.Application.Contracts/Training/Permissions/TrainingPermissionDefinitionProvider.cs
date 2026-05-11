@@ -285,6 +285,92 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
         planNoteGroup.AddChild(
             TrainingPermissions.PlanNote.Create, L("Permission:PlanNote.Create"));
 
+        // ── Phase 4B-α — pre-execution permissions (separate group) ─────────
+        var executionGroup = context.AddGroup(
+            TrainingExecutionPermissions.GroupName,
+            L("Permission:TrainingExecution"));
+
+        var priceQuotesPermission = executionGroup.AddPermission(
+            TrainingExecutionPermissions.PriceQuotes.Default,
+            L("Permission:TrainingExecution.PriceQuotes"));
+        priceQuotesPermission.AddChild(
+            TrainingExecutionPermissions.PriceQuotes.Create,
+            L("Permission:TrainingExecution.PriceQuotes.Create"));
+        priceQuotesPermission.AddChild(
+            TrainingExecutionPermissions.PriceQuotes.Edit,
+            L("Permission:TrainingExecution.PriceQuotes.Edit"));
+        priceQuotesPermission.AddChild(
+            TrainingExecutionPermissions.PriceQuotes.Delete,
+            L("Permission:TrainingExecution.PriceQuotes.Delete"));
+        priceQuotesPermission.AddChild(
+            TrainingExecutionPermissions.PriceQuotes.Select,
+            L("Permission:TrainingExecution.PriceQuotes.Select"));
+
+        var travelInstructionsPermission = executionGroup.AddPermission(
+            TrainingExecutionPermissions.TravelInstructions.Default,
+            L("Permission:TrainingExecution.TravelInstructions"));
+        travelInstructionsPermission.AddChild(
+            TrainingExecutionPermissions.TravelInstructions.Edit,
+            L("Permission:TrainingExecution.TravelInstructions.Edit"));
+        travelInstructionsPermission.AddChild(
+            TrainingExecutionPermissions.TravelInstructions.Issue,
+            L("Permission:TrainingExecution.TravelInstructions.Issue"));
+        travelInstructionsPermission.AddChild(
+            TrainingExecutionPermissions.TravelInstructions.Cancel,
+            L("Permission:TrainingExecution.TravelInstructions.Cancel"));
+
+        // ── Phase 4B-β — payments + auto-reallocation (separate group) ──────
+        var paymentsGroup = context.AddGroup(
+            TrainingPaymentsPermissions.GroupName,
+            L("Permission:TrainingPayments"));
+
+        var travelAllowance = paymentsGroup.AddPermission(
+            TrainingPaymentsPermissions.TravelAllowance.Default,
+            L("Permission:TrainingPayments.TravelAllowance"));
+        travelAllowance.AddChild(
+            TrainingPaymentsPermissions.TravelAllowance.Create,
+            L("Permission:TrainingPayments.TravelAllowance.Create"));
+        travelAllowance.AddChild(
+            TrainingPaymentsPermissions.TravelAllowance.Update,
+            L("Permission:TrainingPayments.TravelAllowance.Update"));
+        travelAllowance.AddChild(
+            TrainingPaymentsPermissions.TravelAllowance.Delete,
+            L("Permission:TrainingPayments.TravelAllowance.Delete"));
+        travelAllowance.AddChild(
+            TrainingPaymentsPermissions.TravelAllowance.Confirm,
+            L("Permission:TrainingPayments.TravelAllowance.Confirm"));
+
+        var coursePayments = paymentsGroup.AddPermission(
+            TrainingPaymentsPermissions.CoursePayments.Default,
+            L("Permission:TrainingPayments.CoursePayments"));
+        coursePayments.AddChild(
+            TrainingPaymentsPermissions.CoursePayments.Create,
+            L("Permission:TrainingPayments.CoursePayments.Create"));
+        coursePayments.AddChild(
+            TrainingPaymentsPermissions.CoursePayments.Update,
+            L("Permission:TrainingPayments.CoursePayments.Update"));
+        coursePayments.AddChild(
+            TrainingPaymentsPermissions.CoursePayments.Delete,
+            L("Permission:TrainingPayments.CoursePayments.Delete"));
+        coursePayments.AddChild(
+            TrainingPaymentsPermissions.CoursePayments.Confirm,
+            L("Permission:TrainingPayments.CoursePayments.Confirm"));
+        coursePayments.AddChild(
+            TrainingPaymentsPermissions.CoursePayments.UploadInvoice,
+            L("Permission:TrainingPayments.CoursePayments.UploadInvoice"));
+        coursePayments.AddChild(
+            TrainingPaymentsPermissions.CoursePayments.DownloadInvoice,
+            L("Permission:TrainingPayments.CoursePayments.DownloadInvoice"));
+
+        var reallocations = paymentsGroup.AddPermission(
+            TrainingPaymentsPermissions.Reallocations.Default,
+            L("Permission:TrainingPayments.Reallocations"));
+        reallocations.AddChild(
+            TrainingPaymentsPermissions.Reallocations.View,
+            L("Permission:TrainingPayments.Reallocations.View"));
+        reallocations.AddChild(
+            TrainingPaymentsPermissions.Reallocations.MarkApproved,
+            L("Permission:TrainingPayments.Reallocations.MarkApproved"));
     }
 
     private static LocalizableString L(string name)

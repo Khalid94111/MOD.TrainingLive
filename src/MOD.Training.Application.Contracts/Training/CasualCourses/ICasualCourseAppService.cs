@@ -32,4 +32,11 @@ public interface ICasualCourseAppService : ICrudAppService<
     Task<CasualCourseDto> ReturnAsync(Guid id, ReturnReasonDto input);
     Task<CasualCourseDto> ResubmitAsync(Guid id);
     Task<CasualCourseDto> RejectAsync(Guid id, RejectDto input);
+
+    /// <summary>
+    /// Phase 4B-α — atomic quote-winner pick. Course must be THApproved. Flips
+    /// <c>IsSelected</c> on previous winner (if any), writes <c>ActualStartDate</c> +
+    /// <c>ActualEndDate</c>, and points <c>SelectedPriceQuoteId</c> at the new quote.
+    /// </summary>
+    Task<CasualCourseDto> SelectPriceQuoteAsync(Guid id, SelectPriceQuoteDto input);
 }

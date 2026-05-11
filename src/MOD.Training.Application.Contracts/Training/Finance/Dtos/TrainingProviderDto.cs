@@ -1,3 +1,4 @@
+using MOD.Training.Training.Enums;
 using System;
 using Volo.Abp.Application.Dtos;
 
@@ -16,4 +17,12 @@ public class TrainingProviderDto : FullAuditedEntityDto<Guid>
     public int TotalRatings { get; set; }
     public bool IsApproved { get; set; }
     public bool IsActive { get; set; }
+
+    // Phase 4B-α — read-only display fields
+    public bool IsFromNebras { get; set; }
+    public string? NebrasId { get; set; }
+    public ProviderScope Scope { get; set; }
+    public Guid? CountryId { get; set; }
+    public string? CountryNameAr { get; set; }
+    public string? CountryNameEn { get; set; }
 }

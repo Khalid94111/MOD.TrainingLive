@@ -1,4 +1,4 @@
-import type { AssignScenarioDto, CalculatePreviewDto, CalculatePreviewInput, CasualCourseDetailDto, CasualCourseDto, CasualCourseGetListInput, CreateUpdateCasualCourseDto, RejectDto } from './dtos/models';
+import type { AssignScenarioDto, CalculatePreviewDto, CalculatePreviewInput, CasualCourseDetailDto, CasualCourseDto, CasualCourseGetListInput, CreateUpdateCasualCourseDto, RejectDto, SelectPriceQuoteDto } from './dtos/models';
 import { RestService, Rest } from '@abp/ng.core';
 import type { PagedResultDto } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
@@ -102,6 +102,15 @@ export class CasualCourseService {
     this.restService.request<any, CasualCourseDto>({
       method: 'POST',
       url: `/api/app/casual-course/${id}/return`,
+      body: input,
+    },
+    { apiName: this.apiName,...config });
+  
+
+  selectPriceQuote = (id: string, input: SelectPriceQuoteDto, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, CasualCourseDto>({
+      method: 'POST',
+      url: `/api/app/casual-course/${id}/select-price-quote`,
       body: input,
     },
     { apiName: this.apiName,...config });

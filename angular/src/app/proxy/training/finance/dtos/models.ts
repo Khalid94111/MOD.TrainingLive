@@ -2,6 +2,7 @@ import type { EntityDto, FullAuditedEntityDto, PagedAndSortedResultRequestDto } 
 import type { CourseType } from '../../enums/course-type.enum';
 import type { FinancialItemType } from '../../enums/financial-item-type.enum';
 import type { PricingType } from '../../enums/pricing-type.enum';
+import type { ProviderScope } from '../../enums/provider-scope.enum';
 import type { ApprovalStatus } from '../../enums/approval-status.enum';
 
 export interface CourseTypeFinancialItemDefaultDto extends EntityDto<string> {
@@ -46,11 +47,15 @@ export interface CreateUpdateFinancialItemRankAmountDto {
 }
 
 export interface CreateUpdatePriceQuoteDto {
-  sessionId: string;
+  sessionId?: string | null;
+  casualCourseId?: string | null;
   providerId: string;
-  pricingType: PricingType;
-  quotedPrice: number;
-  participantsCount: number;
+  pricingType?: PricingType;
+  quotedPrice?: number;
+  participantsCount?: number;
+  quotedPriceOMR?: number;
+  countryId?: string | null;
+  cityId?: string | null;
   notes?: string | null;
 }
 
@@ -64,6 +69,8 @@ export interface CreateUpdateTrainingProviderDto {
   website?: string | null;
   isApproved?: boolean;
   isActive?: boolean;
+  scope?: ProviderScope;
+  countryId?: string | null;
 }
 
 export interface ExchangeRateDto extends EntityDto<string> {
@@ -117,11 +124,13 @@ export interface FinancialItemSubItemDto {
 }
 
 export interface PriceQuoteDto extends FullAuditedEntityDto<string> {
-  sessionId?: string;
+  sessionId?: string | null;
+  casualCourseId?: string | null;
   sessionCode?: string;
   courseName?: string;
   providerId?: string;
   providerName?: string;
+  providerScope?: ProviderScope;
   pricingType?: PricingType;
   quotedPrice?: number;
   pricePerPerson?: number | null;
@@ -129,12 +138,22 @@ export interface PriceQuoteDto extends FullAuditedEntityDto<string> {
   participantsCount?: number;
   status?: ApprovalStatus;
   notes?: string | null;
+  quotedPriceOMR?: number;
+  isSelected?: boolean;
+  countryId?: string | null;
+  countryNameAr?: string | null;
+  countryNameEn?: string | null;
+  cityId?: string | null;
+  cityNameAr?: string | null;
+  cityNameEn?: string | null;
 }
 
 export interface PriceQuoteGetListInput extends PagedAndSortedResultRequestDto {
   sessionId?: string | null;
+  casualCourseId?: string | null;
   providerId?: string | null;
   status?: ApprovalStatus | null;
+  isSelected?: boolean | null;
 }
 
 export interface TrainingBudgetDto extends EntityDto<string> {
@@ -168,12 +187,21 @@ export interface TrainingProviderDto extends FullAuditedEntityDto<string> {
   totalRatings?: number;
   isApproved?: boolean;
   isActive?: boolean;
+  isFromNebras?: boolean;
+  nebrasId?: string | null;
+  scope?: ProviderScope;
+  countryId?: string | null;
+  countryNameAr?: string | null;
+  countryNameEn?: string | null;
 }
 
 export interface TrainingProviderGetListInput extends PagedAndSortedResultRequestDto {
   filter?: string | null;
   isActive?: boolean | null;
   isApproved?: boolean | null;
+  scope?: ProviderScope | null;
+  countryId?: string | null;
+  isFromNebras?: boolean | null;
 }
 
 export interface UpdateAlertThresholdDto {

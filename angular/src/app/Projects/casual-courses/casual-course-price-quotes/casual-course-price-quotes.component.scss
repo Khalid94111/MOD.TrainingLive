@@ -1,0 +1,433 @@
+@import '../../shared/gtms-design';
+
+.page-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.back-link {
+  font-size: 0.78rem;
+  color: #64748b;
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 4px;
+  cursor: pointer;
+  &:hover { color: #1e293b; }
+}
+
+.page-h1 {
+  font-size: 1.4rem;
+  margin: 0;
+}
+
+.section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.muted-xs {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  display: block;
+}
+
+/* Course summary card */
+.course-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  .summary-left { flex: 1; min-width: 280px; }
+  .summary-right { text-align: end; }
+
+  .course-title {
+    margin: 4px 0 8px;
+    font-size: 1.1rem;
+    color: #1e293b;
+  }
+
+  .meta-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 0.78rem;
+    color: #475569;
+  }
+
+  .estimate-block {
+    margin-top: 8px;
+  }
+  .estimate-amount {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+  }
+  .currency {
+    font-size: 0.78rem;
+    color: #64748b;
+    font-weight: 400;
+  }
+}
+
+/* Status pills */
+.status-pill {
+  display: inline-block;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.status-th       { background: #fef3c7; color: #92400e; }
+.status-pending  { background: #fee2e2; color: #991b1b; }
+.status-selected { background: #dcfce7; color: #166534; font-weight: 700; }
+
+/* Scope chips */
+.scope-chip {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.scope-internal      { background: #f1f5f9; color: #475569; }
+.scope-local         { background: #dbeafe; color: #1e40af; }
+.scope-international { background: #fef3c7; color: #92400e; }
+
+/* Variance chips */
+.variance-ok {
+  background: #dcfce7;
+  color: #166534;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.variance-warn {
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.variance-neutral {
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+/* Info banner */
+.info-banner {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 0.85rem;
+
+  .info-banner-icon { font-size: 1.1rem; flex-shrink: 0; }
+  .info-banner-text { flex: 1; line-height: 1.5; }
+  .lock-hint { color: #b91c1c; font-weight: 700; margin-inline-start: 6px; }
+}
+.info-banner-warn {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+}
+
+/* Quote list */
+.quote-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quote-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: white;
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+}
+
+.quote-winner {
+  border: 2px solid #16a34a;
+  background: #f0fdf4;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
+}
+
+.quote-card-body {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.quote-leader {
+  flex-shrink: 0;
+  font-size: 1.7rem;
+  width: 32px;
+  text-align: center;
+}
+
+.quote-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.quote-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.quote-provider {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.quote-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 10px;
+  font-size: 0.8rem;
+  margin-top: 6px;
+
+  @media (max-width: 720px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.price {
+  color: #1e293b;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.quote-winner .price {
+  color: #166534;
+}
+
+.quote-notes {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-style: italic;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.quote-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: stretch;
+  flex-shrink: 0;
+  min-width: 130px;
+}
+
+.btn-link-danger {
+  background: transparent;
+  color: #dc2626;
+  border: none;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+
+  &:hover { background: #fef2f2; }
+}
+
+.winner-actual-dates {
+  text-align: end;
+  background: white;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #bbf7d0;
+
+  .actual-dates-line {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #166534;
+    margin-top: 2px;
+  }
+}
+
+/* Validation error */
+.validation-error {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #991b1b;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Empty state */
+.empty-state.small {
+  padding: 24px;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  text-align: center;
+}
+
+/* Modal — `:host` prefix raises specificity so these rules beat the
+   shared `.modal-backdrop { z-index: 1000 }` in gtms-design.scss, which
+   loads after this file in styleUrls and would otherwise put the backdrop
+   on top of the modal and freeze the form behind it. */
+:host .modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 1100;
+  /* Override shared `display: flex` — modal is a sibling here, not a child. */
+  display: block;
+}
+
+:host .modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  z-index: 1101;
+  width: 90%;
+  max-width: 720px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-quote { max-width: 720px; }
+.modal-pick  { max-width: 600px; }
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+
+  h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e293b;
+  }
+}
+
+.pick-header {
+  background: linear-gradient(135deg, #ecfdf5, #ffffff);
+  border-bottom: 2px solid #bbf7d0;
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #94a3b8;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+
+  &:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+  }
+}
+
+.modal-body {
+  padding: 18px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 0 0 14px 14px;
+}
+
+.pick-intro {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin: 0 0 14px;
+}
+
+.pick-quote-summary {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.pick-quote-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  font-size: 0.8rem;
+  margin-top: 8px;
+}
+
+.pick-effects {
+  margin-top: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.78rem;
+  color: #334155;
+
+  ul {
+    margin: 6px 0 0;
+    padding-inline-start: 18px;
+
+    li { margin-bottom: 4px; }
+  }
+
+  code {
+    background: white;
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+    font-family: monospace;
+  }
+}

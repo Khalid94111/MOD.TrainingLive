@@ -3,8 +3,11 @@ using MOD.Training.Training.CasualCourses;
 using MOD.Training.Training.Catalog;
 using MOD.Training.Training.Centers;
 using MOD.Training.Training.Consts;
+using MOD.Training.Training.Enums;
+using MOD.Training.Training.Execution;
 using MOD.Training.Training.Finance;
 using MOD.Training.Training.Nominations;
+using MOD.Training.Training.Payments;
 using MOD.Training.Training.Plans;
 using MOD.Training.Training.System;
 using MOD.Training.Training.TenantCourses;
@@ -31,6 +34,8 @@ public static class TrainingDbContextModelCreatingExtensions
 builder.ConfigureNominations();
 builder.ConfigureFinancePhase3();
 builder.ConfigureCasualCoursesPhase4A();
+builder.ConfigurePreExecutionPhase4BAlpha();
+builder.ConfigurePaymentsPhase4BBeta();
     }
 
     private static void ConfigureCatalog(this ModelBuilder builder)
@@ -459,7 +464,10 @@ builder.ConfigureCasualCoursesPhase4A();
             b.ToTable(TrainingConsts.DbTablePrefix + "PriceQuotes", TrainingConsts.DbSchema);
             b.ConfigureByConvention();
 
-            b.Property(x => x.SessionId).IsRequired();
+            // Polymorphic parent — both nullable; DB-level CHECK constraint enforces "exactly one set".
+            b.Property(x => x.SessionId).IsRequired(false);
+            b.Property(x => x.CasualCourseId).IsRequired(false);
+
             b.Property(x => x.ProviderId).IsRequired();
             b.Property(x => x.PricingType).IsRequired();
             b.Property(x => x.QuotedPrice).IsRequired().HasColumnType("decimal(18,3)");
@@ -469,11 +477,18 @@ builder.ConfigureCasualCoursesPhase4A();
             b.Property(x => x.Status).IsRequired();
             b.Property(x => x.Notes).HasMaxLength(TrainingConsts.MaxNotesLength);
 
+            // Phase 4B-α additions
+            b.Property(x => x.QuotedPriceOMR).HasColumnType("decimal(18,3)");
+            b.Property(x => x.IsSelected).HasDefaultValue(false);
+
             b.HasOne(x => x.Provider).WithMany().HasForeignKey(x => x.ProviderId).OnDelete(DeleteBehavior.Restrict);
             b.HasOne(x => x.Session).WithMany().HasForeignKey(x => x.SessionId).OnDelete(DeleteBehavior.Restrict);
 
             b.HasIndex(x => x.SessionId);
+            b.HasIndex(x => x.CasualCourseId);
             b.HasIndex(x => x.ProviderId);
+            b.HasIndex(x => x.CountryId);
+            b.HasIndex(x => x.CityId);
         });
 
         builder.Entity<TrainingProvider>(b =>
@@ -489,6 +504,15 @@ builder.ConfigureCasualCoursesPhase4A();
             b.Property(x => x.Address).HasMaxLength(TrainingConsts.MaxAddressLength);
             b.Property(x => x.Website).HasMaxLength(TrainingConsts.MaxWebsiteLength);
             b.Property(x => x.AverageRating).HasColumnType("decimal(3,2)");
+
+            // Phase 4B-α additions
+            b.Property(x => x.IsFromNebras).HasDefaultValue(false);
+            b.Property(x => x.NebrasId).HasMaxLength(100);
+            b.Property(x => x.Scope).IsRequired().HasDefaultValue(ProviderScope.Local);
+
+            b.HasIndex(x => x.CountryId);
+            b.HasIndex(x => x.IsFromNebras);
+            b.HasIndex(x => x.Scope);
         });
 
         builder.Entity<FinancialItemRankAmount>(b =>
@@ -552,6 +576,10 @@ builder.ConfigureCasualCoursesPhase4A();
             b.Property(x => x.RejectedReason).HasMaxLength(500);
             b.Property(x => x.Status).IsRequired();
 
+            // Phase 4B-α — actual confirmed dates (written by SelectPriceQuoteAsync).
+            b.Property(x => x.ActualStartDate).IsRequired(false);
+            b.Property(x => x.ActualEndDate).IsRequired(false);
+
             b.HasMany(x => x.FinancialItems).WithOne()
                 .HasForeignKey(x => x.CasualCourseId).OnDelete(DeleteBehavior.Cascade);
             b.HasMany(x => x.Nominations).WithOne()
@@ -574,6 +602,8 @@ builder.ConfigureCasualCoursesPhase4A();
             b.Property(x => x.Notes).HasMaxLength(500);
 
             b.HasIndex(x => new { x.CasualCourseId, x.FinancialItemId }).IsUnique().HasFilter("[IsDeleted] = 0");
+
+            // Ranks navigation declared on the rank-side block below (single relationship).
         });
 
         builder.Entity<CasualCourseNomination>(b =>
@@ -597,8 +627,156 @@ builder.ConfigureCasualCoursesPhase4A();
             b.Property(x => x.RatePerUnitOMR).IsRequired().HasColumnType("decimal(18,3)");
             b.Property(x => x.SubtotalOMR).IsRequired().HasColumnType("decimal(18,3)");
             b.Property(x => x.RateSource).IsRequired().HasMaxLength(20);
-            b.HasOne<CasualCourseFinancialItem>().WithMany().HasForeignKey(x => x.CasualCourseFinancialItemId).OnDelete(DeleteBehavior.Cascade);
+            // Phase 4B-β — paired navigation: CasualCourseFinancialItem.Ranks ↔ this rank's FK.
+            b.HasOne<CasualCourseFinancialItem>()
+                .WithMany(p => p.Ranks)
+                .HasForeignKey(x => x.CasualCourseFinancialItemId)
+                .OnDelete(DeleteBehavior.Cascade);
             b.HasIndex(x => new { x.TenantId, x.CasualCourseFinancialItemId, x.RankId }).IsUnique();
+        });
+    }
+
+    public static void ConfigurePreExecutionPhase4BAlpha(this ModelBuilder builder)
+    {
+        builder.Entity<TravelInstruction>(b =>
+        {
+            b.ToTable(TrainingConsts.DbTablePrefix + "TravelInstructions", TrainingConsts.DbSchema);
+            b.ConfigureByConvention();
+
+            // Polymorphic parent — both nullable; DB-level CHECK enforces exactly one set.
+            b.Property(x => x.CasualCourseId).IsRequired(false);
+            b.Property(x => x.SessionId).IsRequired(false);
+
+            b.Property(x => x.DepartureDate).IsRequired();
+            b.Property(x => x.ArrivalDate).IsRequired();
+            b.Property(x => x.ReturnDate).IsRequired();
+            b.Property(x => x.ArrivalBackDate).IsRequired();
+
+            b.Property(x => x.VisaRequired).HasDefaultValue(false);
+            b.Property(x => x.VisaNotes).HasMaxLength(500);
+            b.Property(x => x.InsuranceArranged).HasDefaultValue(false);
+            b.Property(x => x.InsuranceProvider).HasMaxLength(200);
+            b.Property(x => x.TicketsBooked).HasDefaultValue(false);
+            b.Property(x => x.TicketReference).HasMaxLength(100);
+
+            b.Property(x => x.CalculatedTravelDays).IsRequired();
+            b.Property(x => x.OverrideTravelDays).IsRequired(false);
+
+            b.Property(x => x.Status).IsRequired().HasDefaultValue(TravelInstructionStatus.Draft);
+
+            // Unique-per-arm: one travel instruction per casual course OR per session.
+            b.HasIndex(x => x.CasualCourseId)
+                .IsUnique()
+                .HasFilter("[CasualCourseId] IS NOT NULL");
+            b.HasIndex(x => x.SessionId)
+                .IsUnique()
+                .HasFilter("[SessionId] IS NOT NULL");
+        });
+    }
+
+    /// <summary>
+    /// Phase 4B-β — payments + auto-reallocation tables.
+    /// Three new entities: TravelAllowancePayment + CoursePayment (both polymorphic with CHECK constraint)
+    /// and BudgetReallocation (casual-course-only by design).
+    /// </summary>
+    public static void ConfigurePaymentsPhase4BBeta(this ModelBuilder builder)
+    {
+        builder.Entity<TravelAllowancePayment>(b =>
+        {
+            b.ToTable(
+                TrainingConsts.DbTablePrefix + "TravelAllowancePayments",
+                TrainingConsts.DbSchema,
+                t => t.HasCheckConstraint(
+                    "CK_TravelAllowancePayment_PolymorphicParent",
+                    "([SessionId] IS NOT NULL AND [CasualCourseId] IS NULL) OR ([SessionId] IS NULL AND [CasualCourseId] IS NOT NULL)"));
+            b.ConfigureByConvention();
+
+            // Polymorphic parent.
+            b.Property(x => x.SessionId).IsRequired(false);
+            b.Property(x => x.CasualCourseId).IsRequired(false);
+
+            b.Property(x => x.NominationId).IsRequired();
+            b.Property(x => x.PersonnelType).IsRequired();
+
+            b.Property(x => x.TicketAmountOMR).IsRequired().HasColumnType("decimal(18,3)");
+            b.Property(x => x.TravelAllowanceOMR).IsRequired().HasColumnType("decimal(18,3)");
+            b.Property(x => x.ClothingAllowanceOMR).IsRequired().HasColumnType("decimal(18,3)");
+            b.Property(x => x.InsuranceOMR).IsRequired().HasColumnType("decimal(18,3)");
+            b.Property(x => x.VisaFeesOMR).IsRequired().HasColumnType("decimal(18,3)");
+            b.Property(x => x.TotalOMR).IsRequired().HasColumnType("decimal(18,3)");
+
+            b.Property(x => x.Status).IsRequired().HasDefaultValue(PaymentStatus.Draft);
+            b.Property(x => x.ConfirmedAt).IsRequired(false);
+            b.Property(x => x.ConfirmedById).IsRequired(false);
+
+            b.Property(x => x.ExternalRequestId).HasMaxLength(100);
+            b.Property(x => x.ExternalStatus).HasMaxLength(50);
+            b.Property(x => x.ExternalResponseAt).IsRequired(false);
+
+            b.Property(x => x.Notes).HasMaxLength(TrainingConsts.MaxNotesLength);
+
+            // One TravelAllowancePayment per nomination, tenant-scoped.
+            b.HasIndex(x => new { x.TenantId, x.NominationId }).IsUnique();
+            b.HasIndex(x => new { x.TenantId, x.SessionId });
+            b.HasIndex(x => new { x.TenantId, x.CasualCourseId });
+            b.HasIndex(x => new { x.TenantId, x.Status });
+        });
+
+        builder.Entity<CoursePayment>(b =>
+        {
+            b.ToTable(
+                TrainingConsts.DbTablePrefix + "CoursePayments",
+                TrainingConsts.DbSchema,
+                t => t.HasCheckConstraint(
+                    "CK_CoursePayment_PolymorphicParent",
+                    "([SessionId] IS NOT NULL AND [CasualCourseId] IS NULL) OR ([SessionId] IS NULL AND [CasualCourseId] IS NOT NULL)"));
+            b.ConfigureByConvention();
+
+            // Polymorphic parent.
+            b.Property(x => x.SessionId).IsRequired(false);
+            b.Property(x => x.CasualCourseId).IsRequired(false);
+
+            b.Property(x => x.TrainingProviderId).IsRequired();
+
+            b.Property(x => x.InvoiceAmountOMR).IsRequired().HasColumnType("decimal(18,3)");
+            b.Property(x => x.NebrasAmountOMR).IsRequired().HasColumnType("decimal(18,3)");
+            b.Property(x => x.InvoiceDate).IsRequired();
+
+            // BlobStoring file refs — populated only by UploadInvoiceAsync.
+            b.Property(x => x.InvoiceBlobName).HasMaxLength(200);
+            b.Property(x => x.InvoiceOriginalFileName).HasMaxLength(260);
+
+            b.Property(x => x.Status).IsRequired().HasDefaultValue(PaymentStatus.Draft);
+            b.Property(x => x.ConfirmedAt).IsRequired(false);
+            b.Property(x => x.ConfirmedById).IsRequired(false);
+
+            b.Property(x => x.Notes).HasMaxLength(TrainingConsts.MaxNotesLength);
+
+            b.HasIndex(x => new { x.TenantId, x.SessionId });
+            b.HasIndex(x => new { x.TenantId, x.CasualCourseId });
+            b.HasIndex(x => new { x.TenantId, x.TrainingProviderId });
+            b.HasIndex(x => new { x.TenantId, x.Status });
+        });
+
+        builder.Entity<BudgetReallocation>(b =>
+        {
+            b.ToTable(TrainingConsts.DbTablePrefix + "BudgetReallocations", TrainingConsts.DbSchema);
+            b.ConfigureByConvention();
+
+            b.Property(x => x.CasualCourseId).IsRequired();
+            b.Property(x => x.CoursePaymentId).IsRequired();
+            b.Property(x => x.FundingSourceVoteCode).IsRequired().HasMaxLength(TrainingConsts.MaxFundingSourceLength);
+            b.Property(x => x.ToFinancialItemId).IsRequired();
+            b.Property(x => x.AmountOMR).IsRequired().HasColumnType("decimal(18,3)");
+
+            b.Property(x => x.Status).IsRequired().HasDefaultValue(ReallocationStatus.Pending);
+            b.Property(x => x.ApprovedAt).IsRequired(false);
+            b.Property(x => x.ApprovedById).IsRequired(false);
+            b.Property(x => x.ApprovalNote).HasMaxLength(TrainingConsts.MaxNotesLength);
+
+            b.HasIndex(x => new { x.TenantId, x.CasualCourseId });
+            b.HasIndex(x => new { x.TenantId, x.CoursePaymentId });
+            b.HasIndex(x => new { x.TenantId, x.Status });
         });
     }
 }

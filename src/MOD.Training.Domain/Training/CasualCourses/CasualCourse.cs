@@ -37,6 +37,10 @@ public class CasualCourse : FullAuditedEntity<Guid>, IMultiTenant
 
     public Guid? SelectedPriceQuoteId { get; set; }
 
+    // Phase 4B-α — actual confirmed dates; written by Staff at quote-winner selection.
+    public DateTime? ActualStartDate { get; set; }
+    public DateTime? ActualEndDate { get; set; }
+
     public CasualCourseStatus Status { get; set; } = CasualCourseStatus.Draft;
     public CasualCourseStatus? ReturnedFromStatus { get; set; }
 

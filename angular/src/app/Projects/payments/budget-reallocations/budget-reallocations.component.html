@@ -1,0 +1,260 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h2>{{ '::Training.Payments.Reallocation.Title' | abpLocalization }}</h2>
+      <p class="subtitle">{{ '::Training.Payments.Reallocation.Subtitle' | abpLocalization }}</p>
+    </div>
+  </div>
+
+  <!-- Read-only banner explaining auto-generation -->
+  <div class="info-banner">
+    <span class="info-icon">ℹ️</span>
+    <div [innerHTML]="'::Training.Payments.Reallocation.AutoBanner' | abpLocalization"></div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card stat-pending">
+      <div class="stat-label">{{ '::Training.Payments.Reallocation.Stat.Pending' | abpLocalization }}</div>
+      <div class="stat-value">{{ pendingCount() }}</div>
+      <div class="stat-sub">{{ formatOMR(pendingTotalOMR()) }} ر.ع</div>
+    </div>
+    <div class="stat-card stat-approved">
+      <div class="stat-label">{{ '::Training.Payments.Reallocation.Stat.Approved' | abpLocalization }}</div>
+      <div class="stat-value">{{ approvedCount() }}</div>
+      <div class="stat-sub">{{ formatOMR(approvedTotalOMR()) }} ر.ع</div>
+    </div>
+    <div class="stat-card stat-month">
+      <div class="stat-label">{{ '::Training.Payments.Reallocation.Stat.ThisMonth' | abpLocalization }}</div>
+      <div class="stat-value">{{ thisMonthCount() }}</div>
+      <div class="stat-sub">{{ formatOMR(thisMonthTotalOMR()) }} ر.ع</div>
+    </div>
+    <div class="stat-card stat-last">
+      <div class="stat-label">{{ '::Training.Payments.Reallocation.Stat.LastApproval' | abpLocalization }}</div>
+      <div class="stat-value-sm">{{ lastApprovalRelative() }}</div>
+      <div class="stat-sub">{{ lastApproval()?.approvedByName || '—' }}</div>
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <span class="filter-label">{{ '::Training.Payments.Filter' | abpLocalization }}:</span>
+    <dx-select-box
+      [items]="statusOptions"
+      displayExpr="text"
+      valueExpr="value"
+      [value]="filterStatus()"
+      [showClearButton]="true"
+      [placeholder]="'::Training.Payments.AllStatuses' | abpLocalization"
+      width="140"
+      (onValueChanged)="onStatusFilterChange($event.value)">
+    </dx-select-box>
+    <dx-select-box
+      [items]="allCourses()"
+      displayExpr="courseNameAr"
+      valueExpr="id"
+      [value]="filterCourseId()"
+      [searchEnabled]="true"
+      [showClearButton]="true"
+      [placeholder]="'::Training.Payments.AllCourses' | abpLocalization"
+      width="220"
+      (onValueChanged)="onCourseFilterChange($event.value)">
+    </dx-select-box>
+    <dx-select-box
+      [items]="financialItems()"
+      displayExpr="nameAr"
+      valueExpr="id"
+      [value]="filterFinancialItemId()"
+      [searchEnabled]="true"
+      [showClearButton]="true"
+      [placeholder]="'::Training.Payments.Reallocation.AllItems' | abpLocalization"
+      width="200"
+      (onValueChanged)="onItemFilterChange($event.value)">
+    </dx-select-box>
+    <dx-date-box
+      [value]="filterCreatedFrom()"
+      type="date"
+      displayFormat="yyyy-MM-dd"
+      [placeholder]="'::Training.Payments.Reallocation.DateFrom' | abpLocalization"
+      width="140"
+      (onValueChanged)="onCreatedFromChange($event.value)">
+    </dx-date-box>
+    <dx-date-box
+      [value]="filterCreatedTo()"
+      type="date"
+      displayFormat="yyyy-MM-dd"
+      [placeholder]="'::Training.Payments.Reallocation.DateTo' | abpLocalization"
+      width="140"
+      (onValueChanged)="onCreatedToChange($event.value)">
+    </dx-date-box>
+    <dx-text-box
+      [value]="filterVoteCode()"
+      [placeholder]="'::Training.Payments.Reallocation.SearchVoteCode' | abpLocalization"
+      width="200"
+      (onValueChanged)="onVoteCodeInput($event.value)">
+    </dx-text-box>
+    <dx-button [text]="'::Training.Payments.Clear' | abpLocalization" stylingMode="text" (onClick)="clearFilters()"></dx-button>
+    <span class="row-count">{{ '::Training.Payments.Reallocation.RowCount' | abpLocalization }}: {{ filteredRows().length }}</span>
+  </div>
+
+  <!-- Grid (10 columns including arrow) -->
+  <dx-data-grid
+    [dataSource]="filteredRows()"
+    [showBorders]="true"
+    [columnAutoWidth]="false"
+    [rowAlternationEnabled]="true"
+    keyExpr="id">
+
+    <dxi-column dataField="casualCourseNameAr"   [caption]="'::Training.Payments.Reallocation.Grid.Course'    | abpLocalization" [width]="200" cellTemplate="courseTpl"></dxi-column>
+    <dxi-column dataField="fundingScenario"      [caption]="'::Training.Payments.Reallocation.Grid.Scenario'  | abpLocalization" [width]="130" alignment="center" cellTemplate="scenarioTpl"></dxi-column>
+    <dxi-column dataField="fundingSourceVoteCode" [caption]="'::Training.Payments.Reallocation.Grid.From'     | abpLocalization" [width]="180" cellTemplate="fromTpl"></dxi-column>
+    <dxi-column                                  caption=""                  [width]="40" alignment="center" cellTemplate="arrowTpl" [allowSorting]="false"></dxi-column>
+    <dxi-column dataField="toFinancialItemNameAr" [caption]="'::Training.Payments.Reallocation.Grid.To'       | abpLocalization" [width]="180" cellTemplate="toTpl"></dxi-column>
+    <dxi-column dataField="amountOMR"            [caption]="'::Training.Payments.Reallocation.Grid.Amount'    | abpLocalization" [width]="130" alignment="end" cellTemplate="moneyTpl"></dxi-column>
+    <dxi-column dataField="status"               [caption]="'::Training.Payments.Reallocation.Grid.Status'    | abpLocalization" [width]="110" alignment="center" cellTemplate="statusTpl"></dxi-column>
+    <dxi-column dataField="creationTime"         [caption]="'::Training.Payments.Reallocation.Grid.Created'   | abpLocalization" [width]="140" cellTemplate="createdTpl"></dxi-column>
+    <dxi-column dataField="approvedByName"       [caption]="'::Training.Payments.Reallocation.Grid.Approver'  | abpLocalization" [width]="160" cellTemplate="approverTpl"></dxi-column>
+    <dxi-column                                  caption=""                  [width]="120" cellTemplate="actionsTpl" [allowSorting]="false"></dxi-column>
+
+    <div *dxTemplate="let cell of 'courseTpl'">
+      <div class="course-name">{{ cell.data.casualCourseNameAr || '—' }}</div>
+      <div class="muted">{{ '::Training.Payments.Reallocation.CasualCourseLabel' | abpLocalization }}</div>
+    </div>
+
+    <div *dxTemplate="let cell of 'scenarioTpl'">
+      <span [class]="scenarioPillCss(cell.data.fundingScenario)">{{ scenarioLabel(cell.data.fundingScenario) }}</span>
+    </div>
+
+    <div *dxTemplate="let cell of 'fromTpl'">
+      <code class="vote-code">{{ cell.data.fundingSourceVoteCode || '—' }}</code>
+      @if (cell.data.fundingSourceName) {
+        <div class="muted">{{ cell.data.fundingSourceName }}</div>
+      }
+    </div>
+
+    <div *dxTemplate="let _ of 'arrowTpl'">
+      <span class="reallocation-arrow">→</span>
+    </div>
+
+    <div *dxTemplate="let cell of 'toTpl'">
+      <b>{{ cell.data.toFinancialItemNameAr || '—' }}</b>
+    </div>
+
+    <div *dxTemplate="let cell of 'moneyTpl'">
+      <div class="currency-dual">
+        <span class="currency-omr">{{ formatOMR(cell.value) }}</span>
+        <span class="currency-usd">~ {{ toUSD(cell.value) }} USD</span>
+      </div>
+    </div>
+
+    <div *dxTemplate="let cell of 'statusTpl'">
+      <span [class]="statusBadgeCss(cell.data.status)">{{ statusBadgeText(cell.data.status) }}</span>
+    </div>
+
+    <div *dxTemplate="let cell of 'createdTpl'">
+      <span>{{ (cell.value || '').substring(0, 10) || '—' }}</span>
+    </div>
+
+    <div *dxTemplate="let cell of 'approverTpl'">
+      @if (cell.data.approvedByName) {
+        <div class="approver-name">{{ cell.data.approvedByName }}</div>
+        @if (cell.data.approvedAt) {
+          <div class="muted">{{ (cell.data.approvedAt || '').substring(0, 10) }}</div>
+        }
+      } @else {
+        <span class="muted">—</span>
+      }
+    </div>
+
+    <div *dxTemplate="let cell of 'actionsTpl'">
+      @if (cell.data.status === ReallocationStatus.Pending && canMarkApproved()) {
+        <dx-button
+          [text]="'::Training.Payments.Reallocation.ApproveButton' | abpLocalization"
+          type="success"
+          stylingMode="contained"
+          (onClick)="onApprove(cell.data)">
+        </dx-button>
+      } @else {
+        <dx-button icon="eyeopen" stylingMode="text" [hint]="'::Training.Payments.View' | abpLocalization" (onClick)="onApprove(cell.data)" [disabled]="cell.data.status === ReallocationStatus.Approved"></dx-button>
+      }
+    </div>
+  </dx-data-grid>
+
+  <!-- Toast -->
+  @if (toast().visible) {
+    <div class="toast-banner" [class.toast-success]="toast().kind === 'success'" [class.toast-error]="toast().kind === 'error'">
+      <span>{{ toast().text }}</span>
+      <button class="toast-close" (click)="dismissToast()">✕</button>
+    </div>
+  }
+
+  <!-- Approval dialog -->
+  <dx-popup
+    [visible]="dialog().visible"
+    [title]="'::Training.Payments.Reallocation.Dialog.Title' | abpLocalization"
+    [showCloseButton]="true"
+    [width]="640"
+    [height]="640"
+    [toolbarItems]="dialogToolbarItems"
+    (onHidden)="closeDialog()">
+
+    <div class="dialog-form">
+      @if (dialog().row; as row) {
+        <!-- Reallocation summary -->
+        <div class="summary-box">
+          <div class="summary-grid">
+            <div>
+              <div class="muted">{{ '::Training.Payments.Reallocation.Dialog.SummaryCourse' | abpLocalization }}</div>
+              <div class="summary-value">{{ row.casualCourseNameAr || '—' }}</div>
+            </div>
+            <div>
+              <div class="muted">{{ '::Training.Payments.Reallocation.Dialog.SummaryScenario' | abpLocalization }}</div>
+              <div><span [class]="scenarioPillCss(row.fundingScenario)">{{ scenarioLabel(row.fundingScenario) }}</span></div>
+            </div>
+            <div>
+              <div class="muted">{{ '::Training.Payments.Reallocation.Dialog.SummaryFrom' | abpLocalization }}</div>
+              <div class="summary-value">{{ row.fundingSourceName || '—' }}</div>
+              <code class="vote-code">{{ row.fundingSourceVoteCode || '' }}</code>
+            </div>
+            <div>
+              <div class="muted">{{ '::Training.Payments.Reallocation.Dialog.SummaryTo' | abpLocalization }}</div>
+              <div class="summary-value">{{ row.toFinancialItemNameAr || '—' }}</div>
+            </div>
+          </div>
+          <div class="amount-callout">
+            <div class="amount-label">{{ '::Training.Payments.Reallocation.Dialog.AmountLabel' | abpLocalization }}</div>
+            <div class="amount-omr">{{ formatOMR(row.amountOMR) }} <span class="omr-sm">ر.ع</span></div>
+            <div class="amount-usd">~ {{ toUSD(row.amountOMR) }} USD</div>
+          </div>
+        </div>
+
+        <!-- Note -->
+        <div class="form-field">
+          <label>{{ '::Training.Payments.Reallocation.Dialog.NoteLabel' | abpLocalization }}</label>
+          <dx-text-area
+            [value]="fApprovalNote()"
+            [height]="80"
+            [placeholder]="'::Training.Payments.Reallocation.Dialog.NotePlaceholder' | abpLocalization"
+            (onValueChanged)="updateApprovalNote($event.value)">
+          </dx-text-area>
+        </div>
+
+        <!-- Irreversibility warning -->
+        <div class="warn-box" [innerHTML]="'::Training.Payments.Reallocation.Dialog.IrreversibilityWarning' | abpLocalization"></div>
+
+        @if (dialogError()) {
+          <div class="error-banner">⚠ {{ dialogError() }}</div>
+        }
+
+        @if (row.status === ReallocationStatus.Approved) {
+          <div class="confirmed-banner">
+            <span [innerHTML]="'::Training.Payments.Reallocation.Dialog.AlreadyApprovedPrefix' | abpLocalization"></span>
+            {{ row.approvedByName || '—' }}
+            @if (row.approvedAt) { {{ '::Training.Payments.Reallocation.Dialog.AlreadyApprovedAt' | abpLocalization }} {{ (row.approvedAt || '').substring(0, 10) }} }
+            @if (row.approvalNote) { · {{ '::Training.Payments.Reallocation.Dialog.AlreadyApprovedNote' | abpLocalization }} {{ row.approvalNote }} }
+          </div>
+        }
+      }
+    </div>
+  </dx-popup>
+</div>

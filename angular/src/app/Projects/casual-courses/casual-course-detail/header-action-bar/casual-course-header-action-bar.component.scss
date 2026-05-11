@@ -1,0 +1,22 @@
+/* ==========================================================
+   Casual Course — Header Action Bar
+   Sticky workflow buttons (Save Draft / Submit / Approve / etc).
+   Lives inside the shell's sticky header so it follows scroll.
+   ========================================================== */
+
+:host {
+  display: block;
+  font-family: 'Tajawal', sans-serif;
+}
+
+.cc-header-action-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+/* Btn classes (.btn, .btn-primary, etc) come from gtms-design.scss
+   loaded by the shell — keep this file lean. */

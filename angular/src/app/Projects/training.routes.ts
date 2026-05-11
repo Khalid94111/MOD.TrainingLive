@@ -158,36 +158,76 @@ export const TRAINING_ROUTES: Routes = [
           import('./casual-courses/casual-courses-list/casual-courses-list.component')
             .then(m => m.CasualCoursesListComponent),
       },
+      // /new uses the same shell as /:id so the layout is identical (header +
+      // pipeline + sections). After the first nominee triggers autosave, the
+      // request component dispatches the new id to the shell and replaces the
+      // URL via history.replaceState — no full reload, no layout shift.
       {
         path: 'casual-courses/new',
+        data: { embedded: true },
         loadComponent: () =>
-          import('./casual-courses/casual-course-request/casual-course-request.component')
-            .then(m => m.CasualCourseRequestComponent),
+          import('./casual-courses/casual-course-detail/casual-course-detail.component')
+            .then(m => m.CasualCourseDetailComponent),
+      },
+      // ===== Phase 4B-α: Casual Course Detail (stage-based progressive disclosure) =====
+      // Single-page layout: sticky header + status pipeline + 4 accordion sections.
+      // Authoritative spec: docs/GTMS-Phase4B-Alpha-Frontend-Layout.md
+      // `data.embedded` is inherited by inner components rendered inline by the shell
+      // (request/approval/review) so they suppress their own page-toolbar.
+      {
+        path: 'casual-courses/:id',
+        data: { embedded: true },
+        loadComponent: () =>
+          import('./casual-courses/casual-course-detail/casual-course-detail.component')
+            .then(m => m.CasualCourseDetailComponent),
+      },
+      // Backward-compat redirects from the old tabbed/flat URLs to the single shell.
+      // The shell reads the URL hash to auto-expand the matching section.
+      { path: 'casual-courses/:id/details',             redirectTo: 'casual-courses/:id', pathMatch: 'full' },
+      { path: 'casual-courses/:id/financials',          redirectTo: 'casual-courses/:id', pathMatch: 'full' },
+      { path: 'casual-courses/:id/quotes',              redirectTo: 'casual-courses/:id', pathMatch: 'full' },
+      { path: 'casual-courses/:id/travel',              redirectTo: 'casual-courses/:id', pathMatch: 'full' },
+      { path: 'casual-courses/:id/edit',                redirectTo: 'casual-courses/:id', pathMatch: 'full' },
+      { path: 'casual-courses/:id/review',              redirectTo: 'casual-courses/:id', pathMatch: 'full' },
+      { path: 'casual-courses/:id/approve',             redirectTo: 'casual-courses/:id', pathMatch: 'full' },
+      { path: 'casual-courses/:id/price-quotes',        redirectTo: 'casual-courses/:id', pathMatch: 'full' },
+      { path: 'casual-courses/:id/travel-instructions', redirectTo: 'casual-courses/:id', pathMatch: 'full' },
+
+      // ===== Phase 4B-α: Session-arm pages (still standalone — no tabbed shell yet) =====
+      {
+        path: 'sessions/:id/travel-instructions',
+        data: { parentArm: 'session' },
+        loadComponent: () =>
+          import('./casual-courses/casual-course-travel-instructions/casual-course-travel-instructions.component')
+            .then(m => m.CasualCourseTravelInstructionsComponent),
       },
       {
-        path: 'casual-courses/:id/edit',
+        path: 'sessions/:id/price-quotes',
+        data: { parentArm: 'session' },
         loadComponent: () =>
-          import('./casual-courses/casual-course-request/casual-course-request.component')
-            .then(m => m.CasualCourseRequestComponent),
-      },
-      {
-        path: 'casual-courses/:id/review',
-        loadComponent: () =>
-          import('./casual-courses/casual-course-review/casual-course-review.component')
-            .then(m => m.CasualCourseReviewComponent),
-      },
-      {
-        path: 'casual-courses/:id/approve',
-        loadComponent: () =>
-          import('./casual-courses/casual-course-approval/casual-course-approval.component')
-            .then(m => m.CasualCourseApprovalComponent),
+          import('./casual-courses/casual-course-price-quotes/casual-course-price-quotes.component')
+            .then(m => m.CasualCoursePriceQuotesComponent),
       },
 
-      // Phase 4 (future)
-      // { path: 'payments/travel', loadComponent: () => import(...) },
-      // { path: 'payments/course', loadComponent: () => import(...) },
-      // { path: 'payments/reallocations', loadComponent: () => import(...) },
-      // { path: 'shared-requests', loadComponent: () => import(...) },
+      // ===== Phase 4B-β: Payments + Auto-Reallocation =====
+      {
+        path: 'payments/travel-allowances',
+        loadComponent: () =>
+          import('./payments/travel-allowance-payments/travel-allowance-payments.component')
+            .then(m => m.TravelAllowancePaymentsComponent),
+      },
+      {
+        path: 'payments/courses',
+        loadComponent: () =>
+          import('./payments/course-payments/course-payments.component')
+            .then(m => m.CoursePaymentsComponent),
+      },
+      {
+        path: 'payments/reallocations',
+        loadComponent: () =>
+          import('./payments/budget-reallocations/budget-reallocations.component')
+            .then(m => m.BudgetReallocationsComponent),
+      },
 
       // Phase 5 (future)
       // { path: 'post-course/results', loadComponent: () => import(...) },

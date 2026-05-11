@@ -1,0 +1,127 @@
+/* Financials tab — read-only view of saved CasualCourseFinancialItems */
+
+.fin-summary {
+  padding: 18px 24px;
+}
+.fin-summary-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 18px;
+}
+.fin-summary-amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+.fin-summary-amount .currency {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #64748b;
+  margin-inline-start: 4px;
+}
+.fin-summary-count {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.muted-xs {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+.section-title { margin: 0; font-size: 1rem; font-weight: 700; color: #1e293b; }
+.section-meta { font-size: 0.78rem; color: #94a3b8; }
+
+.fin-accordion { display: flex; flex-direction: column; gap: 6px; }
+
+.fin-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.fin-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  gap: 12px;
+}
+.fin-head.clickable { cursor: pointer; }
+.fin-head.clickable:hover { background: #f1f5f9; }
+
+.fin-head-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.fin-head-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.fin-chevron, .fin-chevron-flat {
+  font-size: 0.85rem;
+  color: #64748b;
+  width: 14px;
+  text-align: center;
+}
+
+.fin-name { font-weight: 600; color: #0f172a; }
+.fin-total { font-weight: 700; color: #0f172a; }
+.fin-actual { font-size: 0.75rem; color: #16a34a; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.chip-neutral { background: #e2e8f0; color: #475569; }
+.chip-info    { background: #dbeafe; color: #1e40af; }
+.chip-days    { background: #fef3c7; color: #92400e; }
+
+.fin-body {
+  padding: 0 14px 14px;
+}
+
+.fin-grand-total {
+  margin-top: 10px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: white;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+}
+.fin-grand-total .lbl { font-size: 0.92rem; }
+.fin-grand-total .val { font-size: 1.15rem; }
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #64748b;
+}
+.empty-state.small { padding: 24px 16px; font-size: 0.9rem; }
+.empty-state .empty-icon { font-size: 2rem; margin-bottom: 8px; }
+
+.cell-bold { font-weight: 600; }
+.cell-money { font-variant-numeric: tabular-nums; }
+.center { text-align: center; }

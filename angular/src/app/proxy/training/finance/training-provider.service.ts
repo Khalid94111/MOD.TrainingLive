@@ -48,7 +48,7 @@ export class TrainingProviderService {
     this.restService.request<any, PagedResultDto<TrainingProviderDto>>({
       method: 'GET',
       url: '/api/app/training-provider',
-      params: { filter: input.filter, isActive: input.isActive, isApproved: input.isApproved, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
+      params: { filter: input.filter, isActive: input.isActive, isApproved: input.isApproved, scope: input.scope, countryId: input.countryId, isFromNebras: input.isFromNebras, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
     },
     { apiName: this.apiName,...config });
   

@@ -79,3 +79,39 @@ public static class TenantIds
     public static readonly Guid RAO = Guid.Parse("70e7984b-388a-9f5b-df3a-3a209e449f4c");
     public static readonly Guid RNO = Guid.Parse("7fae4701-c561-e270-bf05-3a209e449f7c");
 }
+
+/// <summary>
+/// Phase 4B-α — stable GUIDs for HrGeographicalLocations (countries + their primary cities).
+/// Pattern: countries use prefix 80000000-...001x, their cities use 80000000-...001x-NN.
+/// </summary>
+public static class GeographicalLocationIds
+{
+    // Countries
+    public static readonly Guid Oman          = Guid.Parse("80000000-0000-0000-0000-000000000001");
+    public static readonly Guid SaudiArabia   = Guid.Parse("80000000-0000-0000-0000-000000000002");
+    public static readonly Guid UAE           = Guid.Parse("80000000-0000-0000-0000-000000000003");
+    public static readonly Guid Kuwait        = Guid.Parse("80000000-0000-0000-0000-000000000004");
+    public static readonly Guid Qatar         = Guid.Parse("80000000-0000-0000-0000-000000000005");
+    public static readonly Guid Bahrain       = Guid.Parse("80000000-0000-0000-0000-000000000006");
+    public static readonly Guid Egypt         = Guid.Parse("80000000-0000-0000-0000-000000000007");
+    public static readonly Guid Jordan        = Guid.Parse("80000000-0000-0000-0000-000000000008");
+    public static readonly Guid UnitedKingdom = Guid.Parse("80000000-0000-0000-0000-000000000009");
+    public static readonly Guid USA           = Guid.Parse("80000000-0000-0000-0000-00000000000A");
+
+    // Cities (one or two per country — minimal set for dev/QA cascade)
+    public static readonly Guid Muscat        = Guid.Parse("80000000-0000-0000-0000-000000000101");
+    public static readonly Guid Salalah       = Guid.Parse("80000000-0000-0000-0000-000000000102");
+    public static readonly Guid Riyadh        = Guid.Parse("80000000-0000-0000-0000-000000000201");
+    public static readonly Guid Jeddah        = Guid.Parse("80000000-0000-0000-0000-000000000202");
+    public static readonly Guid Dubai         = Guid.Parse("80000000-0000-0000-0000-000000000301");
+    public static readonly Guid AbuDhabi      = Guid.Parse("80000000-0000-0000-0000-000000000302");
+    public static readonly Guid KuwaitCity    = Guid.Parse("80000000-0000-0000-0000-000000000401");
+    public static readonly Guid Doha          = Guid.Parse("80000000-0000-0000-0000-000000000501");
+    public static readonly Guid Manama        = Guid.Parse("80000000-0000-0000-0000-000000000601");
+    public static readonly Guid Cairo         = Guid.Parse("80000000-0000-0000-0000-000000000701");
+    public static readonly Guid Amman         = Guid.Parse("80000000-0000-0000-0000-000000000801");
+    public static readonly Guid London        = Guid.Parse("80000000-0000-0000-0000-000000000901");
+    public static readonly Guid Manchester    = Guid.Parse("80000000-0000-0000-0000-000000000902");
+    public static readonly Guid Washington    = Guid.Parse("80000000-0000-0000-0000-000000000A01");
+    public static readonly Guid NewYork       = Guid.Parse("80000000-0000-0000-0000-000000000A02");
+}

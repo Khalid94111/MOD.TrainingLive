@@ -1,0 +1,116 @@
+@if (loading()) {
+  <div class="gtms-card">
+    <div class="empty-state">
+      <div class="empty-icon">⏳</div>
+      جاري التحميل...
+    </div>
+  </div>
+} @else if (course()) {
+  <!-- Summary -->
+  <div class="gtms-card fin-summary">
+    <div class="fin-summary-row">
+      <div>
+        <div class="muted-xs">إجمالي تقديري</div>
+        <div class="fin-summary-amount">
+          {{ formatCurrency(totalEstimatedOMR()) }}
+          <span class="currency">ر.ع</span>
+        </div>
+      </div>
+      <div>
+        <div class="muted-xs">إجمالي فعلي</div>
+        <div class="fin-summary-amount">
+          {{ formatCurrency(totalActualOMR()) }}
+          <span class="currency">ر.ع</span>
+        </div>
+      </div>
+      <div>
+        <div class="muted-xs">عدد البنود</div>
+        <div class="fin-summary-count">{{ financialItems().length }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Items -->
+  <div class="gtms-card">
+    <div class="section-header">
+      <h3 class="section-title">البنود المالية للدورة</h3>
+      <span class="section-meta">عرض للقراءة فقط — يُحرَّر من شاشة المراجعة</span>
+    </div>
+
+    @if (!hasItems()) {
+      <div class="empty-state small">
+        لا توجد بنود مالية محفوظة لهذه الدورة بعد.
+      </div>
+    } @else {
+      <div class="fin-accordion">
+        @for (item of financialItems(); track item.id) {
+          <div class="fin-item">
+            <div class="fin-head"
+                 [class.clickable]="!!item.ranks?.length"
+                 (click)="item.ranks?.length && toggleExpand(item.id)">
+              <div class="fin-head-left">
+                @if (item.ranks?.length) {
+                  <span class="fin-chevron">{{ isExpanded(item.id) ? '▾' : '▸' }}</span>
+                } @else {
+                  <span class="fin-chevron-flat">●</span>
+                }
+                <span class="fin-name">{{ item.financialItemName }}</span>
+                @if (item.isPerDay) {
+                  <span class="chip chip-neutral">لكل يوم</span>
+                }
+                @if (item.isPerNominee) {
+                  <span class="chip chip-info">حسب الرتبة</span>
+                } @else {
+                  <span class="chip chip-neutral">ثابت</span>
+                }
+                <span class="chip chip-days">أيام فعّالة: {{ item.effectiveDays }}</span>
+              </div>
+              <div class="fin-head-right">
+                <span class="fin-total cell-money">
+                  {{ formatCurrency(item.estimatedAmountOMR) }} ر.ع
+                </span>
+                @if (item.actualAmountOMR != null) {
+                  <span class="fin-actual cell-money">
+                    فعلي: {{ formatCurrency(item.actualAmountOMR) }} ر.ع
+                  </span>
+                }
+              </div>
+            </div>
+
+            @if (isExpanded(item.id) && item.ranks?.length) {
+              <div class="fin-body">
+                <div class="gtms-table-wrap">
+                  <table class="gtms-table rank-table">
+                    <thead>
+                      <tr>
+                        <th>الرتبة</th>
+                        <th class="center">العدد</th>
+                        <th class="center">السعر (ر.ع)</th>
+                        <th class="center">المجموع (ر.ع)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (row of item.ranks ?? []; track row.id) {
+                        <tr>
+                          <td class="cell-bold">{{ row.rankNameAr }}</td>
+                          <td class="center">{{ row.nomineeCount }}</td>
+                          <td class="center">{{ formatCurrency(row.ratePerUnitOMR) }}</td>
+                          <td class="center cell-money">{{ formatCurrency(row.subtotalOMR) }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <div class="fin-grand-total">
+          <span class="lbl">المجموع التقديري</span>
+          <span class="val cell-money">{{ formatCurrency(totalEstimatedOMR()) }} ر.ع</span>
+        </div>
+      </div>
+    }
+  </div>
+}

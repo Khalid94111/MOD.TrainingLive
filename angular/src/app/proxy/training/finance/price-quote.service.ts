@@ -48,7 +48,7 @@ export class PriceQuoteService {
     this.restService.request<any, PagedResultDto<PriceQuoteDto>>({
       method: 'GET',
       url: '/api/app/price-quote',
-      params: { sessionId: input.sessionId, providerId: input.providerId, status: input.status, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
+      params: { sessionId: input.sessionId, casualCourseId: input.casualCourseId, providerId: input.providerId, status: input.status, isSelected: input.isSelected, sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
     },
     { apiName: this.apiName,...config });
   

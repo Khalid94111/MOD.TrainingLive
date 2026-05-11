@@ -1,0 +1,161 @@
+/* ==========================================================
+   Casual Course Status Pipeline
+   8-node horizontal stepper. Sticky positioning is applied by
+   the shell so the pipeline follows scroll.
+   ========================================================== */
+
+:host {
+  display: block;
+  font-family: 'Tajawal', sans-serif;
+}
+
+.pipeline {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 14px 18px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+}
+
+.pipeline-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.pipeline-banner-rejected { background: #fee2e2; color: #991b1b; }
+.pipeline-banner-returned { background: #fef3c7; color: #92400e; }
+.pipeline-banner-icon { font-size: 1rem; }
+
+.pipeline-track {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  direction: rtl;
+}
+
+.pipeline-item {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 0;
+}
+
+.pipeline-node {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 0;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #475569;
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: default;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s;
+}
+.pipeline-node.clickable {
+  cursor: pointer;
+}
+.pipeline-node.clickable:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+.pipeline-node:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.pipeline-node-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e2e8f0;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border: 2px solid transparent;
+  flex-shrink: 0;
+}
+
+.pipeline-node-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pipeline-node-suffix {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.pipeline-connector {
+  flex: 0 0 36px;
+  height: 2px;
+  background: #e2e8f0;
+  margin: 0 4px;
+  border-radius: 2px;
+  position: relative;
+}
+.pipeline-connector.connector-completed {
+  background: #16a34a;
+}
+
+/* === States === */
+.pipeline-item.state-completed .pipeline-node-dot {
+  background: #16a34a;
+  color: white;
+}
+.pipeline-item.state-completed .pipeline-node {
+  color: #166534;
+}
+
+.pipeline-item.state-active .pipeline-node-dot {
+  background: #2563eb;
+  color: white;
+  border-color: #bfdbfe;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+  animation: pipeline-pulse 1.6s ease-in-out infinite;
+}
+.pipeline-item.state-active .pipeline-node {
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
+.pipeline-item.state-pending .pipeline-node-dot {
+  background: #f1f5f9;
+  color: #94a3b8;
+}
+.pipeline-item.state-pending .pipeline-node {
+  color: #94a3b8;
+}
+
+.pipeline-item.placeholder .pipeline-node {
+  opacity: 0.5;
+}
+
+@keyframes pipeline-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15); }
+  50%      { box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.05); }
+}
+
+@media (max-width: 768px) {
+  .pipeline-connector { flex-basis: 16px; }
+  .pipeline-node { padding: 4px 8px; font-size: 0.76rem; }
+  .pipeline-node-dot { width: 22px; height: 22px; }
+}

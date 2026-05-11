@@ -4,6 +4,27 @@
   max-width: 1200px;
   margin: 0 auto;
 }
+.page-container.embedded {
+  max-width: none;
+  margin: 0;
+}
+
+.embedded-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 0 8px;
+  gap: 12px;
+}
+.embedded-toolbar .actor-hint {
+  font-size: 0.82rem;
+  color: #64748b;
+}
+.embedded-toolbar .actor-name {
+  font-weight: 700;
+  color: #1e293b;
+  margin-inline-start: 4px;
+}
 
 .back-link {
   font-size: 0.78rem;

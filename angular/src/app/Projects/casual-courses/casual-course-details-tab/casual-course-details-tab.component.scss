@@ -1,0 +1,37 @@
+/* Dispatcher only — visual styling lives in the inner components.
+   Provide a reasonable shell-content padding so the inner page-container
+   doesn't collide with the tab nav above. */
+
+:host {
+  display: block;
+}
+
+.gtms-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #64748b;
+}
+.empty-state .empty-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+}
+.alert-danger { background: #fee2e2; color: #991b1b; }
+.alert-warning { background: #fef3c7; color: #92400e; }
+.alert-icon { font-size: 1rem; }

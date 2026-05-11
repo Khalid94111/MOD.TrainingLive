@@ -1,17 +1,24 @@
-<div class="page-container">
-  <!-- Header -->
-  <div class="page-toolbar">
-    <div class="page-toolbar-title">
-      <div>
-        <a routerLink="/training/casual-courses" class="back-link">← الدورات العرضية</a>
-        <h2 class="gtms-card-title page-h1">اعتماد طلب دورة عرضية</h2>
-        <div class="actor-hint">دور الاعتماد: <span class="actor-name">{{ actorLabel() }}</span></div>
+<div class="page-container" [class.embedded]="embedded()">
+  @if (!embedded()) {
+    <!-- Header (standalone mode only — shell renders its own header) -->
+    <div class="page-toolbar">
+      <div class="page-toolbar-title">
+        <div>
+          <a routerLink="/training/casual-courses" class="back-link">← الدورات العرضية</a>
+          <h2 class="gtms-card-title page-h1">اعتماد طلب دورة عرضية</h2>
+          <div class="actor-hint">دور الاعتماد: <span class="actor-name">{{ actorLabel() }}</span></div>
+        </div>
+      </div>
+      <div class="page-toolbar-actions">
+        <button type="button" class="btn btn-ghost" (click)="openNotesDrawer()">📑 الملاحظات</button>
       </div>
     </div>
-    <div class="page-toolbar-actions">
-      <button type="button" class="btn btn-ghost" (click)="openNotesDrawer()">📑 الملاحظات</button>
+  } @else {
+    <div class="embedded-toolbar">
+      <div class="actor-hint">دور الاعتماد: <span class="actor-name">{{ actorLabel() }}</span></div>
+      <button type="button" class="btn btn-ghost btn-sm" (click)="openNotesDrawer()">📑 الملاحظات</button>
     </div>
-  </div>
+  }
 
   @if (loading()) {
     <div class="gtms-card">
@@ -28,6 +35,7 @@
       </div>
     }
 
+    @if (showDetails()) {
     <!-- Summary panel -->
     <div class="gtms-card">
       <div class="section-header">
@@ -54,15 +62,19 @@
         @if (casualCourse()?.courseCost != null) {
           <div><span class="lbl">تكلفة الدورة (UTM):</span> <span class="val">{{ casualCourse()?.courseCost | number:'1.3-3' }} ر.ع</span></div>
         }
-        <div><span class="lbl">سيناريو التمويل:</span> <span class="val">{{ scenarioLabel() }}</span></div>
-        <div>
-          <span class="lbl">التكلفة الإجمالية المعتمدة:</span>
-          <span class="val" [class.cost-bad]="costGateBlocked()">{{ totalCost() | number:'1.3-3' }} ر.ع</span>
-        </div>
+        @if (showFinancials()) {
+          <div><span class="lbl">سيناريو التمويل:</span> <span class="val">{{ scenarioLabel() }}</span></div>
+          <div>
+            <span class="lbl">التكلفة الإجمالية المعتمدة:</span>
+            <span class="val" [class.cost-bad]="costGateBlocked()">{{ totalCost() | number:'1.3-3' }} ر.ع</span>
+          </div>
+        }
         <div class="summary-wide"><span class="lbl">المبرر:</span> <span class="val">{{ casualCourse()?.justification }}</span></div>
       </div>
     </div>
+    }
 
+    @if (showFinancials()) {
     <!-- UGM stage (Submitted) — server-computed calculator preview, no real rows yet -->
     @if (isUGMTurn()) {
       <div class="gtms-card">
@@ -257,6 +269,8 @@
     </div>
     }
 
+    }
+
     @if (canAct() && !isUGMTurn() && costGateBlocked()) {
       <div class="alert alert-danger">
         <span class="alert-icon">🚫</span>
@@ -280,7 +294,9 @@
       </div>
     }
 
-    @if (canAct()) {
+    @if (canAct() && mode() === 'all') {
+      <!-- In-component action bar — only the standalone route renders it.
+           When embedded in the shell, the page-level header bar takes over. -->
       <div class="action-bar">
         <button type="button" class="btn btn-danger" [disabled]="actionBusy()" (click)="openReject()">
           ❌ رفض الطلب
@@ -297,7 +313,7 @@
           @else { ✅ اعتماد نهائي TH }
         </button>
       </div>
-    } @else {
+    } @else if (!canAct()) {
       <div class="alert alert-info">
         <span class="alert-icon">ℹ️</span>
         هذه الصفحة للعرض فقط — الطلب في حالة "{{ statusLabel() }}" ولا يتطلب إجراءً في هذه المرحلة.

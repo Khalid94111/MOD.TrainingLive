@@ -39,5 +39,23 @@ public static class HrReadOnlyConfiguration
             b.HasIndex(x => x.ServiceNumber);
             b.HasIndex(x => x.MainUnitId);
         });
+
+        // GeographicalLocation — Phase 4B-α; read-only HR master data (countries + cities).
+        // Same convention as HrEmployees / HrRanks: lives in this DbContext (NOT excludeFromMigrations).
+        builder.Entity<GeographicalLocation>(b =>
+        {
+            b.ToTable("HrGeographicalLocations");
+            b.ConfigureByConvention();
+
+            b.Property(x => x.ArabicName).IsRequired().HasMaxLength(200);
+            b.Property(x => x.EnglishName).IsRequired().HasMaxLength(200);
+
+            b.HasOne<GeographicalLocation>()
+                .WithMany()
+                .HasForeignKey(x => x.LocationParentId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            b.HasIndex(x => x.LocationParentId);
+        });
     }
 }

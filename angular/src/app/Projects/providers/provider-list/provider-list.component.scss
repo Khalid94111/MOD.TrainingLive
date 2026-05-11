@@ -33,8 +33,116 @@
   .flex-1 { flex: 1; }
 }
 
+.required { color: #ef4444; }
+
+.hint-inline {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-weight: normal;
+  margin-inline-start: 4px;
+}
+
 .switch-label {
   margin-inline-start: 8px;
   font-size: 0.875rem;
   color: #374151;
+}
+
+/* Scope chips */
+.scope-chip {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.scope-internal      { background: #f1f5f9; color: #475569; }
+.scope-local         { background: #dbeafe; color: #1e40af; }
+.scope-international { background: #fef3c7; color: #92400e; }
+
+/* Nebras pill */
+.nebras-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(90deg, #e0f2fe, #cffafe);
+  color: #075985;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.manual-pill {
+  font-size: 11px;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+.muted { color: #94a3b8; }
+
+/* Nebras banner inside dialog */
+.nebras-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #ecfeff;
+  border: 1px solid #a5f3fc;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 0.78rem;
+  color: #155e75;
+
+  .nebras-banner-icon {
+    color: #0891b2;
+    font-size: 1rem;
+  }
+}
+
+.nebras-info {
+  margin-top: 16px;
+  padding: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+
+  h4 {
+    margin: 0 0 10px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #334155;
+  }
+
+  .nebras-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    font-size: 0.75rem;
+  }
+
+  .info-label { color: #64748b; }
+  .info-value-cyan { color: #0e7490; margin-inline-start: 4px; }
+  .info-value-green { color: #166534; margin-inline-start: 4px; }
+  .info-code {
+    background: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+    margin-inline-start: 4px;
+    font-family: monospace;
+  }
+}
+
+.validation-error {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #991b1b;
+  font-size: 0.78rem;
+  font-weight: 600;
 }

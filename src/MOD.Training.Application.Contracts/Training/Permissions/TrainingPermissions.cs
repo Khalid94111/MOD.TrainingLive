@@ -243,3 +243,67 @@ public static class TrainingPermissions
         public const string Delete = Default + ".Delete";
     }
 }
+
+/// <summary>
+/// Phase 4B-α — pre-execution preparation permissions (price quote selection
+/// and travel instruction lifecycle). Separate group from <c>TrainingPermissions</c>
+/// so role grants stay narrowly scoped.
+/// </summary>
+public static class TrainingExecutionPermissions
+{
+    public const string GroupName = "TrainingExecution";
+
+    public static class PriceQuotes
+    {
+        public const string Default = GroupName + ".PriceQuotes";
+        public const string Create  = Default + ".Create";
+        public const string Edit    = Default + ".Edit";
+        public const string Delete  = Default + ".Delete";
+        public const string Select  = Default + ".Select";
+    }
+
+    public static class TravelInstructions
+    {
+        public const string Default = GroupName + ".TravelInstructions";
+        public const string Edit    = Default + ".Edit";
+        public const string Issue   = Default + ".Issue";
+        public const string Cancel  = Default + ".Cancel";
+    }
+}
+
+/// <summary>
+/// Phase 4B-β — payments + auto-reallocation permissions. Separate top-level group from
+/// <c>TrainingPermissions</c> and <c>TrainingExecutionPermissions</c> so role grants (Finance,
+/// Staff, TD) stay narrowly scoped and the admin permissions UI keeps the modules visually distinct.
+/// </summary>
+public static class TrainingPaymentsPermissions
+{
+    public const string GroupName = "TrainingPayments";
+
+    public static class TravelAllowance
+    {
+        public const string Default  = GroupName + ".TravelAllowance";
+        public const string Create   = Default + ".Create";
+        public const string Update   = Default + ".Update";
+        public const string Delete   = Default + ".Delete";
+        public const string Confirm  = Default + ".Confirm";
+    }
+
+    public static class CoursePayments
+    {
+        public const string Default          = GroupName + ".CoursePayments";
+        public const string Create           = Default + ".Create";
+        public const string Update           = Default + ".Update";
+        public const string Delete           = Default + ".Delete";
+        public const string Confirm          = Default + ".Confirm";
+        public const string UploadInvoice    = Default + ".UploadInvoice";
+        public const string DownloadInvoice  = Default + ".DownloadInvoice";
+    }
+
+    public static class Reallocations
+    {
+        public const string Default       = GroupName + ".Reallocations";
+        public const string View          = Default + ".View";
+        public const string MarkApproved  = Default + ".MarkApproved";
+    }
+}

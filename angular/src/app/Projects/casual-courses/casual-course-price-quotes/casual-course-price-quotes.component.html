@@ -1,0 +1,339 @@
+
+  @if (!embedded()) {
+    <!-- Header (standalone mode only — shell renders its own header) -->
+    <div class="page-toolbar">
+      <div class="page-toolbar-title">
+        <div>
+          <a class="back-link" (click)="goBack()" tabindex="0">← الدورات العرضية</a>
+          <h2 class="gtms-card-title page-h1">💰 عروض الأسعار</h2>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="gtms-card">
+      <div class="empty-state">
+        <div class="empty-icon">⏳</div>
+        جاري التحميل...
+      </div>
+    </div>
+  } @else if (course()) {
+
+    @if (!embedded()) {
+      <!-- Course summary (standalone mode only — shell already shows course identity) -->
+      <div class="gtms-card course-summary">
+        <div class="summary-left">
+          <div class="muted-xs">الدورة العرضية</div>
+          <h3 class="course-title">{{ course()?.courseNameAr }}</h3>
+          <div class="meta-line">
+            <span><b>المرشحون:</b> {{ course()?.nomineesCount }}</span>
+            <span><b>المدة:</b> {{ course()?.durationDays }} يوم</span>
+            @if (course()?.fundingScenario != null) {
+              <span><b>السيناريو:</b> #{{ course()?.fundingScenario }}</span>
+            }
+          </div>
+        </div>
+        <div class="summary-right">
+          @if (isCourseTHApproved()) {
+            <span class="status-pill status-th">✓ معتمدة من رئيس التدريب</span>
+          } @else {
+            <span class="status-pill status-pending">⚠ غير معتمدة بعد</span>
+          }
+          <div class="estimate-block">
+            <div class="muted-xs">التكلفة التقديرية</div>
+            <div class="estimate-amount">{{ formatCurrency(estimatedTotalCost()) }} <span class="currency">ر.ع</span></div>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (!isCourseTHApproved()) {
+      <div class="info-banner info-banner-warn">
+        <div class="info-banner-icon">⚠️</div>
+        <div class="info-banner-text">
+          <b>الدورة لم تُعتمد من رئيس التدريب بعد.</b>
+          يمكنك إدخال عروض الأسعار، لكن لن تستطيع اختيار عرض فائز حتى يتم اعتماد الدورة.
+        </div>
+      </div>
+    }
+
+    <!-- Quotes list -->
+    <div class="gtms-card">
+      <div class="section-header">
+        <h3 class="section-title">عروض الأسعار · {{ quotes().length }} عرض</h3>
+        <button type="button" class="btn btn-primary" (click)="onAddQuote()">+ إضافة عرض جديد</button>
+      </div>
+
+      @if (saveError()) {
+        <div class="validation-error">⚠ {{ saveError() }}</div>
+      }
+
+      @if (quotes().length === 0) {
+        <div class="empty-state small">
+          لا توجد عروض. اضغط على "إضافة عرض جديد" للبدء.
+        </div>
+      } @else {
+        <div class="quote-list">
+          @for (quote of sortedQuotes(); track quote.id) {
+            <div class="quote-card" [class.quote-winner]="quote.isSelected">
+              <div class="quote-card-body">
+                <div class="quote-leader">
+                  @if (quote.isSelected) {
+                    <span class="trophy">🏆</span>
+                  }
+                </div>
+
+                <div class="quote-main">
+                  <div class="quote-title-row">
+                    <h4 class="quote-provider">{{ quote.providerName || providerName(quote.providerId) }}</h4>
+                    <span [class]="scopeCssClass(quote.providerScope ?? providerScopeOf(quote.providerId))">
+                      {{ scopeLabel(quote.providerScope ?? providerScopeOf(quote.providerId)) }}
+                    </span>
+                    @if (quote.isSelected) {
+                      <span class="status-pill status-selected">✓ العرض الفائز</span>
+                    }
+                  </div>
+
+                  <div class="quote-grid">
+                    <div>
+                      <span class="muted-xs">الدولة:</span>
+                      <b>{{ quote.countryNameAr || countryNameOf(quote.countryId) || '—' }}</b>
+                    </div>
+                    <div>
+                      <span class="muted-xs">المدينة:</span>
+                      <b>{{ quote.cityNameAr || cityNameOf(quote.countryId, quote.cityId) || '—' }}</b>
+                    </div>
+                    <div>
+                      <span class="muted-xs">السعر:</span>
+                      <b class="price">{{ formatCurrency(quote.quotedPriceOMR) }} ر.ع</b>
+                    </div>
+                    <div>
+                      @if (estimatedTotalCost() > 0) {
+                        @if (variance(quote) < 0) {
+                          <span [class]="varianceCssClass(quote)">
+                            {{ formatCurrency(variance(quote)) }} تحت التقدير ✓
+                          </span>
+                        } @else if (variance(quote) > 0) {
+                          <span [class]="varianceCssClass(quote)">
+                            +{{ formatCurrency(variance(quote)) }} فوق التقدير
+                          </span>
+                        } @else {
+                          <span class="variance-neutral">مطابق للتقدير</span>
+                        }
+                      }
+                    </div>
+                  </div>
+
+                  @if (quote.notes) {
+                    <div class="quote-notes">"{{ quote.notes }}"</div>
+                  }
+                </div>
+
+                <div class="quote-actions">
+                  @if (!quote.isSelected) {
+                    @if (isCourseTHApproved()) {
+                      <button type="button" class="btn btn-warning btn-sm" (click)="onOpenPickDialog(quote)">
+                        🏆 اختر هذا
+                      </button>
+                    }
+                    <button type="button" class="btn btn-ghost btn-sm" (click)="onEditQuote(quote)">✏️ تعديل</button>
+                    <button type="button" class="btn-link-danger btn-sm" (click)="onDeleteQuote(quote)">🗑️ حذف</button>
+                  } @else {
+                    <div class="winner-actual-dates">
+                      <div class="muted-xs">تواريخ الانعقاد الفعلية</div>
+                      <div class="actual-dates-line">
+                        {{ course()?.actualStartDate | slice:0:10 }}
+                        →
+                        {{ course()?.actualEndDate | slice:0:10 }}
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Add/Edit Dialog -->
+    @if (quoteDialogOpen()) {
+      <div class="modal-backdrop" (click)="closeQuoteDialog()"></div>
+      <div class="modal modal-quote">
+        <div class="modal-header">
+          <h3>
+            @if (isEditMode()) { ✏️ تعديل عرض السعر }
+            @else { 📝 إضافة عرض سعر جديد }
+          </h3>
+          <button type="button" class="modal-close" (click)="closeQuoteDialog()">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">جهة التدريب <span class="required">*</span></label>
+              <select class="form-input"
+                [value]="fProviderId()"
+                (change)="onProviderChange($any($event.target).value)">
+                <option value="">اختر جهة التدريب...</option>
+                @for (p of providers(); track p.id) {
+                  <option [value]="p.id">
+                    {{ p.providerNameAr }}
+                    @if (p.scope === ProviderScope.International) { (دولية) }
+                    @else if (p.scope === ProviderScope.Local) { (محلية) }
+                    @else { (داخلية) }
+                  </option>
+                }
+              </select>
+              <div class="form-hint">جهات نشطة فقط</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">السعر المعروض (ر.ع) <span class="required">*</span></label>
+              <input type="number" min="0" step="0.001" class="form-input"
+                [value]="fQuotedPriceOMR()"
+                (input)="fQuotedPriceOMR.set(+$any($event.target).value)" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">دولة انعقاد الدورة</label>
+              <select class="form-input"
+                [value]="fCountryId() || ''"
+                (change)="onCountryChange($any($event.target).value)">
+                <option value="">اختر الدولة</option>
+                @for (c of countries(); track c.id) {
+                  <option [value]="c.id">{{ c.arabicName || c.englishName }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">مدينة انعقاد الدورة</label>
+              <select class="form-input"
+                [value]="fCityId() || ''"
+                [disabled]="!fCountryId()"
+                (change)="onCityChange($any($event.target).value)">
+                <option value="">{{ fCountryId() ? 'اختر المدينة' : 'اختر الدولة أولاً' }}</option>
+                @for (c of citiesForSelected(); track c.id) {
+                  <option [value]="c.id">{{ c.arabicName || c.englishName }}</option>
+                }
+              </select>
+              <div class="form-hint">المدن تظهر بناءً على الدولة المختارة</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">ملاحظات</label>
+            <textarea class="form-input" rows="3"
+              [value]="fNotes()"
+              (input)="fNotes.set($any($event.target).value)"
+              placeholder="ما الذي يتضمنه العرض؟ شروط الدفع؟"></textarea>
+          </div>
+
+          @if (saveError()) {
+            <div class="validation-error">⚠ {{ saveError() }}</div>
+          }
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" (click)="closeQuoteDialog()">إلغاء</button>
+          <button type="button" class="btn btn-primary" (click)="onSaveQuote()">💾 حفظ العرض</button>
+        </div>
+      </div>
+    }
+
+    <!-- Pick Winner Dialog -->
+    @if (pickDialogOpen() && pickQuote()) {
+      <div class="modal-backdrop" (click)="closePickDialog()"></div>
+      <div class="modal modal-pick">
+        <div class="modal-header pick-header">
+          <h3>🏆 اختيار العرض الفائز + تأكيد التواريخ</h3>
+          <button type="button" class="modal-close" (click)="closePickDialog()">×</button>
+        </div>
+        <div class="modal-body">
+          <p class="pick-intro">
+            سيتم قفل هذا الاختيار. تأكد من تواريخ الانعقاد الفعلية مع المعهد قبل المتابعة.
+          </p>
+
+          <div class="pick-quote-summary">
+            <div class="quote-title-row">
+              <span [class]="scopeCssClass(pickQuote()!.providerScope ?? providerScopeOf(pickQuote()!.providerId))">
+                {{ scopeLabel(pickQuote()!.providerScope ?? providerScopeOf(pickQuote()!.providerId)) }}
+              </span>
+              <h4 class="quote-provider">{{ pickQuote()!.providerName || providerName(pickQuote()!.providerId) }}</h4>
+            </div>
+            <div class="pick-quote-grid">
+              <div>
+                <span class="muted-xs">المدينة:</span>
+                <b>
+                  {{ pickQuote()!.cityNameAr || cityNameOf(pickQuote()!.countryId, pickQuote()!.cityId) || '—' }},
+                  {{ pickQuote()!.countryNameAr || countryNameOf(pickQuote()!.countryId) || '—' }}
+                </b>
+              </div>
+              <div>
+                <span class="muted-xs">السعر:</span>
+                <b class="price">{{ formatCurrency(pickQuote()!.quotedPriceOMR) }} ر.ع</b>
+              </div>
+              <div>
+                @if (estimatedTotalCost() > 0) {
+                  @if (variance(pickQuote()!) < 0) {
+                    <span class="variance-ok">{{ formatCurrency(variance(pickQuote()!)) }} تحت التقدير</span>
+                  } @else if (variance(pickQuote()!) > 0) {
+                    <span class="variance-warn">+{{ formatCurrency(variance(pickQuote()!)) }} فوق التقدير</span>
+                  } @else {
+                    <span class="variance-neutral">مطابق للتقدير</span>
+                  }
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="info-banner info-banner-warn">
+            <div class="info-banner-icon">📞</div>
+            <div class="info-banner-text">
+              <b>هذه التواريخ تأتي من تواصلك مع المعهد.</b>
+              سيتم استخدامها لاحقاً في تعليمات السفر وحساب البدلات.
+              <span class="lock-hint">لا يمكن تعديلها بسهولة بعد القفل.</span>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">📅 تاريخ بدء الدورة الفعلي <span class="required">*</span></label>
+              <input type="date" class="form-input"
+                [value]="fActualStartDate()"
+                (input)="fActualStartDate.set($any($event.target).value)" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">📅 تاريخ انتهاء الدورة الفعلي <span class="required">*</span></label>
+              <input type="date" class="form-input"
+                [value]="fActualEndDate()"
+                (input)="fActualEndDate.set($any($event.target).value)" />
+            </div>
+          </div>
+
+          <div class="pick-effects">
+            <b>ماذا سيحدث عند التأكيد:</b>
+            <ul>
+              <li>السطر الفائز سيُعلَّم كـ <code>IsSelected = true</code></li>
+              <li>التواريخ ستُحفَظ على الدورة (ActualStartDate / ActualEndDate)</li>
+              <li>الخطوة التالية ستُفتَح: إصدار تعليمات السفر</li>
+            </ul>
+          </div>
+
+          @if (saveError()) {
+            <div class="validation-error">⚠ {{ saveError() }}</div>
+          }
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" (click)="closePickDialog()">إلغاء</button>
+          <button type="button" class="btn btn-success" (click)="onConfirmPickWinner()">✓ تأكيد + قفل الاختيار</button>
+        </div>
+      </div>
+    }
+  } @else {
+    <div class="gtms-card">
+      <div class="empty-state">تعذر تحميل بيانات الدورة.</div>
+    </div>
+  }

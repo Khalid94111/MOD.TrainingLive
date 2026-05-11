@@ -1,0 +1,424 @@
+.page-container {
+  padding: 24px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  gap: 16px;
+
+  h2 { margin: 0 0 4px; font-size: 1.4rem; font-weight: 700; color: #1e293b; }
+  .subtitle { margin: 0; font-size: 0.78rem; color: #64748b; }
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+
+  .filter-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  .row-count {
+    margin-inline-start: auto;
+    font-size: 0.75rem;
+    color: #64748b;
+  }
+}
+
+.employee-name { font-weight: 600; color: #1e293b; }
+.course-name   { font-weight: 600; color: #1e293b; font-size: 0.82rem; }
+.muted         { color: #94a3b8; font-size: 0.72rem; }
+
+.money { font-weight: 600; color: #1e293b; font-variant-numeric: tabular-nums; }
+
+.currency-dual {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  line-height: 1.15;
+}
+.currency-omr { font-weight: 700; color: #1e293b; font-variant-numeric: tabular-nums; }
+.currency-usd { font-size: 0.7rem; color: #94a3b8; }
+
+.personnel-pill {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+
+  &.officer  { background: #dbeafe; color: #1e40af; }
+  &.enlisted { background: #f1f5f9; color: #475569; }
+}
+
+.status-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  display: inline-block;
+}
+.status-draft     { background: #f1f5f9; color: #475569; }
+.status-confirmed { background: #dcfce7; color: #166534; }
+.status-cancelled { background: #fee2e2; color: #991b1b; }
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: #f0fdf4;
+  border: 2px solid #16a34a;
+  border-radius: 12px;
+  margin-top: 12px;
+
+  .total-label { font-weight: 700; color: #166534; }
+  .total-amount { font-size: 1.1rem; }
+}
+
+/* ── Dialog ── */
+
+.dialog-form {
+  padding: 18px;
+  max-height: 78vh;
+  overflow-y: auto;
+
+  /* Two-column layout: form (DOM-first → start side, RTL=right)
+     + read-only context aside (DOM-second → end side, RTL=left). */
+  .dialog-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 18px;
+    align-items: start;
+  }
+
+  .dialog-main { min-width: 0; }   /* allow nested grids to shrink */
+
+  .dialog-aside {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    max-height: calc(78vh - 36px);
+    overflow-y: auto;
+    padding-inline-end: 4px;        /* tiny breathing room next to scrollbar */
+
+    .context-panel { margin-bottom: 14px; }
+    .nebras-block  { margin-top: 0; }
+  }
+
+  @media (max-width: 980px) {
+    .dialog-grid {
+      grid-template-columns: 1fr;
+    }
+    .dialog-aside {
+      position: static;
+      max-height: none;
+    }
+  }
+
+  .info-banner {
+    display: flex;
+    gap: 10px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    font-size: 0.78rem;
+    color: #1e40af;
+
+    .info-icon { font-size: 1rem; }
+  }
+
+  .context-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    font-size: 0.8rem;
+
+    .muted     { color: #64748b; }
+    .muted-xs  { color: #94a3b8; font-size: 0.72rem; }
+  }
+
+  .context-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .context-section {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 14px;
+
+    .context-section-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #334155;
+      margin-bottom: 6px;
+    }
+
+    &.context-section-warn {
+      background: #fffbeb;
+      border-color: #fde68a;
+      .context-section-title { color: #92400e; }
+      .muted { color: #b45309; }
+    }
+  }
+
+  .date-arrow {
+    color: #d97706;
+    font-size: 0.85em;
+    margin: 0 6px;
+    vertical-align: middle;
+    display: inline-block;          /* ensures transform applies */
+  }
+
+  /* In RTL, "from → to" should visually point LEFT (toward the end of the
+     reading flow). Flip the FA glyph horizontally rather than swapping the
+     icon class — keeps the markup simple and direction-agnostic. */
+  :host-context([dir="rtl"]) .date-arrow,
+  [dir="rtl"] .date-arrow {
+    transform: scaleX(-1);
+  }
+
+  .date-range-row {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .date-source-tag {
+    display: inline-block;
+    margin-inline-start: 6px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 1px 8px;
+    border-radius: 999px;
+    text-transform: lowercase;
+    letter-spacing: 0.02em;
+    /* default = estimated (neutral) */
+    background: #f1f5f9;
+    color: #64748b;
+
+    &.tag-actual {
+      background: #dcfce7;
+      color: #166534;
+    }
+  }
+
+  .ti-flags {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+  .ti-flag {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #94a3b8;
+
+    &.flag-on { background: #dcfce7; color: #166534; }
+  }
+
+  .form-row {
+    display: flex;
+    gap: 12px;
+  }
+  .flex-1 { flex: 1; min-width: 0; }
+
+  .form-field {
+    margin-bottom: 14px;
+
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: #334155;
+    }
+  }
+
+  .readonly-chip {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    color: #475569;
+  }
+
+  .muted-row {
+    font-size: 0.78rem;
+    color: #64748b;
+    margin: -8px 0 14px;
+    padding-inline-start: 4px;
+
+    .sep { margin: 0 6px; color: #cbd5e1; }
+  }
+
+  .amount-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px 18px;
+    margin-bottom: 16px;
+  }
+
+  .amount-field {
+    label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: #334155;
+      margin-bottom: 4px;
+    }
+
+    .dual-input {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .usd-display {
+      font-size: 0.7rem;
+      color: #94a3b8;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 6px 10px;
+      min-width: 120px;
+      text-align: end;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hint {
+      font-size: 0.7rem;
+      color: #d97706;
+      margin-top: 4px;
+    }
+
+    /* Read-only computed total — shows the days × rate = total breakdown
+       directly under the rate input so the user sees what will be saved. */
+    .computed-total {
+      margin-top: 6px;
+      padding: 6px 10px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      color: #166534;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: baseline;
+
+      .formula        { color: #15803d; }
+      .computed-value { font-weight: 800; font-variant-numeric: tabular-nums; color: #14532d; }
+      .computed-usd   { color: #4ade80; font-size: 0.7rem; margin-inline-start: auto; }
+    }
+  }
+
+  .total-card {
+    grid-column: span 2;
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    border: 2px solid #16a34a;
+    border-radius: 12px;
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+
+    .total-card-label { font-size: 0.75rem; color: #166534; font-weight: 600; }
+    .total-card-omr   { font-size: 1.6rem; font-weight: 800; color: #14532d; line-height: 1.1; margin-top: 2px; }
+    .omr-sm           { font-size: 0.85rem; font-weight: 600; }
+    .total-card-usd   { font-size: 0.78rem; color: #166534; margin-top: 2px; }
+  }
+
+  .nebras-block {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-top: 14px;
+
+    h4 {
+      margin: 0 0 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #475569;
+    }
+
+    .nebras-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      font-size: 0.72rem;
+
+      .value { color: #94a3b8; font-style: italic; margin-inline-start: 4px; }
+    }
+  }
+
+  .error-banner {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-top: 14px;
+  }
+
+  .confirmed-banner {
+    background: #dcfce7;
+    border: 1px solid #86efac;
+    color: #166534;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    margin-top: 14px;
+  }
+
+  .warn-footer {
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    color: #92400e;
+    font-size: 0.78rem;
+    text-align: center;
+  }
+
+  .required { color: #ef4444; }
+}
+
+@media (max-width: 768px) {
+  .dialog-form .amount-grid {
+    grid-template-columns: 1fr;
+
+    .total-card { grid-column: span 1; }
+  }
+}

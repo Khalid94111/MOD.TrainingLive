@@ -1,0 +1,150 @@
+/* ==========================================================
+   Casual Course Section — Travel Instructions (Section 4)
+   ========================================================== */
+
+:host {
+  display: block;
+  font-family: 'Tajawal', sans-serif;
+}
+
+.cc-section {
+  background: white;
+  border: 0.5px solid #e2e8f0;
+  border-radius: 14px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.cc-section.state-active {
+  border-inline-start: 3px solid #2563eb;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+}
+.cc-section.state-collapsed:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+.cc-section.state-locked {
+  opacity: 0.55;
+  background: #f8fafc;
+}
+
+.cc-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 18px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: start;
+  font-family: inherit;
+  color: inherit;
+  transition: background 0.15s;
+}
+.cc-section-header:disabled { cursor: not-allowed; }
+.cc-section.state-collapsed .cc-section-header:hover { background: #f8fafc; }
+
+.cc-section-header-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.cc-section-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+.cc-section-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.cc-section-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.3;
+}
+.cc-section-summary {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #64748b;
+  line-height: 1.45;
+  word-break: break-word;
+}
+.cc-section-locked-reason { color: #94a3b8; }
+.cc-section-active-hint   { color: #94a3b8; font-size: 0.78rem; }
+
+.cc-lock-icon { margin-inline-end: 4px; }
+
+.cc-section-affordance {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-inline-start: 12px;
+}
+.cc-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.82rem;
+  transition: background 0.2s;
+}
+.cc-section-header:hover .cc-chevron {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+.cc-lock-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #94a3b8;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+.cc-section-body {
+  padding: 4px 24px 24px;
+  border-top: 1px solid #f1f5f9;
+  animation: cc-section-fade 200ms ease-out;
+}
+.cc-section-locked-body { padding: 16px 24px 20px; }
+
+.cc-locked-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cc-skeleton-line {
+  display: block;
+  height: 10px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 50%, #e2e8f0 100%);
+  background-size: 200% 100%;
+  width: 100%;
+  animation: cc-skeleton-shimmer 1.6s ease-in-out infinite;
+}
+.cc-skeleton-line.short { width: 40%; }
+
+@keyframes cc-section-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes cc-skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

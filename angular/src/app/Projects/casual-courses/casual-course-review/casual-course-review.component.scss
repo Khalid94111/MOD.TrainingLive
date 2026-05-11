@@ -4,6 +4,16 @@
   max-width: 1200px;
   margin: 0 auto;
 }
+.page-container.embedded {
+  max-width: none;
+  margin: 0;
+}
+
+.embedded-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 0 8px;
+}
 
 .back-link {
   font-size: 0.78rem;

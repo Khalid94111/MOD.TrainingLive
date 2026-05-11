@@ -53,6 +53,8 @@ export interface CasualCourseDto extends FullAuditedEntityDto<string> {
   estimatedTotalCost?: number | null;
   fundingScenario?: FundingScenario | null;
   selectedPriceQuoteId?: string | null;
+  actualStartDate?: string | null;
+  actualEndDate?: string | null;
   status?: CasualCourseStatus;
   returnedFromStatus?: CasualCourseStatus | null;
   isReturned?: boolean;
@@ -159,6 +161,12 @@ export interface PreviewRankRowDto {
 
 export interface RejectDto {
   reason: string;
+}
+
+export interface SelectPriceQuoteDto {
+  priceQuoteId: string;
+  actualStartDate: string;
+  actualEndDate: string;
 }
 
 export interface StaffAdjustmentDto {

@@ -1,6 +1,8 @@
 using MOD.Training.Training.Consts;
+using MOD.Training.Training.Enums;
+using System;
 using System.ComponentModel.DataAnnotations;
- 
+
 namespace MOD.Training.Training.Finance.Dtos;
 
 public class CreateUpdateTrainingProviderDto
@@ -31,4 +33,11 @@ public class CreateUpdateTrainingProviderDto
 
     public bool IsApproved { get; set; }
     public bool IsActive { get; set; } = true;
+
+    // Phase 4B-α — Staff-editable
+    public ProviderScope Scope { get; set; } = ProviderScope.Local;
+    public Guid? CountryId { get; set; }
+
+    // INTENTIONALLY ABSENT (sync-driven, server-controlled): IsFromNebras, NebrasId,
+    // AverageRating, TotalRatings.
 }

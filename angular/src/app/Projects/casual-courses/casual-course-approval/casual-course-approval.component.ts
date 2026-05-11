@@ -1,4 +1,5 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, input, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -20,6 +21,7 @@ import {
 import { NotesDrawerComponent } from '../../shared/components/notes-drawer/notes-drawer.component';
 import { ReturnModalComponent } from '../../shared/components/return-modal/return-modal.component';
 import { PlanNoteEntityType } from 'src/app/proxy/training/enums/plan-note-entity-type.enum';
+import { CasualCourseActionService } from '../casual-course-detail/casual-course-action.service';
 
 @Component({
   standalone: true,
@@ -33,12 +35,20 @@ export class CasualCourseApprovalComponent implements OnInit {
   private financialService = inject(CasualCourseFinancialItemService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private actions = inject(CasualCourseActionService);
+  private destroyRef = inject(DestroyRef);
   l = inject(TrainingLocalizationHelper);
 
   CasualCourseStatus = CasualCourseStatus;
   PlanNoteEntityType = PlanNoteEntityType;
 
+  /** Render slot — see CasualCourseRequestComponent for semantics. */
+  mode = input<'details' | 'financials' | 'all'>('all');
+  showDetails    = computed(() => this.mode() === 'details'    || this.mode() === 'all');
+  showFinancials = computed(() => this.mode() === 'financials' || this.mode() === 'all');
+
   courseId = signal<string>('');
+  embedded = signal<boolean>(false);
   casualCourse = signal<CasualCourseDetailDto | null>(null);
   financials = signal<CasualCourseFinancialItemDto[]>([]);
   // Patch 5 — UGM viewing a Submitted course (before scenario is picked) sees a server-
@@ -102,7 +112,25 @@ export class CasualCourseApprovalComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id') ?? '';
     this.courseId.set(id);
+    this.embedded.set(!!this.route.snapshot.data['embedded']);
     await this.loadAll();
+
+    // Header action bar dispatch — UGM (Submitted) acts on Section 1
+    // (mode='details'); TD (StaffReviewed) and TH (TDApproved) act on
+    // Section 2 (mode='financials'). The guard picks the primary mode
+    // for the current status so the live instance responds and a sibling
+    // instance (rendered when the user manually expands the off-default
+    // section) doesn't double-fire.
+    this.actions.events.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(action => {
+      if (!this.embedded() || !this.canAct()) return;
+      const s = this.casualCourse()?.status;
+      const primaryMode: 'details' | 'financials' =
+        s === CasualCourseStatus.Submitted ? 'details' : 'financials';
+      if (this.mode() !== primaryMode) return;
+      if (action === 'approve')      void this.onApprove();
+      else if (action === 'return')  this.openReturn();
+      else if (action === 'reject')  this.openReject();
+    });
   }
 
   private async loadAll(): Promise<void> {

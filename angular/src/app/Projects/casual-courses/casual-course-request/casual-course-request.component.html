@@ -1,15 +1,16 @@
-<div class="page-container">
-  <!-- Header -->
-  <div class="page-toolbar">
-    <div class="page-toolbar-title">
-      <div>
-        <a routerLink="/training/casual-courses" class="back-link">← الدورات العرضية</a>
-        <h2 class="gtms-card-title page-h1">
-          @if (isEdit()) { تعديل طلب دورة عرضية } @else { طلب دورة عرضية جديد }
-        </h2>
+  @if (!embedded()) {
+    <!-- Header (standalone mode only — shell renders its own header) -->
+    <div class="page-toolbar">
+      <div class="page-toolbar-title">
+        <div>
+          <a routerLink="/training/casual-courses" class="back-link">← الدورات العرضية</a>
+          <h2 class="gtms-card-title page-h1">
+            @if (isEdit()) { تعديل طلب دورة عرضية } @else { طلب دورة عرضية جديد }
+          </h2>
+        </div>
       </div>
     </div>
-  </div>
+  }
 
   @if (isReturned()) {
     <div class="info-banner info-banner-returned">
@@ -37,35 +38,36 @@
       </div>
     </div>
   } @else {
+    @if (showDetails()) {
     <!-- Section A — Course details -->
     <div class="gtms-card">
       <h3 class="section-title">تفاصيل الدورة</h3>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">الدورة <span class="required">*</span></label>
-          <select class="form-input" [value]="fTenantCourseId()" (change)="onTenantCourseChange($any($event.target).value)">
-            <option value="">اختر دورة...</option>
+          <select class="form-input" (change)="onTenantCourseChange($any($event.target).value)">
+            <option value="" [selected]="!fTenantCourseId()">اختر دورة...</option>
             @for (tc of tenantCourses(); track tc.id) {
-              <option [value]="tc.id">{{ tc.catalogCourseNameAr }}</option>
+              <option [value]="tc.id" [selected]="fTenantCourseId() === tc.id">{{ tc.catalogCourseNameAr }}</option>
             }
           </select>
         </div>
         <div class="form-group">
           <label class="form-label">نوع الدورة <span class="required">*</span></label>
-          <select class="form-input" [value]="fCourseType()" (change)="onCourseTypeChange($any($event.target).value)">
-            <option [value]="CourseType.Internal">داخلية</option>
-            <option [value]="CourseType.ExternalLocal">خارجية محلية</option>
-            <option [value]="CourseType.ExternalInternational">خارجية دولية</option>
+          <select class="form-input" (change)="onCourseTypeChange($any($event.target).value)">
+            <option [value]="CourseType.Internal"              [selected]="fCourseType() === CourseType.Internal">داخلية</option>
+            <option [value]="CourseType.ExternalLocal"         [selected]="fCourseType() === CourseType.ExternalLocal">خارجية محلية</option>
+            <option [value]="CourseType.ExternalInternational" [selected]="fCourseType() === CourseType.ExternalInternational">خارجية دولية</option>
           </select>
         </div>
         <div class="form-group">
           <label class="form-label">الأولوية</label>
-          <select class="form-input" [value]="fPriority()" (change)="fPriority.set(+$any($event.target).value)">
-            <option [value]="1">عالية جدًا</option>
-            <option [value]="2">عالية</option>
-            <option [value]="3">متوسطة</option>
-            <option [value]="4">منخفضة</option>
-            <option [value]="5">منخفضة جدًا</option>
+          <select class="form-input" (change)="fPriority.set(+$any($event.target).value)">
+            <option [value]="1" [selected]="fPriority() === 1">عالية جدًا</option>
+            <option [value]="2" [selected]="fPriority() === 2">عالية</option>
+            <option [value]="3" [selected]="fPriority() === 3">متوسطة</option>
+            <option [value]="4" [selected]="fPriority() === 4">منخفضة</option>
+            <option [value]="5" [selected]="fPriority() === 5">منخفضة جدًا</option>
           </select>
         </div>
       </div>
@@ -187,7 +189,6 @@
         <h3 class="section-title">المرشحون</h3>
         <span class="section-meta">
           عدد مختارين: {{ nomineeCount() }}
-          @if (autosaving()) { <span class="autosave-chip">حفظ تلقائي...</span> }
         </span>
       </div>
       @if (currentUnitId()) {
@@ -203,8 +204,13 @@
         </div>
       }
     </div>
+    }
 
-    <!-- Section E — Financial preview (read-only calculator, Patch 5) -->
+    @if (showDetails() || showFinancials()) {
+    <!-- Section E — Financial preview (read-only calculator).
+         Visible alongside the form (mode='details') so UTM gets a live cost
+         estimate while editing, AND in Section 2 (mode='financials') as the
+         canonical financials view. Same component instance owns both. -->
     <div class="gtms-card">
       <div class="section-header">
         <h3 class="section-title">معاينة التكلفة المتوقعة</h3>
@@ -302,27 +308,171 @@
         </div>
       }
     </div>
+    }
 
-    <!-- Section F — Actions -->
+    <!-- Phase 4B-α — Execution Status cards.
+         Per stage-based layout spec, these cards distribute into the collapsed-summary
+         content of Sections 1, 3, 4 — so they only appear in legacy 'all' mode here. -->
+    @if (mode() === 'all' && hasSelectedQuote()) {
+      <div class="gtms-card execution-status-card">
+        <div class="section-header">
+          <div class="section-header-titles">
+            <span class="section-label label-purple">قسم التنفيذ</span>
+            <h3 class="section-title">📊 حالة التنفيذ والتحضيرات</h3>
+          </div>
+          <span class="section-meta">يظهر بعد اختيار العرض الفائز</span>
+        </div>
+
+        <div class="exec-grid">
+          <!-- Selected Quote -->
+          <div class="exec-card">
+            <div class="exec-card-header">
+              <span class="exec-card-icon">🏆</span>
+              <h4>العرض الفائز</h4>
+            </div>
+            @if (selectedQuote(); as q) {
+              <div class="exec-card-body">
+                <div class="exec-bold">{{ q.providerName }}</div>
+                <div class="muted-xs">
+                  {{ q.countryNameAr || '—' }}
+                  @if (q.cityNameAr) { · {{ q.cityNameAr }} }
+                </div>
+                <div class="exec-divider"></div>
+                <div class="exec-row">
+                  <div>
+                    <div class="muted-xs">السعر</div>
+                    <div class="exec-bold-lg">{{ formatCurrency(q.quotedPriceOMR) }} ر.ع</div>
+                  </div>
+                  @if ((casualCourse()?.estimatedTotalCost ?? 0) > 0) {
+                    <div>
+                      @if (executionVariance() < 0) {
+                        <span class="variance-ok">{{ formatCurrency(executionVariance()) }} تحت التقدير</span>
+                      } @else if (executionVariance() > 0) {
+                        <span class="variance-warn">+{{ formatCurrency(executionVariance()) }} فوق التقدير</span>
+                      } @else {
+                        <span class="variance-neutral">مطابق للتقدير</span>
+                      }
+                    </div>
+                  }
+                </div>
+                <button type="button" class="btn-link" (click)="goToPriceQuotes()">👁️ عرض كل العروض</button>
+              </div>
+            } @else {
+              <div class="muted-xs">جاري التحميل...</div>
+            }
+          </div>
+
+          <!-- Actual Dates -->
+          <div class="exec-card">
+            <div class="exec-card-header">
+              <span class="exec-card-icon">📅</span>
+              <h4>التواريخ الفعلية</h4>
+            </div>
+            <div class="exec-card-body">
+              <div class="exec-dates-grid">
+                <div>
+                  <div class="muted-xs">البدء</div>
+                  <div class="exec-bold">{{ casualCourse()?.actualStartDate | slice:0:10 }}</div>
+                </div>
+                <div>
+                  <div class="muted-xs">الانتهاء</div>
+                  <div class="exec-bold">{{ casualCourse()?.actualEndDate | slice:0:10 }}</div>
+                </div>
+              </div>
+              <div class="exec-divider"></div>
+              <div>
+                <div class="muted-xs">المدة الفعلية</div>
+                <div class="exec-bold">{{ actualDurationDays() }} أيام</div>
+              </div>
+              <div class="muted-xs lock-note">🔒 مقفلة منذ اختيار العرض الفائز</div>
+            </div>
+          </div>
+
+          <!-- Travel Instruction -->
+          <div class="exec-card">
+            <div class="exec-card-header">
+              <span class="exec-card-icon">✈️</span>
+              <h4>تعليمات السفر</h4>
+            </div>
+            <div class="exec-card-body">
+              <div><span [class]="travelStatusCss()">{{ travelStatusLabel() }}</span></div>
+              @if (travelInstruction(); as ti) {
+                <div class="exec-dates-grid mt-8">
+                  <div>
+                    <div class="muted-xs">المغادرة</div>
+                    <div class="exec-bold">{{ ti.departureDate | slice:0:10 }}</div>
+                  </div>
+                  <div>
+                    <div class="muted-xs">العودة لعُمان</div>
+                    <div class="exec-bold">{{ ti.arrivalBackDate | slice:0:10 }}</div>
+                  </div>
+                  <div>
+                    <div class="muted-xs">أيام السفر</div>
+                    <div class="exec-bold-green">{{ ti.effectiveTravelDays }} أيام</div>
+                  </div>
+                  <div>
+                    <div class="muted-xs">التذاكر</div>
+                    @if (ti.ticketsBooked) {
+                      <div class="exec-bold-green">✓ محجوزة</div>
+                    } @else {
+                      <div class="exec-bold-red">— غير محجوزة</div>
+                    }
+                  </div>
+                </div>
+              } @else {
+                <div class="muted-xs mt-8">لم تُنشأ تعليمات السفر بعد.</div>
+              }
+              <button type="button" class="btn-link" (click)="goToTravelInstructions()">
+                @if (travelInstruction()) { 👁️ عرض التعليمات الكاملة }
+                @else { ✈️ إنشاء تعليمات السفر }
+              </button>
+            </div>
+          </div>
+
+          <!-- What's Next (Phase 4B-β preview) -->
+          <div class="exec-card next-card">
+            <div class="exec-card-header">
+              <span class="exec-card-icon">⏭️</span>
+              <h4>الخطوات القادمة (Phase 4B-β)</h4>
+            </div>
+            <div class="exec-card-body">
+              <ul class="next-list">
+                <li>Finance يصرف بدلات السفر</li>
+                <li>الدورة تنعقد فعلياً</li>
+                <li>Finance يدفع رسوم الدورة</li>
+                <li>النظام يولّد إعادة التخصيص تلقائياً</li>
+              </ul>
+              <div class="muted-xs italic">سيتم تنفيذ هذه الخطوات في Phase 4B-β.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
     @if (submitError()) {
       <div class="alert alert-danger">
         <span class="alert-icon">⚠️</span>{{ submitError() }}
       </div>
     }
-    <div class="action-bar">
-      <button type="button" class="btn btn-ghost" (click)="onCancel()">إلغاء</button>
-      <button type="button" class="btn btn-warning" (click)="onSave(true)">💾 حفظ كمسودة</button>
-      <button
-        type="button"
-        class="btn btn-primary"
-        [disabled]="!canSubmit()"
-        (click)="onSave(false)"
-      >
-        @if (isReturned()) { 🔁 إعادة الإرسال } @else { 📤 إرسال الطلب }
-      </button>
-    </div>
+    @if (mode() === 'all') {
+      <!-- In-component action bar — only the standalone /new route renders it.
+           When embedded in the shell (mode = 'details' / 'financials'), the
+           shell's sticky header action bar takes over. -->
+      <div class="action-bar">
+        <button type="button" class="btn btn-ghost" (click)="onCancel()">إلغاء</button>
+        <button type="button" class="btn btn-warning" (click)="onSave(true)">💾 حفظ كمسودة</button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          [disabled]="!canSubmit()"
+          (click)="onSave(false)"
+        >
+          @if (isReturned()) { 🔁 إعادة الإرسال } @else { 📤 إرسال الطلب }
+        </button>
+      </div>
+    }
   }
-</div>
+
 
 <gtms-notes-drawer
   [isOpen]="notesOpen()"

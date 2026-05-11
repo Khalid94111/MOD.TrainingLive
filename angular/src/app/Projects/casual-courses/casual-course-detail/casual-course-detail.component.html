@@ -1,0 +1,103 @@
+<div class="cc-detail-page">
+  <!-- ── Sticky header + pipeline ──────────────────────────────────── -->
+  <header class="cc-detail-sticky">
+    <div class="cc-detail-header">
+      <div class="cc-detail-header-titles">
+        <button type="button" class="back-link" (click)="goBack()">
+          ← الدورات العرضية
+        </button>
+        <h1 class="cc-detail-title">
+          @if (isNewMode()) {
+            طلب دورة عرضية جديد
+          } @else {
+            {{ course()?.courseNameAr || 'تفاصيل الدورة العرضية' }}
+          }
+        </h1>
+        @if (course(); as c) {
+          <div class="cc-detail-meta">
+            @if (c.unitName) { <span class="muted-xs">{{ c.unitName }}</span> }
+            @if (c.requesterName) { <span class="muted-xs">· {{ c.requesterName }}</span> }
+          </div>
+        }
+      </div>
+
+      <div class="cc-detail-header-side">
+        @if (statusBadge(); as sb) {
+          <span class="status-pill {{ sb.cssClass }}">{{ l.t(sb.key) }}</span>
+        }
+      </div>
+    </div>
+
+    <app-casual-course-header-action-bar
+      [status]="status()"
+      [canEditDraft]="canEditDraft()"
+      [canApproveUgm]="canApproveUgm()"
+      [canReview]="canReview()"
+      [canTdApprove]="canTdApprove()"
+      [canHeadApprove]="canHeadApprove()" />
+
+    <app-casual-course-status-pipeline
+      [status]="status()"
+      [hasSelectedQuote]="hasSelectedQuote()"
+      [hasTravelInstruction]="hasTravelInstruction()"
+      [paymentsCanStart]="paymentsCanStart()"
+      [paymentsComplete]="allPaymentsLifecycleComplete()"
+      (nodeClick)="onPipelineNodeClick($event)" />
+  </header>
+
+  <!-- ── Sections ──────────────────────────────────────────────────── -->
+  @if (loading() && !course()) {
+    <div class="gtms-card">
+      <div class="empty-state">
+        <div class="empty-icon">⏳</div>
+        جاري التحميل...
+      </div>
+    </div>
+  } @else {
+    <!-- Section 1 — Course Details -->
+    <app-casual-course-section-details
+      [state]="detailsState()"
+      [course]="course()"
+      (toggle)="onDetailsToggle()" />
+
+    <!-- Section 2 — Financials -->
+    <app-casual-course-section-financials
+      [state]="financialsState()"
+      [course]="course()"
+      [lockReason]="financialsLockReason()"
+      (toggle)="onFinancialsToggle()" />
+
+    <!-- Section 3 — Price Quotes (hidden entirely for Internal courseType) -->
+    @if (!quotesHidden()) {
+      <app-casual-course-section-quotes
+        [state]="quotesState()"
+        [course]="course()"
+        [quoteCount]="quoteCount()"
+        [selectedQuote]="selectedQuote()"
+        [lockReason]="quotesLockReason()"
+        (toggle)="onQuotesToggle()" />
+    }
+
+    <!-- Section 4 — Travel Instructions (hidden entirely for Internal courseType) -->
+    @if (!travelHidden()) {
+      <app-casual-course-section-travel
+        [state]="travelState()"
+        [course]="course()"
+        [instruction]="travelInstruction()"
+        [lockReason]="travelLockReason()"
+        (toggle)="onTravelToggle()" />
+    }
+
+    <!-- Section 5 — Payments & Reallocation (Phase 4B-β) -->
+    <app-casual-course-section-payments
+      [state]="paymentsState()"
+      [course]="course()"
+      [travelInstruction]="travelInstruction()"
+      [travelAllowancePayments]="travelAllowancePayments()"
+      [coursePayment]="coursePayment()"
+      [reallocations]="reallocations()"
+      [exchangeRate]="exchangeRate()"
+      [lockReason]="paymentsLockReason()"
+      (toggle)="onPaymentsToggle()" />
+  }
+</div>

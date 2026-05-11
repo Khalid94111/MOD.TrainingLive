@@ -8,6 +8,7 @@ using MOD.Training.Training.CasualCourses;
 using MOD.Training.Training.Catalog;
 using MOD.Training.Training.Centers;
 using MOD.Training.Training.Enums;
+using MOD.Training.Training.Execution;
 using MOD.Training.Training.Finance;
 using MOD.Training.Training.Hr;
 using MOD.Training.Training.Managers;
@@ -69,6 +70,7 @@ public class TenantDataSeeder(
     IRepository<CasualCourseFinancialItemRank, Guid> casualCourseFinancialRankRepo,
     IRepository<CasualCourseNomination, Guid> casualCourseNominationRepo,
     IRepository<PlanNote, Guid> planNoteRepo,
+    IRepository<TravelInstruction, Guid> travelInstructionRepo,
     FinancialItemDefaultResolver financialItemDefaultResolver,
     IUnitOfWorkManager uowManager,
     ILogger<TenantDataSeeder> logger)
@@ -527,6 +529,31 @@ private async Task SeedFinancialItemsAsync(Guid tenantId)
         // Price Quotes
         await quoteRepo.InsertAsync(new PriceQuote(guidGenerator.Create(), cyberSession, ProviderIds.SANS, PricingType.PerPerson, 56.667m, 15) { Status = ApprovalStatus.Approved }, autoSave: true);
         await quoteRepo.InsertAsync(new PriceQuote(guidGenerator.Create(), cyberSession, ProviderIds.LocalAcademy, PricingType.Total, 1000m, 15) { Status = ApprovalStatus.Rejected }, autoSave: true);
+
+        // Phase 4B-β fixture — issued TravelInstruction for cyberSession so the polymorphic
+        // SessionId arm of TravelAllowancePayment is smoke-testable without extra UI setup.
+        var sessionTravelId = guidGenerator.Create();
+        var sessionDepart = new DateTime(2027, 4, 14);
+        var sessionArrive = new DateTime(2027, 4, 15);
+        var sessionReturn = new DateTime(2027, 4, 28);
+        var sessionArriveBack = new DateTime(2027, 4, 29);
+        await travelInstructionRepo.InsertAsync(new TravelInstruction(sessionTravelId)
+        {
+            TenantId = currentTenant.Id,
+            SessionId = cyberSession,
+            DepartureDate = sessionDepart,
+            ArrivalDate = sessionArrive,
+            ReturnDate = sessionReturn,
+            ArrivalBackDate = sessionArriveBack,
+            VisaRequired = true,
+            VisaNotes = "تأشيرة B1 — تم التقديم عبر السفارة الأمريكية",
+            InsuranceArranged = true,
+            InsuranceProvider = "Oman Insurance Co.",
+            TicketsBooked = true,
+            TicketReference = "TKT-CYB-001",
+            CalculatedTravelDays = (int)(sessionArriveBack.Date - sessionDepart.Date).TotalDays + 1,
+            Status = TravelInstructionStatus.Issued,
+        }, autoSave: true);
     }
 
     private async Task CreateNomination(Guid planItemId, Guid sessionId, Guid employeeId, Guid utmId, Guid? ugmId, Guid? tdId, NominationStatus status)
@@ -754,6 +781,51 @@ private async Task SeedFinancialItemsAsync(Guid tenantId)
                     new PlanNote(guidGenerator.Create(), PlanNoteEntityType.CasualCourse, cc.Id,
                         "اعتماد القائد", PlanNoteAuthorRole.TH, false) { TenantId = tenantId },
                 }, autoSave: true);
+
+                // Phase 4B-β fixture — selected price quote + issued travel instruction so the
+                // CoursePayment + TravelAllowancePayment AppServices can be smoke-tested without
+                // any extra UI setup. Provider is the SANS seed so the casual arm has a real FK.
+                var quoteId = guidGenerator.Create();
+                var quote = new PriceQuote(quoteId)
+                {
+                    TenantId = tenantId,
+                    CasualCourseId = cc.Id,
+                    ProviderId = ProviderIds.SANS,
+                    PricingType = PricingType.Total,
+                    QuotedPrice = cc.EstimatedTotalCost ?? 0m,
+                    QuotedPriceOMR = cc.EstimatedTotalCost ?? 0m,
+                    ParticipantsCount = 3,
+                    Status = ApprovalStatus.Approved,
+                    IsSelected = true,
+                };
+                await quoteRepo.InsertAsync(quote, autoSave: true);
+
+                cc.SelectedPriceQuoteId = quoteId;
+                cc.ActualStartDate = from;
+                cc.ActualEndDate = to;
+                await casualCourseRepo.UpdateAsync(cc, autoSave: true);
+
+                var travelId = guidGenerator.Create();
+                var depart = from.AddDays(-1);
+                var arriveBack = to.AddDays(1);
+                var travel = new TravelInstruction(travelId)
+                {
+                    TenantId = tenantId,
+                    CasualCourseId = cc.Id,
+                    DepartureDate = depart,
+                    ArrivalDate = from,
+                    ReturnDate = to,
+                    ArrivalBackDate = arriveBack,
+                    VisaRequired = true,
+                    VisaNotes = "تأشيرة زيارة عمل — تم التقديم عبر السفارة",
+                    InsuranceArranged = true,
+                    InsuranceProvider = "Oman Insurance Co.",
+                    TicketsBooked = true,
+                    TicketReference = $"TKT-{cc.Id:N}".Substring(0, 16),
+                    CalculatedTravelDays = (int)(arriveBack.Date - depart.Date).TotalDays + 1,
+                    Status = TravelInstructionStatus.Issued,
+                };
+                await travelInstructionRepo.InsertAsync(travel, autoSave: true);
             }
         }
     }

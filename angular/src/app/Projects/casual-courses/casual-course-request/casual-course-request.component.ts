@@ -1,4 +1,5 @@
-import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, input, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subject, firstValueFrom } from 'rxjs';
@@ -14,11 +15,18 @@ import type {
 import { TenantCourseService } from 'src/app/proxy/training/tenant-courses/tenant-course.service';
 import type { TenantCourseDto } from 'src/app/proxy/training/tenant-courses/dtos/models';
 import { HrLookupService } from 'src/app/proxy/training/hr-integration/hr-lookup.service';
+import { PriceQuoteService } from 'src/app/proxy/training/finance';
+import type { PriceQuoteDto } from 'src/app/proxy/training/finance/dtos/models';
+import { TravelInstructionService } from 'src/app/proxy/training/execution/travel-instruction.service';
+import type { TravelInstructionDto } from 'src/app/proxy/training/execution/dtos/models';
+import { TravelInstructionStatus } from 'src/app/proxy/training/enums/travel-instruction-status.enum';
 
 import { CasualCourseStatus, CourseType, TrainingLocalizationHelper } from '../../shared';
 import { NominationPickerComponent } from '../../shared/components/nomination-picker/nomination-picker.component';
 import { NotesDrawerComponent } from '../../shared/components/notes-drawer/notes-drawer.component';
 import { PlanNoteEntityType } from 'src/app/proxy/training/enums/plan-note-entity-type.enum';
+import { CasualCourseActionService } from '../casual-course-detail/casual-course-action.service';
+import { CasualCourseDetailRefreshService } from '../casual-course-detail/casual-course-detail-refresh.service';
 
 @Component({
   standalone: true,
@@ -31,20 +39,38 @@ export class CasualCourseRequestComponent implements OnInit {
   private service = inject(CasualCourseService);
   private tenantCourseService = inject(TenantCourseService);
   private hrService = inject(HrLookupService);
+  private quoteService = inject(PriceQuoteService);
+  private travelService = inject(TravelInstructionService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private actions = inject(CasualCourseActionService);
+  private refreshShell = inject(CasualCourseDetailRefreshService);
+  private destroyRef = inject(DestroyRef);
   l = inject(TrainingLocalizationHelper);
 
   CourseType = CourseType;
   CasualCourseStatus = CasualCourseStatus;
   PlanNoteEntityType = PlanNoteEntityType;
+  TravelInstructionStatus = TravelInstructionStatus;
+
+  /** Render slot:
+   *   'details'   — course form + nominees only (Section 1 active body)
+   *   'financials'— calculator preview only (Section 2 active body, future)
+   *   'all'       — full standalone layout (legacy `/new` route + reviewers)
+   */
+  mode = input<'details' | 'financials' | 'all'>('all');
+  showDetails    = computed(() => this.mode() === 'details'    || this.mode() === 'all');
+  showFinancials = computed(() => this.mode() === 'financials' || this.mode() === 'all');
+
+  selectedQuote = signal<PriceQuoteDto | null>(null);
+  travelInstruction = signal<TravelInstructionDto | null>(null);
 
   id = signal<string | null>(null);
+  embedded = signal<boolean>(false);
   casualCourse = signal<CasualCourseDetailDto | null>(null);
   preview = signal<CalculatePreviewDto | null>(null);
   previewLoading = signal(false);
   loading = signal(false);
-  autosaving = signal(false);
   submitError = signal<string | null>(null);
   notesOpen = signal(false);
   expandedItemId = signal<string | null>(null);
@@ -78,6 +104,45 @@ export class CasualCourseRequestComponent implements OnInit {
   nomineeCount = computed(() => this.fNomineeIds().length);
   hasPreview = computed(() => (this.preview()?.items?.length ?? 0) > 0);
   grandTotal = computed(() => this.preview()?.totalOMR ?? 0);
+
+  // Phase 4B-α — Execution Status section
+  hasSelectedQuote = computed(() => !!this.casualCourse()?.selectedPriceQuoteId);
+
+  executionVariance = computed(() => {
+    const q = this.selectedQuote();
+    const est = this.casualCourse()?.estimatedTotalCost ?? 0;
+    if (!q || est <= 0) return 0;
+    return (q.quotedPriceOMR ?? 0) - est;
+  });
+
+  travelStatusLabel = computed(() => {
+    const s = this.travelInstruction()?.status;
+    switch (s) {
+      case TravelInstructionStatus.Issued:    return 'مُصدَرة';
+      case TravelInstructionStatus.Cancelled: return 'ملغاة';
+      case TravelInstructionStatus.Draft:     return 'مسودة';
+      default: return 'لم تُنشأ بعد';
+    }
+  });
+
+  travelStatusCss = computed(() => {
+    const s = this.travelInstruction()?.status;
+    switch (s) {
+      case TravelInstructionStatus.Issued:    return 'status-pill status-issued';
+      case TravelInstructionStatus.Cancelled: return 'status-pill status-cancelled';
+      case TravelInstructionStatus.Draft:     return 'status-pill status-draft';
+      default: return 'status-pill status-pending';
+    }
+  });
+
+  actualDurationDays = computed(() => {
+    const c = this.casualCourse();
+    if (!c?.actualStartDate || !c?.actualEndDate) return 0;
+    const s = new Date(c.actualStartDate);
+    const e = new Date(c.actualEndDate);
+    if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return 0;
+    return Math.floor((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  });
 
   computedDateTo = computed(() => {
     const from = this.fDateFrom();
@@ -136,16 +201,53 @@ export class CasualCourseRequestComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     const idParam = this.route.snapshot.paramMap.get('id');
-    this.id.set(idParam);
+    this.embedded.set(!!this.route.snapshot.data['embedded']);
+
+    // When embedded, the URL may have been changed by history.replaceState
+    // (after /new autosave) without Angular Router knowing. In that case
+    // route.snapshot.paramMap is null but the refresh service holds the
+    // newly-attached id — use that as the effective id.
+    const attachedId = this.embedded() ? this.refreshShell.currentAttachedId() : null;
+    const effectiveId = idParam ?? attachedId;
+    this.id.set(effectiveId);
+
     this.loading.set(true);
     try {
       await Promise.all([this.loadCurrentEmployee(), this.loadTenantCourses()]);
-      if (idParam) {
-        await this.loadExisting(idParam);
+      if (effectiveId) {
+        await this.loadExisting(effectiveId);
       }
     } finally {
       this.loading.set(false);
     }
+
+    // Header action bar dispatch — only acts when this component is the active
+    // variant (Draft / ReturnedToCreator OR creating a new course on /new).
+    // Gated on mode='details' so a sibling instance dispatched in Section 2
+    // (mode='financials') doesn't double-fire the same action.
+    // takeUntilDestroyed cleans up when the component is torn down — without
+    // it, dead instances (e.g., after navigating to the list post-submit)
+    // would keep firing onSave against their stale id and hit the backend's
+    // CannotEditInThisStatus guard.
+    this.actions.events.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(action => {
+      if (!this.embedded() || this.mode() !== 'details') return;
+      const s = this.casualCourse()?.status;
+      const isCreatingNew = !this.id();
+      const isOurTurn = isCreatingNew ||
+        s === CasualCourseStatus.Draft || s === CasualCourseStatus.ReturnedToCreator;
+      if (!isOurTurn) return;
+      if (action === 'saveDraft') void this.onSave(true);
+      else if (action === 'submit') void this.onSave(false);
+    });
+
+    // Hydrate when the shell attaches a freshly-created course id (post /new
+    // autosave) — covers both the dispatching instance and any later-mounting
+    // sibling instance (e.g., Section 2 transitioning from locked to active).
+    this.refreshShell.attachEvents.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(async newId => {
+      if (!this.embedded() || !newId || this.id() === newId) return;
+      this.id.set(newId);
+      await this.loadExisting(newId);
+    });
   }
 
   private async loadCurrentEmployee(): Promise<void> {
@@ -186,6 +288,41 @@ export class CasualCourseRequestComponent implements OnInit {
       .filter((v): v is string => !!v);
     this.fNomineeIds.set(ids);
     if (detail.unitId) this.currentUnitId.set(detail.unitId);
+
+    // Phase 4B-α — load execution-status data (best-effort, non-fatal)
+    if (detail.selectedPriceQuoteId) {
+      try {
+        const q = await firstValueFrom(this.quoteService.get(detail.selectedPriceQuoteId));
+        this.selectedQuote.set(q);
+      } catch {
+        this.selectedQuote.set(null);
+      }
+      try {
+        const ti = await firstValueFrom(this.travelService.getByParent(id, ''));
+        this.travelInstruction.set(ti ?? null);
+      } catch {
+        this.travelInstruction.set(null);
+      }
+    } else {
+      this.selectedQuote.set(null);
+      this.travelInstruction.set(null);
+    }
+  }
+
+  formatCurrency(value: number | null | undefined): string {
+    return (value ?? 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 3 });
+  }
+
+  goToPriceQuotes(): void {
+    if (this.id()) {
+      this.router.navigate(['/training/casual-courses', this.id()], { fragment: 'quotes' });
+    }
+  }
+
+  goToTravelInstructions(): void {
+    if (this.id()) {
+      this.router.navigate(['/training/casual-courses', this.id()], { fragment: 'travel' });
+    }
   }
 
   private async refreshPreview(): Promise<void> {
@@ -234,54 +371,24 @@ export class CasualCourseRequestComponent implements OnInit {
     if (!Number.isNaN(n) && n >= 0) this.fCourseCost.set(n);
   }
 
-  async onNomineesChange(ids: string[]): Promise<void> {
-    const prevCount = this.fNomineeIds().length;
+  onNomineesChange(ids: string[]): void {
+    // Picker selection is local-only — no autosave. The Save Draft / Submit
+    // buttons in the header bar persist whenever the user is ready. The
+    // calculator preview still reflects the latest selection because the
+    // preview effect tracks fNomineeIds.
     this.fNomineeIds.set(ids);
-
-    // Patch 4 autosave preserved (Patch 5 §5.1 note): first nominee creates the CasualCourse
-    // row + nominations silently. Patch 5 changed what HAPPENS in CreateAsync (no financial
-    // rows anymore), but the autosave moment is unchanged.
-    if (!this.id() && ids.length > 0) {
-      await this.ensureDraftSaved();
-    } else if (this.id() && (ids.length !== prevCount || !this.sameIds(ids))) {
-      await this.persistUpdate();
-    }
   }
 
-  private sameIds(next: string[]): boolean {
-    const prev = this.fNomineeIds();
-    if (prev.length !== next.length) return false;
-    const setA = new Set(prev);
-    return next.every(id => setA.has(id));
-  }
-
-  private async ensureDraftSaved(): Promise<void> {
-    if (this.id() || this.autosaving()) return;
-    const dto = this.buildDto();
-    this.autosaving.set(true);
-    this.submitError.set(null);
-    try {
-      const saved = await firstValueFrom(this.service.create(dto));
-      if (saved.id) {
-        this.id.set(saved.id);
-        await this.loadExisting(saved.id);
-      }
-    } catch (e: unknown) {
-      this.submitError.set(this.mapError(e));
-    } finally {
-      this.autosaving.set(false);
+  /** When embedded inside the new-course shell, swap /new → /:id silently and
+   *  let the shell load the freshly-created course. Component instance is
+   *  preserved so the form state survives the URL change. */
+  private attachToShell(newId: string): void {
+    if (!this.embedded()) return;
+    if (typeof window !== 'undefined' && window.location.pathname.endsWith('/new')) {
+      const path = `/training/casual-courses/${newId}${window.location.search}${window.location.hash}`;
+      window.history.replaceState(null, '', path);
     }
-  }
-
-  private async persistUpdate(): Promise<void> {
-    const id = this.id();
-    if (!id) return;
-    const dto = this.buildDto();
-    try {
-      await firstValueFrom(this.service.update(id, dto));
-    } catch (e: unknown) {
-      this.submitError.set(this.mapError(e));
-    }
+    this.refreshShell.attachNewCourse(newId);
   }
 
   private buildDto(): CreateUpdateCasualCourseDto {
@@ -336,6 +443,7 @@ export class CasualCourseRequestComponent implements OnInit {
 
     try {
       const wasReturned = this.isReturned();
+      const wasNew = !this.id();
       let currentId = this.id();
       if (currentId) {
         await firstValueFrom(this.service.update(currentId, dto));
@@ -352,6 +460,24 @@ export class CasualCourseRequestComponent implements OnInit {
           await firstValueFrom(this.service.submit(currentId));
         }
       }
+
+      // Embedded inside the shell:
+      //   Save Draft → stay on the page; attach the new course to the shell
+      //                so URL switches /new → /:id without re-instantiation.
+      //   Submit     → workflow done, return to the list as before.
+      if (this.embedded()) {
+        if (isDraft && currentId && wasNew) {
+          this.attachToShell(currentId);
+          await this.loadExisting(currentId);
+          return;
+        }
+        if (isDraft && currentId) {
+          await this.loadExisting(currentId);
+          this.refreshShell.refresh();
+          return;
+        }
+      }
+
       this.router.navigate(['/training/casual-courses']);
     } catch (e: unknown) {
       this.submitError.set(this.mapError(e));

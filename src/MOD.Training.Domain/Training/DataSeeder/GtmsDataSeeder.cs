@@ -18,13 +18,14 @@ public class GtmsDataSeeder(
     ICourseFieldDataSeeder courseFieldDataSeeder,
     ICourseCatalogDataSeeder courseCatalogDataSeeder,
     IProviderDataSeeder providerDataSeeder,
+    IGeographicalLocationDataSeeder geographicalLocationDataSeeder,
     ITenantRepository tenantRepository,
     ITenantDataSeeder tenantDataSeeder,
     IUnitOfWorkManager unitOfWorkManager,
     ILogger<GtmsDataSeeder> logger)
     : IDataSeedContributor, ITransientDependency
 {
-  
+
 
     public async Task SeedAsync(DataSeedContext context)
     {
@@ -36,13 +37,16 @@ public class GtmsDataSeeder(
         //await ExecuteInUowAsync("CourseCatalog", () => courseCatalogDataSeeder.SeedAsync(context));
         //await ExecuteInUowAsync("Providers (supra)", () => providerDataSeeder.SeedAsync(context));
 
-        var tenantList =await tenantRepository.GetListAsync();
-        tenantList.ForEach(async tenant => {
+        // Phase 4B-α — geographical locations for Country/City cascade (idempotent).
+        await ExecuteInUowAsync("GeographicalLocations", () => geographicalLocationDataSeeder.SeedAsync(context));
+
+        //var tenantList =await tenantRepository.GetListAsync();
+        //tenantList.ForEach(async tenant => {
         
 
-            await ExecuteInUowAsync("Tenant: Ground Forces", () => tenantDataSeeder.SeedTenantAsync(context, tenant, tenant.NormalizedName, TenantScenario.FullApproved));
+        //    await ExecuteInUowAsync("Tenant: Ground Forces", () => tenantDataSeeder.SeedTenantAsync(context, tenant, tenant.NormalizedName, TenantScenario.FullApproved));
 
-        });
+        //});
         // Phase 1-3: Per-tenant data (3 tenants, different scenarios)
         //await ExecuteInUowAsync("Tenant: Ground Forces", () => tenantDataSeeder.SeedTenantAsync(context, "GF", TenantScenario.FullApproved));
         //await ExecuteInUowAsync("Tenant: Air Forces", () => tenantDataSeeder.SeedTenantAsync(context, "AF", TenantScenario.MidWorkflow));

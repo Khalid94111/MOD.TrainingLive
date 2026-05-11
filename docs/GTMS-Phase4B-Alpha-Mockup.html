@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<title>GTMS Phase 4B-α — Mockups</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  body { font-family: 'Tajawal', sans-serif; background: #f8fafc; color: #1e293b; }
+  .screen { padding: 32px 28px; max-width: 1280px; margin: 0 auto; }
+  .card { background: white; border: 1px solid #e2e8f0; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .role-pill { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
+  .role-staff   { background: #ddd6fe; color: #5b21b6; }
+  .role-finance { background: #fef3c7; color: #92400e; }
+  .role-td      { background: #fed7aa; color: #9a3412; }
+  .role-ugm     { background: #bbf7d0; color: #14532d; }
+  .role-utm     { background: #c7d2fe; color: #3730a3; }
+  .scope-internal      { background: #f1f5f9; color: #475569; }
+  .scope-local         { background: #dbeafe; color: #1e40af; }
+  .scope-international { background: #fef3c7; color: #92400e; }
+  .nebras-pill { background: linear-gradient(90deg, #e0f2fe, #cffafe); color: #075985; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; display: inline-flex; gap: 4px; align-items: center; }
+  .status-draft     { background: #f1f5f9; color: #475569; }
+  .status-issued    { background: #dcfce7; color: #166534; }
+  .status-cancelled { background: #fee2e2; color: #991b1b; }
+  .status-th        { background: #fef3c7; color: #92400e; }
+  .status-selected  { background: #dcfce7; color: #166534; font-weight: 700; }
+  .status-badge { font-size: 11px; padding: 3px 10px; border-radius: 999px; font-weight: 600; display: inline-flex; gap: 4px; align-items: center; }
+  .section-label { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 6px; }
+  .label-purple { background: #ede9fe; color: #5b21b6; }
+  .label-blue   { background: #dbeafe; color: #1e40af; }
+  .label-amber  { background: #fef3c7; color: #92400e; }
+  .label-green  { background: #dcfce7; color: #166534; }
+  .label-red    { background: #fee2e2; color: #991b1b; }
+  .btn-primary { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; }
+  .btn-success { background: linear-gradient(135deg, #16a34a, #15803d); color: white; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; }
+  .btn-amber   { background: linear-gradient(135deg, #d97706, #b45309); color: white; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; }
+  .btn-danger  { background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; }
+  .btn-ghost   { background: white; border: 1px solid #cbd5e1; color: #475569; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; }
+  .btn-locked  { background: #f1f5f9; color: #94a3b8; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: not-allowed; }
+  .input-mock  { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; font-size: 13px; min-height: 36px; display: flex; align-items: center; }
+  .input-mock-empty { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 8px 12px; font-size: 13px; min-height: 36px; display: flex; align-items: center; color: #94a3b8; }
+  .checkbox-mock { width: 18px; height: 18px; border-radius: 4px; border: 2px solid #94a3b8; display: inline-block; }
+  .checkbox-checked { background: #16a34a; border-color: #16a34a; }
+  .nav-pill { background: white; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 999px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .nav-pill.active { background: #4f46e5; color: white; border-color: #4f46e5; }
+  .winner-glow { box-shadow: 0 0 0 3px #16a34a, 0 0 16px rgba(22, 163, 74, 0.25); }
+  .section-divider { border-top: 2px dashed #cbd5e1; margin: 48px 0; padding-top: 32px; }
+  table.data-grid { width: 100%; font-size: 13px; }
+  table.data-grid th { background: #f8fafc; padding: 12px; font-weight: 600; text-align: right; color: #475569; font-size: 12px; border-bottom: 2px solid #e2e8f0; }
+  table.data-grid td { padding: 12px; border-bottom: 1px solid #e2e8f0; }
+  table.data-grid tr:hover td { background: #f8fafc; }
+  .variance-warn { background: #fef3c7; color: #92400e; font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+  .variance-ok { background: #dcfce7; color: #166534; font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- ====================================================================== -->
+<!-- NAV -->
+<!-- ====================================================================== -->
+<div class="bg-white border-b border-slate-200 sticky top-0 z-10">
+  <div class="max-w-7xl mx-auto px-7 py-3 flex items-center gap-3 flex-wrap">
+    <span class="text-sm font-bold text-slate-700">GTMS Phase 4B-α</span>
+    <span class="text-xs text-slate-400">v1.0 — Pre-Execution Preparation</span>
+    <div class="mr-auto flex gap-2 flex-wrap">
+      <a href="#screen-providers" class="nav-pill">📋 Training Providers</a>
+      <a href="#screen-quotes" class="nav-pill">💰 Price Quotes</a>
+      <a href="#screen-quote-pick" class="nav-pill">🏆 Pick Winner Dialog</a>
+      <a href="#screen-travel" class="nav-pill">✈️ Travel Instructions</a>
+      <a href="#screen-detail" class="nav-pill">📊 Course Detail Panel</a>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- SCREEN 1 — Training Providers (extended) -->
+<!-- ====================================================================== -->
+<div id="screen-providers" class="screen">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-slate-800">📋 إدارة جهات التدريب</h1>
+    <p class="text-sm text-slate-500 mt-1">PAGE 4 (extended) — Staff manages training providers · Nebras-aware · Country-scoped</p>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="card p-4 mb-4 flex items-center gap-3 flex-wrap">
+    <button class="btn-primary">+ إضافة جهة تدريب جديدة</button>
+    <div class="flex gap-2 flex-wrap mr-auto">
+      <span class="text-xs text-slate-500 self-center">فلتر:</span>
+      <select class="text-xs px-3 py-2 border border-slate-300 rounded-lg bg-white">
+        <option>كل النطاقات</option><option>داخلية</option><option>محلية</option><option>دولية</option>
+      </select>
+      <select class="text-xs px-3 py-2 border border-slate-300 rounded-lg bg-white">
+        <option>كل الدول</option><option>عُمان</option><option>الإمارات</option><option>المملكة المتحدة</option>
+      </select>
+      <select class="text-xs px-3 py-2 border border-slate-300 rounded-lg bg-white">
+        <option>الكل</option><option>من نبراس</option><option>محلي فقط</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Grid -->
+  <div class="card overflow-hidden">
+    <table class="data-grid">
+      <thead>
+        <tr>
+          <th>اسم الجهة</th>
+          <th>النطاق</th>
+          <th>الدولة</th>
+          <th>المصدر</th>
+          <th>التواصل</th>
+          <th>الحالة</th>
+          <th>إجراءات</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div class="font-semibold text-slate-800">SANS Institute</div>
+            <div class="text-xs text-slate-400">SANS</div>
+          </td>
+          <td><span class="status-badge scope-international">🌍 دولية</span></td>
+          <td>المملكة المتحدة</td>
+          <td>
+            <span class="nebras-pill">⚡ من نبراس</span>
+            <div class="text-xs text-slate-400 mt-1" title="NebrasId">NEB-7K2H-9012</div>
+          </td>
+          <td class="text-xs text-slate-600">enrollments@sans.org<br>+44 20 7946 0958</td>
+          <td><span class="status-badge status-issued">✓ نشطة</span></td>
+          <td class="flex gap-2"><button class="text-xs text-slate-500 hover:text-indigo-600">👁️ عرض</button><button class="text-xs text-slate-500 hover:text-indigo-600">✏️ تعديل</button></td>
+        </tr>
+        <tr>
+          <td>
+            <div class="font-semibold text-slate-800">معهد الإدارة العامة</div>
+            <div class="text-xs text-slate-400">IOMA</div>
+          </td>
+          <td><span class="status-badge scope-local">🇴🇲 محلية</span></td>
+          <td>عُمان</td>
+          <td>
+            <span class="nebras-pill">⚡ من نبراس</span>
+            <div class="text-xs text-slate-400 mt-1">NEB-OM-3344</div>
+          </td>
+          <td class="text-xs text-slate-600">training@ioma.om<br>+968 24 596 600</td>
+          <td><span class="status-badge status-issued">✓ نشطة</span></td>
+          <td class="flex gap-2"><button class="text-xs text-slate-500 hover:text-indigo-600">👁️ عرض</button><button class="text-xs text-slate-500 hover:text-indigo-600">✏️ تعديل</button></td>
+        </tr>
+        <tr>
+          <td>
+            <div class="font-semibold text-slate-800">Cyber Defense Academy</div>
+            <div class="text-xs text-slate-400">CDA</div>
+          </td>
+          <td><span class="status-badge scope-international">🌍 دولية</span></td>
+          <td>الإمارات</td>
+          <td><span class="text-xs text-slate-400 italic">يدوي (Staff)</span></td>
+          <td class="text-xs text-slate-600">info@cda-uae.com<br>+971 2 555 0123</td>
+          <td><span class="status-badge status-issued">✓ نشطة</span></td>
+          <td class="flex gap-2"><button class="text-xs text-slate-500 hover:text-indigo-600">👁️ عرض</button><button class="text-xs text-slate-500 hover:text-indigo-600">✏️ تعديل</button></td>
+        </tr>
+        <tr>
+          <td>
+            <div class="font-semibold text-slate-800">مركز التدريب الداخلي — القوات البرية</div>
+          </td>
+          <td><span class="status-badge scope-internal">🏢 داخلية</span></td>
+          <td><span class="text-xs text-slate-400">—</span></td>
+          <td><span class="text-xs text-slate-400 italic">داخلي</span></td>
+          <td class="text-xs text-slate-600">internal@gf.gov.om</td>
+          <td><span class="status-badge status-issued">✓ نشطة</span></td>
+          <td class="flex gap-2"><button class="text-xs text-slate-500 hover:text-indigo-600">👁️ عرض</button><button class="text-xs text-slate-500 hover:text-indigo-600">✏️ تعديل</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Edit Dialog -->
+  <div class="mt-6 card p-5">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="section-label label-purple">نموذج التعديل</span>
+      <h3 class="font-bold text-slate-800">تعديل بيانات جهة التدريب: <span class="text-indigo-600">SANS Institute</span></h3>
+    </div>
+
+    <!-- Nebras alert -->
+    <div class="bg-cyan-50 border border-cyan-200 rounded-lg p-3 mb-4 flex items-start gap-2">
+      <span class="text-cyan-600">⚡</span>
+      <div class="text-xs text-cyan-900 flex-1">
+        <b>هذه الجهة مزامنة من نبراس.</b> الحقول التالية مغلقة للتعديل (تُحدَّث تلقائياً): اسم الجهة، Nebras ID. يمكنك تعديل بيانات التواصل، الدولة، النطاق، والحالة.
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">اسم الجهة (عربي) <span class="text-red-500">*</span></label>
+        <div class="input-mock bg-slate-100 text-slate-500" title="مغلق — مزامن من نبراس">SANS Institute 🔒</div>
+      </div>
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">اسم الجهة (إنجليزي) <span class="text-red-500">*</span></label>
+        <div class="input-mock bg-slate-100 text-slate-500">SANS Institute 🔒</div>
+      </div>
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">النطاق <span class="text-red-500">*</span></label>
+        <select class="input-mock w-full">
+          <option>🏢 داخلية</option>
+          <option>🇴🇲 محلية</option>
+          <option selected>🌍 دولية</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">الدولة <span class="text-red-500">*</span> <span class="text-xs text-slate-400">(مطلوبة للنطاق غير الداخلي)</span></label>
+        <select class="input-mock w-full">
+          <option>اختر الدولة</option>
+          <option selected>المملكة المتحدة</option>
+          <option>الإمارات</option>
+          <option>عُمان</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">جهة الاتصال</label>
+        <div class="input-mock">Sarah Williams</div>
+      </div>
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">البريد الإلكتروني</label>
+        <div class="input-mock">enrollments@sans.org</div>
+      </div>
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">الهاتف</label>
+        <div class="input-mock">+44 20 7946 0958</div>
+      </div>
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">الحالة</label>
+        <div class="flex items-center gap-2 mt-2">
+          <span class="checkbox-mock checkbox-checked"></span>
+          <span class="text-sm">نشطة (تظهر في قوائم الاختيار)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Read-only Nebras section -->
+    <div class="mt-5 p-4 bg-slate-50 rounded-lg border border-slate-200">
+      <h4 class="text-xs font-bold text-slate-700 mb-3">معلومات نبراس (للقراءة فقط)</h4>
+      <div class="grid grid-cols-3 gap-4 text-xs">
+        <div><span class="text-slate-500">من نبراس:</span> <b class="text-cyan-700">نعم ⚡</b></div>
+        <div><span class="text-slate-500">Nebras ID:</span> <code class="text-slate-700 bg-white px-2 py-0.5 rounded border border-slate-200">NEB-7K2H-9012</code></div>
+        <div><span class="text-slate-500">معتمدة:</span> <b class="text-green-700">✓ نعم</b></div>
+        <div><span class="text-slate-500">متوسط التقييم:</span> ⭐ 4.6 / 5.0</div>
+        <div><span class="text-slate-500">عدد التقييمات:</span> 23</div>
+        <div></div>
+      </div>
+    </div>
+
+    <div class="mt-5 flex gap-3 justify-end">
+      <button class="btn-ghost">إلغاء</button>
+      <button class="btn-primary">💾 حفظ التغييرات</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- SCREEN 2 — Price Quotes (PAGE 4.8) -->
+<!-- ====================================================================== -->
+<div class="section-divider"></div>
+<div id="screen-quotes" class="screen">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-slate-800">💰 عروض الأسعار — الدورة العرضية</h1>
+    <p class="text-sm text-slate-500 mt-1">PAGE 4.8 — Staff collects quotes from providers, picks the winner</p>
+  </div>
+
+  <!-- Course header -->
+  <div class="card p-5 mb-5">
+    <div class="flex justify-between items-start flex-wrap gap-3">
+      <div>
+        <div class="text-xs text-slate-500 mb-1">الدورة العرضية</div>
+        <h2 class="text-lg font-bold text-slate-800">إدارة المشاريع الاحترافية — PMP</h2>
+        <div class="text-xs text-slate-500 mt-2 flex flex-wrap gap-3">
+          <span><b class="text-slate-700">المرشحون:</b> 2 (1 رائد · 1 نقيب)</span>
+          <span><b class="text-slate-700">المدة:</b> 5 أيام</span>
+          <span><b class="text-slate-700">النوع:</b> خارجية دولية</span>
+        </div>
+      </div>
+      <div class="text-left">
+        <span class="status-badge status-th">✓ معتمدة من TH</span>
+        <div class="text-xs text-slate-500 mt-2">التكلفة التقديرية</div>
+        <div class="text-2xl font-bold text-slate-800">5,580 <span class="text-sm text-slate-500">ر.ع</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quotes list -->
+  <div class="card p-5 mb-5">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="section-label label-purple">عروض الأسعار</span>
+      <h3 class="font-bold text-slate-800">3 عروض مستلمة</h3>
+      <button class="btn-primary mr-auto">+ إضافة عرض جديد</button>
+    </div>
+
+    <div class="space-y-3">
+      <!-- Winner card (highlighted) -->
+      <div class="border-2 border-green-500 bg-green-50 rounded-xl p-4 winner-glow">
+        <div class="flex items-start gap-4">
+          <div class="text-3xl">🏆</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-3 flex-wrap mb-2">
+              <h4 class="font-bold text-slate-800">SANS Institute</h4>
+              <span class="status-badge scope-international">🌍 دولية</span>
+              <span class="status-badge status-selected">✓ العرض الفائز</span>
+            </div>
+            <div class="grid grid-cols-4 gap-4 text-xs mt-3">
+              <div><span class="text-slate-500">الدولة:</span> <b>المملكة المتحدة</b></div>
+              <div><span class="text-slate-500">المدينة:</span> <b>لندن</b></div>
+              <div><span class="text-slate-500">السعر:</span> <b class="text-green-700 text-base">5,400 ر.ع</b></div>
+              <div><span class="variance-ok">−180 من التقدير ✓</span></div>
+            </div>
+            <div class="text-xs text-slate-600 mt-2 italic">"يتضمن المواد التدريبية والشهادة المعتمدة"</div>
+          </div>
+          <div class="text-left">
+            <div class="text-xs text-slate-500">تواريخ الانعقاد</div>
+            <div class="text-sm font-bold text-slate-800 mt-1">15 - 19 أبريل 2026</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quote 2 -->
+      <div class="border border-slate-200 rounded-xl p-4 bg-white">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 font-bold">2</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-3 flex-wrap mb-2">
+              <h4 class="font-bold text-slate-800">Cyber Defense Academy</h4>
+              <span class="status-badge scope-international">🌍 دولية</span>
+            </div>
+            <div class="grid grid-cols-4 gap-4 text-xs mt-3">
+              <div><span class="text-slate-500">الدولة:</span> <b>الإمارات</b></div>
+              <div><span class="text-slate-500">المدينة:</span> <b>دبي</b></div>
+              <div><span class="text-slate-500">السعر:</span> <b class="text-slate-800 text-base">5,800 ر.ع</b></div>
+              <div><span class="variance-warn">+220 فوق التقدير</span></div>
+            </div>
+            <div class="text-xs text-slate-600 mt-2 italic">"دورة مكثفة، إقامة فندقية مشمولة"</div>
+          </div>
+          <div class="flex flex-col gap-2">
+            <button class="btn-amber text-xs">🏆 اختر هذا</button>
+            <button class="btn-ghost text-xs">✏️ تعديل</button>
+            <button class="text-xs text-red-600 hover:text-red-700 mt-1">🗑️ حذف</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quote 3 - over-budget -->
+      <div class="border border-slate-200 rounded-xl p-4 bg-white">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 font-bold">3</div>
+          <div class="flex-1">
+            <div class="flex items-center gap-3 flex-wrap mb-2">
+              <h4 class="font-bold text-slate-800">Project Management Institute</h4>
+              <span class="status-badge scope-international">🌍 دولية</span>
+              <span class="variance-warn">⚠ +12% فوق التقدير</span>
+            </div>
+            <div class="grid grid-cols-4 gap-4 text-xs mt-3">
+              <div><span class="text-slate-500">الدولة:</span> <b>الولايات المتحدة</b></div>
+              <div><span class="text-slate-500">المدينة:</span> <b>نيويورك</b></div>
+              <div><span class="text-slate-500">السعر:</span> <b class="text-slate-800 text-base">6,250 ر.ع</b></div>
+              <div><span class="variance-warn">+670 فوق التقدير</span></div>
+            </div>
+            <div class="text-xs text-slate-600 mt-2 italic">"PMI الرسمي، شهادة دولية معتمدة"</div>
+          </div>
+          <div class="flex flex-col gap-2">
+            <button class="btn-amber text-xs">🏆 اختر هذا</button>
+            <button class="btn-ghost text-xs">✏️ تعديل</button>
+            <button class="text-xs text-red-600 hover:text-red-700 mt-1">🗑️ حذف</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add quote dialog -->
+  <div class="card p-5">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="section-label label-purple">إضافة عرض</span>
+      <h3 class="font-bold text-slate-800">📝 إضافة عرض سعر جديد</h3>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">جهة التدريب <span class="text-red-500">*</span></label>
+        <select class="input-mock w-full">
+          <option>اختر جهة التدريب</option>
+          <option>SANS Institute (دولية · المملكة المتحدة) ⚡</option>
+          <option>Cyber Defense Academy (دولية · الإمارات)</option>
+          <option>Project Management Institute (دولية · الولايات المتحدة)</option>
+        </select>
+        <div class="text-xs text-slate-400 mt-1">جهات نشطة فقط</div>
+      </div>
+
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">السعر المعروض (ر.ع) <span class="text-red-500">*</span></label>
+        <div class="input-mock-empty">0.000</div>
+      </div>
+
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">دولة انعقاد الدورة <span class="text-red-500">*</span></label>
+        <select class="input-mock w-full">
+          <option>اختر الدولة</option>
+          <option selected>المملكة المتحدة</option>
+          <option>الإمارات</option>
+          <option>الولايات المتحدة</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">مدينة انعقاد الدورة</label>
+        <select class="input-mock w-full">
+          <option>اختر المدينة (تابعة للدولة)</option>
+          <option selected>لندن</option>
+          <option>أكسفورد</option>
+          <option>كامبريدج</option>
+        </select>
+        <div class="text-xs text-slate-400 mt-1">المدن تظهر بناءً على الدولة المختارة</div>
+      </div>
+
+      <div class="col-span-2">
+        <label class="text-xs text-slate-600 mb-1 block">ملاحظات</label>
+        <div class="input-mock-empty" style="min-height: 60px;">ما الذي يتضمنه العرض؟ شروط الدفع؟</div>
+      </div>
+    </div>
+
+    <div class="mt-5 flex gap-3 justify-end">
+      <button class="btn-ghost">إلغاء</button>
+      <button class="btn-primary">💾 حفظ العرض</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- SCREEN 3 — Pick Winner Dialog -->
+<!-- ====================================================================== -->
+<div class="section-divider"></div>
+<div id="screen-quote-pick" class="screen">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-slate-800">🏆 اختيار العرض الفائز + تأكيد التواريخ</h1>
+    <p class="text-sm text-slate-500 mt-1">Dialog: Staff selects winning quote AND enters actual start/end dates from provider</p>
+  </div>
+
+  <!-- Modal-like card -->
+  <div class="max-w-2xl mx-auto card p-6 border-2 border-green-300">
+    <div class="flex items-center gap-2 mb-2">
+      <span class="text-3xl">🏆</span>
+      <h3 class="text-lg font-bold text-slate-800">اختيار العرض الفائز</h3>
+    </div>
+    <p class="text-xs text-slate-500 mb-5">سيتم قفل هذا الاختيار. تأكد من تواريخ الانعقاد الفعلية مع المعهد قبل المتابعة.</p>
+
+    <!-- Selected quote summary -->
+    <div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-5">
+      <div class="flex items-center gap-3 mb-3">
+        <span class="status-badge scope-international">🌍 دولية</span>
+        <h4 class="font-bold text-slate-800">SANS Institute</h4>
+        <span class="nebras-pill">⚡ من نبراس</span>
+      </div>
+      <div class="grid grid-cols-3 gap-3 text-xs">
+        <div><span class="text-slate-500">المدينة:</span> <b>لندن، المملكة المتحدة</b></div>
+        <div><span class="text-slate-500">السعر:</span> <b class="text-green-700">5,400 ر.ع</b></div>
+        <div><span class="text-slate-500">vs التقدير:</span> <span class="variance-ok">−180 ر.ع تحت التقدير</span></div>
+      </div>
+    </div>
+
+    <!-- Date fields -->
+    <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4 flex items-start gap-2">
+      <span class="text-amber-600">📞</span>
+      <div class="text-xs text-amber-900 flex-1">
+        <b>هذه التواريخ تأتي من تواصلك مع المعهد.</b> سيتم استخدامها لاحقاً في تعليمات السفر وحساب البدلات. <b class="text-red-700">لا يمكن تعديلها بعد القفل.</b>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-5">
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">📅 تاريخ بدء الدورة الفعلي <span class="text-red-500">*</span></label>
+        <div class="input-mock-empty">15 / 04 / 2026</div>
+      </div>
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">📅 تاريخ انتهاء الدورة الفعلي <span class="text-red-500">*</span></label>
+        <div class="input-mock-empty">19 / 04 / 2026</div>
+      </div>
+    </div>
+
+    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 mb-5 text-xs text-slate-700">
+      <b>ماذا سيحدث عند التأكيد:</b>
+      <ul class="mt-2 space-y-1 mr-4 list-disc">
+        <li>السطر الفائز سيُعلَّم <code>IsSelected = true</code></li>
+        <li>التواريخ ستُحفَظ على CasualCourse.ActualStartDate / ActualEndDate</li>
+        <li>الخطوة التالية ستُفتَح: إصدار تعليمات السفر</li>
+      </ul>
+    </div>
+
+    <div class="flex gap-3 justify-end">
+      <button class="btn-ghost">إلغاء</button>
+      <button class="btn-success">✓ تأكيد + قفل الاختيار</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- SCREEN 4 — Travel Instructions -->
+<!-- ====================================================================== -->
+<div class="section-divider"></div>
+<div id="screen-travel" class="screen">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-slate-800">✈️ تعليمات السفر</h1>
+    <p class="text-sm text-slate-500 mt-1">New page — Staff issues travel instructions for the entire group · One per course</p>
+  </div>
+
+  <!-- Course header -->
+  <div class="card p-5 mb-5">
+    <div class="flex justify-between items-start flex-wrap gap-3">
+      <div>
+        <div class="text-xs text-slate-500 mb-1">الدورة العرضية</div>
+        <h2 class="text-lg font-bold text-slate-800">إدارة المشاريع الاحترافية — PMP · لندن</h2>
+        <div class="text-xs text-slate-500 mt-2 flex flex-wrap gap-3">
+          <span><b class="text-slate-700">المرشحون:</b> 2 (يسافرون معاً)</span>
+          <span><b class="text-slate-700">تواريخ الدورة:</b> 15 - 19 أبريل 2026</span>
+          <span><b class="text-slate-700">المعهد:</b> SANS Institute</span>
+        </div>
+      </div>
+      <div>
+        <span class="status-badge status-draft">📝 مسودة — لم تُصدر بعد</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 1 - Travel Dates -->
+  <div class="card p-5 mb-4">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="section-label label-blue">القسم 1</span>
+      <h3 class="font-bold text-slate-800">📅 تواريخ السفر</h3>
+    </div>
+
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 flex items-start gap-2">
+      <span class="text-blue-600">ℹ️</span>
+      <div class="text-xs text-blue-900 flex-1">
+        <b>التواريخ الأربعة مطلوبة:</b> المغادرة من عُمان، الوصول إلى البلد المضيف (قد يختلف عن المغادرة في رحلات طويلة)، العودة من البلد المضيف، الوصول إلى عُمان.
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-5">
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">✈️ تاريخ المغادرة من عُمان <span class="text-red-500">*</span></label>
+        <div class="input-mock">14 / 04 / 2026  <span class="text-xs text-slate-400 mr-2">(قبل بدء الدورة بيوم)</span></div>
+      </div>
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">📍 تاريخ الوصول إلى لندن <span class="text-red-500">*</span></label>
+        <div class="input-mock">14 / 04 / 2026</div>
+      </div>
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">🛫 تاريخ العودة من لندن <span class="text-red-500">*</span></label>
+        <div class="input-mock">19 / 04 / 2026  <span class="text-xs text-slate-400 mr-2">(يوم انتهاء الدورة)</span></div>
+      </div>
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">🏠 تاريخ الوصول إلى عُمان <span class="text-red-500">*</span></label>
+        <div class="input-mock">20 / 04 / 2026  <span class="text-xs text-amber-600 mr-2">⚠ يوم بعد المغادرة</span></div>
+      </div>
+    </div>
+
+    <!-- Travel days computation -->
+    <div class="mt-5 grid grid-cols-3 gap-3">
+      <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-3 text-center">
+        <div class="text-xs text-indigo-700 mb-1">عدد أيام السفر المحسوب</div>
+        <div class="text-2xl font-bold text-indigo-700">7 أيام</div>
+        <div class="text-xs text-slate-500 mt-1">(20 أبريل − 14 أبريل + 1)</div>
+      </div>
+      <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
+        <label class="text-xs text-amber-700 mb-1 block">تجاوز يدوي (اختياري)</label>
+        <div class="input-mock-empty">اتركه فارغاً لاستخدام المحسوب</div>
+        <div class="text-xs text-amber-600 mt-1">يفعّله Staff عند الحاجة</div>
+      </div>
+      <div class="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+        <div class="text-xs text-green-700 mb-1">الأيام الفعّالة (لـ Finance)</div>
+        <div class="text-2xl font-bold text-green-700">7 أيام</div>
+        <div class="text-xs text-green-600 mt-1">المحسوب (لا يوجد تجاوز)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2 - Visa -->
+  <div class="card p-5 mb-4">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="section-label label-purple">القسم 2</span>
+      <h3 class="font-bold text-slate-800">📋 التأشيرة</h3>
+    </div>
+
+    <div class="flex items-center gap-3 mb-3">
+      <span class="checkbox-mock checkbox-checked"></span>
+      <span class="text-sm font-semibold">تتطلب تأشيرة</span>
+    </div>
+
+    <div>
+      <label class="text-xs text-slate-600 mb-1 block">ملاحظات التأشيرة</label>
+      <div class="input-mock" style="min-height: 60px;">تأشيرة قصيرة المدى من السفارة البريطانية. المرشحان يحملان جوازات سفر سارية. تم استخراج التأشيرات بتاريخ 5 أبريل.</div>
+    </div>
+  </div>
+
+  <!-- Section 3 - Insurance -->
+  <div class="card p-5 mb-4">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="section-label label-green">القسم 3</span>
+      <h3 class="font-bold text-slate-800">🛡️ التأمين الصحي</h3>
+    </div>
+
+    <div class="flex items-center gap-3 mb-3">
+      <span class="checkbox-mock checkbox-checked"></span>
+      <span class="text-sm font-semibold">التأمين مُرتَّب</span>
+    </div>
+
+    <div>
+      <label class="text-xs text-slate-600 mb-1 block">جهة التأمين</label>
+      <div class="input-mock">شركة عُمان للتأمين — بوليصة تأمين سفر (TR-2026-0445)</div>
+    </div>
+  </div>
+
+  <!-- Section 4 - Tickets -->
+  <div class="card p-5 mb-4">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="section-label label-amber">القسم 4</span>
+      <h3 class="font-bold text-slate-800">🎫 التذاكر</h3>
+    </div>
+
+    <div class="flex items-center gap-3 mb-3">
+      <span class="checkbox-mock checkbox-checked"></span>
+      <span class="text-sm font-semibold">التذاكر محجوزة</span>
+    </div>
+
+    <div>
+      <label class="text-xs text-slate-600 mb-1 block">رقم الحجز / المرجع</label>
+      <div class="input-mock">OAB-PNR-X4Y9Z2 — الخطوط العمانية، رحلة WY-103/104</div>
+    </div>
+  </div>
+
+  <!-- Action bar -->
+  <div class="card p-4 flex gap-3 justify-end">
+    <button class="btn-danger">⛔ إلغاء التعليمات</button>
+    <button class="btn-ghost">💾 حفظ كمسودة</button>
+    <button class="btn-success">📤 إصدار تعليمات السفر</button>
+  </div>
+
+  <div class="mt-3 text-xs text-slate-500 text-center">
+    <b>عند الإصدار:</b> الحالة تتحول إلى "مُصدرة"، التعديل يُقفل، Finance يبدأ في صرف بدلات السفر.
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- SCREEN 5 — Course Detail Panel (Execution Status section) -->
+<!-- ====================================================================== -->
+<div class="section-divider"></div>
+<div id="screen-detail" class="screen">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-slate-800">📊 قسم حالة التنفيذ في صفحة الدورة</h1>
+    <p class="text-sm text-slate-500 mt-1">Casual Course detail page — new "Execution Status" section visible after quote selected</p>
+  </div>
+
+  <!-- Existing course detail (abbreviated) -->
+  <div class="card p-5 mb-5">
+    <div class="flex justify-between items-center mb-2">
+      <h2 class="text-lg font-bold text-slate-800">إدارة المشاريع الاحترافية — PMP</h2>
+      <span class="status-badge status-th">✓ معتمدة من TH</span>
+    </div>
+    <div class="text-xs text-slate-500">… (الأقسام الموجودة: التفاصيل، المرشحون، البنود المالية، السيناريو، إلخ) …</div>
+  </div>
+
+  <!-- NEW: Execution Status Section -->
+  <div class="card p-5 border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-white">
+    <div class="flex items-center gap-2 mb-4 flex-wrap">
+      <span class="section-label label-purple">جديد — قسم التنفيذ</span>
+      <h3 class="font-bold text-indigo-900">📊 حالة التنفيذ والتحضيرات</h3>
+      <span class="text-xs text-slate-500 mr-auto">يظهر فقط بعد اختيار العرض الفائز</span>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <!-- Selected Quote -->
+      <div class="bg-white border border-slate-200 rounded-xl p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-xl">🏆</span>
+          <h4 class="font-bold text-slate-800 text-sm">العرض الفائز</h4>
+        </div>
+        <div class="text-sm font-bold text-slate-800">SANS Institute</div>
+        <div class="text-xs text-slate-500 mt-1">المملكة المتحدة · لندن</div>
+        <div class="flex justify-between items-center mt-3 pt-3 border-t border-slate-100">
+          <div>
+            <div class="text-xs text-slate-500">السعر</div>
+            <div class="text-base font-bold text-slate-800">5,400 ر.ع</div>
+          </div>
+          <div>
+            <span class="variance-ok">−180 تحت التقدير</span>
+          </div>
+        </div>
+        <button class="text-xs text-indigo-600 hover:text-indigo-700 mt-3">👁️ عرض كل العروض</button>
+      </div>
+
+      <!-- Actual Dates -->
+      <div class="bg-white border border-slate-200 rounded-xl p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-xl">📅</span>
+          <h4 class="font-bold text-slate-800 text-sm">التواريخ الفعلية</h4>
+        </div>
+        <div class="grid grid-cols-2 gap-3 text-xs">
+          <div>
+            <div class="text-slate-500">البدء</div>
+            <div class="font-bold text-slate-800 text-sm mt-1">15 أبريل 2026</div>
+          </div>
+          <div>
+            <div class="text-slate-500">الانتهاء</div>
+            <div class="font-bold text-slate-800 text-sm mt-1">19 أبريل 2026</div>
+          </div>
+        </div>
+        <div class="mt-3 pt-3 border-t border-slate-100">
+          <div class="text-xs text-slate-500">المدة الفعلية</div>
+          <div class="text-sm font-bold text-slate-800">5 أيام</div>
+        </div>
+        <div class="mt-2 text-xs text-amber-600">🔒 مقفلة منذ اختيار العرض الفائز</div>
+      </div>
+
+      <!-- Travel Instruction Status -->
+      <div class="bg-white border border-slate-200 rounded-xl p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-xl">✈️</span>
+          <h4 class="font-bold text-slate-800 text-sm">تعليمات السفر</h4>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="status-badge status-issued">✓ مُصدَرة</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3 text-xs mt-3">
+          <div>
+            <div class="text-slate-500">المغادرة</div>
+            <div class="font-bold text-slate-700 text-sm mt-1">14 أبريل</div>
+          </div>
+          <div>
+            <div class="text-slate-500">العودة</div>
+            <div class="font-bold text-slate-700 text-sm mt-1">20 أبريل</div>
+          </div>
+          <div>
+            <div class="text-slate-500">أيام السفر</div>
+            <div class="font-bold text-green-700 text-sm mt-1">7 أيام</div>
+          </div>
+          <div>
+            <div class="text-slate-500">التذاكر</div>
+            <div class="font-bold text-green-700 text-sm mt-1">✓ محجوزة</div>
+          </div>
+        </div>
+        <button class="text-xs text-indigo-600 hover:text-indigo-700 mt-3">👁️ عرض التعليمات الكاملة</button>
+      </div>
+
+      <!-- What's Next -->
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-xl">⏭️</span>
+          <h4 class="font-bold text-amber-900 text-sm">الخطوات القادمة (Phase 4B-β)</h4>
+        </div>
+        <ul class="text-xs space-y-2 text-amber-900">
+          <li class="flex items-center gap-2"><span class="checkbox-mock"></span> Finance يصرف بدلات السفر</li>
+          <li class="flex items-center gap-2"><span class="checkbox-mock"></span> الدورة تنعقد فعلياً</li>
+          <li class="flex items-center gap-2"><span class="checkbox-mock"></span> Finance يدفع رسوم الدورة</li>
+          <li class="flex items-center gap-2"><span class="checkbox-mock"></span> النظام يولّد إعادة التخصيص تلقائياً</li>
+        </ul>
+        <div class="mt-3 text-xs text-amber-700 italic">سيتم تنفيذ هذه الخطوات في Phase 4B-β.</div>
+      </div>
+    </div>
+
+    <!-- Variance summary banner -->
+    <div class="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-3">
+      <span class="text-2xl">✓</span>
+      <div class="flex-1 text-sm">
+        <b class="text-green-900">حالة التحضير: مكتمل</b>
+        <div class="text-xs text-green-700 mt-1">
+          العرض مختار · التواريخ مؤكدة · تعليمات السفر مُصدَرة · الدورة جاهزة لمرحلة الصرف.
+        </div>
+      </div>
+      <div class="text-left">
+        <div class="text-xs text-slate-500">التوفير المتوقع</div>
+        <div class="text-lg font-bold text-green-700">180 ر.ع</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section-divider"></div>
+<div class="screen text-center text-xs text-slate-400 py-10">
+  <b>End of Phase 4B-α Mockups</b> · 5 screens · Awaiting OmanAI approval to proceed to backend implementation
+</div>
+
+</body>
+</html>

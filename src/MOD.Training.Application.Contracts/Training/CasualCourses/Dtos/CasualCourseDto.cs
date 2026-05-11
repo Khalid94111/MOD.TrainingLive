@@ -35,6 +35,10 @@ public class CasualCourseDto : FullAuditedEntityDto<Guid>
 
     public Guid? SelectedPriceQuoteId { get; set; }
 
+    // Phase 4B-α — actual confirmed dates (set by SelectPriceQuoteAsync after provider confirms).
+    public DateTime? ActualStartDate { get; set; }
+    public DateTime? ActualEndDate { get; set; }
+
     public CasualCourseStatus Status { get; set; }
     public CasualCourseStatus? ReturnedFromStatus { get; set; }
 

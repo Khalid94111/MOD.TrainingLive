@@ -177,6 +177,40 @@ export const TRAINING_ROUTE_PROVIDER = {
         order: 6,
         requiredPolicy: 'Training.CasualCourses',
       },
+      // ──────────────────────────────────
+      // Phase 4B-β: Payments
+      // ──────────────────────────────────
+      {
+        path: '',
+        name: '::Training.Menu.Payments',
+        parentName: '::Training.Menu.Training',
+        iconClass: 'fas fa-money-check-alt',
+        order: 7,
+      },
+      {
+        path: '/training/payments/travel-allowances',
+        name: '::Training.Menu.TravelAllowancePayments',
+        parentName: '::Training.Menu.Payments',
+        iconClass: 'fas fa-plane-departure',
+        order: 1,
+        requiredPolicy: 'TrainingPayments.TravelAllowance',
+      },
+      {
+        path: '/training/payments/courses',
+        name: '::Training.Menu.CoursePayments',
+        parentName: '::Training.Menu.Payments',
+        iconClass: 'fas fa-file-invoice-dollar',
+        order: 2,
+        requiredPolicy: 'TrainingPayments.CoursePayments',
+      },
+      {
+        path: '/training/payments/reallocations',
+        name: '::Training.Menu.BudgetReallocations',
+        parentName: '::Training.Menu.Payments',
+        iconClass: 'fas fa-exchange-alt',
+        order: 3,
+        requiredPolicy: 'TrainingPayments.Reallocations',
+      },
         // ── Phase 2 (uncomment when ready) ──
         // {
         //   path: '/training/finance/items',

@@ -1,0 +1,35 @@
+@if (loading() && !course()) {
+  <div class="gtms-card">
+    <div class="empty-state">
+      <div class="empty-icon">⏳</div>
+      جاري التحميل...
+    </div>
+  </div>
+} @else if (!course()) {
+  <div class="gtms-card">
+    <div class="alert alert-danger">
+      <span class="alert-icon">❌</span>
+      تعذر تحميل بيانات الدورة.
+    </div>
+  </div>
+} @else {
+  @switch (variant()) {
+    @case ('request') {
+      <app-casual-course-request />
+    }
+    @case ('approval') {
+      <app-casual-course-approval />
+    }
+    @case ('review') {
+      <app-casual-course-review />
+    }
+    @default {
+      <div class="gtms-card">
+        <div class="alert alert-warning">
+          <span class="alert-icon">⚠️</span>
+          الحالة غير معروفة — تواصل مع الدعم.
+        </div>
+      </div>
+    }
+  }
+}

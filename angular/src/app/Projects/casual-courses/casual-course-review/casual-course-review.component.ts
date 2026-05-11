@@ -1,4 +1,5 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, input, signal, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subject, firstValueFrom } from 'rxjs';
@@ -30,6 +31,8 @@ import { NotesDrawerComponent } from '../../shared/components/notes-drawer/notes
 import { ReturnModalComponent } from '../../shared/components/return-modal/return-modal.component';
 import { FinancialItemType } from 'src/app/proxy/training/enums/financial-item-type.enum';
 import { PlanNoteEntityType } from 'src/app/proxy/training/enums/plan-note-entity-type.enum';
+import { CasualCourseActionService } from '../casual-course-detail/casual-course-action.service';
+import { CasualCourseDetailRefreshService } from '../casual-course-detail/casual-course-detail-refresh.service';
 
 interface RateEdit {
   rankRowId: string;
@@ -50,6 +53,9 @@ export class CasualCourseReviewComponent implements OnInit {
   private financialItemService = inject(FinancialItemService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private actions = inject(CasualCourseActionService);
+  private refreshShell = inject(CasualCourseDetailRefreshService);
+  private destroyRef = inject(DestroyRef);
   l = inject(TrainingLocalizationHelper);
 
   CasualCourseStatus = CasualCourseStatus;
@@ -58,7 +64,13 @@ export class CasualCourseReviewComponent implements OnInit {
   PlanNoteEntityType = PlanNoteEntityType;
   SCENARIO_OPTIONS = FUNDING_SCENARIO_OPTIONS;
 
+  /** Render slot — see CasualCourseRequestComponent for semantics. */
+  mode = input<'details' | 'financials' | 'all'>('all');
+  showDetails    = computed(() => this.mode() === 'details'    || this.mode() === 'all');
+  showFinancials = computed(() => this.mode() === 'financials' || this.mode() === 'all');
+
   courseId = signal<string>('');
+  embedded = signal<boolean>(false);
   casualCourse = signal<CasualCourseDetailDto | null>(null);
   financials = signal<CasualCourseFinancialItemDto[]>([]);
   financialItems = signal<FinancialItemDto[]>([]);
@@ -125,7 +137,25 @@ export class CasualCourseReviewComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id') ?? '';
     this.courseId.set(id);
+    this.embedded.set(!!this.route.snapshot.data['embedded']);
     await this.loadAll();
+
+    // Header action bar dispatch — Staff actions during review. The review
+    // variant's default-active section is Section 2 (mode='financials') —
+    // Section 1 is collapsed for UGMApproved+/UnderReview/etc. Gate on
+    // mode='financials' so the sole live instance handles the action;
+    // 'details' guard would drop the event because Section 1 is collapsed.
+    this.actions.events.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(action => {
+      if (!this.embedded() || this.mode() !== 'financials') return;
+      if (action === 'startReview' && this.canStartReview()) {
+        void this.onStartReview();
+      } else if (this.isReviewable()) {
+        if (action === 'saveProgress')        void this.onSaveAssignments(false);
+        else if (action === 'finalizeReview') void this.onSaveAssignments(true);
+        else if (action === 'return')         this.openReturnCourse();
+        else if (action === 'reject')         this.openReject();
+      }
+    });
   }
 
   private async loadAll(): Promise<void> {
@@ -395,6 +425,9 @@ export class CasualCourseReviewComponent implements OnInit {
     try {
       await firstValueFrom(this.service.startReview(this.courseId()));
       await this.loadAll();
+      // Shell's course() drives the header action bar — refresh so the
+      // buttons recompute for the new status (UGMApproved → UnderReview).
+      if (this.embedded()) this.refreshShell.refresh();
     } catch (e: unknown) {
       this.error.set(this.mapError(e));
     } finally {
@@ -427,6 +460,9 @@ export class CasualCourseReviewComponent implements OnInit {
         this.router.navigate(['/training/casual-courses']);
       } else {
         await this.loadAll();
+        // Save Progress keeps the user on the page — refresh the shell
+        // so the financial-items count / total reflects new edits.
+        if (this.embedded()) this.refreshShell.refresh();
       }
     } catch (e: unknown) {
       this.error.set(this.mapError(e));

@@ -31,12 +31,14 @@ public class CasualCourseAppService(
     IRepository<CourseTypeFinancialItemDefault, Guid> defaultsRepo,
     IRepository<Rank, Guid> rankRefRepo,
     IRepository<PlanNote, Guid> planNoteRepo,
+    IRepository<PriceQuote, Guid> priceQuoteRepo,
     IOrganizationUnitRepository orgUnitRepository,
     CasualCourseValidator validator,
     NominationConditionValidator conditionValidator,
     FundingScenarioSourceResolver scenarioSourceResolver,
     FinancialItemDefaultResolver rateResolver,
     CasualCourseRankBreakdownManager rankManager,
+    PriceQuoteValidator priceQuoteValidator,
     EmployeeResolver employeeResolver,
     CourseNameResolver courseNameResolver,
     CasualCourseUnitScope unitScope,
@@ -88,6 +90,8 @@ public class CasualCourseAppService(
             EstimatedTotalCost = baseDto.EstimatedTotalCost,
             FundingScenario = baseDto.FundingScenario,
             SelectedPriceQuoteId = baseDto.SelectedPriceQuoteId,
+            ActualStartDate = baseDto.ActualStartDate,
+            ActualEndDate = baseDto.ActualEndDate,
             Status = baseDto.Status,
             ReturnedFromStatus = baseDto.ReturnedFromStatus,
             IsReturned = baseDto.IsReturned,
@@ -581,6 +585,46 @@ public class CasualCourseAppService(
             n.LastReturnNoteId = null;
             await nominationRepo.UpdateAsync(n, autoSave: true);
         }
+
+        return await BuildDtoAsync(entity);
+    }
+
+    // ─── PRE-EXECUTION (Phase 4B-α) ─────────────────────────────────────
+
+    [Authorize(TrainingExecutionPermissions.PriceQuotes.Select)]
+    public async Task<CasualCourseDto> SelectPriceQuoteAsync(Guid id, SelectPriceQuoteDto input)
+    {
+        var entity = await repository.GetAsync(id);
+
+        if (entity.Status != CasualCourseStatus.THApproved)
+            throw new BusinessException("Training:CasualCourse:NotApprovedYet");
+
+        if (input.ActualEndDate < input.ActualStartDate)
+            throw new BusinessException("Training:CasualCourse:InvalidActualDates");
+
+        await priceQuoteValidator.ValidateForSelectionAsync(id, input.PriceQuoteId);
+
+        // Flip IsSelected on the previous winner (if any).
+        if (entity.SelectedPriceQuoteId.HasValue &&
+            entity.SelectedPriceQuoteId.Value != input.PriceQuoteId)
+        {
+            var oldQuote = await priceQuoteRepo.FindAsync(entity.SelectedPriceQuoteId.Value);
+            if (oldQuote != null && oldQuote.IsSelected)
+            {
+                oldQuote.IsSelected = false;
+                await priceQuoteRepo.UpdateAsync(oldQuote);
+            }
+        }
+
+        var newQuote = await priceQuoteRepo.GetAsync(input.PriceQuoteId);
+        newQuote.IsSelected = true;
+        await priceQuoteRepo.UpdateAsync(newQuote);
+
+        entity.SelectedPriceQuoteId = input.PriceQuoteId;
+        entity.ActualStartDate = input.ActualStartDate;
+        entity.ActualEndDate = input.ActualEndDate;
+
+        await repository.UpdateAsync(entity, autoSave: true);
 
         return await BuildDtoAsync(entity);
     }

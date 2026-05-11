@@ -1,0 +1,353 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h2>{{ '::Training.Payments.CoursePayment.Title' | abpLocalization }}</h2>
+      <p class="subtitle">{{ '::Training.Payments.CoursePayment.Subtitle' | abpLocalization }}</p>
+    </div>
+    @if (canCreate()) {
+      <dx-button [text]="'::Training.Payments.CoursePayment.NewButton' | abpLocalization" type="default" (onClick)="onAdd()"></dx-button>
+    }
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <span class="filter-label">{{ '::Training.Payments.Filter' | abpLocalization }}:</span>
+    <dx-select-box
+      [items]="approvedCourses()"
+      displayExpr="courseNameAr"
+      valueExpr="id"
+      [value]="filterCourseId()"
+      [searchEnabled]="true"
+      [showClearButton]="true"
+      [placeholder]="'::Training.Payments.AllCourses' | abpLocalization"
+      width="240"
+      (onValueChanged)="onCourseFilterChange($event.value)">
+    </dx-select-box>
+    <dx-select-box
+      [items]="statusOptions"
+      displayExpr="text"
+      valueExpr="value"
+      [value]="filterStatus()"
+      [showClearButton]="true"
+      [placeholder]="'::Training.Payments.AllStatuses' | abpLocalization"
+      width="140"
+      (onValueChanged)="onStatusFilterChange($event.value)">
+    </dx-select-box>
+    <dx-select-box
+      [items]="providers()"
+      displayExpr="providerNameAr"
+      valueExpr="id"
+      [value]="filterProviderId()"
+      [searchEnabled]="true"
+      [showClearButton]="true"
+      [placeholder]="'::Training.Payments.AllProviders' | abpLocalization"
+      width="220"
+      (onValueChanged)="onProviderFilterChange($event.value)">
+    </dx-select-box>
+    <dx-button [text]="'::Training.Payments.Clear' | abpLocalization" stylingMode="text" (onClick)="clearFilters()"></dx-button>
+    <span class="row-count">{{ '::Training.Payments.CoursePayment.RowCount' | abpLocalization }}: {{ filteredRows().length }}</span>
+  </div>
+
+  <!-- Grid (9 columns) -->
+  <dx-data-grid
+    [dataSource]="filteredRows()"
+    [showBorders]="true"
+    [columnAutoWidth]="false"
+    [rowAlternationEnabled]="true"
+    keyExpr="id">
+
+    <dxi-column dataField="courseNameAr"          [caption]="'::Training.Payments.CoursePayment.Grid.Course'        | abpLocalization" [width]="220" cellTemplate="courseTpl"></dxi-column>
+    <dxi-column dataField="trainingProviderName"  [caption]="'::Training.Payments.CoursePayment.Grid.Provider'      | abpLocalization" [width]="180" cellTemplate="providerTpl"></dxi-column>
+    <dxi-column dataField="invoiceAmountOMR"      [caption]="'::Training.Payments.CoursePayment.Grid.InvoiceAmount' | abpLocalization" [width]="130" alignment="end" cellTemplate="moneyTpl"></dxi-column>
+    <dxi-column dataField="nebrasAmountOMR"       [caption]="'::Training.Payments.CoursePayment.Grid.NebrasAmount'  | abpLocalization" [width]="130" alignment="end" cellTemplate="moneyTpl"></dxi-column>
+    <dxi-column dataField="varianceOMR"           [caption]="'::Training.Payments.CoursePayment.Grid.Variance'      | abpLocalization" [width]="120" alignment="center" cellTemplate="varianceTpl"></dxi-column>
+    <dxi-column dataField="invoiceDate"           [caption]="'::Training.Payments.CoursePayment.Grid.InvoiceDate'   | abpLocalization" [width]="120" cellTemplate="dateTpl"></dxi-column>
+    <dxi-column                                   [caption]="'::Training.Payments.CoursePayment.Grid.Invoice'       | abpLocalization" [width]="160" cellTemplate="fileTpl" [allowSorting]="false"></dxi-column>
+    <dxi-column dataField="status"                [caption]="'::Training.Payments.CoursePayment.Grid.Status'        | abpLocalization" [width]="120" alignment="center" cellTemplate="statusTpl"></dxi-column>
+    <dxi-column                                   caption=""                  [width]="120" cellTemplate="actionsTpl" [allowSorting]="false"></dxi-column>
+
+    <div *dxTemplate="let cell of 'courseTpl'">
+      <div class="course-name">{{ cell.data.courseNameAr || '—' }}</div>
+      @if (cell.data.fundingScenario !== null && cell.data.fundingScenario !== undefined) {
+        @switch (cell.data.fundingScenario) {
+          @case (FundingScenario.FundingSourceCoversAll)    { <span class="scenario-pill scenario-1">{{ '::Training.Payments.CoursePayment.Scenario1' | abpLocalization }}</span> }
+          @case (FundingScenario.FundingSourceCoversCourse) { <span class="scenario-pill scenario-2">{{ '::Training.Payments.CoursePayment.Scenario2' | abpLocalization }}</span> }
+          @case (FundingScenario.FinancialItemsCoverAll)    { <span class="scenario-pill scenario-3">{{ '::Training.Payments.CoursePayment.Scenario3' | abpLocalization }}</span> }
+        }
+      }
+    </div>
+
+    <div *dxTemplate="let cell of 'providerTpl'">
+      <div class="provider-name">{{ cell.data.trainingProviderName || '—' }}</div>
+    </div>
+
+    <div *dxTemplate="let cell of 'moneyTpl'">
+      <div class="currency-dual">
+        <span class="currency-omr">{{ formatOMR(cell.value) }}</span>
+        <span class="currency-usd">~ {{ toUSD(cell.value) }} USD</span>
+      </div>
+    </div>
+
+    <div *dxTemplate="let cell of 'varianceTpl'">
+      <span class="variance-pill" [class]="varianceCss(cell.value)">{{ varianceText(cell.value) }}</span>
+    </div>
+
+    <div *dxTemplate="let cell of 'dateTpl'">
+      <span>{{ (cell.value || '').substring(0, 10) || '—' }}</span>
+    </div>
+
+    <div *dxTemplate="let cell of 'fileTpl'">
+      @if (cell.data.invoiceBlobName) {
+        <span class="file-chip file-chip-uploaded" [title]="cell.data.invoiceOriginalFileName || ''">
+          📎 {{ cell.data.invoiceOriginalFileName || 'invoice.pdf' }}
+        </span>
+        @if (canDownload()) {
+          <dx-button icon="download" stylingMode="text" [hint]="'::Download' | abpLocalization" (onClick)="onDownloadInvoice(cell.data)"></dx-button>
+        }
+      } @else {
+        <span class="file-chip file-chip-empty">{{ '::Training.Payments.CoursePayment.Grid.InvoiceMissing' | abpLocalization }}</span>
+      }
+    </div>
+
+    <div *dxTemplate="let cell of 'statusTpl'">
+      <span [class]="statusBadgeCss(cell.data.status)">{{ statusBadgeText(cell.data.status) }}</span>
+    </div>
+
+    <div *dxTemplate="let cell of 'actionsTpl'">
+      @if (cell.data.status === PaymentStatus.Draft) {
+        @if (canUpdate()) { <dx-button icon="edit" stylingMode="text" [hint]="'::Training.Payments.Edit' | abpLocalization" (onClick)="onEdit(cell.data)"></dx-button> }
+        @if (canDelete()) { <dx-button icon="trash" stylingMode="text" [hint]="'::Training.Payments.Delete' | abpLocalization" (onClick)="onDelete(cell.data)"></dx-button> }
+      }
+      <dx-button icon="eyeopen" stylingMode="text" [hint]="'::Training.Payments.View' | abpLocalization" (onClick)="onView(cell.data)"></dx-button>
+    </div>
+  </dx-data-grid>
+
+  <!-- Toast -->
+  @if (toast().visible) {
+    <div class="toast-banner" [class.toast-success]="toast().kind === 'success'" [class.toast-error]="toast().kind === 'error'">
+      <span>{{ toast().text }}</span>
+      <button class="toast-close" (click)="dismissToast()">✕</button>
+    </div>
+  }
+
+  <!-- Create / Edit / View Dialog -->
+  <dx-popup
+    [visible]="dialog().visible"
+    [title]="dialog().isEdit ? ('::Training.Payments.CoursePayment.Dialog.TitleEdit' | abpLocalization) : ('::Training.Payments.CoursePayment.Dialog.TitleNew' | abpLocalization)"
+    [showCloseButton]="true"
+    [width]="980"
+    [height]="820"
+    [toolbarItems]="dialogToolbarItems()"
+    (onHidden)="closeDialog()">
+
+    <div class="dialog-form">
+      <!-- Context -->
+      @if (dialogCourse(); as c) {
+        <div class="context-grid">
+          <div><span class="muted">{{ '::Training.Payments.CoursePayment.Dialog.ContextCourse' | abpLocalization }}</span> <b>{{ c.courseNameAr }}</b></div>
+          <div><span class="muted">{{ '::Training.Payments.CoursePayment.Dialog.ContextScenario' | abpLocalization }}</span> <span [class]="scenarioPillCss()">{{ scenarioLabel() }}</span></div>
+          @if (dialogQuoteProviderId()) {
+            <div><span class="muted">{{ '::Training.Payments.CoursePayment.Dialog.ContextProvider' | abpLocalization }}</span> <b>{{ providerName(dialogQuoteProviderId()) }}</b></div>
+          }
+          @if (c.fundingSourceVoteCode) {
+            <div><span class="muted">{{ '::Training.Payments.CoursePayment.Dialog.ContextVoteCode' | abpLocalization }}</span> <code class="vote-code">{{ c.fundingSourceVoteCode }}</code></div>
+          }
+        </div>
+      }
+
+      <!-- Form fields -->
+      <div class="form-row">
+        <div class="form-field flex-1">
+          <label>{{ '::Training.Payments.CoursePayment.Dialog.PickCourse' | abpLocalization }} <span class="required">*</span></label>
+          @if (dialog().isEdit) {
+            <div class="readonly-chip">{{ dialogCourse()?.courseNameAr || courseLabel(fCourseId()) }} 🔒</div>
+          } @else {
+            <dx-select-box
+              [items]="dialogAvailableCourses()"
+              displayExpr="courseNameAr"
+              valueExpr="id"
+              [value]="fCourseId()"
+              [searchEnabled]="true"
+              [placeholder]="'::Training.Payments.CoursePayment.Dialog.PickCoursePlaceholder' | abpLocalization"
+              [noDataText]="'::Training.Payments.CoursePayment.Dialog.NoAvailableCourses' | abpLocalization"
+              (onValueChanged)="updateCourseId($event.value)">
+            </dx-select-box>
+          }
+        </div>
+        <div class="form-field flex-1">
+          <label>{{ '::Training.Payments.CoursePayment.Dialog.PickProvider' | abpLocalization }} <span class="required">*</span></label>
+          @if (dialogQuoteProviderId() && !dialog().isEdit) {
+            <div class="readonly-chip">{{ providerName(dialogQuoteProviderId()) }} 🔒</div>
+            <div class="hint">{{ '::Training.Payments.CoursePayment.Dialog.ProviderLockedHint' | abpLocalization }}</div>
+          } @else if (dialog().isEdit) {
+            <div class="readonly-chip">{{ providerName(fProviderId()) }} 🔒</div>
+          } @else {
+            <dx-select-box
+              [items]="providers()"
+              displayExpr="providerNameAr"
+              valueExpr="id"
+              [value]="fProviderId()"
+              [searchEnabled]="true"
+              [placeholder]="'::Training.Payments.CoursePayment.Dialog.PickProviderPlaceholder' | abpLocalization"
+              (onValueChanged)="updateProviderId($event.value)">
+            </dx-select-box>
+          }
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field flex-1">
+          <label>{{ '::Training.Payments.CoursePayment.Dialog.InvoiceAmount' | abpLocalization }} <span class="required">*</span></label>
+          <div class="dual-input">
+            <dx-number-box
+              [value]="fInvoiceAmountOMR()"
+              [min]="0"
+              format="#,##0.000 'ر.ع'"
+              (onValueChanged)="updateInvoiceAmount($event.value)">
+            </dx-number-box>
+            <div class="usd-display">~ {{ toUSD(fInvoiceAmountOMR()) }} USD</div>
+          </div>
+          <div class="hint">{{ '::Training.Payments.CoursePayment.Dialog.InvoiceAmountHint' | abpLocalization }}</div>
+        </div>
+        <div class="form-field flex-1">
+          <label>{{ '::Training.Payments.CoursePayment.Dialog.NebrasAmount' | abpLocalization }} <span class="required">*</span></label>
+          <div class="dual-input">
+            <dx-number-box
+              [value]="fNebrasAmountOMR()"
+              [min]="0"
+              format="#,##0.000 'ر.ع'"
+              (onValueChanged)="updateNebrasAmount($event.value)">
+            </dx-number-box>
+            <div class="usd-display">~ {{ toUSD(fNebrasAmountOMR()) }} USD</div>
+          </div>
+          <div class="hint" [class.variance-up]="formVarianceOMR() > 0" [class.variance-down]="formVarianceOMR() < 0">
+            {{ '::Training.Payments.CoursePayment.Dialog.VarianceLabel' | abpLocalization }} {{ varianceText(formVarianceOMR()) }}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field flex-1">
+          <label>{{ '::Training.Payments.CoursePayment.Dialog.InvoiceDate' | abpLocalization }} <span class="required">*</span></label>
+          <dx-date-box
+            [value]="fInvoiceDate()"
+            displayFormat="yyyy-MM-dd"
+            type="date"
+            (onValueChanged)="updateInvoiceDate($event.value)">
+          </dx-date-box>
+        </div>
+        <div class="form-field flex-1">
+          <label>📝 {{ '::Training.Payments.Notes' | abpLocalization }}</label>
+          <dx-text-area
+            [value]="fNotes()"
+            [height]="60"
+            [placeholder]="'::Training.Payments.CoursePayment.Dialog.NotesPlaceholder' | abpLocalization"
+            (onValueChanged)="updateNotes($event.value)">
+          </dx-text-area>
+        </div>
+      </div>
+
+      <!-- Upload zone -->
+      <div class="form-field">
+        <label>{{ '::Training.Payments.CoursePayment.Dialog.UploadLabel' | abpLocalization }} <span class="required">*</span></label>
+
+        @if (!dialog().id) {
+          <div class="upload-disabled">
+            <span>{{ '::Training.Payments.CoursePayment.Dialog.UploadDisabled' | abpLocalization }}</span>
+          </div>
+        } @else if (upload().status === 'idle') {
+          <label
+            class="upload-zone"
+            [class.dragging]="isDragging()"
+            (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)"
+            (drop)="onDrop($event)">
+            <div class="upload-icon">📄</div>
+            <div class="upload-title">{{ '::Training.Payments.CoursePayment.Dialog.UploadPrompt' | abpLocalization }}</div>
+            <div class="upload-sub">{{ '::Training.Payments.CoursePayment.Dialog.UploadConstraints' | abpLocalization }}</div>
+            <input type="file" accept="application/pdf" hidden (change)="onFileSelected($event)" />
+          </label>
+        } @else if (upload().status === 'uploading') {
+          <div class="upload-progress">
+            <div class="upload-progress-row">
+              <span class="upload-progress-name">📎 {{ upload().fileName }}</span>
+              <span class="upload-progress-meta">{{ formatFileSize(upload().fileSize) }} · {{ upload().progress }}%</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" [style.width.%]="upload().progress"></div></div>
+          </div>
+        } @else if (upload().status === 'uploaded') {
+          <div class="upload-done">
+            <span class="upload-done-icon">📄</span>
+            <div class="upload-done-info">
+              <div class="upload-done-name">{{ upload().fileName }}</div>
+              <div class="upload-done-meta">{{ '::Training.Payments.CoursePayment.Dialog.UploadDone' | abpLocalization }} · {{ formatFileSize(upload().fileSize) || ('::Training.Payments.CoursePayment.Dialog.UploadStored' | abpLocalization) }}</div>
+            </div>
+            <div class="upload-done-actions">
+              @if (canDownload()) {
+                <dx-button icon="download" stylingMode="text" [hint]="'::Download' | abpLocalization" (onClick)="onDownloadInvoice(null)"></dx-button>
+              }
+              @if (dialog().current?.status === PaymentStatus.Draft) {
+                <label class="replace-label">
+                  {{ '::Training.Payments.CoursePayment.Dialog.Replace' | abpLocalization }}
+                  <input type="file" accept="application/pdf" hidden (change)="onFileSelected($event)" />
+                </label>
+              }
+            </div>
+          </div>
+        } @else if (upload().status === 'error') {
+          <div class="upload-error">
+            <span>⚠ {{ upload().errorMessage }}</span>
+            <label class="replace-label">
+              {{ '::Training.Payments.CoursePayment.Dialog.Retry' | abpLocalization }}
+              <input type="file" accept="application/pdf" hidden (change)="onFileSelected($event)" />
+            </label>
+          </div>
+        }
+
+        @if (!hasInvoice() && dialog().id) {
+          <div class="hint warn">{{ '::Training.Payments.CoursePayment.Dialog.RequiresInvoice' | abpLocalization }}</div>
+        }
+      </div>
+
+      <!-- Reallocation Forecast banner — only when course + scenario known -->
+      @if (forecastApplicable()) {
+        <div class="forecast-banner">
+          <div class="forecast-header">
+            <span class="forecast-icon">🔄</span>
+            <h4>{{ '::Training.Payments.CoursePayment.Forecast.Title' | abpLocalization }}</h4>
+          </div>
+
+          @if (forecast().length === 0) {
+            <div class="forecast-none">
+              {{ '::Training.Payments.CoursePayment.Forecast.None' | abpLocalization }}
+            </div>
+          } @else {
+            <div class="forecast-list">
+              @for (row of forecast(); track row.itemName + row.amountOMR) {
+                <div class="forecast-row">
+                  <code class="vote-code">{{ row.voteCode }}</code>
+                  <span class="reallocation-arrow">→</span>
+                  <span class="forecast-item">{{ row.itemName }}</span>
+                  <span class="forecast-amount">{{ formatOMR(row.amountOMR) }} ر.ع</span>
+                </div>
+              }
+              <div class="forecast-total">
+                <span>{{ '::Training.Payments.CoursePayment.Forecast.Total' | abpLocalization }}</span>
+                <span class="forecast-total-amount">{{ formatOMR(forecastTotalOMR()) }} ر.ع · {{ forecast().length }} {{ '::Training.Payments.CoursePayment.Forecast.TotalSuffix' | abpLocalization }}</span>
+              </div>
+            </div>
+            <div class="forecast-hint">{{ '::Training.Payments.CoursePayment.Forecast.Hint' | abpLocalization }}</div>
+          }
+        </div>
+      }
+
+      @if (dialogError()) {
+        <div class="error-banner">⚠ {{ dialogError() }}</div>
+      }
+
+      @if (dialog().current?.status === PaymentStatus.Confirmed) {
+        <div class="confirmed-banner">{{ '::Training.Payments.CoursePayment.Dialog.ConfirmedBanner' | abpLocalization }}</div>
+      }
+    </div>
+  </dx-popup>
+</div>

@@ -1,16 +1,23 @@
-<div class="page-container">
-  <!-- Header -->
-  <div class="page-toolbar">
-    <div class="page-toolbar-title">
-      <div>
-        <a routerLink="/training/casual-courses" class="back-link">← الدورات العرضية</a>
-        <h2 class="gtms-card-title page-h1">مراجعة طلب دورة عرضية</h2>
+<div class="page-container" [class.embedded]="embedded()">
+  @if (!embedded()) {
+    <!-- Header (standalone mode only — shell renders its own header) -->
+    <div class="page-toolbar">
+      <div class="page-toolbar-title">
+        <div>
+          <a routerLink="/training/casual-courses" class="back-link">← الدورات العرضية</a>
+          <h2 class="gtms-card-title page-h1">مراجعة طلب دورة عرضية</h2>
+        </div>
+      </div>
+      <div class="page-toolbar-actions">
+        <button type="button" class="btn btn-ghost" (click)="openNotesDrawer()">📑 الملاحظات</button>
       </div>
     </div>
-    <div class="page-toolbar-actions">
-      <button type="button" class="btn btn-ghost" (click)="openNotesDrawer()">📑 الملاحظات</button>
+  } @else {
+    <!-- Embedded: keep notes button accessible via a thin local toolbar -->
+    <div class="embedded-toolbar">
+      <button type="button" class="btn btn-ghost btn-sm" (click)="openNotesDrawer()">📑 الملاحظات</button>
     </div>
-  </div>
+  }
 
   @if (loading()) {
     <div class="gtms-card">
@@ -36,14 +43,17 @@
           <b>الطلب معتمد من UGM وجاهز للمراجعة</b>
           <div class="banner-hint">اضغط "بدء المراجعة" لبدء تعيين السيناريو والبنود المالية.</div>
         </div>
-        <div class="banner-actions">
-          <button type="button" class="btn btn-primary" [disabled]="actionBusy()" (click)="onStartReview()">
-            ▶️ بدء المراجعة
-          </button>
-        </div>
+        @if (mode() === 'all') {
+          <div class="banner-actions">
+            <button type="button" class="btn btn-primary" [disabled]="actionBusy()" (click)="onStartReview()">
+              ▶️ بدء المراجعة
+            </button>
+          </div>
+        }
       </div>
     }
 
+    @if (showDetails()) {
     <!-- Panel 1: Course summary -->
     <div class="gtms-card">
       <h3 class="section-title">ملخص الدورة</h3>
@@ -115,7 +125,9 @@
         </div>
       }
     </div>
+    }
 
+    @if (showFinancials()) {
     <!-- Panel 3: Funding Scenario -->
     <div class="gtms-card">
       <h3 class="section-title">سيناريو التمويل</h3>
@@ -336,8 +348,9 @@
         </div>
       }
     </div>
+    }
 
-    @if (isReviewable()) {
+    @if (isReviewable() && mode() === 'all') {
       <div class="action-bar">
         <button type="button" class="btn btn-danger" [disabled]="actionBusy()" (click)="openReject()">
           ❌ رفض الطلب

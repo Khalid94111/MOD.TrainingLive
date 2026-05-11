@@ -1,0 +1,184 @@
+/* ==========================================================
+   Casual Course Detail — Stage-Based Progressive Disclosure Shell
+   Sticky header + pipeline. Sections rendered as accordions below.
+   Spec: docs/GTMS-Phase4B-Alpha-Frontend-Layout.md
+   ========================================================== */
+
+:host {
+  display: block;
+  font-family: 'Tajawal', sans-serif;
+  direction: rtl;
+}
+
+.cc-detail-page {
+  padding-top: 4px;
+}
+
+.cc-detail-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 1) 0%, rgba(248, 250, 252, 0.94) 90%, rgba(248, 250, 252, 0));
+  padding: 14px 0 12px;
+  margin-bottom: 16px;
+  backdrop-filter: blur(6px);
+}
+
+.cc-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 4px 12px;
+}
+
+.cc-detail-header-titles {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cc-detail-title {
+  margin: 4px 0 4px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1.25;
+}
+
+.cc-detail-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.muted-xs {
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.back-link {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.78rem;
+  color: #2563eb;
+  text-decoration: none;
+  cursor: pointer;
+}
+.back-link:hover { text-decoration: underline; }
+
+.cc-detail-header-side {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* === Status pill (status × class from CASUAL_COURSE_STATUS_OPTIONS) === */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: #e2e8f0;
+  color: #1e293b;
+  white-space: nowrap;
+}
+.status-th-approved   { background: #d1fae5; color: #065f46; }
+.status-td-approved   { background: #cffafe; color: #075985; }
+.status-staff-reviewed{ background: #ede9fe; color: #5b21b6; }
+.status-under-review  { background: #fef3c7; color: #92400e; }
+.status-submitted     { background: #dbeafe; color: #1e40af; }
+.status-ugm-approved  { background: #e0e7ff; color: #3730a3; }
+.status-draft         { background: #f1f5f9; color: #475569; }
+.status-returned      { background: #fee2e2; color: #991b1b; }
+.status-rejected      { background: #fee2e2; color: #991b1b; }
+
+/* ==========================================================
+   Inline locked-preview stub for sections 2-4 in this iteration.
+   Mirrors the section component's locked styling.
+   ========================================================== */
+
+.cc-section {
+  background: white;
+  border: 0.5px solid #e2e8f0;
+  border-radius: 14px;
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+.cc-section.state-locked {
+  opacity: 0.55;
+  background: #f8fafc;
+}
+
+.cc-section-header-static {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 18px;
+  gap: 12px;
+}
+
+.cc-section-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.cc-section-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.cc-section-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.3;
+}
+
+.cc-section-summary {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+.cc-section-locked-reason {
+  color: #94a3b8;
+}
+.cc-lock-icon { margin-inline-end: 4px; }
+
+.cc-lock-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #94a3b8;
+  font-size: 0.74rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* === Loading/empty === */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 40px 20px;
+  color: #64748b;
+}
+.empty-icon { font-size: 2rem; }

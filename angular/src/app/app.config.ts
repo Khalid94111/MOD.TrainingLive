@@ -23,7 +23,7 @@ import { provideSideMenuLayout } from '@volosoft/abp.ng.theme.lepton-x/layouts';
 import { provideLogo, withEnvironmentOptions } from '@abp/ng.theme.shared';
 import { ApplicationConfig } from '@angular/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withRouterConfig } from '@angular/router';
 import { environment } from '../environments/environment';
 import { APP_ROUTES } from './app.routes';
 import { APP_ROUTE_PROVIDER } from './route.provider';
@@ -32,7 +32,10 @@ import { TRAINING_ROUTE_PROVIDER } from './Projects/training-route.provider';
  // old name AppModule is not used anymore since we are using standalone components and loadComponent method for lazy loading. We can directly export the appConfig as shown below and use it in our main module or wherever needed.
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideRouter(APP_ROUTES),
+    provideRouter(
+      APP_ROUTES,
+      withRouterConfig({ paramsInheritanceStrategy: 'always' }),
+    ),
     APP_ROUTE_PROVIDER,
     FOOTER_PROVIDER,
     provideAnimations(),

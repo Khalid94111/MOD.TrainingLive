@@ -1,0 +1,279 @@
+
+  @if (!embedded()) {
+    <!-- Header (standalone mode only — shell renders its own header) -->
+    <div class="page-toolbar">
+      <div class="page-toolbar-title">
+        <div>
+          <a class="back-link" (click)="goBack()" tabindex="0">← الدورات العرضية</a>
+          <h2 class="gtms-card-title page-h1">✈️ تعليمات السفر</h2>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="gtms-card">
+      <div class="empty-state">
+        <div class="empty-icon">⏳</div>
+        جاري التحميل...
+      </div>
+    </div>
+  } @else if (course()) {
+
+    <!-- Course summary -->
+    <div class="gtms-card course-summary">
+      <div class="summary-left">
+        <div class="muted-xs">الدورة العرضية</div>
+        <h3 class="course-title">{{ course()?.courseNameAr }}</h3>
+        <div class="meta-line">
+          <span><b>المرشحون:</b> {{ course()?.nomineesCount }} (يسافرون معاً)</span>
+          @if (course()?.actualStartDate && course()?.actualEndDate) {
+            <span>
+              <b>تواريخ الدورة:</b>
+              {{ course()?.actualStartDate | slice:0:10 }}
+              →
+              {{ course()?.actualEndDate | slice:0:10 }}
+            </span>
+          } @else {
+            <span class="warn-inline">⚠ لم يتم اختيار العرض الفائز بعد</span>
+          }
+        </div>
+      </div>
+      <div class="summary-right">
+        <span [class]="statusCssClass()">{{ statusLabel() }}</span>
+      </div>
+    </div>
+
+    @if (saveSuccess()) {
+      <div class="alert alert-success">✓ {{ saveSuccess() }}</div>
+    }
+    @if (saveError()) {
+      <div class="alert alert-error">⚠ {{ saveError() }}</div>
+    }
+
+    @if (isIssued()) {
+      <div class="info-banner info-banner-issued">
+        <div class="info-banner-icon">📤</div>
+        <div class="info-banner-text">
+          <b>تعليمات السفر مُصدَرة.</b>
+          التعديل مقفل. Finance يمكنه الآن صرف بدلات السفر بناءً على هذه التعليمات.
+        </div>
+      </div>
+    } @else if (isCancelled()) {
+      <div class="info-banner info-banner-cancelled">
+        <div class="info-banner-icon">⛔</div>
+        <div class="info-banner-text">
+          <b>تعليمات السفر ملغاة.</b>
+          هذه التعليمات لا تستخدم في حساب البدلات.
+        </div>
+      </div>
+    }
+
+    <!-- Section 1: Travel Dates -->
+    <div class="gtms-card section-card">
+      <div class="section-row">
+        <span class="section-label label-blue">القسم 1</span>
+        <h3 class="section-title">📅 تواريخ السفر</h3>
+      </div>
+
+      <div class="info-banner info-banner-info">
+        <div class="info-banner-icon">ℹ️</div>
+        <div class="info-banner-text">
+          <b>التواريخ الأربعة مطلوبة:</b>
+          المغادرة من عُمان، الوصول إلى البلد المضيف، العودة من البلد المضيف، الوصول إلى عُمان.
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">✈️ تاريخ المغادرة من عُمان <span class="required">*</span></label>
+          <input type="date" class="form-input"
+            [value]="fDepartureDate()"
+            [readOnly]="isReadOnly()"
+            (input)="fDepartureDate.set($any($event.target).value)" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">📍 تاريخ الوصول إلى البلد المضيف <span class="required">*</span></label>
+          <input type="date" class="form-input"
+            [value]="fArrivalDate()"
+            [readOnly]="isReadOnly()"
+            (input)="fArrivalDate.set($any($event.target).value)" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">🛫 تاريخ العودة من البلد المضيف <span class="required">*</span></label>
+          <input type="date" class="form-input"
+            [value]="fReturnDate()"
+            [readOnly]="isReadOnly()"
+            (input)="fReturnDate.set($any($event.target).value)" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">🏠 تاريخ الوصول إلى عُمان <span class="required">*</span></label>
+          <input type="date" class="form-input"
+            [value]="fArrivalBackDate()"
+            [readOnly]="isReadOnly()"
+            (input)="fArrivalBackDate.set($any($event.target).value)" />
+        </div>
+      </div>
+
+      @if (!datesValid() && fDepartureDate() && fArrivalBackDate()) {
+        <div class="form-hint warn">
+          ⚠ ترتيب التواريخ غير صحيح: المغادرة ≤ الوصول ≤ العودة ≤ العودة لعُمان
+        </div>
+      }
+
+      <!-- Travel days computation -->
+      <div class="travel-days-row">
+        <div class="days-card days-calc">
+          <div class="muted-xs">عدد أيام السفر المحسوب</div>
+          <div class="days-value">{{ calculatedTravelDays() }} أيام</div>
+          <div class="muted-xs days-sub">من المغادرة إلى العودة لعُمان (شامل)</div>
+        </div>
+        <div class="days-card days-override">
+          <label class="form-label">تجاوز يدوي (اختياري)</label>
+          <input type="number" min="0" class="form-input"
+            [value]="fOverrideTravelDays() ?? ''"
+            [readOnly]="isReadOnly()"
+            placeholder="اتركه فارغاً لاستخدام المحسوب"
+            (input)="fOverrideTravelDays.set($any($event.target).value === '' ? null : +$any($event.target).value)" />
+          <div class="muted-xs days-sub">يُستخدم بدلاً من المحسوب عند الحاجة</div>
+        </div>
+        <div class="days-card days-effective">
+          <div class="muted-xs">الأيام الفعّالة (لـ Finance)</div>
+          <div class="days-value">{{ effectiveTravelDays() }} أيام</div>
+          @if (hasOverride()) {
+            <div class="muted-xs days-sub">تجاوز يدوي مفعّل</div>
+          } @else {
+            <div class="muted-xs days-sub">المحسوب (لا يوجد تجاوز)</div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Visa -->
+    <div class="gtms-card section-card">
+      <div class="section-row">
+        <span class="section-label label-purple">القسم 2</span>
+        <h3 class="section-title">📋 التأشيرة</h3>
+      </div>
+
+      <label class="checkbox-row">
+        <input type="checkbox"
+          [checked]="fVisaRequired()"
+          [disabled]="isReadOnly()"
+          (change)="fVisaRequired.set($any($event.target).checked)" />
+        <span>تتطلب تأشيرة</span>
+      </label>
+
+      @if (fVisaRequired()) {
+        <div class="form-group mt-12">
+          <label class="form-label">ملاحظات التأشيرة <span class="required">*</span></label>
+          <textarea class="form-input" rows="3"
+            [value]="fVisaNotes()"
+            [readOnly]="isReadOnly()"
+            (input)="fVisaNotes.set($any($event.target).value)"
+            placeholder="مثلاً: تأشيرة قصيرة المدى. حالة الجوازات. تاريخ الاستخراج."></textarea>
+        </div>
+      }
+    </div>
+
+    <!-- Section 3: Insurance -->
+    <div class="gtms-card section-card">
+      <div class="section-row">
+        <span class="section-label label-green">القسم 3</span>
+        <h3 class="section-title">🛡️ التأمين الصحي</h3>
+      </div>
+
+      <label class="checkbox-row">
+        <input type="checkbox"
+          [checked]="fInsuranceArranged()"
+          [disabled]="isReadOnly()"
+          (change)="fInsuranceArranged.set($any($event.target).checked)" />
+        <span>التأمين مُرتَّب</span>
+      </label>
+
+      @if (fInsuranceArranged()) {
+        <div class="form-group mt-12">
+          <label class="form-label">جهة التأمين / رقم البوليصة <span class="required">*</span></label>
+          <input type="text" class="form-input"
+            [value]="fInsuranceProvider()"
+            [readOnly]="isReadOnly()"
+            (input)="fInsuranceProvider.set($any($event.target).value)"
+            placeholder="مثلاً: شركة عُمان للتأمين — TR-2026-XXXX" />
+        </div>
+      }
+    </div>
+
+    <!-- Section 4: Tickets -->
+    <div class="gtms-card section-card">
+      <div class="section-row">
+        <span class="section-label label-amber">القسم 4</span>
+        <h3 class="section-title">🎫 التذاكر</h3>
+      </div>
+
+      <label class="checkbox-row">
+        <input type="checkbox"
+          [checked]="fTicketsBooked()"
+          [disabled]="isReadOnly()"
+          (change)="fTicketsBooked.set($any($event.target).checked)" />
+        <span>التذاكر محجوزة</span>
+      </label>
+
+      @if (fTicketsBooked()) {
+        <div class="form-group mt-12">
+          <label class="form-label">رقم الحجز / المرجع <span class="required">*</span></label>
+          <input type="text" class="form-input"
+            [value]="fTicketReference()"
+            [readOnly]="isReadOnly()"
+            (input)="fTicketReference.set($any($event.target).value)"
+            placeholder="مثلاً: PNR-X4Y9Z2 — الخطوط العمانية" />
+        </div>
+      }
+    </div>
+
+    <!-- Action bar -->
+    @if (isDraft()) {
+      <div class="gtms-card action-bar">
+        <button type="button" class="btn btn-ghost"
+          [disabled]="saving()"
+          (click)="onSaveDraft()">
+          💾 حفظ كمسودة
+        </button>
+
+        @if (instruction()) {
+          <button type="button" class="btn btn-danger"
+            [disabled]="saving()"
+            (click)="onCancel()">
+            ⛔ إلغاء التعليمات
+          </button>
+        }
+
+        <button type="button"
+          [class]="canIssue() ? 'btn btn-success' : 'btn btn-locked'"
+          [disabled]="saving() || !canIssue()"
+          (click)="onIssue()">
+          📤 إصدار تعليمات السفر
+        </button>
+      </div>
+
+      <div class="action-hint">
+        <b>عند الإصدار:</b> الحالة تتحول إلى "مُصدرة"، التعديل يُقفل، Finance يبدأ في صرف بدلات السفر.
+      </div>
+    } @else if (isIssued()) {
+      <div class="gtms-card action-bar">
+        <button type="button" class="btn btn-danger"
+          [disabled]="saving()"
+          (click)="onCancel()">
+          ⛔ إلغاء التعليمات
+        </button>
+      </div>
+    }
+
+  } @else {
+    <div class="gtms-card">
+      <div class="empty-state">تعذر تحميل بيانات الدورة.</div>
+    </div>
+  }
+

@@ -1,0 +1,51 @@
+<section class="cc-section state-{{ state() }}"
+         id="section-travel"
+         [attr.aria-expanded]="state() === 'active'">
+
+  <button type="button"
+          class="cc-section-header"
+          [disabled]="!isExpandable()"
+          (click)="onHeaderClick()">
+    <div class="cc-section-header-main">
+      <span class="cc-section-icon">✈️</span>
+      <div class="cc-section-titles">
+        <h3 class="cc-section-title">تعليمات السفر</h3>
+        @if (state() === 'collapsed') {
+          <p class="cc-section-summary">{{ summaryLine() || '— لا توجد بيانات بعد —' }}</p>
+        } @else if (state() === 'locked') {
+          <p class="cc-section-summary cc-section-locked-reason">
+            <span class="cc-lock-icon">🔒</span> {{ lockReason() || 'غير متاح بعد' }}
+          </p>
+        } @else if (state() === 'active') {
+          <p class="cc-section-summary cc-section-active-hint">
+            إنشاء وإدارة تعليمات السفر للمرشحين.
+          </p>
+        }
+      </div>
+    </div>
+
+    <span class="cc-section-affordance">
+      @if (state() === 'active') {
+        <span class="cc-chevron">▴</span>
+      } @else if (state() === 'collapsed') {
+        <span class="cc-chevron">▾</span>
+      } @else {
+        <span class="cc-lock-pill">🔒 مقفل</span>
+      }
+    </span>
+  </button>
+
+  @if (state() === 'active') {
+    <div class="cc-section-body">
+      <app-casual-course-travel-instructions />
+    </div>
+  } @else if (state() === 'locked') {
+    <div class="cc-section-body cc-section-locked-body">
+      <div class="cc-locked-skeleton">
+        <span class="cc-skeleton-line"></span>
+        <span class="cc-skeleton-line short"></span>
+        <span class="cc-skeleton-line"></span>
+      </div>
+    </div>
+  }
+</section>

@@ -4,9 +4,11 @@ using MOD.Training.Training.CasualCourses;
 using MOD.Training.Training.Catalog;
 using MOD.Training.Training.Centers;
 using MOD.Training.Training.Configurations;
+using MOD.Training.Training.Execution;
 using MOD.Training.Training.Finance;
 using MOD.Training.Training.Hr;
 using MOD.Training.Training.Nominations;
+using MOD.Training.Training.Payments;
 using MOD.Training.Training.Plans;
 using MOD.Training.Training.System;
 using MOD.Training.Training.TenantCourses;
@@ -96,6 +98,15 @@ public DbSet<CasualCourseNomination>          CasualCourseNominations          {
     // In your DbContext class:
     public DbSet<Rank> HrRanks { get; set; }
     public DbSet<Employee> HrEmployees { get; set; }
+
+    // Phase 4B-α additions
+    public DbSet<GeographicalLocation> HrGeographicalLocations { get; set; }
+    public DbSet<TravelInstruction>    TravelInstructions       { get; set; }
+
+    // Phase 4B-β additions
+    public DbSet<TravelAllowancePayment> TravelAllowancePayments { get; set; }
+    public DbSet<CoursePayment>          CoursePayments          { get; set; }
+    public DbSet<BudgetReallocation>     BudgetReallocations     { get; set; }
 
 
 

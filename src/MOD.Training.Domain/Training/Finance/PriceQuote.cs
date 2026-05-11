@@ -3,27 +3,50 @@ using MOD.Training.Training.Plans;
 using System;
 using Volo.Abp.Domain.Entities.Auditing;
 using Volo.Abp.MultiTenancy;
- 
+
 namespace MOD.Training.Training.Finance;
 
+/// <summary>
+/// Polymorphic-parented price quote: bound to either an annual-plan CourseSession (Phase 3 arm)
+/// or a CasualCourse (Phase 4B-α arm). Exactly one of SessionId / CasualCourseId is set.
+/// </summary>
 public class PriceQuote : FullAuditedEntity<Guid>, IMultiTenant
 {
     public Guid? TenantId { get; set; }
-    public Guid SessionId { get; set; }
+
+    // Polymorphic parent — exactly one is set (DB CHECK constraint enforced).
+    public Guid? SessionId { get; set; }
+    public Guid? CasualCourseId { get; set; }
+
     public Guid ProviderId { get; set; }
+
+    // Legacy session-arm pricing shape (kept for the Phase 3 sessions flow).
     public PricingType PricingType { get; set; }
     public decimal QuotedPrice { get; set; }
-    public decimal? PricePerPerson { get; set; } // Auto-calc if PricingType=Total
-    public decimal? TotalPrice { get; set; }      // Auto-calc if PricingType=PerPerson
+    public decimal? PricePerPerson { get; set; }
+    public decimal? TotalPrice { get; set; }
     public int ParticipantsCount { get; set; }
     public ApprovalStatus Status { get; set; }
     public string? Notes { get; set; }
+
+    // Phase 4B-α additions
+    public decimal QuotedPriceOMR { get; set; }   // Casual-course arm canonical price; mirrors QuotedPrice for legacy rows.
+    public bool IsSelected { get; set; }          // Server-controlled; only flipped by SelectPriceQuoteAsync.
+    public Guid? CountryId { get; set; }          // Soft FK to HrGeographicalLocations
+    public Guid? CityId { get; set; }             // Soft FK to HrGeographicalLocations (child of CountryId)
 
     public TrainingProvider? Provider { get; set; }
     public CourseSession? Session { get; set; }
 
     protected PriceQuote() { }
 
+    /// <summary>Casual-arm-friendly constructor — Phase 4B-α.</summary>
+    public PriceQuote(Guid id) : base(id)
+    {
+        Status = ApprovalStatus.Pending;
+    }
+
+    /// <summary>Legacy session-arm constructor (Phase 3).</summary>
     public PriceQuote(
         Guid id,
         Guid sessionId,
@@ -36,6 +59,7 @@ public class PriceQuote : FullAuditedEntity<Guid>, IMultiTenant
         ProviderId = providerId;
         PricingType = pricingType;
         QuotedPrice = quotedPrice;
+        QuotedPriceOMR = quotedPrice;
         ParticipantsCount = participantsCount;
         Status = ApprovalStatus.Pending;
 

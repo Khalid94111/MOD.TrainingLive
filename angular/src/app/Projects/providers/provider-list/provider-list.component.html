@@ -28,14 +28,37 @@
       [width]="200">
     </dxi-column>
 
+    <dxi-column
+      dataField="scope"
+      caption="النطاق"
+      [width]="110"
+      cellTemplate="scopeTemplate"
+      alignment="center">
+    </dxi-column>
+
+    <dxi-column
+      dataField="countryNameAr"
+      [caption]="'::Training.Country' | abpLocalization"
+      [width]="140"
+      cellTemplate="countryTemplate">
+    </dxi-column>
+
+    <dxi-column
+      caption="المصدر"
+      [width]="120"
+      cellTemplate="nebrasTemplate"
+      alignment="center"
+      [allowSorting]="false">
+    </dxi-column>
+
     <dxi-column dataField="contactPerson"
       [caption]="'::Training.ContactPerson' | abpLocalization"
-      [width]="150">
+      [width]="140">
     </dxi-column>
 
     <dxi-column dataField="email"
       [caption]="'::Training.Email' | abpLocalization"
-      [width]="180">
+      [width]="160">
     </dxi-column>
 
     <dxi-column dataField="phone"
@@ -51,12 +74,6 @@
       format="#.0">
     </dxi-column>
 
-    <dxi-column dataField="isApproved"
-      [caption]="'::Training.IsApproved' | abpLocalization"
-      [width]="80"
-      dataType="boolean">
-    </dxi-column>
-
     <dxi-column dataField="isActive"
       [caption]="'::Training.IsActive' | abpLocalization"
       [width]="80"
@@ -70,6 +87,26 @@
       [allowSorting]="false">
     </dxi-column>
 
+    <div *dxTemplate="let cell of 'scopeTemplate'">
+      <span [class]="scopeCssClass(cell.data.scope)">{{ scopeLabel(cell.data.scope) }}</span>
+    </div>
+
+    <div *dxTemplate="let cell of 'countryTemplate'">
+      @if (cell.data.scope === ProviderScope.Internal) {
+        <span class="muted">—</span>
+      } @else {
+        <span>{{ cell.data.countryNameAr || cell.data.countryNameEn || '—' }}</span>
+      }
+    </div>
+
+    <div *dxTemplate="let cell of 'nebrasTemplate'">
+      @if (cell.data.isFromNebras) {
+        <span class="nebras-pill" [title]="cell.data.nebrasId || ''">⚡ من نبراس</span>
+      } @else {
+        <span class="manual-pill">يدوي</span>
+      }
+    </div>
+
     <div *dxTemplate="let cell of 'actionsTemplate'">
       <dx-button icon="edit" stylingMode="text" (onClick)="onEdit(cell.data)"></dx-button>
       <dx-button icon="trash" stylingMode="text" (onClick)="onDelete(cell.data.id)"></dx-button>
@@ -82,21 +119,75 @@
     [visible]="isDialogVisible()"
     [title]="dialogTitle"
     [showCloseButton]="true"
-    [width]="550"
-    [height]="520"
+    [width]="640"
+    [height]="640"
     [toolbarItems]="dialogToolbarItems"
     (onHidden)="isDialogVisible.set(false)">
     <div class="dialog-form">
+
+      @if (isFromNebras()) {
+        <div class="nebras-banner">
+          <span class="nebras-banner-icon">⚡</span>
+          <div class="nebras-banner-text">
+            <b>هذه الجهة مزامنة من نبراس.</b>
+            الحقول التالية مغلقة للتعديل (تُحدَّث تلقائياً): اسم الجهة، Nebras ID. يمكنك تعديل بيانات التواصل، الدولة، النطاق، والحالة.
+          </div>
+        </div>
+      }
+
       <div class="form-row">
         <div class="form-field flex-1">
-          <label>{{ '::Training.ProviderNameAr' | abpLocalization }} *</label>
-          <dx-text-box [value]="formData().providerNameAr" (onValueChanged)="updateNameAr($event.value)"></dx-text-box>
+          <label>{{ '::Training.ProviderNameAr' | abpLocalization }} <span class="required">*</span></label>
+          <dx-text-box
+            [value]="formData().providerNameAr"
+            [readOnly]="isFromNebras()"
+            (onValueChanged)="updateNameAr($event.value)">
+          </dx-text-box>
         </div>
         <div class="form-field flex-1">
-          <label>{{ '::Training.ProviderNameEn' | abpLocalization }} *</label>
-          <dx-text-box [value]="formData().providerNameEn" (onValueChanged)="updateNameEn($event.value)"></dx-text-box>
+          <label>{{ '::Training.ProviderNameEn' | abpLocalization }} <span class="required">*</span></label>
+          <dx-text-box
+            [value]="formData().providerNameEn"
+            [readOnly]="isFromNebras()"
+            (onValueChanged)="updateNameEn($event.value)">
+          </dx-text-box>
         </div>
       </div>
+
+      <div class="form-row">
+        <div class="form-field flex-1">
+          <label>النطاق <span class="required">*</span></label>
+          <dx-select-box
+            [items]="scopeDataSource()"
+            displayExpr="text"
+            valueExpr="value"
+            [value]="formData().scope"
+            (onValueChanged)="updateScope($event.value)">
+          </dx-select-box>
+        </div>
+        <div class="form-field flex-1">
+          <label>
+            {{ '::Training.Country' | abpLocalization }}
+            @if (countryRequired()) {
+              <span class="required">*</span>
+            }
+            @if (!countryRequired()) {
+              <span class="hint-inline">(غير مطلوب للنطاق الداخلي)</span>
+            }
+          </label>
+          <dx-select-box
+            [items]="countries()"
+            displayExpr="arabicName"
+            valueExpr="id"
+            [value]="formData().countryId"
+            [disabled]="!countryRequired()"
+            [searchEnabled]="true"
+            [placeholder]="countryRequired() ? 'اختر الدولة' : 'غير منطبق'"
+            (onValueChanged)="updateCountryId($event.value)">
+          </dx-select-box>
+        </div>
+      </div>
+
       <div class="form-field">
         <label>{{ '::Training.ContactPerson' | abpLocalization }}</label>
         <dx-text-box [value]="formData().contactPerson" (onValueChanged)="updateContactPerson($event.value)"></dx-text-box>
@@ -117,22 +208,54 @@
       </div>
       <div class="form-row">
         <div class="form-field flex-1">
-          <dx-check-box
-            [text]="'::Training.IsApproved' | abpLocalization"
-            [value]="formData().isApproved"
-            (onValueChanged)="updateIsApproved($event.value)">
-          </dx-check-box>
-        </div>
-        <div class="form-field flex-1">
           <dx-switch
             [value]="formData().isActive"
             (onValueChanged)="updateIsActive($event.value)">
           </dx-switch>
           <span class="switch-label">
-            @if (formData().isActive) { Active } @else { Inactive }
+            @if (formData().isActive) {
+              {{ '::Training.IsActive' | abpLocalization }}
+            } @else {
+              {{ '::Training.Inactive' | abpLocalization }}
+            }
           </span>
         </div>
       </div>
+
+      @if (isFromNebras()) {
+        <div class="nebras-info">
+          <h4>معلومات نبراس (للقراءة فقط)</h4>
+          <div class="nebras-info-grid">
+            <div>
+              <span class="info-label">من نبراس:</span>
+              <b class="info-value-cyan">نعم ⚡</b>
+            </div>
+            <div>
+              <span class="info-label">Nebras ID:</span>
+              <code class="info-code">{{ editingProvider()?.nebrasId }}</code>
+            </div>
+            <div>
+              <span class="info-label">{{ '::Training.IsApproved' | abpLocalization }}:</span>
+              <b class="info-value-green">
+                @if (editingProvider()?.isApproved) { ✓ نعم }
+                @else { لا }
+              </b>
+            </div>
+            <div>
+              <span class="info-label">{{ '::Training.AverageRating' | abpLocalization }}:</span>
+              <span>⭐ {{ editingProvider()?.averageRating || 0 }}</span>
+            </div>
+            <div>
+              <span class="info-label">عدد التقييمات:</span>
+              <span>{{ editingProvider()?.totalRatings || 0 }}</span>
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (validationError()) {
+        <div class="validation-error">⚠ {{ validationError() }}</div>
+      }
     </div>
   </dx-popup>
 </div>

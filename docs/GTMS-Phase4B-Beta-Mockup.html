@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<title>GTMS Phase 4B-β — Mockups</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  body { font-family: 'Tajawal', sans-serif; background: #f8fafc; color: #1e293b; }
+  .screen { padding: 32px 28px; max-width: 1280px; margin: 0 auto; }
+  .card { background: white; border: 1px solid #e2e8f0; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .role-pill { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
+  .role-finance { background: #fef3c7; color: #92400e; }
+  .role-staff   { background: #ddd6fe; color: #5b21b6; }
+  .role-td      { background: #fed7aa; color: #9a3412; }
+  .status-draft     { background: #f1f5f9; color: #475569; }
+  .status-confirmed { background: #dcfce7; color: #166534; }
+  .status-cancelled { background: #fee2e2; color: #991b1b; }
+  .status-pending   { background: #fef3c7; color: #92400e; }
+  .status-approved  { background: #dbeafe; color: #1e40af; }
+  .status-badge { font-size: 11px; padding: 3px 10px; border-radius: 999px; font-weight: 600; display: inline-flex; gap: 4px; align-items: center; }
+  .section-label { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 6px; }
+  .label-purple { background: #ede9fe; color: #5b21b6; }
+  .label-blue   { background: #dbeafe; color: #1e40af; }
+  .label-amber  { background: #fef3c7; color: #92400e; }
+  .label-green  { background: #dcfce7; color: #166534; }
+  .label-red    { background: #fee2e2; color: #991b1b; }
+  .btn-primary { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; }
+  .btn-success { background: linear-gradient(135deg, #16a34a, #15803d); color: white; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; }
+  .btn-amber   { background: linear-gradient(135deg, #d97706, #b45309); color: white; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; }
+  .btn-danger  { background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; }
+  .btn-ghost   { background: white; border: 1px solid #cbd5e1; color: #475569; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-locked  { background: #f1f5f9; color: #94a3b8; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: not-allowed; border: none; }
+  .input-mock  { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; font-size: 13px; min-height: 36px; display: flex; align-items: center; }
+  .input-mock-empty { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 8px 12px; font-size: 13px; min-height: 36px; display: flex; align-items: center; color: #94a3b8; }
+  .input-mock-locked { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; font-size: 13px; min-height: 36px; display: flex; align-items: center; color: #64748b; }
+  .nav-pill { background: white; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 999px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .nav-pill.active { background: #4f46e5; color: white; border-color: #4f46e5; }
+  .section-divider { border-top: 2px dashed #cbd5e1; margin: 48px 0; padding-top: 32px; }
+  table.data-grid { width: 100%; font-size: 13px; }
+  table.data-grid th { background: #f8fafc; padding: 12px; font-weight: 600; text-align: right; color: #475569; font-size: 12px; border-bottom: 2px solid #e2e8f0; }
+  table.data-grid td { padding: 12px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  table.data-grid tr:hover td { background: #f8fafc; }
+  .currency-dual { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; line-height: 1.2; }
+  .currency-omr { font-weight: 700; color: #1e293b; }
+  .currency-usd { font-size: 11px; color: #94a3b8; }
+  .file-chip { display: inline-flex; align-items: center; gap: 6px; background: #fef3c7; padding: 4px 10px; border-radius: 6px; font-size: 11px; color: #92400e; font-weight: 600; }
+  .file-chip-uploaded { background: #dcfce7; color: #166534; }
+  .nebras-pill { background: linear-gradient(90deg, #e0f2fe, #cffafe); color: #075985; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; display: inline-flex; gap: 4px; align-items: center; }
+  .scenario-pill-1 { background: #f1f5f9; color: #475569; font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+  .scenario-pill-2 { background: #fef3c7; color: #92400e; font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+  .scenario-pill-3 { background: #fee2e2; color: #991b1b; font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+  .reallocation-arrow { color: #d97706; font-weight: 700; }
+  .upload-zone { border: 2px dashed #cbd5e1; border-radius: 10px; padding: 24px; text-align: center; background: #fafbfc; }
+  .upload-zone-active { border-color: #4f46e5; background: #f5f3ff; }
+  .progress-bar { height: 6px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #4f46e5, #7c3aed); transition: width 0.3s; }
+  details summary { cursor: pointer; list-style: none; }
+  details summary::-webkit-details-marker { display: none; }
+  .total-row { background: #f0fdf4 !important; border-top: 2px solid #16a34a !important; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- ====================================================================== -->
+<!-- NAV -->
+<!-- ====================================================================== -->
+<div class="bg-white border-b border-slate-200 sticky top-0 z-10">
+  <div class="max-w-7xl mx-auto px-7 py-3 flex items-center gap-3 flex-wrap">
+    <span class="text-sm font-bold text-slate-700">GTMS Phase 4B-β</span>
+    <span class="text-xs text-slate-400">v1.0 — Payments + Auto-Reallocation</span>
+    <div class="mr-auto flex gap-2 flex-wrap">
+      <a href="#screen-travel-payments" class="nav-pill">💸 PAGE 4.5 — بدلات السفر</a>
+      <a href="#screen-course-payments" class="nav-pill">🧾 PAGE 4.6 — رسوم الدورة</a>
+      <a href="#screen-reallocations" class="nav-pill">🔄 PAGE 4.7 — إعادة التخصيص</a>
+      <a href="#screen-course-integration" class="nav-pill">📊 تكامل صفحة الدورة</a>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- SCREEN 1 — Travel Allowance Payments (PAGE 4.5) -->
+<!-- ====================================================================== -->
+<div id="screen-travel-payments" class="screen">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-slate-800">💸 صرف بدلات السفر</h1>
+    <p class="text-sm text-slate-500 mt-1">PAGE 4.5 — Finance Officer enters per-nominee actual amounts after travel instruction is issued</p>
+    <div class="mt-2 flex gap-2 flex-wrap">
+      <span class="role-pill role-finance">💰 Finance Officer (يكتب)</span>
+      <span class="role-pill role-staff">📋 Staff (يقرأ)</span>
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="card p-4 mb-4 flex items-center gap-3 flex-wrap">
+    <button class="btn-primary">+ صرف بدل جديد</button>
+    <div class="flex gap-2 flex-wrap mr-auto">
+      <span class="text-xs text-slate-500 self-center">فلتر:</span>
+      <select class="text-xs px-3 py-2 border border-slate-300 rounded-lg bg-white">
+        <option>كل الدورات</option><option>دورات عرضية</option><option>جلسات الخطة السنوية</option>
+      </select>
+      <select class="text-xs px-3 py-2 border border-slate-300 rounded-lg bg-white">
+        <option>كل الحالات</option><option>مسودة</option><option>مؤكدة</option><option>ملغاة</option>
+      </select>
+      <select class="text-xs px-3 py-2 border border-slate-300 rounded-lg bg-white">
+        <option>كل المرشحين</option><option>ضباط</option><option>أفراد</option>
+      </select>
+      <input type="text" placeholder="🔍 بحث باسم المرشح" class="text-xs px-3 py-2 border border-slate-300 rounded-lg bg-white" />
+    </div>
+  </div>
+
+  <!-- Grid -->
+  <div class="card overflow-hidden mb-5">
+    <table class="data-grid">
+      <thead>
+        <tr>
+          <th>المرشح</th>
+          <th>الدورة</th>
+          <th>النوع</th>
+          <th>تذاكر</th>
+          <th>بدل سفر</th>
+          <th>ملابس</th>
+          <th>تأمين</th>
+          <th>تأشيرة</th>
+          <th>الإجمالي</th>
+          <th>الحالة</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div class="font-semibold text-slate-800">رائد / محمد بن سالم العامري</div>
+            <div class="text-xs text-slate-400">رتبة: رائد</div>
+          </td>
+          <td>
+            <div class="text-xs font-semibold">PMP — لندن</div>
+            <div class="text-xs text-slate-400">15-19 أبريل · 7 أيام سفر</div>
+          </td>
+          <td><span class="status-badge label-blue">⭐ ضابط</span></td>
+          <td><div class="currency-dual"><span class="currency-omr">450</span><span class="currency-usd">~1,170 USD</span></div></td>
+          <td><div class="currency-dual"><span class="currency-omr">280</span><span class="currency-usd">7 × 40</span></div></td>
+          <td><div class="currency-dual"><span class="currency-omr">100</span></div></td>
+          <td><div class="currency-dual"><span class="currency-omr">35</span></div></td>
+          <td><div class="currency-dual"><span class="currency-omr">25</span></div></td>
+          <td><div class="currency-dual"><span class="currency-omr text-base">890</span><span class="currency-usd">~2,314 USD</span></div></td>
+          <td><span class="status-badge status-confirmed">✓ مؤكدة</span></td>
+          <td><button class="text-xs text-slate-500 hover:text-indigo-600">👁️</button></td>
+        </tr>
+        <tr>
+          <td>
+            <div class="font-semibold text-slate-800">نقيب / سعيد بن أحمد البوسعيدي</div>
+            <div class="text-xs text-slate-400">رتبة: نقيب</div>
+          </td>
+          <td>
+            <div class="text-xs font-semibold">PMP — لندن</div>
+            <div class="text-xs text-slate-400">15-19 أبريل · 7 أيام سفر</div>
+          </td>
+          <td><span class="status-badge label-blue">⭐ ضابط</span></td>
+          <td><div class="currency-dual"><span class="currency-omr">450</span></div></td>
+          <td><div class="currency-dual"><span class="currency-omr">245</span><span class="currency-usd">7 × 35</span></div></td>
+          <td><div class="currency-dual"><span class="currency-omr">100</span></div></td>
+          <td><div class="currency-dual"><span class="currency-omr">35</span></div></td>
+          <td><div class="currency-dual"><span class="currency-omr">25</span></div></td>
+          <td><div class="currency-dual"><span class="currency-omr text-base">855</span></div></td>
+          <td><span class="status-badge status-draft">📝 مسودة</span></td>
+          <td class="flex gap-1"><button class="text-xs text-indigo-600 hover:text-indigo-700">✏️</button><button class="text-xs text-green-600 hover:text-green-700">✓</button></td>
+        </tr>
+        <tr class="total-row">
+          <td colspan="3" class="text-left font-bold">إجمالي بدلات السفر للدورة</td>
+          <td colspan="5"></td>
+          <td><div class="currency-dual"><span class="currency-omr text-base">1,745</span><span class="currency-usd">~4,537 USD</span></div></td>
+          <td colspan="2"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Travel Allowance Form Dialog -->
+  <div class="card p-5">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="section-label label-amber">نموذج الإدخال</span>
+      <h3 class="font-bold text-slate-800">✏️ صرف بدل سفر للمرشح: <span class="text-indigo-600">نقيب / سعيد البوسعيدي</span></h3>
+    </div>
+
+    <!-- Auto-filled banner from TravelInstruction -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 flex items-start gap-2">
+      <span class="text-blue-600">ℹ️</span>
+      <div class="text-xs text-blue-900 flex-1">
+        <b>القيم الافتراضية تأتي من تعليمات السفر للدورة:</b>
+        تأشيرة مطلوبة (35 ر.ع) · تأمين شركة عُمان (35 ر.ع) · 7 أيام سفر فعّالة · بدل يومي للنقيب 35 ر.ع.
+        يمكنك تعديل أي قيمة قبل التأكيد.
+      </div>
+    </div>
+
+    <!-- Course context -->
+    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 mb-5 grid grid-cols-4 gap-3 text-xs">
+      <div><span class="text-slate-500">الدورة:</span> <b class="text-slate-800">PMP</b></div>
+      <div><span class="text-slate-500">المعهد:</span> <b class="text-slate-800">SANS Institute</b></div>
+      <div><span class="text-slate-500">المرشح:</span> <b class="text-slate-800">نقيب البوسعيدي</b></div>
+      <div><span class="text-slate-500">تواريخ السفر:</span> <b class="text-slate-800">14-20 أبريل (7 أيام)</b></div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <!-- Each amount field has OMR + USD live conversion -->
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">🎫 ثمن التذاكر <span class="text-red-500">*</span></label>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="input-mock">450.000 ر.ع</div>
+          <div class="input-mock-locked">~1,170 USD</div>
+        </div>
+        <div class="text-xs text-slate-400 mt-1">من حجز الخطوط العمانية WY-103/104</div>
+      </div>
+
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">🏨 بدل السفر اليومي <span class="text-red-500">*</span></label>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="input-mock">245.000 ر.ع</div>
+          <div class="input-mock-locked">~637 USD</div>
+        </div>
+        <div class="text-xs text-amber-600 mt-1">⚡ محسوب تلقائياً: 7 أيام × 35 ر.ع/يوم (نقيب)</div>
+      </div>
+
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">👔 بدل الملابس</label>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="input-mock">100.000 ر.ع</div>
+          <div class="input-mock-locked">~260 USD</div>
+        </div>
+        <div class="text-xs text-slate-400 mt-1">معدل ثابت لكل مرشح</div>
+      </div>
+
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">🛡️ التأمين الصحي</label>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="input-mock">35.000 ر.ع</div>
+          <div class="input-mock-locked">~91 USD</div>
+        </div>
+        <div class="text-xs text-slate-400 mt-1">شركة عُمان للتأمين (TR-2026-0445)</div>
+      </div>
+
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">📋 رسوم التأشيرة</label>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="input-mock">25.000 ر.ع</div>
+          <div class="input-mock-locked">~65 USD</div>
+        </div>
+        <div class="text-xs text-slate-400 mt-1">من تعليمات السفر</div>
+      </div>
+
+      <div class="bg-green-50 border-2 border-green-300 rounded-lg p-3 flex items-center justify-between">
+        <div>
+          <div class="text-xs text-green-700">الإجمالي (محسوب)</div>
+          <div class="text-2xl font-bold text-green-800">855.000 <span class="text-sm">ر.ع</span></div>
+        </div>
+        <div class="text-left">
+          <div class="text-xs text-slate-500">~ بالدولار</div>
+          <div class="text-sm font-semibold text-slate-700">2,223 USD</div>
+        </div>
+      </div>
+
+      <div class="col-span-2">
+        <label class="text-xs text-slate-600 mb-1 block">📝 ملاحظات</label>
+        <div class="input-mock-empty" style="min-height: 60px;">أي تفاصيل إضافية حول الصرف</div>
+      </div>
+    </div>
+
+    <!-- Future Nebras section (read-only display) -->
+    <div class="mt-5 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+      <h4 class="text-xs font-bold text-slate-600 mb-2">🔗 معلومات نبراس (للتكامل المستقبلي)</h4>
+      <div class="grid grid-cols-3 gap-3 text-xs">
+        <div><span class="text-slate-500">External Request ID:</span> <span class="text-slate-400 italic">— لم يُرسَل بعد</span></div>
+        <div><span class="text-slate-500">External Status:</span> <span class="text-slate-400 italic">—</span></div>
+        <div><span class="text-slate-500">Response At:</span> <span class="text-slate-400 italic">—</span></div>
+      </div>
+    </div>
+
+    <div class="mt-5 flex gap-3 justify-end">
+      <button class="btn-ghost">إلغاء</button>
+      <button class="btn-ghost">💾 حفظ كمسودة</button>
+      <button class="btn-success">✓ تأكيد الصرف (نهائي)</button>
+    </div>
+
+    <div class="mt-3 text-xs text-slate-500 text-center">
+      <b>⚠ بعد التأكيد:</b> الصرف يصبح غير قابل للتعديل (متطلب مراجعة مالية).
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- SCREEN 2 — Course Payments (PAGE 4.6) -->
+<!-- ====================================================================== -->
+<div class="section-divider"></div>
+<div id="screen-course-payments" class="screen">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-slate-800">🧾 دفع رسوم الدورة</h1>
+    <p class="text-sm text-slate-500 mt-1">PAGE 4.6 — Finance enters invoice + Nebras amount, uploads PDF, confirms → triggers BudgetReallocation</p>
+    <div class="mt-2 flex gap-2 flex-wrap">
+      <span class="role-pill role-finance">💰 Finance Officer</span>
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="card p-4 mb-4 flex items-center gap-3 flex-wrap">
+    <button class="btn-primary">+ تسجيل دفعة جديدة</button>
+    <div class="flex gap-2 flex-wrap mr-auto">
+      <select class="text-xs px-3 py-2 border border-slate-300 rounded-lg bg-white">
+        <option>كل الدورات</option><option>عرضية</option><option>جلسات سنوية</option>
+      </select>
+      <select class="text-xs px-3 py-2 border border-slate-300 rounded-lg bg-white">
+        <option>كل الحالات</option><option>مسودة</option><option>مؤكدة</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Grid -->
+  <div class="card overflow-hidden mb-5">
+    <table class="data-grid">
+      <thead>
+        <tr>
+          <th>الدورة</th>
+          <th>المعهد</th>
+          <th>مبلغ الفاتورة</th>
+          <th>مبلغ نبراس</th>
+          <th>الفرق</th>
+          <th>تاريخ الفاتورة</th>
+          <th>الفاتورة</th>
+          <th>الحالة</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div class="font-semibold text-slate-800">إدارة المشاريع — PMP</div>
+            <div class="text-xs text-slate-400">دورة عرضية · 2 مرشحين</div>
+          </td>
+          <td>
+            <div class="text-xs font-semibold">SANS Institute</div>
+            <span class="nebras-pill">⚡ نبراس</span>
+          </td>
+          <td><div class="currency-dual"><span class="currency-omr">5,400</span><span class="currency-usd">~14,040 USD</span></div></td>
+          <td><div class="currency-dual"><span class="currency-omr">5,400</span><span class="currency-usd">~14,040 USD</span></div></td>
+          <td><span class="status-badge label-green">≡ مطابق</span></td>
+          <td>2026-04-25</td>
+          <td>
+            <span class="file-chip file-chip-uploaded">📎 invoice.pdf</span>
+            <button class="text-xs text-indigo-600 hover:text-indigo-700 mt-1">⬇ تحميل</button>
+          </td>
+          <td><span class="status-badge status-confirmed">✓ مؤكدة</span></td>
+          <td><button class="text-xs text-slate-500">👁️</button></td>
+        </tr>
+        <tr>
+          <td>
+            <div class="font-semibold text-slate-800">دورة CISSP</div>
+            <div class="text-xs text-slate-400">جلسة من الخطة السنوية · 8 مرشحين</div>
+          </td>
+          <td>
+            <div class="text-xs font-semibold">معهد الإدارة العامة</div>
+            <span class="nebras-pill">⚡ نبراس</span>
+          </td>
+          <td><div class="currency-dual"><span class="currency-omr">12,800</span></div></td>
+          <td><div class="currency-dual"><span class="currency-omr">12,500</span></div></td>
+          <td><span class="status-badge label-amber">−300 ر.ع</span></td>
+          <td>2026-04-22</td>
+          <td>
+            <span class="file-chip">📎 لم تُرفع</span>
+          </td>
+          <td><span class="status-badge status-draft">📝 مسودة</span></td>
+          <td class="flex gap-1"><button class="text-xs text-indigo-600">✏️</button><button class="text-xs text-green-600">✓</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Course Payment Form -->
+  <div class="card p-5">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="section-label label-amber">نموذج تسجيل دفعة</span>
+      <h3 class="font-bold text-slate-800">📝 تسجيل دفع رسوم الدورة</h3>
+    </div>
+
+    <!-- Course context (auto-loaded from selected course) -->
+    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 mb-5 grid grid-cols-4 gap-3 text-xs">
+      <div><span class="text-slate-500">الدورة:</span> <b class="text-slate-800">PMP</b></div>
+      <div><span class="text-slate-500">السيناريو:</span> <span class="scenario-pill-2">2 — جزئي</span></div>
+      <div><span class="text-slate-500">المعهد المعتمد:</span> <b class="text-slate-800">SANS Institute</b></div>
+      <div><span class="text-slate-500">السعر المتفق عليه:</span> <b class="text-slate-800">5,400 ر.ع</b></div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">الدورة <span class="text-red-500">*</span></label>
+        <select class="input-mock w-full">
+          <option>اختر الدورة</option>
+          <option selected>PMP — SANS Institute (دورة عرضية)</option>
+          <option>CISSP — معهد الإدارة (جلسة سنوية)</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">جهة التدريب <span class="text-red-500">*</span></label>
+        <div class="input-mock">SANS Institute (معتمد من العرض الفائز) 🔒</div>
+        <div class="text-xs text-slate-400 mt-1">يُملأ تلقائياً من SelectedPriceQuote</div>
+      </div>
+
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">💰 مبلغ الفاتورة <span class="text-red-500">*</span></label>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="input-mock">5,400.000 ر.ع</div>
+          <div class="input-mock-locked">~14,040 USD</div>
+        </div>
+        <div class="text-xs text-slate-400 mt-1">المبلغ الذي طلبه المعهد</div>
+      </div>
+
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">⚡ مبلغ نبراس الفعلي <span class="text-red-500">*</span></label>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="input-mock">5,400.000 ر.ع</div>
+          <div class="input-mock-locked">~14,040 USD</div>
+        </div>
+        <div class="text-xs text-green-600 mt-1">≡ مطابق للفاتورة (لا فرق)</div>
+      </div>
+
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">📅 تاريخ الفاتورة <span class="text-red-500">*</span></label>
+        <div class="input-mock">25 / 04 / 2026</div>
+      </div>
+
+      <div>
+        <label class="text-xs text-slate-600 mb-1 block">📝 ملاحظات</label>
+        <div class="input-mock-empty">رقم الفاتورة، شروط دفع، أي ملاحظات</div>
+      </div>
+
+      <!-- File upload -->
+      <div class="col-span-2">
+        <label class="text-xs text-slate-600 mb-1 block">📎 رفع الفاتورة (PDF) <span class="text-red-500">*</span></label>
+        <div class="upload-zone">
+          <div class="text-3xl mb-2">📄</div>
+          <div class="text-sm font-semibold text-slate-700">اسحب الفاتورة هنا أو انقر للاختيار</div>
+          <div class="text-xs text-slate-400 mt-1">PDF فقط · الحد الأقصى 10 ميجابايت</div>
+          <button class="btn-ghost mt-3">📂 اختيار ملف</button>
+        </div>
+
+        <!-- Upload in progress example -->
+        <div class="mt-3 bg-slate-50 border border-slate-200 rounded-lg p-3 hidden">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold">📎 invoice-PMP-SANS.pdf</span>
+            <span class="text-xs text-slate-500">2.3 MB · 65%</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width: 65%"></div></div>
+        </div>
+
+        <!-- Uploaded state example -->
+        <div class="mt-3 bg-green-50 border border-green-200 rounded-lg p-3 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-2xl">📄</span>
+            <div>
+              <div class="text-sm font-semibold text-green-800">invoice-PMP-SANS.pdf</div>
+              <div class="text-xs text-green-700">رُفعت بنجاح · 2.3 MB</div>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button class="text-xs text-indigo-600 hover:text-indigo-700">⬇ تحميل</button>
+            <button class="text-xs text-red-600 hover:text-red-700">🗑️ حذف</button>
+          </div>
+        </div>
+
+        <div class="text-xs text-amber-600 mt-2">⚠ زر التأكيد لن يُفعَّل قبل رفع الفاتورة</div>
+      </div>
+    </div>
+
+    <!-- Reallocation forecast (visible before confirming, casual courses only) -->
+    <div class="mt-5 bg-amber-50 border border-amber-300 rounded-lg p-4">
+      <div class="flex items-start gap-3">
+        <span class="text-2xl">🔄</span>
+        <div class="flex-1">
+          <h4 class="font-bold text-amber-900 mb-2">عند التأكيد، سيُولِّد النظام تلقائياً قيود إعادة التخصيص:</h4>
+          <div class="bg-white border border-amber-200 rounded-md p-3 text-xs">
+            <div class="text-slate-600 mb-2"><b>السيناريو 2 (جزئي):</b> رسوم الدورة تبقى على FundingSource — البنود الأخرى تُحوَّل من نبراس.</div>
+            <div class="space-y-1.5 mt-3">
+              <div class="flex items-center gap-2">
+                <code class="bg-slate-100 px-2 py-0.5 rounded">wew-232-343-2</code>
+                <span class="reallocation-arrow">→</span>
+                <span class="text-slate-700">بدل سفر</span>
+                <span class="text-slate-500 mr-auto">525 ر.ع</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <code class="bg-slate-100 px-2 py-0.5 rounded">wew-232-343-2</code>
+                <span class="reallocation-arrow">→</span>
+                <span class="text-slate-700">تذاكر سفر</span>
+                <span class="text-slate-500 mr-auto">900 ر.ع</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <code class="bg-slate-100 px-2 py-0.5 rounded">wew-232-343-2</code>
+                <span class="reallocation-arrow">→</span>
+                <span class="text-slate-700">تأمين</span>
+                <span class="text-slate-500 mr-auto">70 ر.ع</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <code class="bg-slate-100 px-2 py-0.5 rounded">wew-232-343-2</code>
+                <span class="reallocation-arrow">→</span>
+                <span class="text-slate-700">تأشيرة</span>
+                <span class="text-slate-500 mr-auto">50 ر.ع</span>
+              </div>
+              <div class="flex items-center gap-2 pt-2 border-t border-slate-200 font-bold">
+                <span class="text-slate-800">إجمالي القيود</span>
+                <span class="text-amber-800 mr-auto">1,545 ر.ع · 4 قيود</span>
+              </div>
+            </div>
+          </div>
+          <div class="text-xs text-amber-700 mt-3">القيود تنشأ بحالة "معلقة" وتنتظر مراجعة مدير التدريب واعتماده مباشرة في PAGE 4.7.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-5 flex gap-3 justify-end">
+      <button class="btn-ghost">إلغاء</button>
+      <button class="btn-ghost">💾 حفظ كمسودة</button>
+      <button class="btn-success">✓ تأكيد الدفع + توليد القيود</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- SCREEN 3 — Budget Reallocations (PAGE 4.7) -->
+<!-- ====================================================================== -->
+<div class="section-divider"></div>
+<div id="screen-reallocations" class="screen">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-slate-800">🔄 إعادة تخصيص الميزانية</h1>
+    <p class="text-sm text-slate-500 mt-1">PAGE 4.7 — Auto-generated records · TD reviews each pending entry and approves directly in the system</p>
+    <div class="mt-2 flex gap-2 flex-wrap">
+      <span class="role-pill role-td">👔 TD (يعتمد)</span>
+      <span class="role-pill role-staff">📋 Staff (يقرأ)</span>
+    </div>
+  </div>
+
+  <!-- Read-only banner -->
+  <div class="card p-4 mb-5 bg-blue-50 border-blue-200">
+    <div class="flex items-start gap-3">
+      <span class="text-2xl">ℹ️</span>
+      <div class="text-xs text-blue-900 flex-1">
+        <b>القيود تُولَّد تلقائياً</b> عند تأكيد دفعة الدورة في PAGE 4.6 — للدورات العرضية ذات السيناريو 2 أو 3 فقط.
+        <b>لا يمكن إنشاؤها يدوياً.</b> مدير التدريب يراجع كل قيد معلق ثم ينقر "اعتماد القيد" لتسجيل القرار مباشرة في النظام.
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid grid-cols-4 gap-3 mb-5">
+    <div class="card p-4">
+      <div class="text-xs text-slate-500 mb-1">القيود المعلقة</div>
+      <div class="text-2xl font-bold text-amber-600">12</div>
+      <div class="text-xs text-slate-400 mt-1">3,420 ر.ع</div>
+    </div>
+    <div class="card p-4">
+      <div class="text-xs text-slate-500 mb-1">القيود المعتمدة</div>
+      <div class="text-2xl font-bold text-green-600">47</div>
+      <div class="text-xs text-slate-400 mt-1">14,250 ر.ع</div>
+    </div>
+    <div class="card p-4">
+      <div class="text-xs text-slate-500 mb-1">إجمالي هذا الشهر</div>
+      <div class="text-2xl font-bold text-slate-800">59</div>
+      <div class="text-xs text-slate-400 mt-1">17,670 ر.ع</div>
+    </div>
+    <div class="card p-4">
+      <div class="text-xs text-slate-500 mb-1">آخر اعتماد</div>
+      <div class="text-sm font-bold text-slate-800">قبل ساعتين</div>
+      <div class="text-xs text-slate-400 mt-1">عميد / م. الراشدي</div>
+    </div>
+  </div>
+
+  <!-- Filter -->
+  <div class="card p-4 mb-4 flex items-center gap-3 flex-wrap">
+    <div class="flex gap-2 flex-wrap mr-auto">
+      <select class="text-xs px-3 py-2 border border-slate-300 rounded-lg bg-white">
+        <option>كل الحالات</option><option>معلقة فقط</option><option>معتمدة فقط</option>
+      </select>
+      <select class="text-xs px-3 py-2 border border-slate-300 rounded-lg bg-white">
+        <option>كل الدورات</option><option>دورة معينة...</option>
+      </select>
+      <select class="text-xs px-3 py-2 border border-slate-300 rounded-lg bg-white">
+        <option>كل البنود</option><option>تذاكر سفر</option><option>بدل سفر</option><option>تأمين</option><option>تأشيرة</option>
+      </select>
+      <input type="date" class="text-xs px-3 py-2 border border-slate-300 rounded-lg bg-white" />
+      <input type="text" placeholder="🔍 بحث بكود التمويل" class="text-xs px-3 py-2 border border-slate-300 rounded-lg bg-white" />
+    </div>
+  </div>
+
+  <!-- Grid -->
+  <div class="card overflow-hidden">
+    <table class="data-grid">
+      <thead>
+        <tr>
+          <th>الدورة</th>
+          <th>السيناريو</th>
+          <th>من (مصدر تمويل)</th>
+          <th>→</th>
+          <th>إلى (بند مالي)</th>
+          <th>المبلغ</th>
+          <th>الحالة</th>
+          <th>تاريخ التوليد</th>
+          <th>المعتمد</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <div class="font-semibold text-slate-800">PMP — لندن</div>
+            <div class="text-xs text-slate-400">دورة عرضية</div>
+          </td>
+          <td><span class="scenario-pill-2">2 — جزئي</span></td>
+          <td><code class="text-xs bg-slate-100 px-2 py-0.5 rounded">wew-232-343-2</code><div class="text-xs text-slate-400 mt-0.5">مشروع شمس 2</div></td>
+          <td class="text-center text-xl reallocation-arrow">→</td>
+          <td><b>تذاكر سفر</b></td>
+          <td><div class="currency-dual"><span class="currency-omr">900</span></div></td>
+          <td><span class="status-badge status-pending">⏳ معلقة</span></td>
+          <td class="text-xs text-slate-500">منذ ساعتين</td>
+          <td class="text-xs text-slate-400 italic">—</td>
+          <td><button class="btn-success text-xs">✓ اعتماد</button></td>
+        </tr>
+        <tr>
+          <td>
+            <div class="font-semibold text-slate-800">PMP — لندن</div>
+            <div class="text-xs text-slate-400">دورة عرضية</div>
+          </td>
+          <td><span class="scenario-pill-2">2 — جزئي</span></td>
+          <td><code class="text-xs bg-slate-100 px-2 py-0.5 rounded">wew-232-343-2</code></td>
+          <td class="text-center text-xl reallocation-arrow">→</td>
+          <td><b>بدل سفر</b></td>
+          <td><div class="currency-dual"><span class="currency-omr">525</span></div></td>
+          <td><span class="status-badge status-pending">⏳ معلقة</span></td>
+          <td class="text-xs text-slate-500">منذ ساعتين</td>
+          <td class="text-xs text-slate-400 italic">—</td>
+          <td><button class="btn-success text-xs">✓ اعتماد</button></td>
+        </tr>
+        <tr>
+          <td>
+            <div class="font-semibold text-slate-800">PMP — لندن</div>
+          </td>
+          <td><span class="scenario-pill-2">2 — جزئي</span></td>
+          <td><code class="text-xs bg-slate-100 px-2 py-0.5 rounded">wew-232-343-2</code></td>
+          <td class="text-center text-xl reallocation-arrow">→</td>
+          <td><b>تأمين</b></td>
+          <td><div class="currency-dual"><span class="currency-omr">70</span></div></td>
+          <td><span class="status-badge status-pending">⏳ معلقة</span></td>
+          <td class="text-xs text-slate-500">منذ ساعتين</td>
+          <td class="text-xs text-slate-400 italic">—</td>
+          <td><button class="btn-success text-xs">✓ اعتماد</button></td>
+        </tr>
+        <tr>
+          <td>
+            <div class="font-semibold text-slate-800">PMP — لندن</div>
+          </td>
+          <td><span class="scenario-pill-2">2 — جزئي</span></td>
+          <td><code class="text-xs bg-slate-100 px-2 py-0.5 rounded">wew-232-343-2</code></td>
+          <td class="text-center text-xl reallocation-arrow">→</td>
+          <td><b>تأشيرة</b></td>
+          <td><div class="currency-dual"><span class="currency-omr">50</span></div></td>
+          <td><span class="status-badge status-pending">⏳ معلقة</span></td>
+          <td class="text-xs text-slate-500">منذ ساعتين</td>
+          <td class="text-xs text-slate-400 italic">—</td>
+          <td><button class="btn-success text-xs">✓ اعتماد</button></td>
+        </tr>
+        <!-- Approved row -->
+        <tr>
+          <td>
+            <div class="font-semibold text-slate-800">CISSP</div>
+            <div class="text-xs text-slate-400">جلسة سنوية</div>
+          </td>
+          <td><span class="scenario-pill-3">3 — كامل</span></td>
+          <td><code class="text-xs bg-slate-100 px-2 py-0.5 rounded">wew-501-200-1</code></td>
+          <td class="text-center text-xl reallocation-arrow">→</td>
+          <td><b>رسوم الدورة</b></td>
+          <td><div class="currency-dual"><span class="currency-omr">12,500</span></div></td>
+          <td><span class="status-badge status-approved">✓ معتمدة</span></td>
+          <td class="text-xs text-slate-500">قبل يومين</td>
+          <td class="text-xs">عميد / م. الراشدي</td>
+          <td><button class="text-xs text-slate-500">👁️</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Approval Dialog -->
+  <div class="card p-5 mt-5">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="section-label label-green">حوار الاعتماد</span>
+      <h3 class="font-bold text-slate-800">✓ اعتماد قيد إعادة التخصيص</h3>
+    </div>
+
+    <!-- Reallocation summary -->
+    <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-5">
+      <div class="grid grid-cols-2 gap-4 text-xs">
+        <div>
+          <div class="text-slate-500">الدورة</div>
+          <div class="font-bold text-slate-800 mt-1">PMP — لندن (دورة عرضية)</div>
+        </div>
+        <div>
+          <div class="text-slate-500">السيناريو</div>
+          <div class="mt-1"><span class="scenario-pill-2">2 — تخصيص جزئي</span></div>
+        </div>
+        <div>
+          <div class="text-slate-500">من مصدر التمويل</div>
+          <div class="font-bold text-slate-800 mt-1">مشروع شمس 2</div>
+          <code class="text-xs bg-white px-2 py-0.5 rounded border border-slate-200">wew-232-343-2</code>
+        </div>
+        <div>
+          <div class="text-slate-500">إلى البند المالي</div>
+          <div class="font-bold text-slate-800 mt-1">تذاكر سفر</div>
+        </div>
+        <div class="col-span-2 bg-amber-50 border border-amber-200 rounded-md p-3 mt-2">
+          <div class="text-amber-900 font-bold text-sm">المبلغ: 900.000 ر.ع</div>
+          <div class="text-xs text-amber-700 mt-1">~ 2,340 USD</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <label class="text-xs text-slate-600 mb-1 block">ملاحظة الاعتماد (اختياري)</label>
+      <div class="input-mock-empty" style="min-height: 60px;">رقم المرجع، مبرر القرار، أي ملاحظة</div>
+    </div>
+
+    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 mb-5 text-xs">
+      <b>تنبيه:</b> هذا الإجراء يُحدّث حالة القيد إلى "معتمد" — الإجراء غير قابل للتراجع. تأكد من مراجعة القيد قبل المتابعة.
+    </div>
+
+    <div class="flex gap-3 justify-end">
+      <button class="btn-ghost">إلغاء</button>
+      <button class="btn-success">✓ تأكيد الاعتماد</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- SCREEN 4 — Course Detail Page Integration -->
+<!-- ====================================================================== -->
+<div class="section-divider"></div>
+<div id="screen-course-integration" class="screen">
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-slate-800">📊 تكامل في صفحة الدورة العرضية</h1>
+    <p class="text-sm text-slate-500 mt-1">Integration into the existing stage-based detail page · Adds payments + reallocation cards to the Execution Status section</p>
+  </div>
+
+  <!-- Header reminder -->
+  <div class="card p-5 mb-5">
+    <div class="flex justify-between items-center mb-2">
+      <h2 class="text-lg font-bold text-slate-800">إدارة المشاريع — PMP</h2>
+      <span class="status-badge status-confirmed">✓ معتمدة من TH</span>
+    </div>
+    <div class="text-xs text-slate-500 mt-2">
+      [Status pipeline: Draft ✓ → Submit ✓ → UGM ✓ → Staff ✓ → TH ✓ → <b class="text-blue-600">Quote ✓</b> → <b class="text-blue-600">Travel ✓</b> → <b class="text-amber-600">Payment ●</b>]
+    </div>
+  </div>
+
+  <!-- Pre-existing Section 1, 2, 3 mentioned briefly -->
+  <div class="card p-3 mb-2 opacity-50">
+    <div class="text-xs text-slate-500">▼ Section 1: تفاصيل الدورة والمرشحون <span class="text-slate-400">(موجود من Phase 4B-α)</span></div>
+  </div>
+  <div class="card p-3 mb-2 opacity-50">
+    <div class="text-xs text-slate-500">▼ Section 2: البنود المالية <span class="text-slate-400">(موجود)</span></div>
+  </div>
+  <div class="card p-3 mb-2 opacity-50">
+    <div class="text-xs text-slate-500">▼ Section 3: عروض الأسعار <span class="text-slate-400">(SANS Institute مختار)</span></div>
+  </div>
+  <div class="card p-3 mb-5 opacity-50">
+    <div class="text-xs text-slate-500">▼ Section 4: تعليمات السفر <span class="text-slate-400">(مُصدَرة)</span></div>
+  </div>
+
+  <!-- NEW Section 5: Payments & Reallocation -->
+  <div class="card p-5 border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-white">
+    <div class="flex items-center gap-2 mb-4 flex-wrap">
+      <span class="section-label label-amber">جديد — Phase 4B-β</span>
+      <h3 class="font-bold text-amber-900">💰 Section 5: المدفوعات وإعادة التخصيص</h3>
+      <span class="text-xs text-slate-500 mr-auto">يظهر بعد إصدار تعليمات السفر</span>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-4">
+      <!-- Travel Allowance Payments Card -->
+      <div class="bg-white border border-slate-200 rounded-xl p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">💸</span>
+            <h4 class="font-bold text-slate-800 text-sm">بدلات السفر</h4>
+          </div>
+          <span class="status-badge status-confirmed">2/2 مؤكدة</span>
+        </div>
+        <div class="space-y-2 text-xs">
+          <div class="flex justify-between">
+            <span class="text-slate-600">رائد العامري</span>
+            <span class="font-semibold">890 ر.ع ✓</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-600">نقيب البوسعيدي</span>
+            <span class="font-semibold">855 ر.ع ✓</span>
+          </div>
+          <div class="flex justify-between pt-2 border-t border-slate-100 font-bold">
+            <span class="text-slate-800">الإجمالي</span>
+            <span class="text-green-700">1,745 ر.ع</span>
+          </div>
+        </div>
+        <button class="text-xs text-indigo-600 hover:text-indigo-700 mt-3">→ فتح صفحة بدلات السفر</button>
+      </div>
+
+      <!-- Course Payment Card -->
+      <div class="bg-white border border-slate-200 rounded-xl p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">🧾</span>
+            <h4 class="font-bold text-slate-800 text-sm">رسوم الدورة</h4>
+          </div>
+          <span class="status-badge status-confirmed">✓ مؤكدة</span>
+        </div>
+        <div class="space-y-2 text-xs">
+          <div class="flex justify-between">
+            <span class="text-slate-600">مبلغ الفاتورة</span>
+            <span class="font-semibold">5,400 ر.ع</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-600">مبلغ نبراس</span>
+            <span class="font-semibold">5,400 ر.ع</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-600">الفاتورة</span>
+            <span class="file-chip file-chip-uploaded">📎 invoice.pdf</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-600">تاريخ الدفع</span>
+            <span class="font-semibold">25 / 04 / 2026</span>
+          </div>
+        </div>
+        <button class="text-xs text-indigo-600 hover:text-indigo-700 mt-3">→ فتح صفحة رسوم الدورة</button>
+      </div>
+    </div>
+
+    <!-- Budget Reallocation Card (full width) -->
+    <div class="bg-white border border-slate-200 rounded-xl p-4">
+      <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">🔄</span>
+          <h4 class="font-bold text-slate-800 text-sm">قيود إعادة التخصيص</h4>
+          <span class="scenario-pill-2">السيناريو 2 — جزئي</span>
+        </div>
+        <div class="flex gap-2">
+          <span class="status-badge status-pending">⏳ 4 معلقة</span>
+          <span class="status-badge status-approved">✓ 0 معتمدة</span>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 border border-slate-200 rounded-md p-3 text-xs space-y-1.5">
+        <div class="flex items-center gap-2">
+          <code class="bg-white px-2 py-0.5 rounded border border-slate-200">wew-232-343-2</code>
+          <span class="reallocation-arrow">→</span>
+          <span class="text-slate-700 flex-1">تذاكر سفر</span>
+          <span class="text-slate-700">900 ر.ع</span>
+          <span class="status-badge status-pending text-xs">⏳</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <code class="bg-white px-2 py-0.5 rounded border border-slate-200">wew-232-343-2</code>
+          <span class="reallocation-arrow">→</span>
+          <span class="text-slate-700 flex-1">بدل سفر</span>
+          <span class="text-slate-700">525 ر.ع</span>
+          <span class="status-badge status-pending text-xs">⏳</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <code class="bg-white px-2 py-0.5 rounded border border-slate-200">wew-232-343-2</code>
+          <span class="reallocation-arrow">→</span>
+          <span class="text-slate-700 flex-1">تأمين</span>
+          <span class="text-slate-700">70 ر.ع</span>
+          <span class="status-badge status-pending text-xs">⏳</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <code class="bg-white px-2 py-0.5 rounded border border-slate-200">wew-232-343-2</code>
+          <span class="reallocation-arrow">→</span>
+          <span class="text-slate-700 flex-1">تأشيرة</span>
+          <span class="text-slate-700">50 ر.ع</span>
+          <span class="status-badge status-pending text-xs">⏳</span>
+        </div>
+        <div class="flex items-center gap-2 pt-2 border-t border-slate-300 font-bold">
+          <span class="text-slate-800 flex-1">إجمالي القيود</span>
+          <span class="text-amber-700">1,545 ر.ع</span>
+        </div>
+      </div>
+
+      <div class="mt-3 bg-amber-50 border border-amber-200 rounded-md p-2 text-xs flex items-center gap-2">
+        <span>⚠</span>
+        <span class="flex-1 text-amber-900">في انتظار مراجعة مدير التدريب واعتماده مباشرة في النظام.</span>
+        <button class="text-xs text-indigo-600 hover:text-indigo-700">→ فتح PAGE 4.7</button>
+      </div>
+    </div>
+
+    <!-- Lifecycle complete banner -->
+    <div class="mt-4 bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-3">
+      <span class="text-2xl">✓</span>
+      <div class="flex-1 text-sm">
+        <b class="text-green-900">حالة الدورة المالية: مكتملة (المرحلة الحالية)</b>
+        <div class="text-xs text-green-700 mt-1">
+          المدفوعات صُرفت · الفاتورة دُفعت · القيود وُلِّدت · في انتظار اعتماد القيود لإغلاق الدورة المالية.
+        </div>
+      </div>
+      <div class="text-left">
+        <div class="text-xs text-slate-500">إجمالي الدورة</div>
+        <div class="text-lg font-bold text-green-700">7,145 ر.ع</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section-divider"></div>
+<div class="screen text-center text-xs text-slate-400 py-10">
+  <b>End of Phase 4B-β Mockups</b> · 4 screens · Awaiting OmanAI approval to proceed to API list (Gate 2)
+</div>
+
+</body>
+</html>
