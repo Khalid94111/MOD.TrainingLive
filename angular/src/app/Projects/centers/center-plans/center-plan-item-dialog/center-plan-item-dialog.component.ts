@@ -115,12 +115,12 @@ private readonly orgUnitService = inject(OrganizationUnitService);
     this.formData.update(f => ({ ...f, capacity: value }));
   }
 
-  updateEstimatedStartDate(value: Date): void {
-    this.formData.update(f => ({ ...f, estimatedStartDate: value }));
+  updateEstimatedStartDate(value: Date | string | number | null): void {
+    this.formData.update(f => ({ ...f, estimatedStartDate: value ? new Date(value as any) : null }));
   }
 
-  updateEstimatedEndDate(value: Date): void {
-    this.formData.update(f => ({ ...f, estimatedEndDate: value }));
+  updateEstimatedEndDate(value: Date | string | number | null): void {
+    this.formData.update(f => ({ ...f, estimatedEndDate: value ? new Date(value as any) : null }));
   }
 
   updateDurationWeeks(value: number): void {

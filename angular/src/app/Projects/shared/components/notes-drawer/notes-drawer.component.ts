@@ -123,7 +123,7 @@ export class NotesDrawerComponent implements OnInit {
     } as Record<number, string>)[role as number] ?? '';
   }
 
-  formatTime(d?: string): string {
+  formatTime(d?: string | Date | null): string {
     if (!d) return '';
     const date = new Date(d);
     return date.toLocaleString('ar-OM', { dateStyle: 'short', timeStyle: 'short' });

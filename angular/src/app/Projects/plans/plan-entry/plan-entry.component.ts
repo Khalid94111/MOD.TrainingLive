@@ -594,7 +594,7 @@ export class PlanEntryComponent implements OnInit {
   getCourseTypeText(t: number): string { return ({ 0: 'داخلية', 1: 'خارجية محلية', 2: 'خارجية دولية' } as Record<number, string>)[t] ?? ''; }
   getQuarterText(q: number): string { return ({ 1: 'الربع الأول', 2: 'الربع الثاني', 3: 'الربع الثالث', 4: 'الربع الرابع' } as Record<number, string>)[q] ?? ''; }
   getConditionTypeName(t: number): string { return ({ 0: 'الرتبة', 1: 'العمر', 2: 'سنوات الخدمة', 3: 'المؤهل', 4: 'لياقة طبية', 5: 'تصريح أمني', 6: 'لغة', 7: 'دورة سابقة', 8: 'مخصص' } as Record<number, string>)[t] ?? ''; }
-  formatDate(d?: string | null): string { if (!d) return '—'; return new Date(d).toLocaleDateString('ar-OM'); }
+  formatDate(d?: string | Date | null): string { if (!d) return '—'; return new Date(d).toLocaleDateString('ar-OM'); }
 
   // Convert an ISO date/datetime string from the API into the yyyy-MM-dd slice
   // that <input type="date"> expects. Returns '' for null/undefined/empty input.

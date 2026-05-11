@@ -12,11 +12,11 @@
       </div>
       <div class="form-field">
         <label class="field-label">{{ '::Training.WindowOpenDate' | abpLocalization }}</label>
-        <dx-date-box [value]="windowOpenDate()" (valueChange)="windowOpenDate.set($event)" type="date"></dx-date-box>
+        <dx-date-box [value]="windowOpenDate()" (valueChange)="setWindowOpenDate($event)" type="date"></dx-date-box>
       </div>
       <div class="form-field">
         <label class="field-label">{{ '::Training.WindowCloseDate' | abpLocalization }}</label>
-        <dx-date-box [value]="windowCloseDate()" (valueChange)="windowCloseDate.set($event)" type="date"></dx-date-box>
+        <dx-date-box [value]="windowCloseDate()" (valueChange)="setWindowCloseDate($event)" type="date"></dx-date-box>
       </div>
       <div class="form-field form-field-btn">
         <dx-button [text]="'::Training.OpenWindow' | abpLocalization" type="success" stylingMode="contained" icon="event" (onClick)="onOpenWindow()"></dx-button>

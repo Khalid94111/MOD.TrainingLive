@@ -168,6 +168,14 @@ planItemsMap = signal<Map<string, any[]>>(new Map());
     this.plansGrid()?.instance.refresh();
   }
 
+  setWindowOpenDate(v: Date | string | number | null): void {
+    this.windowOpenDate.set(v ? new Date(v as any) : null);
+  }
+
+  setWindowCloseDate(v: Date | string | number | null): void {
+    this.windowCloseDate.set(v ? new Date(v as any) : null);
+  }
+
   async onOpenWindow(): Promise<void> {
     if (!this.windowOpenDate() || !this.windowCloseDate()) return;
     try {
