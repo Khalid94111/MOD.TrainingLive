@@ -102,11 +102,6 @@ export class CasualCourseSectionPaymentsComponent {
 
   // ── Course Payment ──
   coursePaymentStatus = computed(() => this.coursePayment()?.status);
-  coursePaymentVarianceOMR = computed(() => {
-    const cp = this.coursePayment();
-    if (!cp) return 0;
-    return (cp.nebrasAmountOMR ?? 0) - (cp.invoiceAmountOMR ?? 0);
-  });
   coursePaymentBadge = computed(() => {
     const cp = this.coursePayment();
     if (!cp) return { text: this.l.t('::Training.Payments.Section5.CourseEmptyBadge'), css: 'badge-empty' };
@@ -205,18 +200,6 @@ export class CasualCourseSectionPaymentsComponent {
 
   toUSD(omr: number | null | undefined): string {
     return ((omr ?? 0) * this.exchangeRate()).toLocaleString('en-US', { maximumFractionDigits: 0 });
-  }
-
-  varianceText(v: number): string {
-    if (Math.abs(v) < 0.001) return this.l.t('::Training.Payments.CoursePayment.VarianceEqual');
-    const sign = v > 0 ? '+' : '−';
-    return `${sign}${this.formatOMR(Math.abs(v))} ر.ع`;
-  }
-
-  varianceCss(v: number): string {
-    if (Math.abs(v) < 0.001) return 'variance-equal';
-    if (v < 0) return 'variance-down';
-    return 'variance-up';
   }
 
   paymentStatusText(s: PaymentStatus | undefined): string {

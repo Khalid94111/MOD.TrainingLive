@@ -37900,32 +37900,6 @@
           "isNullable": false
         },
         {
-          "name": "NebrasAmountOMR",
-          "jsonName": null,
-          "type": "System.Decimal",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "VarianceOMR",
-          "jsonName": null,
-          "type": "System.Decimal",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
           "name": "InvoiceDate",
           "jsonName": null,
           "type": "System.DateTime",
@@ -38192,19 +38166,6 @@
         },
         {
           "name": "InvoiceAmountOMR",
-          "jsonName": null,
-          "type": "System.Decimal",
-          "typeSimple": "number",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "NebrasAmountOMR",
           "jsonName": null,
           "type": "System.Decimal",
           "typeSimple": "number",

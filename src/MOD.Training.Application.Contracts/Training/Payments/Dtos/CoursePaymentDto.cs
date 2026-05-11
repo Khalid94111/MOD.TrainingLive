@@ -16,8 +16,6 @@ public class CoursePaymentDto : EntityDto<Guid>
     public FundingScenario? FundingScenario { get; set; }   // joined from CasualCourse; null on session arm
 
     public decimal InvoiceAmountOMR { get; set; }
-    public decimal NebrasAmountOMR { get; set; }
-    public decimal VarianceOMR { get; set; }                // computed: NebrasAmountOMR - InvoiceAmountOMR
     public DateTime InvoiceDate { get; set; }
 
     public string? InvoiceBlobName { get; set; }

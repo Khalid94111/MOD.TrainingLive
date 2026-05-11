@@ -90,14 +90,6 @@
                 <span>{{ '::Training.Payments.Section5.CourseInvoiceAmount' | abpLocalization }}</span>
                 <span class="payment-list-amount">{{ formatOMR(cp.invoiceAmountOMR) }} ر.ع</span>
               </li>
-              <li class="payment-list-row">
-                <span>{{ '::Training.Payments.Section5.CourseNebrasAmount' | abpLocalization }}</span>
-                <span class="payment-list-amount">{{ formatOMR(cp.nebrasAmountOMR) }} ر.ع</span>
-              </li>
-              <li class="payment-list-row">
-                <span>{{ '::Training.Payments.Section5.CourseVariance' | abpLocalization }}</span>
-                <span class="variance-pill {{ varianceCss(coursePaymentVarianceOMR()) }}">{{ varianceText(coursePaymentVarianceOMR()) }}</span>
-              </li>
               @if (cp.invoiceDate) {
                 <li class="payment-list-row">
                   <span>{{ '::Training.Payments.Section5.CourseInvoiceDate' | abpLocalization }}</span>

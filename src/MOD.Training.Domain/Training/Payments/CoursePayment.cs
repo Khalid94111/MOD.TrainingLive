@@ -22,7 +22,6 @@ public class CoursePayment : FullAuditedAggregateRoot<Guid>, IMultiTenant
     public Guid TrainingProviderId { get; set; }       // FK — must match SelectedPriceQuote.ProviderId on casual arm
 
     public decimal InvoiceAmountOMR { get; set; }      // what provider charged
-    public decimal NebrasAmountOMR { get; set; }       // what Nebras paid out
     public DateTime InvoiceDate { get; set; }
 
     // BlobStoring file refs — written by UploadInvoiceAsync, never via Create/Update DTO.

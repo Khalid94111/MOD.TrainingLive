@@ -739,7 +739,6 @@ builder.ConfigurePaymentsPhase4BBeta();
             b.Property(x => x.TrainingProviderId).IsRequired();
 
             b.Property(x => x.InvoiceAmountOMR).IsRequired().HasColumnType("decimal(18,3)");
-            b.Property(x => x.NebrasAmountOMR).IsRequired().HasColumnType("decimal(18,3)");
             b.Property(x => x.InvoiceDate).IsRequired();
 
             // BlobStoring file refs — populated only by UploadInvoiceAsync.

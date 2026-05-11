@@ -232,7 +232,7 @@ public class CoursePaymentAppService(
 
     private static void ValidateAmounts(CreateUpdateCoursePaymentDto input)
     {
-        if (input.InvoiceAmountOMR < 0 || input.NebrasAmountOMR < 0)
+        if (input.InvoiceAmountOMR < 0)
             throw new BusinessException("Training:CoursePayment:NegativeAmount");
     }
 
@@ -294,7 +294,6 @@ public class CoursePaymentAppService(
         {
             var d = toDtoMapper.Map(e);
             d.HasInvoice = !string.IsNullOrEmpty(e.InvoiceBlobName);
-            d.VarianceOMR = e.NebrasAmountOMR - e.InvoiceAmountOMR;
             return d;
         }).ToList();
         if (dtos.Count == 0) return dtos;

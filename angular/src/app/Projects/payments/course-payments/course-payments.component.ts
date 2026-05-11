@@ -134,7 +134,6 @@ export class CoursePaymentsComponent implements OnInit {
   fCourseId = signal<string | null>(null);
   fProviderId = signal<string | null>(null);
   fInvoiceAmountOMR = signal<number>(0);
-  fNebrasAmountOMR = signal<number>(0);
   fInvoiceDate = signal<string>(new Date().toISOString().substring(0, 10));
   fNotes = signal<string>('');
 
@@ -152,8 +151,6 @@ export class CoursePaymentsComponent implements OnInit {
       return true;
     });
   });
-
-  formVarianceOMR = computed(() => this.fNebrasAmountOMR() - this.fInvoiceAmountOMR());
 
   /**
    * Courses offered in the dialog picker. Filters out casual courses that
@@ -325,20 +322,6 @@ export class CoursePaymentsComponent implements OnInit {
     return (value ?? 0).toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
   }
 
-  varianceCss(v: number | null | undefined): string {
-    const n = v ?? 0;
-    if (Math.abs(n) < 0.001) return 'variance-equal';
-    if (n < 0) return 'variance-down';
-    return 'variance-up';
-  }
-
-  varianceText(v: number | null | undefined): string {
-    const n = v ?? 0;
-    if (Math.abs(n) < 0.001) return this.l.t('::Training.Payments.CoursePayment.VarianceEqual');
-    const sign = n > 0 ? '+' : '−';
-    return `${sign}${this.formatOMR(Math.abs(n))} ر.ع`;
-  }
-
   statusBadgeText(s: PaymentStatus | undefined): string {
     if (s === undefined) return '';
     return this.statusOptions.find(o => o.value === s)?.text ?? '';
@@ -422,7 +405,6 @@ export class CoursePaymentsComponent implements OnInit {
     this.fCourseId.set(row.casualCourseId ?? null);
     this.fProviderId.set(row.trainingProviderId ?? null);
     this.fInvoiceAmountOMR.set(row.invoiceAmountOMR ?? 0);
-    this.fNebrasAmountOMR.set(row.nebrasAmountOMR ?? 0);
     this.fInvoiceDate.set((row.invoiceDate ?? '').substring(0, 10));
     this.fNotes.set(row.notes ?? '');
     this.upload.set({
@@ -479,7 +461,6 @@ export class CoursePaymentsComponent implements OnInit {
       sessionId: null,
       trainingProviderId: this.dialogQuoteProviderId() ?? this.fProviderId() ?? '',
       invoiceAmountOMR: this.fInvoiceAmountOMR(),
-      nebrasAmountOMR: this.fNebrasAmountOMR(),
       invoiceDate: this.fInvoiceDate(),
       notes: this.fNotes() || null,
     };
@@ -510,7 +491,6 @@ export class CoursePaymentsComponent implements OnInit {
       }
       this.dialog.set({ visible: true, isEdit: true, id: saved.id, current: saved });
       this.fInvoiceAmountOMR.set(saved.invoiceAmountOMR ?? 0);
-      this.fNebrasAmountOMR.set(saved.nebrasAmountOMR ?? 0);
       await this.loadRows();
       this.showToast(this.l.t('::Training.Payments.CoursePayment.Dialog.SaveDraftSuccess'), 'success');
     } catch (err) {
@@ -642,7 +622,6 @@ export class CoursePaymentsComponent implements OnInit {
   updateCourseId(v: string | null): void { void this.onDialogCourseChange(v); }
   updateProviderId(v: string | null): void { this.fProviderId.set(v); }
   updateInvoiceAmount(v: number | null): void { this.fInvoiceAmountOMR.set(v ?? 0); }
-  updateNebrasAmount(v: number | null): void { this.fNebrasAmountOMR.set(v ?? 0); }
   updateInvoiceDate(v: string | null | Date): void {
     if (!v) { this.fInvoiceDate.set(''); return; }
     const iso = typeof v === 'string' ? v : v.toISOString();
@@ -654,7 +633,6 @@ export class CoursePaymentsComponent implements OnInit {
     this.fCourseId.set(null);
     this.fProviderId.set(null);
     this.fInvoiceAmountOMR.set(0);
-    this.fNebrasAmountOMR.set(0);
     this.fInvoiceDate.set(new Date().toISOString().substring(0, 10));
     this.fNotes.set('');
     this.dialogError.set(null);

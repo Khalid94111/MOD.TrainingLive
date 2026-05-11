@@ -59,8 +59,6 @@
     <dxi-column dataField="courseNameAr"          [caption]="'::Training.Payments.CoursePayment.Grid.Course'        | abpLocalization" [width]="220" cellTemplate="courseTpl"></dxi-column>
     <dxi-column dataField="trainingProviderName"  [caption]="'::Training.Payments.CoursePayment.Grid.Provider'      | abpLocalization" [width]="180" cellTemplate="providerTpl"></dxi-column>
     <dxi-column dataField="invoiceAmountOMR"      [caption]="'::Training.Payments.CoursePayment.Grid.InvoiceAmount' | abpLocalization" [width]="130" alignment="end" cellTemplate="moneyTpl"></dxi-column>
-    <dxi-column dataField="nebrasAmountOMR"       [caption]="'::Training.Payments.CoursePayment.Grid.NebrasAmount'  | abpLocalization" [width]="130" alignment="end" cellTemplate="moneyTpl"></dxi-column>
-    <dxi-column dataField="varianceOMR"           [caption]="'::Training.Payments.CoursePayment.Grid.Variance'      | abpLocalization" [width]="120" alignment="center" cellTemplate="varianceTpl"></dxi-column>
     <dxi-column dataField="invoiceDate"           [caption]="'::Training.Payments.CoursePayment.Grid.InvoiceDate'   | abpLocalization" [width]="120" cellTemplate="dateTpl"></dxi-column>
     <dxi-column                                   [caption]="'::Training.Payments.CoursePayment.Grid.Invoice'       | abpLocalization" [width]="160" cellTemplate="fileTpl" [allowSorting]="false"></dxi-column>
     <dxi-column dataField="status"                [caption]="'::Training.Payments.CoursePayment.Grid.Status'        | abpLocalization" [width]="120" alignment="center" cellTemplate="statusTpl"></dxi-column>
@@ -86,10 +84,6 @@
         <span class="currency-omr">{{ formatOMR(cell.value) }}</span>
         <span class="currency-usd">~ {{ toUSD(cell.value) }} USD</span>
       </div>
-    </div>
-
-    <div *dxTemplate="let cell of 'varianceTpl'">
-      <span class="variance-pill" [class]="varianceCss(cell.value)">{{ varianceText(cell.value) }}</span>
     </div>
 
     <div *dxTemplate="let cell of 'dateTpl'">
@@ -208,21 +202,6 @@
             <div class="usd-display">~ {{ toUSD(fInvoiceAmountOMR()) }} USD</div>
           </div>
           <div class="hint">{{ '::Training.Payments.CoursePayment.Dialog.InvoiceAmountHint' | abpLocalization }}</div>
-        </div>
-        <div class="form-field flex-1">
-          <label>{{ '::Training.Payments.CoursePayment.Dialog.NebrasAmount' | abpLocalization }} <span class="required">*</span></label>
-          <div class="dual-input">
-            <dx-number-box
-              [value]="fNebrasAmountOMR()"
-              [min]="0"
-              format="#,##0.000 'ر.ع'"
-              (onValueChanged)="updateNebrasAmount($event.value)">
-            </dx-number-box>
-            <div class="usd-display">~ {{ toUSD(fNebrasAmountOMR()) }} USD</div>
-          </div>
-          <div class="hint" [class.variance-up]="formVarianceOMR() > 0" [class.variance-down]="formVarianceOMR() < 0">
-            {{ '::Training.Payments.CoursePayment.Dialog.VarianceLabel' | abpLocalization }} {{ varianceText(formVarianceOMR()) }}
-          </div>
         </div>
       </div>
 

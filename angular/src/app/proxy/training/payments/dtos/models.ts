@@ -45,8 +45,6 @@ export interface CoursePaymentDto extends EntityDto<string> {
   courseNameAr?: string | null;
   fundingScenario?: FundingScenario | null;
   invoiceAmountOMR?: number;
-  nebrasAmountOMR?: number;
-  varianceOMR?: number;
   invoiceDate?: string;
   invoiceBlobName?: string | null;
   invoiceOriginalFileName?: string | null;
@@ -73,7 +71,6 @@ export interface CreateUpdateCoursePaymentDto {
   sessionId?: string | null;
   trainingProviderId?: string;
   invoiceAmountOMR?: number;
-  nebrasAmountOMR?: number;
   invoiceDate?: string;
   notes?: string | null;
 }

@@ -16,7 +16,6 @@ public class CreateUpdateCoursePaymentDto
     public Guid TrainingProviderId { get; set; }
 
     public decimal InvoiceAmountOMR { get; set; }
-    public decimal NebrasAmountOMR { get; set; }
     public DateTime InvoiceDate { get; set; }
 
     public string? Notes { get; set; }
