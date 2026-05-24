@@ -279,16 +279,21 @@ public class CasualCourseAppService(
             return (ExecutionStage.FinanciallyComplete, null, null);
         }
 
-        // External flow — five stages.
+        // External flow.
         if (course.SelectedPriceQuoteId == null)
             return (ExecutionStage.AwaitingQuoteSelection, null, null);
 
-        if (travel == null || travel.Status != TravelInstructionStatus.Issued)
-            return (ExecutionStage.AwaitingTravelInstruction, null, null);
+        // Patches 4 + 5 (v4.10.5) — travel instruction + per-nominee allowances apply only to
+        // ExternalInternational. ExternalLocal skips both stages: jump straight to course payment.
+        if (course.CourseType == CourseType.ExternalInternational)
+        {
+            if (travel == null || travel.Status != TravelInstructionStatus.Issued)
+                return (ExecutionStage.AwaitingTravelInstruction, null, null);
 
-        var confirmedAllowances = allowances?.Count(p => p.Status == PaymentStatus.Confirmed) ?? 0;
-        if (confirmedAllowances < nomineesCount)
-            return (ExecutionStage.AwaitingTravelAllowances, confirmedAllowances, nomineesCount);
+            var confirmedAllowances = allowances?.Count(p => p.Status == PaymentStatus.Confirmed) ?? 0;
+            if (confirmedAllowances < nomineesCount)
+                return (ExecutionStage.AwaitingTravelAllowances, confirmedAllowances, nomineesCount);
+        }
 
         if (payment == null || payment.Status != PaymentStatus.Confirmed)
             return (ExecutionStage.AwaitingCoursePayment, null, null);

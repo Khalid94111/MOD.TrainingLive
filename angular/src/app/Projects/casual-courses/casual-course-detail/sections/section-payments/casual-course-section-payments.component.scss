@@ -100,7 +100,8 @@
   gap: 14px;
   margin-top: 12px;
 
-  /* When travel card is hidden (internal courses) — let course-payment span. */
+  /* When travel card is hidden (Internal + ExternalLocal — Patch 5) — let
+     course-payment span the full row. */
   &:has(> :only-child) {
     grid-template-columns: 1fr;
   }

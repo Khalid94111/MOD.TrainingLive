@@ -72,7 +72,11 @@ export class CasualCourseSectionPaymentsComponent {
 
   // ── Course-type guards ──
   isInternal = computed(() => this.course()?.courseType === CourseType.Internal);
-  showTravelCard = computed(() => !this.isInternal());
+  // Patch 5 (v4.10.5) — travel allowances apply only to ExternalInternational courses.
+  // Internal + ExternalLocal have no travel instruction, so no allowances to pay.
+  showTravelCard = computed(
+    () => this.course()?.courseType === CourseType.ExternalInternational,
+  );
 
   // ── Travel Allowance aggregation ──
   travelConfirmedCount = computed(() =>
@@ -152,9 +156,10 @@ export class CasualCourseSectionPaymentsComponent {
   });
 
   // ── Lifecycle complete banner ──
+  // Travel is "vacuously OK" when the card is hidden (Internal + ExternalLocal — Patch 5).
   allConfirmed = computed(() => {
     const courseConfirmed = this.coursePayment()?.status === PaymentStatus.Confirmed;
-    const travelOk = this.isInternal() || this.allTravelConfirmed();
+    const travelOk = !this.showTravelCard() || this.allTravelConfirmed();
     return courseConfirmed && travelOk;
   });
 

@@ -19,7 +19,7 @@
 
   @if (state() === 'active') {
     <div class="section-body">
-      <div class="payments-grid">
+      <div class="payments-grid" [class.single-card]="!showTravelCard()">
         @if (showTravelCard()) {
           <!-- Travel Allowance card -->
           <div class="payment-card">

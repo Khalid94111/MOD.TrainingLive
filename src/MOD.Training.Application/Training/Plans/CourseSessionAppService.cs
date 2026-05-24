@@ -461,14 +461,14 @@ public class CourseSessionAppService(
         if (s.Status == SessionStatus.Planned)
             return SessionExecutionStage.AwaitingQuoteSelection;
 
-        var isInternal = s.CourseType == CourseType.Internal;
+        // Patches 4 + 5 (v4.10.5) — travel instruction + per-nominee allowances apply only to
+        // ExternalInternational. Internal + ExternalLocal both skip these stages.
+        var isInternational = s.CourseType == CourseType.ExternalInternational;
 
-        // External-only: travel instruction must be issued.
-        if (!isInternal && (ti == null || ti.Status != TravelInstructionStatus.Issued))
+        if (isInternational && (ti == null || ti.Status != TravelInstructionStatus.Issued))
             return SessionExecutionStage.AwaitingTravelInstruction;
 
-        // External-only: every nominee's travel allowance must be confirmed.
-        if (!isInternal && expectedNomineeCount > 0)
+        if (isInternational && expectedNomineeCount > 0)
         {
             var confirmed = allowances.Count(a => a.Status == PaymentStatus.Confirmed);
             if (confirmed < expectedNomineeCount)

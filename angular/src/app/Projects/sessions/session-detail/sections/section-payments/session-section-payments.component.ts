@@ -47,7 +47,11 @@ export class SessionSectionPaymentsComponent {
 
   // ── Course-type guards ──
   isInternal = computed(() => this.session()?.courseType === CourseType.Internal);
-  showTravelCard = computed(() => !this.isInternal());
+  // Patch 5 (v4.10.5) — travel allowances apply only to ExternalInternational courses.
+  // Internal and ExternalLocal have no travel instruction → no allowances to pay.
+  showTravelCard = computed(
+    () => this.session()?.courseType === CourseType.ExternalInternational,
+  );
 
   // ── Travel allowances rollup ──
   expectedNomineeCount = computed(() => {
@@ -89,8 +93,9 @@ export class SessionSectionPaymentsComponent {
   });
 
   // ── Aggregate "lifecycle complete" ──
+  // Travel is "vacuously confirmed" when the card is hidden (Internal + ExternalLocal).
   allTravelConfirmed = computed(() => {
-    if (this.isInternal()) return true;
+    if (!this.showTravelCard()) return true;
     const expected = this.expectedNomineeCount();
     return expected > 0 && this.travelConfirmedCount() === expected;
   });
