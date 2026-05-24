@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 
+import { sessionTravelInstructionsGuard } from './execution/travel-instructions/travel-instructions-route.guard';
+
 /**
  * Training module routes — Angular 21 standalone pattern.
  *
@@ -199,6 +201,7 @@ export const TRAINING_ROUTES: Routes = [
       {
         path: 'sessions/:id/travel-instructions',
         data: { parentArm: 'session' },
+        canActivate: [sessionTravelInstructionsGuard],
         loadComponent: () =>
           import('./execution/travel-instructions/travel-instructions.component')
             .then(m => m.TravelInstructionsComponent),
