@@ -1,0 +1,83 @@
+// Phase 4C-α Patch 1 (v4.10.1) — Course Info Bar.
+// Linear gradient + soft purple border. The hosting page applies `.info-bar-sticky`
+// to stick the bar below the status pipeline at scroll.
+
+.course-info-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  padding: 10px 18px;
+  background: linear-gradient(90deg, #eef4ff 0%, #fff8e1 100%);
+  border: 1px solid #c7b8e8;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.cib-icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.cib-bit {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cib-bit-course {
+  // Course name can be long — let it wrap if the row is narrow.
+  max-width: 100%;
+}
+
+.cib-label {
+  color: #475569;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.cib-value {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.cib-value-money {
+  color: #134e4a;
+  font-variant-numeric: tabular-nums;
+}
+
+.cib-value-scenario {
+  color: #c2410c;
+}
+
+.cib-breakdown {
+  color: #64748b;
+  font-weight: 400;
+  font-size: 12px;
+}
+
+.cib-unit {
+  color: #475569;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.cib-sep {
+  width: 1px;
+  align-self: stretch;
+  background: #c7b8e8;
+  opacity: 0.5;
+}
+
+// Mobile: drop separators and stack
+@media (max-width: 720px) {
+  .course-info-bar {
+    gap: 6px 12px;
+  }
+  .cib-sep {
+    display: none;
+  }
+}

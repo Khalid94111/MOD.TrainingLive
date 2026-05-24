@@ -1,0 +1,76 @@
+@if (open()) {
+  <div class="modal-backdrop" (click)="onCancel()">
+    <div class="modal-shell" (click)="$event.stopPropagation()">
+      <header class="modal-header">
+        <h3>{{ '::Training.AnnualPlan.Substitute.Title' | abpLocalization }}</h3>
+        <button type="button" class="modal-close" (click)="onCancel()">×</button>
+      </header>
+
+      <section class="modal-body">
+        <!-- Original nominee (locked context) -->
+        <div class="original-card">
+          <label>{{ '::Training.AnnualPlan.Substitute.OriginalNominee' | abpLocalization }}</label>
+          <div class="original-name">{{ originalEmployeeName() }}</div>
+        </div>
+
+        <!-- Replacement picker -->
+        <div class="field">
+          <label>{{ '::Training.AnnualPlan.Substitute.ReplacementLabel' | abpLocalization }}</label>
+          @if (loading()) {
+            <div class="state-line">{{ '::Training.AnnualPlan.Substitute.Loading' | abpLocalization }}</div>
+          } @else if (candidates().length === 0) {
+            <div class="state-line">{{ '::Training.AnnualPlan.Substitute.NoCandidates' | abpLocalization }}</div>
+          } @else {
+            <select class="filter-input" (change)="onReplacementChange($event)">
+              <option value="" [selected]="!fReplacementId()">
+                {{ '::Training.AnnualPlan.Substitute.PickPrompt' | abpLocalization }}
+              </option>
+              @for (c of candidates(); track c.employeeId) {
+                <option [value]="c.employeeId" [selected]="fReplacementId() === c.employeeId">
+                  {{ c.fullNameAr || c.fullNameEn }}
+                  @if (c.serviceNumber) { ({{ c.serviceNumber }}) }
+                </option>
+              }
+            </select>
+            <div class="hint">
+              {{ '::Training.AnnualPlan.Substitute.SameRankHint' | abpLocalization }}
+            </div>
+          }
+        </div>
+
+        @if (selectedCandidate()?.rankNameAr) {
+          <div class="rank-confirmed">
+            ✓ {{ '::Training.AnnualPlan.Substitute.RankMatchedPrefix' | abpLocalization }}
+            <strong>{{ selectedCandidate()!.rankNameAr }}</strong>
+          </div>
+        }
+
+        <!-- Reason -->
+        <div class="field">
+          <label>{{ '::Training.AnnualPlan.Substitute.ReasonLabel' | abpLocalization }}</label>
+          <textarea
+            class="filter-input reason-area"
+            rows="3"
+            [value]="fReason()"
+            (input)="onReasonChange($event)"
+            [placeholder]="('::Training.AnnualPlan.Substitute.ReasonPlaceholder' | abpLocalization)"></textarea>
+        </div>
+
+        @if (error()) {
+          <div class="error-banner">{{ error() }}</div>
+        }
+      </section>
+
+      <footer class="modal-footer">
+        <button type="button" class="btn-ghost" (click)="onCancel()">
+          {{ '::Training.AnnualPlan.Substitute.Cancel' | abpLocalization }}
+        </button>
+        <button type="button" class="btn-primary"
+                [disabled]="!selectedCandidate()"
+                (click)="onConfirm()">
+          {{ '::Training.AnnualPlan.Substitute.Confirm' | abpLocalization }}
+        </button>
+      </footer>
+    </div>
+  </div>
+}

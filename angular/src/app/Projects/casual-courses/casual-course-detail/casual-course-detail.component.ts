@@ -26,6 +26,8 @@ import { ExchangeRateService } from '../../shared/services/finance-proxy.service
 import {
   CASUAL_COURSE_STATUS_OPTIONS,
   CasualCourseStatus,
+  CourseInfoBarComponent,
+  type CourseInfoBarData,
   CourseType,
   TrainingLocalizationHelper,
 } from '../../shared';
@@ -71,6 +73,7 @@ type SectionKey = 'details' | 'financials' | 'quotes' | 'travel' | 'payments';
     CommonModule,
     CasualCourseStatusPipelineComponent,
     CasualCourseHeaderActionBarComponent,
+    CourseInfoBarComponent,
     CasualCourseSectionDetailsComponent,
     CasualCourseSectionFinancialsComponent,
     CasualCourseSectionQuotesComponent,
@@ -106,6 +109,23 @@ export class CasualCourseDetailComponent implements OnInit {
   exchangeRate = signal<number>(2.6);
   loading = signal<boolean>(false);
 
+  // Phase 4C-α Patch 1 — feeds <app-course-info-bar variant="casual">.
+  // Null until the course loads; the template skips rendering the bar in that case.
+  infoBarData = computed<CourseInfoBarData | null>(() => {
+    const c = this.course();
+    if (!c) return null;
+    return {
+      courseName: c.courseNameAr || '',
+      unitName: c.unitName || null,
+      durationDays: c.durationDays ?? 0,
+      nomineesCount: c.nomineesCount ?? 0,
+      officersCount: c.officersCount ?? 0,
+      enlistedCount: c.enlistedCount ?? 0,
+      approvedCostOMR: c.estimatedTotalCost ?? 0,
+      fundingScenarioLabel: c.fundingScenarioLabel ?? null,
+    };
+  });
+
   /** Section a user explicitly expanded (overrides default-active). */
   private userExpanded = signal<SectionKey | null>(null);
   /** Sections the user explicitly collapsed even though they would default to active. */
@@ -130,6 +150,9 @@ export class CasualCourseDetailComponent implements OnInit {
 
   // ── Course summary computeds ───────────────────────────────────────
   isInternal = computed(() => this.course()?.courseType === CourseType.Internal);
+  // Patch 4 (v4.10.4) — ExternalLocal: provider is in-country, so Section 4 is hidden
+  // and Section 5 doesn't gate on TravelInstruction.
+  isLocal = computed(() => this.course()?.courseType === CourseType.ExternalLocal);
   hasSelectedQuote = computed(() => !!this.course()?.selectedPriceQuoteId);
   status = computed(() => this.course()?.status);
 
@@ -251,7 +274,8 @@ export class CasualCourseDetailComponent implements OnInit {
 
   quotesHidden = computed(() => this.isInternal());
 
-  travelHidden = computed(() => this.isInternal());
+  // Hidden for Internal AND ExternalLocal (no travel for in-country providers).
+  travelHidden = computed(() => this.isInternal() || this.isLocal());
 
   /** Section 5 — Payments & Reallocation. Always visible after THApproved (per
    *  prompt §"Section state matrix"). External courses also require an Issued
@@ -263,7 +287,8 @@ export class CasualCourseDetailComponent implements OnInit {
 
   allTravelPaymentsConfirmed = computed(() => {
     const expected = this.course()?.nomineesCount ?? this.course()?.nominations?.length ?? 0;
-    if (this.isInternal()) return true;
+    // Internal and Local both skip travel-allowance payments (no TI, no travel).
+    if (this.isInternal() || this.isLocal()) return true;
     if (expected === 0) return false;
     const confirmed = this.travelAllowancePayments()
       .filter(p => p.status === PaymentStatus.Confirmed).length;
@@ -288,7 +313,8 @@ export class CasualCourseDetailComponent implements OnInit {
 
   private paymentsDefaultState = computed<SectionState>(() => {
     if (this.status() !== CasualCourseStatus.THApproved) return 'locked';
-    if (!this.isInternal() && !this.travelInstructionIssued()) return 'locked';
+    // Only ExternalInternational gates Section 5 on an Issued TI.
+    if (!this.isInternal() && !this.isLocal() && !this.travelInstructionIssued()) return 'locked';
     if (this.allPaymentsLifecycleComplete()) return 'collapsed';
     return 'active';
   });
@@ -305,7 +331,7 @@ export class CasualCourseDetailComponent implements OnInit {
     if (this.status() !== CasualCourseStatus.THApproved) {
       return this.l.t('::Training.Payments.Section5.LockReasonNoTH');
     }
-    if (!this.isInternal() && !this.travelInstructionIssued()) {
+    if (!this.isInternal() && !this.isLocal() && !this.travelInstructionIssued()) {
       return this.l.t('::Training.Payments.Section5.LockReasonNoTI');
     }
     return '';

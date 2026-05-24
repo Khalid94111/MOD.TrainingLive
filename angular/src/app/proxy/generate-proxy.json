@@ -4281,6 +4281,406 @@
       "rootPath": "app",
       "remoteServiceName": "Default",
       "controllers": {
+        "MOD.Training.Training.AnnualPlanSessions.AnnualPlanSessionAppService": {
+          "controllerName": "AnnualPlanSession",
+          "controllerGroupName": "AnnualPlanSession",
+          "isRemoteService": true,
+          "isIntegrationService": false,
+          "apiVersion": null,
+          "type": "MOD.Training.Training.AnnualPlanSessions.AnnualPlanSessionAppService",
+          "interfaces": [
+            {
+              "type": "MOD.Training.Training.AnnualPlanSessions.IAnnualPlanSessionAppService",
+              "name": "IAnnualPlanSessionAppService",
+              "methods": [
+                {
+                  "name": "GetPlanItemsQueueAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.AnnualPlanSessions.Dtos.PlanItemQueueGetListInput, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.AnnualPlanSessions.Dtos.PlanItemQueueGetListInput",
+                      "typeSimple": "MOD.Training.Training.AnnualPlanSessions.Dtos.PlanItemQueueGetListInput",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "Volo.Abp.Application.Dtos.PagedResultDto<MOD.Training.Training.AnnualPlanSessions.Dtos.PlanItemQueueItemDto>",
+                    "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<MOD.Training.Training.AnnualPlanSessions.Dtos.PlanItemQueueItemDto>"
+                  }
+                },
+                {
+                  "name": "CreateInternalSessionAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.AnnualPlanSessions.Dtos.CreateInternalSessionDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.AnnualPlanSessions.Dtos.CreateInternalSessionDto",
+                      "typeSimple": "MOD.Training.Training.AnnualPlanSessions.Dtos.CreateInternalSessionDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.Plans.Dtos.CourseSessionDto",
+                    "typeSimple": "MOD.Training.Training.Plans.Dtos.CourseSessionDto"
+                  }
+                },
+                {
+                  "name": "CreateExternalSessionAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.AnnualPlanSessions.Dtos.CreateExternalSessionDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.AnnualPlanSessions.Dtos.CreateExternalSessionDto",
+                      "typeSimple": "MOD.Training.Training.AnnualPlanSessions.Dtos.CreateExternalSessionDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.Plans.Dtos.CourseSessionDto",
+                    "typeSimple": "MOD.Training.Training.Plans.Dtos.CourseSessionDto"
+                  }
+                },
+                {
+                  "name": "GetAvailableSubstitutesAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "planItemId",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "originalEmployeeId",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "System.Collections.Generic.List<MOD.Training.Training.AnnualPlanSessions.Dtos.AvailableSubstituteDto>",
+                    "typeSimple": "[MOD.Training.Training.AnnualPlanSessions.Dtos.AvailableSubstituteDto]"
+                  }
+                },
+                {
+                  "name": "GetProgressDashboardAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "year",
+                      "typeAsString": "System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib",
+                      "type": "System.Int32?",
+                      "typeSimple": "number?",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.AnnualPlanSessions.Dtos.AnnualPlanProgressDto",
+                    "typeSimple": "MOD.Training.Training.AnnualPlanSessions.Dtos.AnnualPlanProgressDto"
+                  }
+                }
+              ]
+            }
+          ],
+          "actions": {
+            "GetPlanItemsQueueAsyncByInput": {
+              "uniqueName": "GetPlanItemsQueueAsyncByInput",
+              "name": "GetPlanItemsQueueAsync",
+              "httpMethod": "GET",
+              "url": "api/app/annual-plan-session/plan-items-queue",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.AnnualPlanSessions.Dtos.PlanItemQueueGetListInput, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.AnnualPlanSessions.Dtos.PlanItemQueueGetListInput",
+                  "typeSimple": "MOD.Training.Training.AnnualPlanSessions.Dtos.PlanItemQueueGetListInput",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "Year",
+                  "jsonName": null,
+                  "type": "System.Int32?",
+                  "typeSimple": "number?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "Quarter",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.Enums.PreferredQuarter?",
+                  "typeSimple": "enum?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "Priority",
+                  "jsonName": null,
+                  "type": "System.Int32?",
+                  "typeSimple": "number?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "CourseType",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.Enums.CourseType?",
+                  "typeSimple": "enum?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "UnitId",
+                  "jsonName": null,
+                  "type": "System.Guid?",
+                  "typeSimple": "string?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "Sorting",
+                  "jsonName": null,
+                  "type": "System.String",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "SkipCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "MaxResultCount",
+                  "jsonName": null,
+                  "type": "System.Int32",
+                  "typeSimple": "number",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                }
+              ],
+              "returnValue": {
+                "type": "Volo.Abp.Application.Dtos.PagedResultDto<MOD.Training.Training.AnnualPlanSessions.Dtos.PlanItemQueueItemDto>",
+                "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<MOD.Training.Training.AnnualPlanSessions.Dtos.PlanItemQueueItemDto>"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.AnnualPlanSessions.IAnnualPlanSessionAppService"
+            },
+            "CreateInternalSessionAsyncByInput": {
+              "uniqueName": "CreateInternalSessionAsyncByInput",
+              "name": "CreateInternalSessionAsync",
+              "httpMethod": "POST",
+              "url": "api/app/annual-plan-session/internal-session",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.AnnualPlanSessions.Dtos.CreateInternalSessionDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.AnnualPlanSessions.Dtos.CreateInternalSessionDto",
+                  "typeSimple": "MOD.Training.Training.AnnualPlanSessions.Dtos.CreateInternalSessionDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.AnnualPlanSessions.Dtos.CreateInternalSessionDto",
+                  "typeSimple": "MOD.Training.Training.AnnualPlanSessions.Dtos.CreateInternalSessionDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.Plans.Dtos.CourseSessionDto",
+                "typeSimple": "MOD.Training.Training.Plans.Dtos.CourseSessionDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.AnnualPlanSessions.IAnnualPlanSessionAppService"
+            },
+            "CreateExternalSessionAsyncByInput": {
+              "uniqueName": "CreateExternalSessionAsyncByInput",
+              "name": "CreateExternalSessionAsync",
+              "httpMethod": "POST",
+              "url": "api/app/annual-plan-session/external-session",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.AnnualPlanSessions.Dtos.CreateExternalSessionDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.AnnualPlanSessions.Dtos.CreateExternalSessionDto",
+                  "typeSimple": "MOD.Training.Training.AnnualPlanSessions.Dtos.CreateExternalSessionDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.AnnualPlanSessions.Dtos.CreateExternalSessionDto",
+                  "typeSimple": "MOD.Training.Training.AnnualPlanSessions.Dtos.CreateExternalSessionDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.Plans.Dtos.CourseSessionDto",
+                "typeSimple": "MOD.Training.Training.Plans.Dtos.CourseSessionDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.AnnualPlanSessions.IAnnualPlanSessionAppService"
+            },
+            "GetAvailableSubstitutesAsyncByPlanItemIdAndOriginalEmployeeId": {
+              "uniqueName": "GetAvailableSubstitutesAsyncByPlanItemIdAndOriginalEmployeeId",
+              "name": "GetAvailableSubstitutesAsync",
+              "httpMethod": "GET",
+              "url": "api/app/annual-plan-session/available-substitutes",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "planItemId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "originalEmployeeId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "planItemId",
+                  "name": "planItemId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "originalEmployeeId",
+                  "name": "originalEmployeeId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "System.Collections.Generic.List<MOD.Training.Training.AnnualPlanSessions.Dtos.AvailableSubstituteDto>",
+                "typeSimple": "[MOD.Training.Training.AnnualPlanSessions.Dtos.AvailableSubstituteDto]"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.AnnualPlanSessions.IAnnualPlanSessionAppService"
+            },
+            "GetProgressDashboardAsyncByYear": {
+              "uniqueName": "GetProgressDashboardAsyncByYear",
+              "name": "GetProgressDashboardAsync",
+              "httpMethod": "GET",
+              "url": "api/app/annual-plan-session/progress-dashboard",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "year",
+                  "typeAsString": "System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib",
+                  "type": "System.Int32?",
+                  "typeSimple": "number?",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "year",
+                  "name": "year",
+                  "jsonName": null,
+                  "type": "System.Int32?",
+                  "typeSimple": "number?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.AnnualPlanSessions.Dtos.AnnualPlanProgressDto",
+                "typeSimple": "MOD.Training.Training.AnnualPlanSessions.Dtos.AnnualPlanProgressDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.AnnualPlanSessions.IAnnualPlanSessionAppService"
+            }
+          }
+        },
         "MOD.Training.Training.CasualCourses.CasualCourseAppService": {
           "controllerName": "CasualCourse",
           "controllerGroupName": "CasualCourse",
@@ -4807,6 +5207,18 @@
                   "jsonName": null,
                   "type": "System.String",
                   "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "ExecutionStage",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.Enums.ExecutionStage?",
+                  "typeSimple": "enum?",
                   "isOptional": false,
                   "defaultValue": null,
                   "constraintTypes": null,
@@ -13399,6 +13811,31 @@
                   }
                 },
                 {
+                  "name": "GetDefaultsAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "casualCourseId",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "nominationId",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.Payments.Dtos.TravelAllowancePaymentDefaultsDto",
+                    "typeSimple": "MOD.Training.Training.Payments.Dtos.TravelAllowancePaymentDefaultsDto"
+                  }
+                },
+                {
                   "name": "GetAsync",
                   "parametersOnMethod": [
                     {
@@ -13796,6 +14233,63 @@
               "allowAnonymous": false,
               "implementFrom": "Volo.Abp.Application.Services.IDeleteAppService<System.Guid>"
             },
+            "GetDefaultsAsyncByCasualCourseIdAndNominationId": {
+              "uniqueName": "GetDefaultsAsyncByCasualCourseIdAndNominationId",
+              "name": "GetDefaultsAsync",
+              "httpMethod": "GET",
+              "url": "api/app/travel-allowance-payment/defaults",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "casualCourseId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "nominationId",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "casualCourseId",
+                  "name": "casualCourseId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "nominationId",
+                  "name": "nominationId",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.Payments.Dtos.TravelAllowancePaymentDefaultsDto",
+                "typeSimple": "MOD.Training.Training.Payments.Dtos.TravelAllowancePaymentDefaultsDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.Payments.ITravelAllowancePaymentAppService"
+            },
             "ConfirmAsyncById": {
               "uniqueName": "ConfirmAsyncById",
               "name": "ConfirmAsync",
@@ -13860,8 +14354,8 @@
                     }
                   ],
                   "returnValue": {
-                    "type": "MOD.Training.Training.Plans.Dtos.CourseSessionDto",
-                    "typeSimple": "MOD.Training.Training.Plans.Dtos.CourseSessionDto"
+                    "type": "MOD.Training.Training.Plans.Dtos.CourseSessionDetailDto",
+                    "typeSimple": "MOD.Training.Training.Plans.Dtos.CourseSessionDetailDto"
                   }
                 },
                 {
@@ -13882,24 +14376,7 @@
                   }
                 },
                 {
-                  "name": "CreateAsync",
-                  "parametersOnMethod": [
-                    {
-                      "name": "input",
-                      "typeAsString": "MOD.Training.Training.Plans.Dtos.CreateUpdateCourseSessionDto, MOD.Training.Application.Contracts",
-                      "type": "MOD.Training.Training.Plans.Dtos.CreateUpdateCourseSessionDto",
-                      "typeSimple": "MOD.Training.Training.Plans.Dtos.CreateUpdateCourseSessionDto",
-                      "isOptional": false,
-                      "defaultValue": null
-                    }
-                  ],
-                  "returnValue": {
-                    "type": "MOD.Training.Training.Plans.Dtos.CourseSessionDto",
-                    "typeSimple": "MOD.Training.Training.Plans.Dtos.CourseSessionDto"
-                  }
-                },
-                {
-                  "name": "UpdateAsync",
+                  "name": "SelectPriceQuoteAsync",
                   "parametersOnMethod": [
                     {
                       "name": "id",
@@ -13911,20 +14388,20 @@
                     },
                     {
                       "name": "input",
-                      "typeAsString": "MOD.Training.Training.Plans.Dtos.CreateUpdateCourseSessionDto, MOD.Training.Application.Contracts",
-                      "type": "MOD.Training.Training.Plans.Dtos.CreateUpdateCourseSessionDto",
-                      "typeSimple": "MOD.Training.Training.Plans.Dtos.CreateUpdateCourseSessionDto",
+                      "typeAsString": "MOD.Training.Training.Plans.Dtos.SelectSessionPriceQuoteDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.Plans.Dtos.SelectSessionPriceQuoteDto",
+                      "typeSimple": "MOD.Training.Training.Plans.Dtos.SelectSessionPriceQuoteDto",
                       "isOptional": false,
                       "defaultValue": null
                     }
                   ],
                   "returnValue": {
-                    "type": "MOD.Training.Training.Plans.Dtos.CourseSessionDto",
-                    "typeSimple": "MOD.Training.Training.Plans.Dtos.CourseSessionDto"
+                    "type": "MOD.Training.Training.Plans.Dtos.CourseSessionDetailDto",
+                    "typeSimple": "MOD.Training.Training.Plans.Dtos.CourseSessionDetailDto"
                   }
                 },
                 {
-                  "name": "DeleteAsync",
+                  "name": "MarkInProgressAsync",
                   "parametersOnMethod": [
                     {
                       "name": "id",
@@ -13936,8 +14413,50 @@
                     }
                   ],
                   "returnValue": {
-                    "type": "System.Void",
-                    "typeSimple": "System.Void"
+                    "type": "MOD.Training.Training.Plans.Dtos.CourseSessionDetailDto",
+                    "typeSimple": "MOD.Training.Training.Plans.Dtos.CourseSessionDetailDto"
+                  }
+                },
+                {
+                  "name": "MarkCompletedAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.Plans.Dtos.CourseSessionDetailDto",
+                    "typeSimple": "MOD.Training.Training.Plans.Dtos.CourseSessionDetailDto"
+                  }
+                },
+                {
+                  "name": "CancelAsync",
+                  "parametersOnMethod": [
+                    {
+                      "name": "id",
+                      "typeAsString": "System.Guid, System.Private.CoreLib",
+                      "type": "System.Guid",
+                      "typeSimple": "string",
+                      "isOptional": false,
+                      "defaultValue": null
+                    },
+                    {
+                      "name": "input",
+                      "typeAsString": "MOD.Training.Training.Plans.Dtos.CancelSessionDto, MOD.Training.Application.Contracts",
+                      "type": "MOD.Training.Training.Plans.Dtos.CancelSessionDto",
+                      "typeSimple": "MOD.Training.Training.Plans.Dtos.CancelSessionDto",
+                      "isOptional": false,
+                      "defaultValue": null
+                    }
+                  ],
+                  "returnValue": {
+                    "type": "MOD.Training.Training.Plans.Dtos.CourseSessionDetailDto",
+                    "typeSimple": "MOD.Training.Training.Plans.Dtos.CourseSessionDetailDto"
                   }
                 }
               ]
@@ -13975,11 +14494,11 @@
                 }
               ],
               "returnValue": {
-                "type": "MOD.Training.Training.Plans.Dtos.CourseSessionDto",
-                "typeSimple": "MOD.Training.Training.Plans.Dtos.CourseSessionDto"
+                "type": "MOD.Training.Training.Plans.Dtos.CourseSessionDetailDto",
+                "typeSimple": "MOD.Training.Training.Plans.Dtos.CourseSessionDetailDto"
               },
               "allowAnonymous": false,
-              "implementFrom": "Volo.Abp.Application.Services.IReadOnlyAppService<MOD.Training.Training.Plans.Dtos.CourseSessionDto,MOD.Training.Training.Plans.Dtos.CourseSessionDto,System.Guid,MOD.Training.Training.Plans.Dtos.CourseSessionGetListInput>"
+              "implementFrom": "MOD.Training.Training.Plans.ICourseSessionAppService"
             },
             "GetListAsyncByInput": {
               "uniqueName": "GetListAsyncByInput",
@@ -14000,10 +14519,46 @@
               "parameters": [
                 {
                   "nameOnMethod": "input",
-                  "name": "CourseId",
+                  "name": "TrainingPlanItemId",
                   "jsonName": null,
                   "type": "System.Guid?",
                   "typeSimple": "string?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "TrainingCenterPlanItemId",
+                  "jsonName": null,
+                  "type": "System.Guid?",
+                  "typeSimple": "string?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "TenantCourseId",
+                  "jsonName": null,
+                  "type": "System.Guid?",
+                  "typeSimple": "string?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "CourseType",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.Enums.CourseType?",
+                  "typeSimple": "enum?",
                   "isOptional": false,
                   "defaultValue": null,
                   "constraintTypes": null,
@@ -14016,6 +14571,42 @@
                   "jsonName": null,
                   "type": "MOD.Training.Training.Enums.SessionStatus?",
                   "typeSimple": "enum?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "ExecutionStage",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.Enums.SessionExecutionStage?",
+                  "typeSimple": "enum?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "PlanYear",
+                  "jsonName": null,
+                  "type": "System.Int32?",
+                  "typeSimple": "number?",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "ModelBinding",
+                  "descriptorName": "input"
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "PreferredQuarter",
+                  "jsonName": null,
+                  "type": "System.Int32?",
+                  "typeSimple": "number?",
                   "isOptional": false,
                   "defaultValue": null,
                   "constraintTypes": null,
@@ -14064,50 +14655,13 @@
                 "typeSimple": "Volo.Abp.Application.Dtos.PagedResultDto<MOD.Training.Training.Plans.Dtos.CourseSessionDto>"
               },
               "allowAnonymous": false,
-              "implementFrom": "Volo.Abp.Application.Services.IReadOnlyAppService<MOD.Training.Training.Plans.Dtos.CourseSessionDto,MOD.Training.Training.Plans.Dtos.CourseSessionDto,System.Guid,MOD.Training.Training.Plans.Dtos.CourseSessionGetListInput>"
+              "implementFrom": "MOD.Training.Training.Plans.ICourseSessionAppService"
             },
-            "CreateAsyncByInput": {
-              "uniqueName": "CreateAsyncByInput",
-              "name": "CreateAsync",
+            "SelectPriceQuoteAsyncByIdAndInput": {
+              "uniqueName": "SelectPriceQuoteAsyncByIdAndInput",
+              "name": "SelectPriceQuoteAsync",
               "httpMethod": "POST",
-              "url": "api/app/course-session",
-              "supportedVersions": [],
-              "parametersOnMethod": [
-                {
-                  "name": "input",
-                  "typeAsString": "MOD.Training.Training.Plans.Dtos.CreateUpdateCourseSessionDto, MOD.Training.Application.Contracts",
-                  "type": "MOD.Training.Training.Plans.Dtos.CreateUpdateCourseSessionDto",
-                  "typeSimple": "MOD.Training.Training.Plans.Dtos.CreateUpdateCourseSessionDto",
-                  "isOptional": false,
-                  "defaultValue": null
-                }
-              ],
-              "parameters": [
-                {
-                  "nameOnMethod": "input",
-                  "name": "input",
-                  "jsonName": null,
-                  "type": "MOD.Training.Training.Plans.Dtos.CreateUpdateCourseSessionDto",
-                  "typeSimple": "MOD.Training.Training.Plans.Dtos.CreateUpdateCourseSessionDto",
-                  "isOptional": false,
-                  "defaultValue": null,
-                  "constraintTypes": null,
-                  "bindingSourceId": "Body",
-                  "descriptorName": ""
-                }
-              ],
-              "returnValue": {
-                "type": "MOD.Training.Training.Plans.Dtos.CourseSessionDto",
-                "typeSimple": "MOD.Training.Training.Plans.Dtos.CourseSessionDto"
-              },
-              "allowAnonymous": false,
-              "implementFrom": "Volo.Abp.Application.Services.ICreateAppService<MOD.Training.Training.Plans.Dtos.CourseSessionDto,MOD.Training.Training.Plans.Dtos.CreateUpdateCourseSessionDto>"
-            },
-            "UpdateAsyncByIdAndInput": {
-              "uniqueName": "UpdateAsyncByIdAndInput",
-              "name": "UpdateAsync",
-              "httpMethod": "PUT",
-              "url": "api/app/course-session/{id}",
+              "url": "api/app/course-session/{id}/select-price-quote",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -14120,9 +14674,9 @@
                 },
                 {
                   "name": "input",
-                  "typeAsString": "MOD.Training.Training.Plans.Dtos.CreateUpdateCourseSessionDto, MOD.Training.Application.Contracts",
-                  "type": "MOD.Training.Training.Plans.Dtos.CreateUpdateCourseSessionDto",
-                  "typeSimple": "MOD.Training.Training.Plans.Dtos.CreateUpdateCourseSessionDto",
+                  "typeAsString": "MOD.Training.Training.Plans.Dtos.SelectSessionPriceQuoteDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.Plans.Dtos.SelectSessionPriceQuoteDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.SelectSessionPriceQuoteDto",
                   "isOptional": false,
                   "defaultValue": null
                 }
@@ -14144,8 +14698,8 @@
                   "nameOnMethod": "input",
                   "name": "input",
                   "jsonName": null,
-                  "type": "MOD.Training.Training.Plans.Dtos.CreateUpdateCourseSessionDto",
-                  "typeSimple": "MOD.Training.Training.Plans.Dtos.CreateUpdateCourseSessionDto",
+                  "type": "MOD.Training.Training.Plans.Dtos.SelectSessionPriceQuoteDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.SelectSessionPriceQuoteDto",
                   "isOptional": false,
                   "defaultValue": null,
                   "constraintTypes": null,
@@ -14154,17 +14708,17 @@
                 }
               ],
               "returnValue": {
-                "type": "MOD.Training.Training.Plans.Dtos.CourseSessionDto",
-                "typeSimple": "MOD.Training.Training.Plans.Dtos.CourseSessionDto"
+                "type": "MOD.Training.Training.Plans.Dtos.CourseSessionDetailDto",
+                "typeSimple": "MOD.Training.Training.Plans.Dtos.CourseSessionDetailDto"
               },
               "allowAnonymous": false,
-              "implementFrom": "Volo.Abp.Application.Services.IUpdateAppService<MOD.Training.Training.Plans.Dtos.CourseSessionDto,System.Guid,MOD.Training.Training.Plans.Dtos.CreateUpdateCourseSessionDto>"
+              "implementFrom": "MOD.Training.Training.Plans.ICourseSessionAppService"
             },
-            "DeleteAsyncById": {
-              "uniqueName": "DeleteAsyncById",
-              "name": "DeleteAsync",
-              "httpMethod": "DELETE",
-              "url": "api/app/course-session/{id}",
+            "MarkInProgressAsyncById": {
+              "uniqueName": "MarkInProgressAsyncById",
+              "name": "MarkInProgressAsync",
+              "httpMethod": "POST",
+              "url": "api/app/course-session/{id}/mark-in-progress",
               "supportedVersions": [],
               "parametersOnMethod": [
                 {
@@ -14191,11 +14745,105 @@
                 }
               ],
               "returnValue": {
-                "type": "System.Void",
-                "typeSimple": "System.Void"
+                "type": "MOD.Training.Training.Plans.Dtos.CourseSessionDetailDto",
+                "typeSimple": "MOD.Training.Training.Plans.Dtos.CourseSessionDetailDto"
               },
               "allowAnonymous": false,
-              "implementFrom": "Volo.Abp.Application.Services.IDeleteAppService<System.Guid>"
+              "implementFrom": "MOD.Training.Training.Plans.ICourseSessionAppService"
+            },
+            "MarkCompletedAsyncById": {
+              "uniqueName": "MarkCompletedAsyncById",
+              "name": "MarkCompletedAsync",
+              "httpMethod": "POST",
+              "url": "api/app/course-session/{id}/mark-completed",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.Plans.Dtos.CourseSessionDetailDto",
+                "typeSimple": "MOD.Training.Training.Plans.Dtos.CourseSessionDetailDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.Plans.ICourseSessionAppService"
+            },
+            "CancelAsyncByIdAndInput": {
+              "uniqueName": "CancelAsyncByIdAndInput",
+              "name": "CancelAsync",
+              "httpMethod": "POST",
+              "url": "api/app/course-session/{id}/cancel",
+              "supportedVersions": [],
+              "parametersOnMethod": [
+                {
+                  "name": "id",
+                  "typeAsString": "System.Guid, System.Private.CoreLib",
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null
+                },
+                {
+                  "name": "input",
+                  "typeAsString": "MOD.Training.Training.Plans.Dtos.CancelSessionDto, MOD.Training.Application.Contracts",
+                  "type": "MOD.Training.Training.Plans.Dtos.CancelSessionDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.CancelSessionDto",
+                  "isOptional": false,
+                  "defaultValue": null
+                }
+              ],
+              "parameters": [
+                {
+                  "nameOnMethod": "id",
+                  "name": "id",
+                  "jsonName": null,
+                  "type": "System.Guid",
+                  "typeSimple": "string",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": [],
+                  "bindingSourceId": "Path",
+                  "descriptorName": ""
+                },
+                {
+                  "nameOnMethod": "input",
+                  "name": "input",
+                  "jsonName": null,
+                  "type": "MOD.Training.Training.Plans.Dtos.CancelSessionDto",
+                  "typeSimple": "MOD.Training.Training.Plans.Dtos.CancelSessionDto",
+                  "isOptional": false,
+                  "defaultValue": null,
+                  "constraintTypes": null,
+                  "bindingSourceId": "Body",
+                  "descriptorName": ""
+                }
+              ],
+              "returnValue": {
+                "type": "MOD.Training.Training.Plans.Dtos.CourseSessionDetailDto",
+                "typeSimple": "MOD.Training.Training.Plans.Dtos.CourseSessionDetailDto"
+              },
+              "allowAnonymous": false,
+              "implementFrom": "MOD.Training.Training.Plans.ICourseSessionAppService"
             }
           }
         },
@@ -29952,6 +30600,889 @@
         }
       ]
     },
+    "MOD.Training.Training.AnnualPlanSessions.Dtos.AnnualPlanProgressDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Year",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "TotalPlanItems",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "PlannedSessionCount",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ScheduledSessionCount",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "InProgressSessionCount",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "CompletedSessionCount",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "CancelledSessionCount",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "OverdueCount",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "OverallProgressPercent",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ProgressByQuarter",
+          "jsonName": null,
+          "type": "[MOD.Training.Training.AnnualPlanSessions.Dtos.QuarterProgressDto]",
+          "typeSimple": "[MOD.Training.Training.AnnualPlanSessions.Dtos.QuarterProgressDto]",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ProgressByUnit",
+          "jsonName": null,
+          "type": "[MOD.Training.Training.AnnualPlanSessions.Dtos.UnitProgressDto]",
+          "typeSimple": "[MOD.Training.Training.AnnualPlanSessions.Dtos.UnitProgressDto]",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Alerts",
+          "jsonName": null,
+          "type": "[MOD.Training.Training.AnnualPlanSessions.Dtos.OverdueAlertDto]",
+          "typeSimple": "[MOD.Training.Training.AnnualPlanSessions.Dtos.OverdueAlertDto]",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Training.AnnualPlanSessions.Dtos.AvailableSubstituteDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "EmployeeId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "RankId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ServiceNumber",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "FullNameAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "FullNameEn",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "RankNameAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        }
+      ]
+    },
+    "MOD.Training.Training.AnnualPlanSessions.Dtos.CreateExternalSessionDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "TrainingPlanItemId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Substitutions",
+          "jsonName": null,
+          "type": "[MOD.Training.Training.AnnualPlanSessions.Dtos.NomineeSubstitutionDto]",
+          "typeSimple": "[MOD.Training.Training.AnnualPlanSessions.Dtos.NomineeSubstitutionDto]",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Notes",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 2000,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        }
+      ]
+    },
+    "MOD.Training.Training.AnnualPlanSessions.Dtos.CreateInternalSessionDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "TrainingPlanItemId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ActualStartDate",
+          "jsonName": null,
+          "type": "System.DateTime",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ActualEndDate",
+          "jsonName": null,
+          "type": "System.DateTime",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Substitutions",
+          "jsonName": null,
+          "type": "[MOD.Training.Training.AnnualPlanSessions.Dtos.NomineeSubstitutionDto]",
+          "typeSimple": "[MOD.Training.Training.AnnualPlanSessions.Dtos.NomineeSubstitutionDto]",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Notes",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": 2000,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        }
+      ]
+    },
+    "MOD.Training.Training.AnnualPlanSessions.Dtos.NomineeSubstitutionDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "OriginalEmployeeId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ReplacementEmployeeId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Reason",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        }
+      ]
+    },
+    "MOD.Training.Training.AnnualPlanSessions.Dtos.OverdueAlertDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Type",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "EntityId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "EntityType",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Message",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "DaysOverdue",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Training.AnnualPlanSessions.Dtos.PlanItemQueueGetListInput": {
+      "baseType": "Volo.Abp.Application.Dtos.PagedAndSortedResultRequestDto",
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Year",
+          "jsonName": null,
+          "type": "System.Int32?",
+          "typeSimple": "number?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "Quarter",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.PreferredQuarter?",
+          "typeSimple": "enum?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "Priority",
+          "jsonName": null,
+          "type": "System.Int32?",
+          "typeSimple": "number?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "CourseType",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.CourseType?",
+          "typeSimple": "enum?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "UnitId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        }
+      ]
+    },
+    "MOD.Training.Training.AnnualPlanSessions.Dtos.PlanItemQueueItemDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Id",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "PlanId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "PlanYear",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "TenantCourseId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "TenantCourseNameAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "TenantCourseNameEn",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "CourseType",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.CourseType",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "PreferredQuarter",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.PreferredQuarter",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Priority",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "UnitId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "NomineesCount",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "IsOverdue",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "CreationTime",
+          "jsonName": null,
+          "type": "System.DateTime",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Training.AnnualPlanSessions.Dtos.QuarterProgressDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Quarter",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Total",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Completed",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "InProgress",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Pending",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Training.AnnualPlanSessions.Dtos.UnitProgressDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "UnitId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "UnitName",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "Total",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "Completed",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
     "MOD.Training.Training.CasualCourses.Dtos.AssignScenarioDto": {
       "baseType": null,
       "isEnum": false,
@@ -30618,6 +32149,45 @@
           "maximum": null,
           "regex": null,
           "isNullable": true
+        },
+        {
+          "name": "ExecutionStage",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.ExecutionStage?",
+          "typeSimple": "enum?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "ExecutionStageProgressCurrent",
+          "jsonName": null,
+          "type": "System.Int32?",
+          "typeSimple": "number?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "ExecutionStageProgressTotal",
+          "jsonName": null,
+          "type": "System.Int32?",
+          "typeSimple": "number?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
         }
       ]
     },
@@ -30989,6 +32559,19 @@
           "jsonName": null,
           "type": "System.String",
           "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "ExecutionStage",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.ExecutionStage?",
+          "typeSimple": "enum?",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -33932,24 +35515,6 @@
       "genericArguments": null,
       "properties": null
     },
-    "MOD.Training.Training.Enums.CompletionStatus": {
-      "baseType": "System.Enum",
-      "isEnum": true,
-      "enumNames": [
-        "NotStarted",
-        "InProgress",
-        "Completed",
-        "Cancelled"
-      ],
-      "enumValues": [
-        0,
-        1,
-        2,
-        3
-      ],
-      "genericArguments": null,
-      "properties": null
-    },
     "MOD.Training.Training.Enums.ConditionType": {
       "baseType": "System.Enum",
       "isEnum": true,
@@ -33990,6 +35555,28 @@
         0,
         1,
         2
+      ],
+      "genericArguments": null,
+      "properties": null
+    },
+    "MOD.Training.Training.Enums.ExecutionStage": {
+      "baseType": "System.Enum",
+      "isEnum": true,
+      "enumNames": [
+        "AwaitingQuoteSelection",
+        "AwaitingTravelInstruction",
+        "AwaitingTravelAllowances",
+        "AwaitingCoursePayment",
+        "AwaitingReallocationApproval",
+        "FinanciallyComplete"
+      ],
+      "enumValues": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
       ],
       "genericArguments": null,
       "properties": null
@@ -34264,20 +35851,48 @@
       "genericArguments": null,
       "properties": null
     },
+    "MOD.Training.Training.Enums.SessionExecutionStage": {
+      "baseType": "System.Enum",
+      "isEnum": true,
+      "enumNames": [
+        "AwaitingQuoteSelection",
+        "AwaitingTravelInstruction",
+        "AwaitingTravelAllowances",
+        "AwaitingCoursePayment",
+        "AwaitingCompletion",
+        "FinanciallyComplete",
+        "NoExecutionPending"
+      ],
+      "enumValues": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "genericArguments": null,
+      "properties": null
+    },
     "MOD.Training.Training.Enums.SessionStatus": {
       "baseType": "System.Enum",
       "isEnum": true,
       "enumNames": [
+        "Planned",
         "Scheduled",
         "InProgress",
         "Completed",
-        "Cancelled"
+        "Cancelled",
+        "FinanciallyClosed"
       ],
       "enumValues": [
         0,
         1,
         2,
-        3
+        3,
+        4,
+        5
       ],
       "genericArguments": null,
       "properties": null
@@ -38353,6 +39968,119 @@
         }
       ]
     },
+    "MOD.Training.Training.Payments.Dtos.TravelAllowancePaymentDefaultsDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "DailyAllowanceRateOMR",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "TravelAllowanceOMR",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "TicketAmountOMR",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ClothingAllowanceOMR",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "InsuranceOMR",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "VisaFeesOMR",
+          "jsonName": null,
+          "type": "System.Decimal",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "EffectiveTravelDays",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "PersonnelType",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.PersonnelType",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
     "MOD.Training.Training.Payments.Dtos.TravelAllowancePaymentDto": {
       "baseType": "Volo.Abp.Application.Dtos.EntityDto<System.Guid>",
       "isEnum": false,
@@ -38748,7 +40476,29 @@
         }
       ]
     },
-    "MOD.Training.Training.Plans.Dtos.CourseSessionDto": {
+    "MOD.Training.Training.Plans.Dtos.CancelSessionDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "Reason",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": 2000,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Training.Plans.Dtos.CourseSessionDetailDto": {
       "baseType": "Volo.Abp.Application.Dtos.FullAuditedEntityDto<System.Guid>",
       "isEnum": false,
       "enumNames": null,
@@ -38756,7 +40506,33 @@
       "genericArguments": null,
       "properties": [
         {
-          "name": "CourseId",
+          "name": "TrainingPlanItemId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "TrainingCenterPlanItemId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "TenantCourseId",
           "jsonName": null,
           "type": "System.Guid",
           "typeSimple": "string",
@@ -38769,59 +40545,7 @@
           "isNullable": false
         },
         {
-          "name": "CourseName",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "SessionCode",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "StartDate",
-          "jsonName": null,
-          "type": "System.DateTime",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "EndDate",
-          "jsonName": null,
-          "type": "System.DateTime",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "Location",
+          "name": "TenantCourseNameAr",
           "jsonName": null,
           "type": "System.String",
           "typeSimple": "string",
@@ -38834,7 +40558,7 @@
           "isNullable": true
         },
         {
-          "name": "Country",
+          "name": "TenantCourseNameEn",
           "jsonName": null,
           "type": "System.String",
           "typeSimple": "string",
@@ -38847,7 +40571,20 @@
           "isNullable": true
         },
         {
-          "name": "MaxSeats",
+          "name": "CourseType",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.CourseType",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "PreferredQuarter",
           "jsonName": null,
           "type": "System.Int32",
           "typeSimple": "number",
@@ -38860,7 +40597,7 @@
           "isNullable": false
         },
         {
-          "name": "AvailableSeats",
+          "name": "PlanYear",
           "jsonName": null,
           "type": "System.Int32",
           "typeSimple": "number",
@@ -38873,10 +40610,23 @@
           "isNullable": false
         },
         {
-          "name": "Cost",
+          "name": "ActualStartDate",
           "jsonName": null,
-          "type": "System.Decimal?",
-          "typeSimple": "number?",
+          "type": "System.DateTime?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "ActualEndDate",
+          "jsonName": null,
+          "type": "System.DateTime?",
+          "typeSimple": "string?",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -38899,9 +40649,9 @@
           "isNullable": false
         },
         {
-          "name": "CompletionStatus",
+          "name": "ExecutionStage",
           "jsonName": null,
-          "type": "MOD.Training.Training.Enums.CompletionStatus",
+          "type": "MOD.Training.Training.Enums.SessionExecutionStage",
           "typeSimple": "enum",
           "isRequired": false,
           "minLength": null,
@@ -38912,9 +40662,330 @@
           "isNullable": false
         },
         {
-          "name": "CompletedAt",
+          "name": "SelectedPriceQuoteId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "SelectedPriceQuoteAmountOMR",
+          "jsonName": null,
+          "type": "System.Decimal?",
+          "typeSimple": "number?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "SelectedPriceQuoteProviderId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "SelectedPriceQuoteProviderNameAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "CancellationReason",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "CancelledAt",
           "jsonName": null,
           "type": "System.DateTime?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "CancelledById",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "Nominations",
+          "jsonName": null,
+          "type": "[MOD.Training.Training.Plans.Dtos.SessionNominationDto]",
+          "typeSimple": "[MOD.Training.Training.Plans.Dtos.SessionNominationDto]",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Training.Plans.Dtos.CourseSessionDto": {
+      "baseType": "Volo.Abp.Application.Dtos.FullAuditedEntityDto<System.Guid>",
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "TrainingPlanItemId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "TrainingCenterPlanItemId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "TenantCourseId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "TenantCourseNameAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "TenantCourseNameEn",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "CourseType",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.CourseType",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "PreferredQuarter",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "PlanYear",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ActualStartDate",
+          "jsonName": null,
+          "type": "System.DateTime?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "ActualEndDate",
+          "jsonName": null,
+          "type": "System.DateTime?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "SelectedPriceQuoteId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "Status",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.SessionStatus",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ExecutionStage",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.SessionExecutionStage",
+          "typeSimple": "enum",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "NomineesCount",
+          "jsonName": null,
+          "type": "System.Int32",
+          "typeSimple": "number",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "CancellationReason",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "CancelledAt",
+          "jsonName": null,
+          "type": "System.DateTime?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "CancelledById",
+          "jsonName": null,
+          "type": "System.Guid?",
           "typeSimple": "string?",
           "isRequired": false,
           "minLength": null,
@@ -38934,10 +41005,49 @@
       "genericArguments": null,
       "properties": [
         {
-          "name": "CourseId",
+          "name": "TrainingPlanItemId",
           "jsonName": null,
           "type": "System.Guid?",
           "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "TrainingCenterPlanItemId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "TenantCourseId",
+          "jsonName": null,
+          "type": "System.Guid?",
+          "typeSimple": "string?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "CourseType",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.CourseType?",
+          "typeSimple": "enum?",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -38951,6 +41061,45 @@
           "jsonName": null,
           "type": "MOD.Training.Training.Enums.SessionStatus?",
           "typeSimple": "enum?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "ExecutionStage",
+          "jsonName": null,
+          "type": "MOD.Training.Training.Enums.SessionExecutionStage?",
+          "typeSimple": "enum?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "PlanYear",
+          "jsonName": null,
+          "type": "System.Int32?",
+          "typeSimple": "number?",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "PreferredQuarter",
+          "jsonName": null,
+          "type": "System.Int32?",
+          "typeSimple": "number?",
           "isRequired": false,
           "minLength": null,
           "maxLength": null,
@@ -39019,119 +41168,6 @@
           "maximum": null,
           "regex": null,
           "isNullable": false
-        }
-      ]
-    },
-    "MOD.Training.Training.Plans.Dtos.CreateUpdateCourseSessionDto": {
-      "baseType": null,
-      "isEnum": false,
-      "enumNames": null,
-      "enumValues": null,
-      "genericArguments": null,
-      "properties": [
-        {
-          "name": "CourseId",
-          "jsonName": null,
-          "type": "System.Guid",
-          "typeSimple": "string",
-          "isRequired": true,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "SessionCode",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": true,
-          "minLength": null,
-          "maxLength": 50,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "StartDate",
-          "jsonName": null,
-          "type": "System.DateTime",
-          "typeSimple": "string",
-          "isRequired": true,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "EndDate",
-          "jsonName": null,
-          "type": "System.DateTime",
-          "typeSimple": "string",
-          "isRequired": true,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "Location",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": 256,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": true
-        },
-        {
-          "name": "Country",
-          "jsonName": null,
-          "type": "System.String",
-          "typeSimple": "string",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": 256,
-          "minimum": null,
-          "maximum": null,
-          "regex": null,
-          "isNullable": true
-        },
-        {
-          "name": "MaxSeats",
-          "jsonName": null,
-          "type": "System.Int32",
-          "typeSimple": "number",
-          "isRequired": true,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": "1",
-          "maximum": "2147483647",
-          "regex": null,
-          "isNullable": false
-        },
-        {
-          "name": "Cost",
-          "jsonName": null,
-          "type": "System.Decimal?",
-          "typeSimple": "number?",
-          "isRequired": false,
-          "minLength": null,
-          "maxLength": null,
-          "minimum": "0",
-          "maximum": "1.7976931348623157E+308",
-          "regex": null,
-          "isNullable": true
         }
       ]
     },
@@ -39898,6 +41934,206 @@
           "isRequired": true,
           "minLength": null,
           "maxLength": 2000,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Training.Plans.Dtos.SelectSessionPriceQuoteDto": {
+      "baseType": null,
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "PriceQuoteId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ActualStartDate",
+          "jsonName": null,
+          "type": "System.DateTime",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "ActualEndDate",
+          "jsonName": null,
+          "type": "System.DateTime",
+          "typeSimple": "string",
+          "isRequired": true,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        }
+      ]
+    },
+    "MOD.Training.Training.Plans.Dtos.SessionNominationDto": {
+      "baseType": "Volo.Abp.Application.Dtos.EntityDto<System.Guid>",
+      "isEnum": false,
+      "enumNames": null,
+      "enumValues": null,
+      "genericArguments": null,
+      "properties": [
+        {
+          "name": "SessionId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "EmployeeId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "OriginalEmployeeId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "WasSubstituted",
+          "jsonName": null,
+          "type": "System.Boolean",
+          "typeSimple": "boolean",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "SubstitutionReason",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "RankId",
+          "jsonName": null,
+          "type": "System.Guid",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": false
+        },
+        {
+          "name": "RankNameAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "EmployeeNameAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "EmployeeNameEn",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "OriginalEmployeeNameAr",
+          "jsonName": null,
+          "type": "System.String",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
+          "minimum": null,
+          "maximum": null,
+          "regex": null,
+          "isNullable": true
+        },
+        {
+          "name": "CreationTime",
+          "jsonName": null,
+          "type": "System.DateTime",
+          "typeSimple": "string",
+          "isRequired": false,
+          "minLength": null,
+          "maxLength": null,
           "minimum": null,
           "maximum": null,
           "regex": null,

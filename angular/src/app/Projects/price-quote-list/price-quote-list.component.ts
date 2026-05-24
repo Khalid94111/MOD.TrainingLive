@@ -61,6 +61,7 @@ export class PriceQuoteListComponent implements OnInit {
 
   async loadSessions(): Promise<void> {
     const r = await firstValueFrom(this.sessionService.getList({ maxResultCount: 200 }));
+    console.log('sessions', r);
     this.sessions.set(r.items ?? []);
   }
 
@@ -124,8 +125,8 @@ export class PriceQuoteListComponent implements OnInit {
   }
 
   onSessionSelected(): void {
-    const s = this.sessions().find(x => x.id === this.fSessionId());
-    if (s) this.fParticipantsCount.set(s.maxSeats);
+    // Phase 4C-α (v4.10.0): CourseSession no longer carries MaxSeats — sessions use a
+    // fixed nominee snapshot taken at creation (Q-D). Participants count is entered manually.
   }
 
   getStatusClass(s: number): string {

@@ -211,6 +211,40 @@ export const TRAINING_ROUTE_PROVIDER = {
         order: 3,
         requiredPolicy: 'TrainingPayments.Reallocations',
       },
+      // ──────────────────────────────────
+      // Phase 4C-α: Annual Plan Sessions (v4.10.0)
+      // ──────────────────────────────────
+      {
+        path: '',
+        name: '::Training.Menu.AnnualPlanSessions',
+        parentName: '::Training.Menu.Training',
+        iconClass: 'fas fa-calendar-check',
+        order: 8,
+      },
+      {
+        path: '/training/annual-plan/sessions-queue',
+        name: '::Training.Menu.SessionsQueue',
+        parentName: '::Training.Menu.AnnualPlanSessions',
+        iconClass: 'fas fa-list-check',
+        order: 1,
+        requiredPolicy: 'AnnualPlanSessions.Default',
+      },
+      {
+        path: '/training/sessions',
+        name: '::Training.Menu.SessionsList',
+        parentName: '::Training.Menu.AnnualPlanSessions',
+        iconClass: 'fas fa-graduation-cap',
+        order: 2,
+        requiredPolicy: 'Training.CourseSession',
+      },
+      {
+        path: '/training/annual-plan/dashboard',
+        name: '::Training.Menu.AnnualPlanDashboard',
+        parentName: '::Training.Menu.AnnualPlanSessions',
+        iconClass: 'fas fa-chart-line',
+        order: 3,
+        requiredPolicy: 'AnnualPlanSessions.Dashboard',
+      },
         // ── Phase 2 (uncomment when ready) ──
         // {
         //   path: '/training/finance/items',

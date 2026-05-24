@@ -24,6 +24,12 @@
   backdrop-filter: blur(6px);
 }
 
+// Patch 1 (v4.10.1) — info bar lives inside the sticky header so it travels with the pipeline.
+.cc-info-bar {
+  display: block;
+  margin-top: 10px;
+}
+
 .cc-detail-header {
   display: flex;
   align-items: flex-start;

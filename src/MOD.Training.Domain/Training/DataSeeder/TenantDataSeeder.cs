@@ -502,58 +502,19 @@ private async Task SeedFinancialItemsAsync(Guid tenantId)
     }
 
     // ── POST-APPROVAL (FullApproved only) ──
-    private async Task SeedPostApprovalAsync(Guid cyberPlanItemId, Guid leaderPlanItemId)
+    // Phase 4C-α (v4.10.0): the Phase-3 post-approval fixture (2 CourseSessions + their
+    // dependent Nominations / PriceQuotes / TravelInstruction) used the OLD CourseSession
+    // shape (SessionCode / Location / Country / MaxSeats / Cost) that is dropped by the
+    // v4_10_0_AnnualPlanSessions migration. This block will be re-seeded with the new
+    // shape (TrainingPlanItemId source + SessionStatus.Planned/Scheduled + SessionNomination
+    // children + atomic dates-on-SelectPriceQuote semantics) during step 11 (smoke test
+    // fixtures). Until then, post-approval data is absent from fresh tenants — production
+    // tenants are unaffected per v4.9.2 checkpoint "no annual plan sessions exist yet".
+    private Task SeedPostApprovalAsync(Guid cyberPlanItemId, Guid leaderPlanItemId)
     {
-        var cyberCourse = guidGenerator.Create();
-        await courseRepo.InsertAsync(new Course(cyberCourse, _tenantCourses[CatalogIds.Cybersecurity], CourseType.ExternalInternational) { Status = CourseStatus.Active }, autoSave: true);
-
-        var cyberSession = guidGenerator.Create();
-        await sessionRepo.InsertAsync(new CourseSession(cyberSession, cyberCourse, "S-2027-001", new(2027,4,15), new(2027,4,28), 15)
-            { Location = "واشنطن، الولايات المتحدة", Country = "US", Cost = 1800m, Status = SessionStatus.Scheduled }, autoSave: true);
-
-        var leaderCourse = guidGenerator.Create();
-        await courseRepo.InsertAsync(new Course(leaderCourse, _tenantCourses[CatalogIds.Leadership], CourseType.Internal) { Status = CourseStatus.Active }, autoSave: true);
-
-        var leaderSession = guidGenerator.Create();
-        await sessionRepo.InsertAsync(new CourseSession(leaderSession, leaderCourse, "S-2027-002", new(2027,2,1), new(2027,2,14), 30)
-            { Location = "مركز التدريب الأساسي", Country = "OM", Status = SessionStatus.Scheduled }, autoSave: true);
-
-        // Nominations — use PlanItemId + Employee IDs
-        await CreateNomination(cyberPlanItemId, cyberSession, _employees["Emp1"], _users["UTM1"], _users["UGM1"], _users["TD"], NominationStatus.TDApproved);
-        await CreateNomination(cyberPlanItemId, cyberSession, _employees["Emp2"], _users["UTM1"], _users["UGM1"], null, NominationStatus.UGMApproved);
-        await CreateNomination(cyberPlanItemId, cyberSession, _employees["Emp3"], _users["UTM1"], null, null, NominationStatus.UTMApproved);
-        await CreateNominationRejected(cyberPlanItemId, cyberSession, _employees["Emp5"], _users["UTM2"], _users["UGM1"], "الرتبة أقل من المطلوب");
-        await CreateNomination(leaderPlanItemId, leaderSession, _employees["Emp1"], _users["UTM1"], _users["UGM1"], _users["TD"], NominationStatus.TDApproved);
-        await CreateNomination(leaderPlanItemId, leaderSession, _employees["Emp6"], _users["UTM3"], _users["UGM2"], _users["TD"], NominationStatus.TDApproved);
-
-        // Price Quotes
-        await quoteRepo.InsertAsync(new PriceQuote(guidGenerator.Create(), cyberSession, ProviderIds.SANS, PricingType.PerPerson, 56.667m, 15) { Status = ApprovalStatus.Approved }, autoSave: true);
-        await quoteRepo.InsertAsync(new PriceQuote(guidGenerator.Create(), cyberSession, ProviderIds.LocalAcademy, PricingType.Total, 1000m, 15) { Status = ApprovalStatus.Rejected }, autoSave: true);
-
-        // Phase 4B-β fixture — issued TravelInstruction for cyberSession so the polymorphic
-        // SessionId arm of TravelAllowancePayment is smoke-testable without extra UI setup.
-        var sessionTravelId = guidGenerator.Create();
-        var sessionDepart = new DateTime(2027, 4, 14);
-        var sessionArrive = new DateTime(2027, 4, 15);
-        var sessionReturn = new DateTime(2027, 4, 28);
-        var sessionArriveBack = new DateTime(2027, 4, 29);
-        await travelInstructionRepo.InsertAsync(new TravelInstruction(sessionTravelId)
-        {
-            TenantId = currentTenant.Id,
-            SessionId = cyberSession,
-            DepartureDate = sessionDepart,
-            ArrivalDate = sessionArrive,
-            ReturnDate = sessionReturn,
-            ArrivalBackDate = sessionArriveBack,
-            VisaRequired = true,
-            VisaNotes = "تأشيرة B1 — تم التقديم عبر السفارة الأمريكية",
-            InsuranceArranged = true,
-            InsuranceProvider = "Oman Insurance Co.",
-            TicketsBooked = true,
-            TicketReference = "TKT-CYB-001",
-            CalculatedTravelDays = (int)(sessionArriveBack.Date - sessionDepart.Date).TotalDays + 1,
-            Status = TravelInstructionStatus.Issued,
-        }, autoSave: true);
+        _ = cyberPlanItemId;
+        _ = leaderPlanItemId;
+        return Task.CompletedTask;
     }
 
     private async Task CreateNomination(Guid planItemId, Guid sessionId, Guid employeeId, Guid utmId, Guid? ugmId, Guid? tdId, NominationStatus status)

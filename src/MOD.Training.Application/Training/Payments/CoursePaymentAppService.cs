@@ -306,11 +306,10 @@ public class CoursePaymentAppService(
 
         var sessionIds = entities.Where(e => e.SessionId.HasValue).Select(e => e.SessionId!.Value).Distinct().ToList();
         var sessionLookup = await BatchByIdsAsync(sessionRepo, sessionIds);
-        var courseIds = sessionLookup.Values.Select(s => s.CourseId).Distinct().ToList();
-        var courseLookup = await BatchByIdsAsync(courseRepo, courseIds);
 
+        // Phase 4C-α (v4.10.0): CourseSession exposes TenantCourseId directly — no Course indirection.
         var tenantCourseIds = casualLookup.Values.Select(c => c.TenantCourseId)
-            .Concat(courseLookup.Values.Select(c => c.TenantCourseId))
+            .Concat(sessionLookup.Values.Select(s => s.TenantCourseId))
             .Distinct().ToList();
         var nameLookup = await courseNameResolver.BatchResolveAsync(tenantCourseIds);
 
@@ -331,10 +330,9 @@ public class CoursePaymentAppService(
                 tenantCourseId = casual.TenantCourseId;
                 dto.FundingScenario = casual.FundingScenario;
             }
-            else if (ent.SessionId.HasValue && sessionLookup.TryGetValue(ent.SessionId.Value, out var session)
-                && courseLookup.TryGetValue(session.CourseId, out var course))
+            else if (ent.SessionId.HasValue && sessionLookup.TryGetValue(ent.SessionId.Value, out var session))
             {
-                tenantCourseId = course.TenantCourseId;
+                tenantCourseId = session.TenantCourseId;
             }
             if (tenantCourseId.HasValue && nameLookup.TryGetValue(tenantCourseId.Value, out var name))
                 dto.CourseNameAr = name.NameAr;

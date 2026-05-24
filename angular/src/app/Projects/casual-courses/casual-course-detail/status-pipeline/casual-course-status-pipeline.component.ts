@@ -24,6 +24,8 @@ export interface PipelineNode {
   anchor: string;
   /** Phase 5 placeholder — node visible but inert. */
   placeholder?: boolean;
+  /** Patch 4 (v4.10.4) — stage doesn't apply for this courseType; shown grayed + dash. */
+  skipped?: boolean;
 }
 
 @Component({
@@ -39,6 +41,9 @@ export class CasualCourseStatusPipelineComponent {
   status = input<CasualCourseStatus | undefined>(undefined);
   hasSelectedQuote = input<boolean>(false);
   hasTravelInstruction = input<boolean>(false);
+  // Patch 4 (v4.10.4) — courseType inputs drive node skipping for Internal/Local.
+  isInternal = input<boolean>(false);
+  isLocal = input<boolean>(false);
   /** Section 5 unlocked (TI Issued for external courses, or THApproved for internal). */
   paymentsCanStart = input<boolean>(false);
   /** All payments confirmed AND all reallocations approved. */
@@ -57,8 +62,12 @@ export class CasualCourseStatusPipelineComponent {
     const staffDone = completed(CasualCourseStatus.StaffReviewed);
     const tdDone = completed(CasualCourseStatus.TDApproved);
     const thDone = completed(CasualCourseStatus.THApproved);
-    const quoteDone = thDone && this.hasSelectedQuote();
-    const travelDone = quoteDone && this.hasTravelInstruction();
+    const isInt = this.isInternal();
+    const isLoc = this.isLocal();
+    const noTravel = isInt || isLoc;
+    // Internal courses have no quote stage; Internal+Local both skip travel.
+    const quoteDone = isInt || (thDone && this.hasSelectedQuote());
+    const travelDone = noTravel || (quoteDone && this.hasTravelInstruction());
     const paymentDone = this.paymentsComplete();
 
     const stateOf = (done: boolean, isCurrent: boolean): PipelineNodeState =>
@@ -101,17 +110,19 @@ export class CasualCourseStatusPipelineComponent {
       {
         key: 'quote',
         label: 'اختيار العرض',
-        state: stateOf(quoteDone, thDone && !this.hasSelectedQuote()),
+        state: stateOf(quoteDone, thDone && !isInt && !this.hasSelectedQuote()),
         anchor: 'quotes',
+        skipped: isInt,
       },
       {
         key: 'travel',
         label: 'تعليمات السفر',
         state: stateOf(
           travelDone,
-          quoteDone && !this.hasTravelInstruction(),
+          quoteDone && !noTravel && !this.hasTravelInstruction(),
         ),
         anchor: 'travel',
+        skipped: noTravel,
       },
       {
         key: 'payment',
@@ -136,12 +147,13 @@ export class CasualCourseStatusPipelineComponent {
   isReturned = computed(() => this.status() === CasualCourseStatus.ReturnedToCreator);
 
   onNodeClick(node: PipelineNode): void {
-    if (node.placeholder || !node.anchor) return;
+    if (node.placeholder || node.skipped || !node.anchor) return;
     this.nodeClick.emit(node);
   }
 
-  iconFor(state: PipelineNodeState): string {
-    switch (state) {
+  iconFor(node: PipelineNode): string {
+    if (node.skipped) return '—';
+    switch (node.state) {
       case 'completed': return '✓';
       case 'active':    return '●';
       default:          return '○';

@@ -42,7 +42,7 @@ export class TravelAllowancePaymentService {
       url: `/api/app/travel-allowance-payment/${id}`,
     },
     { apiName: this.apiName,...config });
-
+  
 
   getDefaults = (casualCourseId: string, nominationId: string, config?: Partial<Rest.Config>) =>
     this.restService.request<any, TravelAllowancePaymentDefaultsDto>({
@@ -51,7 +51,7 @@ export class TravelAllowancePaymentService {
       params: { casualCourseId, nominationId },
     },
     { apiName: this.apiName,...config });
-
+  
 
   getList = (input: TravelAllowancePaymentGetListInput, config?: Partial<Rest.Config>) =>
     this.restService.request<any, PagedResultDto<TravelAllowancePaymentDto>>({

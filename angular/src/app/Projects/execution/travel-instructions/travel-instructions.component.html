@@ -18,37 +18,50 @@
         جاري التحميل...
       </div>
     </div>
-  } @else if (course()) {
+  } @else if (course() || parentArm() === 'session') {
 
-    <!-- Course summary -->
-    <div class="gtms-card course-summary">
-      <div class="summary-left">
-        <div class="muted-xs">الدورة العرضية</div>
-        <h3 class="course-title">{{ course()?.courseNameAr }}</h3>
-        <div class="meta-line">
-          <span><b>المرشحون:</b> {{ course()?.nomineesCount }} (يسافرون معاً)</span>
-          @if (course()?.actualStartDate && course()?.actualEndDate) {
-            <span>
-              <b>تواريخ الدورة:</b>
-              {{ course()?.actualStartDate | slice:0:10 }}
-              →
-              {{ course()?.actualEndDate | slice:0:10 }}
-            </span>
-          } @else {
-            <span class="warn-inline">⚠ لم يتم اختيار العرض الفائز بعد</span>
-          }
+    <!-- Course summary (casual-course arm only — session shell renders its own header) -->
+    @if (course() && !embedded()) {
+      <div class="gtms-card course-summary">
+        <div class="summary-left">
+          <div class="muted-xs">الدورة العرضية</div>
+          <h3 class="course-title">{{ course()?.courseNameAr }}</h3>
+          <div class="meta-line">
+            <span><b>المرشحون:</b> {{ course()?.nomineesCount }} (يسافرون معاً)</span>
+            @if (course()?.actualStartDate && course()?.actualEndDate) {
+              <span>
+                <b>تواريخ الدورة:</b>
+                {{ course()?.actualStartDate | slice:0:10 }}
+                →
+                {{ course()?.actualEndDate | slice:0:10 }}
+              </span>
+            } @else {
+              <span class="warn-inline">⚠ لم يتم اختيار العرض الفائز بعد</span>
+            }
+          </div>
+        </div>
+        <div class="summary-right">
+          <span [class]="statusCssClass()">{{ statusLabel() }}</span>
         </div>
       </div>
-      <div class="summary-right">
-        <span [class]="statusCssClass()">{{ statusLabel() }}</span>
-      </div>
-    </div>
+    }
 
     @if (saveSuccess()) {
       <div class="alert alert-success">✓ {{ saveSuccess() }}</div>
     }
     @if (saveError()) {
       <div class="alert alert-error">⚠ {{ saveError() }}</div>
+    }
+
+    <!-- Patch 3 (v4.10.3) — defaults hint: shown only on the create path, after dates
+         + options were seeded from the parent course. Vanishes once a draft is saved. -->
+    @if (!instruction() && course()?.actualStartDate && course()?.actualEndDate) {
+      <div class="info-banner info-banner-info">
+        <div class="info-banner-icon">💡</div>
+        <div class="info-banner-text">
+          {{ '::Training.TravelInstruction.DefaultsHint' | abpLocalization }}
+        </div>
+      </div>
     }
 
     @if (isIssued()) {

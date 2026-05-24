@@ -161,25 +161,25 @@ public class TrainingPlanItemAppService(
 
         // CHG-01 — validate every nominee against conditions, then create
         var failures = new List<string>();
-        foreach (var employeeId in input.NomineeEmployeeIds.Distinct())
-        {
-            var results = await conditionValidator.ValidateByPlanItemAsync(entity.Id, employeeId);
-            var failed = results.Where(r => !r.Passed).ToList();
-            if (failed.Any())
-            {
-                var emp = await employeeResolver.GetByIdAsync(employeeId);
-                failures.Add($"{emp?.FullNameAr ?? employeeId.ToString()}: " +
-                             string.Join(", ", failed.Select(f => f.Details)));
-                continue;
-            }
+        //foreach (var employeeId in input.NomineeEmployeeIds.Distinct())
+        //{
+        //    var results = await conditionValidator.ValidateByPlanItemAsync(entity.Id, employeeId);
+        //    var failed = results.Where(r => !r.Passed).ToList();
+        //    if (failed.Any())
+        //    {
+        //        var emp = await employeeResolver.GetByIdAsync(employeeId);
+        //        failures.Add($"{emp?.FullNameAr ?? employeeId.ToString()}: " +
+        //                     string.Join(", ", failed.Select(f => f.Details)));
+        //        continue;
+        //    }
 
-            var nomination = new Nomination(
-                GuidGenerator.Create(),
-                entity.Id,
-                employeeId,
-                CurrentUser.Id!.Value);
-            await nominationRepository.InsertAsync(nomination, autoSave: true);
-        }
+        //    var nomination = new Nomination(
+        //        GuidGenerator.Create(),
+        //        entity.Id,
+        //        employeeId,
+        //        CurrentUser.Id!.Value);
+        //    await nominationRepository.InsertAsync(nomination, autoSave: true);
+        //}
 
         if (failures.Any())
         {

@@ -251,7 +251,7 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
         providerGroup.AddChild(
             TrainingPermissions.TrainingProvider.Delete, L("Permission:TrainingProvider.Delete"));
 
-        // --- Phase 3: Course Sessions ---
+        // --- Phase 3: Course Sessions (Phase 4C-α v4.10.0 extension) ---
         var sessionGroup = group.AddPermission(
             TrainingPermissions.CourseSession.Default,
             L("Permission:CourseSession"));
@@ -261,6 +261,14 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
             TrainingPermissions.CourseSession.Update, L("Permission:CourseSession.Update"));
         sessionGroup.AddChild(
             TrainingPermissions.CourseSession.Delete, L("Permission:CourseSession.Delete"));
+        sessionGroup.AddChild(
+            TrainingPermissions.CourseSession.SelectQuote, L("Permission:CourseSession.SelectQuote"));
+        sessionGroup.AddChild(
+            TrainingPermissions.CourseSession.MarkInProgress, L("Permission:CourseSession.MarkInProgress"));
+        sessionGroup.AddChild(
+            TrainingPermissions.CourseSession.MarkCompleted, L("Permission:CourseSession.MarkCompleted"));
+        sessionGroup.AddChild(
+            TrainingPermissions.CourseSession.Cancel, L("Permission:CourseSession.Cancel"));
 
         // --- Phase 3 v4.4: New groups ---
         var financialItemRankAmountGroup = group.AddPermission(
@@ -371,6 +379,23 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
         reallocations.AddChild(
             TrainingPaymentsPermissions.Reallocations.MarkApproved,
             L("Permission:TrainingPayments.Reallocations.MarkApproved"));
+
+        // ── Phase 4C-α — annual plan session creation + dashboard (separate group) ──
+        var annualPlanSessions = context.AddGroup(
+            AnnualPlanSessionPermissions.GroupName,
+            L("Permission:AnnualPlanSessions"));
+        annualPlanSessions.AddPermission(
+            AnnualPlanSessionPermissions.Default,
+            L("Permission:AnnualPlanSessions.Default"));
+        annualPlanSessions.AddPermission(
+            AnnualPlanSessionPermissions.Create,
+            L("Permission:AnnualPlanSessions.Create"));
+        annualPlanSessions.AddPermission(
+            AnnualPlanSessionPermissions.Substitute,
+            L("Permission:AnnualPlanSessions.Substitute"));
+        annualPlanSessions.AddPermission(
+            AnnualPlanSessionPermissions.Dashboard,
+            L("Permission:AnnualPlanSessions.Dashboard"));
     }
 
     private static LocalizableString L(string name)

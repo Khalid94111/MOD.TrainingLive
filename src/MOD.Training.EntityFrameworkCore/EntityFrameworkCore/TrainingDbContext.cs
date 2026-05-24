@@ -73,6 +73,7 @@ public DbSet<TrainingPlanItem> TrainingPlanItems { get; set; }
 public DbSet<PlanItemCondition> PlanItemConditions { get; set; }
 public DbSet<Course> Courses { get; set; }
 public DbSet<CourseSession> CourseSessions { get; set; }
+public DbSet<SessionNomination> SessionNominations { get; set; }
 public DbSet<SessionCondition> SessionConditions { get; set; }
 
 // Finance (Phase 3 additions)

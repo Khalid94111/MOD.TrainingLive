@@ -2407,24 +2407,31 @@ namespace MOD.Training.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("AvailableSeats")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("CompletedAt")
+                    b.Property<DateTime?>("ActualEndDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("CompletionStatus")
-                        .HasColumnType("int");
+                    b.Property<DateTime?>("ActualStartDate")
+                        .HasColumnType("datetime2");
 
-                    b.Property<decimal?>("Cost")
-                        .HasColumnType("decimal(18,3)");
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
 
-                    b.Property<string>("Country")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("datetime2");
 
-                    b.Property<Guid>("CourseId")
+                    b.Property<Guid?>("CancelledById")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)")
+                        .HasColumnName("ConcurrencyStamp");
+
+                    b.Property<int>("CourseType")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreationTime")
                         .HasColumnType("datetime2")
@@ -2442,8 +2449,10 @@ namespace MOD.Training.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("DeletionTime");
 
-                    b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("ExtraProperties")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("ExtraProperties");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
@@ -2459,35 +2468,49 @@ namespace MOD.Training.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("LastModifierId");
 
-                    b.Property<string>("Location")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<int>("MaxSeats")
+                    b.Property<int>("PlanYear")
                         .HasColumnType("int");
 
-                    b.Property<string>("SessionCode")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                    b.Property<int>("PreferredQuarter")
+                        .HasColumnType("int");
 
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
+                    b.Property<Guid?>("SelectedPriceQuoteId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Status")
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<Guid>("TenantCourseId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("TenantId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("TenantId");
 
+                    b.Property<Guid?>("TrainingCenterPlanItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("TrainingPlanItemId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("CourseId");
+                    b.HasIndex("TenantId", "Status");
 
-                    b.HasIndex("SessionCode");
+                    b.HasIndex("TenantId", "TenantCourseId");
 
-                    b.ToTable("AppCourseSessions", (string)null);
+                    b.HasIndex("TenantId", "TrainingCenterPlanItemId");
+
+                    b.HasIndex("TenantId", "TrainingPlanItemId");
+
+                    b.HasIndex("TenantId", "PlanYear", "PreferredQuarter");
+
+                    b.ToTable("AppCourseSessions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_CourseSession_PolymorphicSource", "([TrainingPlanItemId] IS NOT NULL AND [TrainingCenterPlanItemId] IS NULL) OR ([TrainingPlanItemId] IS NULL AND [TrainingCenterPlanItemId] IS NOT NULL)");
+                        });
                 });
 
             modelBuilder.Entity("MOD.Training.Training.Plans.PlanItemCondition", b =>
@@ -2575,6 +2598,74 @@ namespace MOD.Training.Migrations
                     b.HasIndex("SessionId");
 
                     b.ToTable("AppSessionConditions", (string)null);
+                });
+
+            modelBuilder.Entity("MOD.Training.Training.Plans.SessionNomination", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<Guid>("OriginalEmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RankId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SubstitutionReason")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("TenantId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId");
+
+                    b.HasIndex("TenantId", "SessionId");
+
+                    b.HasIndex("TenantId", "SessionId", "EmployeeId")
+                        .IsUnique()
+                        .HasFilter("[TenantId] IS NOT NULL");
+
+                    b.ToTable("AppSessionNominations", (string)null);
                 });
 
             modelBuilder.Entity("MOD.Training.Training.Plans.TrainingPlan", b =>
@@ -5373,17 +5464,6 @@ namespace MOD.Training.Migrations
                     b.Navigation("Nomination");
                 });
 
-            modelBuilder.Entity("MOD.Training.Training.Plans.CourseSession", b =>
-                {
-                    b.HasOne("MOD.Training.Training.Plans.Course", "Course")
-                        .WithMany()
-                        .HasForeignKey("CourseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Course");
-                });
-
             modelBuilder.Entity("MOD.Training.Training.Plans.PlanItemCondition", b =>
                 {
                     b.HasOne("MOD.Training.Training.Plans.TrainingPlanItem", "PlanItem")
@@ -5404,6 +5484,15 @@ namespace MOD.Training.Migrations
                         .IsRequired();
 
                     b.Navigation("Session");
+                });
+
+            modelBuilder.Entity("MOD.Training.Training.Plans.SessionNomination", b =>
+                {
+                    b.HasOne("MOD.Training.Training.Plans.CourseSession", null)
+                        .WithMany("Nominations")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("MOD.Training.Training.Plans.TrainingPlanItem", b =>
@@ -5661,6 +5750,11 @@ namespace MOD.Training.Migrations
             modelBuilder.Entity("MOD.Training.Training.CasualCourses.CasualCourseFinancialItem", b =>
                 {
                     b.Navigation("Ranks");
+                });
+
+            modelBuilder.Entity("MOD.Training.Training.Plans.CourseSession", b =>
+                {
+                    b.Navigation("Nominations");
                 });
 
             modelBuilder.Entity("Volo.Abp.Gdpr.GdprRequest", b =>

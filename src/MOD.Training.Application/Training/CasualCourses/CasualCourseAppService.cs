@@ -118,7 +118,24 @@ public class CasualCourseAppService(
             FinancialItems = (entity.FinancialItems ?? new List<CasualCourseFinancialItem>())
                 .Select(f => financialToDtoMapper.Map(f)).ToList(),
             Nominations = await HydrateNominationsAsync(entity.Nominations ?? new List<CasualCourseNomination>()),
+            FundingScenarioLabel = ResolveFundingScenarioLabel(baseDto.FundingScenario),
         };
+
+        // Info Bar (Patch 1): officer/enlisted breakdown via Rank.PersonnelType.
+        var noms = entity.Nominations ?? new List<CasualCourseNomination>();
+        if (noms.Count > 0)
+        {
+            var empIds = noms.Select(n => n.EmployeeId).Distinct().ToList();
+            var empMap = await employeeResolver.BatchResolveByIdsAsync(empIds);
+            foreach (var n in noms)
+            {
+                if (!empMap.TryGetValue(n.EmployeeId, out var emp) || emp.Rank == null) continue;
+                if (string.Equals(emp.Rank.PersonnelType, "Officer", StringComparison.OrdinalIgnoreCase))
+                    detail.OfficersCount++;
+                else if (string.Equals(emp.Rank.PersonnelType, "Enlisted", StringComparison.OrdinalIgnoreCase))
+                    detail.EnlistedCount++;
+            }
+        }
 
         if (entity.LastReturnNoteId.HasValue)
         {
@@ -847,6 +864,16 @@ public class CasualCourseAppService(
 
         return dto;
     }
+
+    // Patch 1 (v4.10.1) — short Arabic label for the Info Bar; matches the wording used
+    // in the funding-scenario picker dialog. Returns null when no scenario has been chosen yet.
+    private static string? ResolveFundingScenarioLabel(FundingScenario? scenario) => scenario switch
+    {
+        FundingScenario.FundingSourceCoversAll      => "سيناريو 1 — كامل",
+        FundingScenario.FundingSourceCoversCourse   => "سيناريو 2 — جزئي",
+        FundingScenario.FinancialItemsCoverAll      => "سيناريو 3 — مستقل",
+        _ => null,
+    };
 
     private async Task<List<CasualCourseNominationDto>> HydrateNominationsAsync(ICollection<CasualCourseNomination> noms)
     {

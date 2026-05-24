@@ -1,0 +1,160 @@
+<div class="page-shell">
+  <!-- ── Header ── -->
+  <div class="page-header">
+    <div>
+      <h1>{{ '::Training.AnnualPlan.SessionsQueue.Title' | abpLocalization }}</h1>
+      <p class="page-subtitle">{{ '::Training.AnnualPlan.SessionsQueue.Subtitle' | abpLocalization }}</p>
+    </div>
+    <div class="header-stats">
+      <span class="stat-chip stat-total">
+        {{ '::Training.AnnualPlan.SessionsQueue.StatTotal' | abpLocalization }}: <strong>{{ totalCount() }}</strong>
+      </span>
+      <span class="stat-chip stat-overdue" [class.has-value]="overdueCount() > 0">
+        {{ '::Training.AnnualPlan.SessionsQueue.StatOverdue' | abpLocalization }}: <strong>{{ overdueCount() }}</strong>
+      </span>
+      <span class="stat-chip stat-high" [class.has-value]="highPriorityCount() > 0">
+        {{ '::Training.AnnualPlan.SessionsQueue.StatHighPriority' | abpLocalization }}: <strong>{{ highPriorityCount() }}</strong>
+      </span>
+    </div>
+  </div>
+
+  <!-- ── Filters ── -->
+  <div class="filter-card">
+    <div class="filter-grid">
+      <div class="filter-field">
+        <label>{{ '::Training.AnnualPlan.SessionsQueue.Filter.Year' | abpLocalization }}</label>
+        <input type="number" class="filter-input" [value]="fYear()" (change)="onYearChange($event)" />
+      </div>
+
+      <div class="filter-field">
+        <label>{{ '::Training.AnnualPlan.SessionsQueue.Filter.Quarter' | abpLocalization }}</label>
+        <select class="filter-input" (change)="onQuarterChange($event)">
+          <option value="" [selected]="fQuarter() === null">
+            {{ '::Training.AnnualPlan.SessionsQueue.Filter.All' | abpLocalization }}
+          </option>
+          <option [value]="PreferredQuarter.Q1" [selected]="fQuarter() === PreferredQuarter.Q1">Q1</option>
+          <option [value]="PreferredQuarter.Q2" [selected]="fQuarter() === PreferredQuarter.Q2">Q2</option>
+          <option [value]="PreferredQuarter.Q3" [selected]="fQuarter() === PreferredQuarter.Q3">Q3</option>
+          <option [value]="PreferredQuarter.Q4" [selected]="fQuarter() === PreferredQuarter.Q4">Q4</option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label>{{ '::Training.AnnualPlan.SessionsQueue.Filter.Priority' | abpLocalization }}</label>
+        <select class="filter-input" (change)="onPriorityChange($event)">
+          <option value="" [selected]="fPriority() === null">
+            {{ '::Training.AnnualPlan.SessionsQueue.Filter.All' | abpLocalization }}
+          </option>
+          <option [value]="3" [selected]="fPriority() === 3">
+            {{ '::Training.AnnualPlan.SessionsQueue.Priority.High' | abpLocalization }}
+          </option>
+          <option [value]="2" [selected]="fPriority() === 2">
+            {{ '::Training.AnnualPlan.SessionsQueue.Priority.Medium' | abpLocalization }}
+          </option>
+          <option [value]="1" [selected]="fPriority() === 1">
+            {{ '::Training.AnnualPlan.SessionsQueue.Priority.Low' | abpLocalization }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label>{{ '::Training.AnnualPlan.SessionsQueue.Filter.Type' | abpLocalization }}</label>
+        <select class="filter-input" (change)="onCourseTypeChange($event)">
+          <option value="" [selected]="fCourseType() === null">
+            {{ '::Training.AnnualPlan.SessionsQueue.Filter.All' | abpLocalization }}
+          </option>
+          <option [value]="CourseType.Internal" [selected]="fCourseType() === CourseType.Internal">
+            {{ '::Training.AnnualPlan.SessionsQueue.Type.Internal' | abpLocalization }}
+          </option>
+          <option [value]="CourseType.ExternalLocal" [selected]="fCourseType() === CourseType.ExternalLocal">
+            {{ '::Training.AnnualPlan.SessionsQueue.Type.ExternalLocal' | abpLocalization }}
+          </option>
+          <option [value]="CourseType.ExternalInternational" [selected]="fCourseType() === CourseType.ExternalInternational">
+            {{ '::Training.AnnualPlan.SessionsQueue.Type.ExternalInternational' | abpLocalization }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label>{{ '::Training.AnnualPlan.SessionsQueue.Filter.Unit' | abpLocalization }}</label>
+        <select class="filter-input" (change)="onUnitChange($event)">
+          <option value="" [selected]="fUnitId() === null">
+            {{ '::Training.AnnualPlan.SessionsQueue.Filter.All' | abpLocalization }}
+          </option>
+          @for (u of units(); track u.id) {
+            <option [value]="u.id" [selected]="fUnitId() === u.id">{{ u.displayName }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn-ghost" type="button" (click)="resetFilters()">
+          {{ '::Training.AnnualPlan.SessionsQueue.ResetFilters' | abpLocalization }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Error banner ── -->
+  @if (errorMessage()) {
+    <div class="error-banner">{{ errorMessage() }}</div>
+  }
+
+  <!-- ── Grid ── -->
+  <div class="card grid-card">
+    @if (loading()) {
+      <div class="grid-state">{{ '::Training.AnnualPlan.SessionsQueue.Loading' | abpLocalization }}</div>
+    } @else if (items().length === 0) {
+      <div class="grid-state">{{ '::Training.AnnualPlan.SessionsQueue.NoItems' | abpLocalization }}</div>
+    } @else {
+      <table class="data-grid">
+        <thead>
+          <tr>
+            <th>{{ '::Training.AnnualPlan.SessionsQueue.Column.Priority' | abpLocalization }}</th>
+            <th>{{ '::Training.AnnualPlan.SessionsQueue.Column.Quarter' | abpLocalization }}</th>
+            <th>{{ '::Training.AnnualPlan.SessionsQueue.Column.Course' | abpLocalization }}</th>
+            <th>{{ '::Training.AnnualPlan.SessionsQueue.Column.Type' | abpLocalization }}</th>
+            <th>{{ '::Training.AnnualPlan.SessionsQueue.Column.Unit' | abpLocalization }}</th>
+            <th>{{ '::Training.AnnualPlan.SessionsQueue.Column.Nominees' | abpLocalization }}</th>
+            <th>{{ '::Training.AnnualPlan.SessionsQueue.Column.Action' | abpLocalization }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of items(); track row.id) {
+            <tr [class.row-overdue]="row.isOverdue">
+              <td>
+                <span [class]="priorityCss(row.priority)">
+                  {{ priorityLabelKey(row.priority) | abpLocalization }}
+                </span>
+              </td>
+              <td>
+                <span class="quarter-pill" [class.quarter-overdue]="row.isOverdue">
+                  {{ quarterLabel(row.preferredQuarter) }}
+                  @if (row.isOverdue) {
+                    <span class="overdue-marker">⚠</span>
+                  }
+                </span>
+              </td>
+              <td class="course-cell">
+                <div class="course-name">{{ row.tenantCourseNameAr || row.tenantCourseNameEn }}</div>
+                <div class="course-year">{{ row.planYear }}</div>
+              </td>
+              <td>
+                <span [class]="courseTypeCss(row.courseType)">
+                  {{ courseTypeLabelKey(row.courseType) | abpLocalization }}
+                </span>
+              </td>
+              <td>{{ unitName(row.unitId) }}</td>
+              <td>{{ row.nomineesCount ?? 0 }}</td>
+              <td>
+                <button class="btn-create-session" type="button" (click)="onCreateClick(row)">
+                  {{ '::Training.AnnualPlan.SessionsQueue.CreateButton' | abpLocalization }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>

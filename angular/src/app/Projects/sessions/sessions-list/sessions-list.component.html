@@ -1,0 +1,149 @@
+<div class="page-shell">
+  <!-- ── Header ── -->
+  <div class="page-header">
+    <div>
+      <h1>{{ '::Training.Sessions.List.Title' | abpLocalization }}</h1>
+      <p class="page-subtitle">{{ '::Training.Sessions.List.Subtitle' | abpLocalization }}</p>
+    </div>
+    <div class="header-stats">
+      <span class="stat-chip stat-total">
+        {{ '::Training.Sessions.List.StatTotal' | abpLocalization }}: <strong>{{ totalCount() }}</strong>
+      </span>
+      <span class="stat-chip stat-planned" [class.has-value]="plannedCount() > 0">
+        {{ '::Training.Session.Status.Planned' | abpLocalization }}: <strong>{{ plannedCount() }}</strong>
+      </span>
+      <span class="stat-chip stat-inprogress" [class.has-value]="inProgressCount() > 0">
+        {{ '::Training.Session.Status.InProgress' | abpLocalization }}: <strong>{{ inProgressCount() }}</strong>
+      </span>
+      <span class="stat-chip stat-completed" [class.has-value]="completedCount() > 0">
+        {{ '::Training.Session.Status.Completed' | abpLocalization }}: <strong>{{ completedCount() }}</strong>
+      </span>
+    </div>
+  </div>
+
+  <!-- ── Filters ── -->
+  <div class="filter-card">
+    <div class="filter-grid">
+      <div class="filter-field">
+        <label>{{ '::Training.AnnualPlan.SessionsQueue.Filter.Year' | abpLocalization }}</label>
+        <input type="number" class="filter-input" [value]="fYear()" (change)="onYearChange($event)" />
+      </div>
+
+      <div class="filter-field">
+        <label>{{ '::Training.Sessions.List.Filter.Status' | abpLocalization }}</label>
+        <select class="filter-input" (change)="onStatusChange($event)">
+          <option value="" [selected]="fStatus() === null">
+            {{ '::Training.AnnualPlan.SessionsQueue.Filter.All' | abpLocalization }}
+          </option>
+          <option [value]="SessionStatus.Planned"           [selected]="fStatus() === SessionStatus.Planned">{{ '::Training.Session.Status.Planned' | abpLocalization }}</option>
+          <option [value]="SessionStatus.Scheduled"         [selected]="fStatus() === SessionStatus.Scheduled">{{ '::Training.Session.Status.Scheduled' | abpLocalization }}</option>
+          <option [value]="SessionStatus.InProgress"        [selected]="fStatus() === SessionStatus.InProgress">{{ '::Training.Session.Status.InProgress' | abpLocalization }}</option>
+          <option [value]="SessionStatus.Completed"         [selected]="fStatus() === SessionStatus.Completed">{{ '::Training.Session.Status.Completed' | abpLocalization }}</option>
+          <option [value]="SessionStatus.Cancelled"         [selected]="fStatus() === SessionStatus.Cancelled">{{ '::Training.Session.Status.Cancelled' | abpLocalization }}</option>
+          <option [value]="SessionStatus.FinanciallyClosed" [selected]="fStatus() === SessionStatus.FinanciallyClosed">{{ '::Training.Session.Status.FinanciallyClosed' | abpLocalization }}</option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label>{{ '::Training.AnnualPlan.SessionsQueue.Filter.Type' | abpLocalization }}</label>
+        <select class="filter-input" (change)="onCourseTypeChange($event)">
+          <option value="" [selected]="fCourseType() === null">
+            {{ '::Training.AnnualPlan.SessionsQueue.Filter.All' | abpLocalization }}
+          </option>
+          <option [value]="CourseType.Internal"              [selected]="fCourseType() === CourseType.Internal">{{ '::Training.AnnualPlan.SessionsQueue.Type.Internal' | abpLocalization }}</option>
+          <option [value]="CourseType.ExternalLocal"         [selected]="fCourseType() === CourseType.ExternalLocal">{{ '::Training.AnnualPlan.SessionsQueue.Type.ExternalLocal' | abpLocalization }}</option>
+          <option [value]="CourseType.ExternalInternational" [selected]="fCourseType() === CourseType.ExternalInternational">{{ '::Training.AnnualPlan.SessionsQueue.Type.ExternalInternational' | abpLocalization }}</option>
+        </select>
+      </div>
+
+      <div class="filter-field filter-stage">
+        <label>{{ '::Training.Sessions.List.Filter.ExecutionStage' | abpLocalization }}</label>
+        <select class="filter-input" (change)="onStageChange($event)">
+          <option value="" [selected]="fExecutionStage() === null">
+            {{ '::Training.AnnualPlan.SessionsQueue.Filter.All' | abpLocalization }}
+          </option>
+          <option [value]="SessionExecutionStage.AwaitingQuoteSelection"    [selected]="fExecutionStage() === SessionExecutionStage.AwaitingQuoteSelection">{{ '::Training.SessionExecutionStage.AwaitingQuoteSelection' | abpLocalization }}</option>
+          <option [value]="SessionExecutionStage.AwaitingTravelInstruction" [selected]="fExecutionStage() === SessionExecutionStage.AwaitingTravelInstruction">{{ '::Training.SessionExecutionStage.AwaitingTravelInstruction' | abpLocalization }}</option>
+          <option [value]="SessionExecutionStage.AwaitingTravelAllowances"  [selected]="fExecutionStage() === SessionExecutionStage.AwaitingTravelAllowances">{{ '::Training.SessionExecutionStage.AwaitingTravelAllowances' | abpLocalization }}</option>
+          <option [value]="SessionExecutionStage.AwaitingCoursePayment"     [selected]="fExecutionStage() === SessionExecutionStage.AwaitingCoursePayment">{{ '::Training.SessionExecutionStage.AwaitingCoursePayment' | abpLocalization }}</option>
+          <option [value]="SessionExecutionStage.AwaitingCompletion"        [selected]="fExecutionStage() === SessionExecutionStage.AwaitingCompletion">{{ '::Training.SessionExecutionStage.AwaitingCompletion' | abpLocalization }}</option>
+          <option [value]="SessionExecutionStage.FinanciallyComplete"       [selected]="fExecutionStage() === SessionExecutionStage.FinanciallyComplete">{{ '::Training.SessionExecutionStage.FinanciallyComplete' | abpLocalization }}</option>
+          <option [value]="SessionExecutionStage.NoExecutionPending"        [selected]="fExecutionStage() === SessionExecutionStage.NoExecutionPending">{{ '::Training.SessionExecutionStage.NoExecutionPending' | abpLocalization }}</option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn-ghost" type="button" (click)="resetFilters()">
+          {{ '::Training.AnnualPlan.SessionsQueue.ResetFilters' | abpLocalization }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Error banner ── -->
+  @if (errorMessage()) {
+    <div class="error-banner">{{ errorMessage() }}</div>
+  }
+
+  <!-- ── Grid ── -->
+  <div class="card grid-card">
+    @if (loading()) {
+      <div class="grid-state">{{ '::Training.AnnualPlan.SessionsQueue.Loading' | abpLocalization }}</div>
+    } @else if (items().length === 0) {
+      <div class="grid-state">{{ '::Training.Sessions.List.NoSessions' | abpLocalization }}</div>
+    } @else {
+      <table class="data-grid">
+        <thead>
+          <tr>
+            <th>{{ '::Training.Sessions.List.Column.Course' | abpLocalization }}</th>
+            <th>{{ '::Training.Sessions.List.Column.Type' | abpLocalization }}</th>
+            <th>{{ '::Training.Sessions.List.Column.Dates' | abpLocalization }}</th>
+            <th>{{ '::Training.Sessions.List.Column.Status' | abpLocalization }}</th>
+            <th>{{ '::Training.Sessions.List.Column.ExecutionStage' | abpLocalization }}</th>
+            <th>{{ '::Training.Sessions.List.Column.Nominees' | abpLocalization }}</th>
+            <th>{{ '::Training.Sessions.List.Column.Actions' | abpLocalization }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of items(); track row.id) {
+            <tr class="row-clickable" (click)="goDetail(row)">
+              <td class="course-cell">
+                <div class="course-name">{{ row.tenantCourseNameAr || row.tenantCourseNameEn }}</div>
+                <div class="course-year">Q{{ row.preferredQuarter }} {{ row.planYear }}</div>
+              </td>
+              <td>
+                <span [class]="courseTypeCss(row.courseType)">
+                  {{ courseTypeLabelKey(row.courseType) | abpLocalization }}
+                </span>
+              </td>
+              <td class="dates-cell">
+                @if (datesCell(row); as d) {
+                  <div class="dates-primary" [class.dates-pending]="d.primary === '—'">{{ d.primary }}</div>
+                  @if (d.hint) {
+                    <div class="dates-hint">{{ d.hint }}</div>
+                  }
+                }
+              </td>
+              <td>
+                @if (statusBadge(row.status); as b) {
+                  <span [class]="b.css">{{ b.key | abpLocalization }}</span>
+                }
+              </td>
+              <td>
+                @if (stageBadge(row.executionStage); as b) {
+                  <span [class]="b.css">{{ b.key | abpLocalization }}</span>
+                }
+              </td>
+              <td class="nominees-cell">{{ row.nomineesCount ?? 0 }}</td>
+              <td>
+                <button class="btn-view" type="button" (click)="$event.stopPropagation(); goDetail(row)">
+                  {{ '::Training.Sessions.List.View' | abpLocalization }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>

@@ -40,9 +40,19 @@
       [status]="status()"
       [hasSelectedQuote]="hasSelectedQuote()"
       [hasTravelInstruction]="hasTravelInstruction()"
+      [isInternal]="isInternal()"
+      [isLocal]="isLocal()"
       [paymentsCanStart]="paymentsCanStart()"
       [paymentsComplete]="allPaymentsLifecycleComplete()"
       (nodeClick)="onPipelineNodeClick($event)" />
+
+    <!-- Phase 4C-α Patch 1 (v4.10.1) — sticky course info bar -->
+    @if (infoBarData(); as bar) {
+      <app-course-info-bar
+        class="cc-info-bar"
+        [data]="bar"
+        variant="casual" />
+    }
   </header>
 
   <!-- ── Sections ──────────────────────────────────────────────────── -->

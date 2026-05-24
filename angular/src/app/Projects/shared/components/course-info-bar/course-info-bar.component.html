@@ -1,0 +1,69 @@
+<div class="course-info-bar">
+  <div class="cib-icon" aria-hidden="true">📚</div>
+
+  <div class="cib-bit cib-bit-course">
+    <span class="cib-label">{{ '::Training.InfoBar.Course' | abpLocalization }}</span>
+    <span class="cib-value">{{ data().courseName }}</span>
+  </div>
+
+  @if (showUnit()) {
+    <div class="cib-sep" aria-hidden="true"></div>
+    <div class="cib-bit">
+      <span class="cib-label">{{ '::Training.InfoBar.Unit' | abpLocalization }}</span>
+      <span class="cib-value">{{ data().unitName }}</span>
+    </div>
+  }
+
+  <div class="cib-sep" aria-hidden="true"></div>
+
+  <div class="cib-bit">
+    <span class="cib-label">{{ '::Training.InfoBar.Duration' | abpLocalization }}</span>
+    <span class="cib-value">
+      {{ data().durationDays }}
+      <span class="cib-unit">{{ '::Training.Days' | abpLocalization }}</span>
+    </span>
+  </div>
+
+  <div class="cib-sep" aria-hidden="true"></div>
+
+  <div class="cib-bit">
+    <span class="cib-label">{{ '::Training.InfoBar.Nominees' | abpLocalization }}</span>
+    <span class="cib-value">
+      {{ data().nomineesCount }}
+      <span class="cib-breakdown">
+        ({{ data().officersCount }} {{ '::Training.Officers' | abpLocalization }}
+        ·
+        {{ data().enlistedCount }} {{ '::Training.Enlisted' | abpLocalization }})
+      </span>
+    </span>
+  </div>
+
+  @if (showScenario()) {
+    <div class="cib-sep" aria-hidden="true"></div>
+    <div class="cib-bit cib-bit-scenario">
+      <span class="cib-label">{{ '::Training.InfoBar.FundingScenario' | abpLocalization }}</span>
+      <span class="cib-value cib-value-scenario">{{ data().fundingScenarioLabel }}</span>
+    </div>
+  }
+
+  <div class="cib-sep" aria-hidden="true"></div>
+
+  <div class="cib-bit">
+    <span class="cib-label">{{ '::Training.InfoBar.ApprovedCost' | abpLocalization }}</span>
+    <span class="cib-value cib-value-money">
+      {{ data().approvedCostOMR | number:'1.0-3' }}
+      <span class="cib-unit">{{ '::Training.OMR' | abpLocalization }}</span>
+    </span>
+  </div>
+
+  @if (showUnitTotal()) {
+    <div class="cib-sep" aria-hidden="true"></div>
+    <div class="cib-bit">
+      <span class="cib-label">{{ '::Training.InfoBar.UnitTotal' | abpLocalization }}</span>
+      <span class="cib-value cib-value-money">
+        {{ data().unitTotalOMR | number:'1.0-3' }}
+        <span class="cib-unit">{{ '::Training.OMR' | abpLocalization }}</span>
+      </span>
+    </div>
+  }
+</div>

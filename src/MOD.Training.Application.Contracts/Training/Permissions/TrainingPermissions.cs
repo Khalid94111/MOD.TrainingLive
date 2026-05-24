@@ -234,14 +234,33 @@ public static class TrainingPermissions
         public const string Delete = Default + ".Delete";
     }
 
-    // --- Phase 3: Course Sessions ---
+    // --- Phase 3: Course Sessions (extended in Phase 4C-α v4.10.0) ---
     public static class CourseSession
     {
-        public const string Default = GroupName + ".CourseSession";
-        public const string Create = Default + ".Create";
-        public const string Update = Default + ".Update";
-        public const string Delete = Default + ".Delete";
+        public const string Default        = GroupName + ".CourseSession";
+        public const string Create         = Default + ".Create";
+        public const string Update         = Default + ".Update";
+        public const string Delete         = Default + ".Delete";
+
+        // Phase 4C-α — execution lifecycle transitions (applied via CourseSessionAppService).
+        public const string SelectQuote    = Default + ".SelectQuote";
+        public const string MarkInProgress = Default + ".MarkInProgress";
+        public const string MarkCompleted  = Default + ".MarkCompleted";
+        public const string Cancel         = Default + ".Cancel";
     }
+}
+
+// Phase 4C-α (v4.10.0) — annual plan session creation + dashboard permissions.
+// Separate top-level group so role grants stay narrowly scoped, mirroring the pattern of
+// TrainingExecutionPermissions / TrainingPaymentsPermissions.
+public static class AnnualPlanSessionPermissions
+{
+    public const string GroupName = "AnnualPlanSessions";
+
+    public const string Default        = GroupName + ".Default";
+    public const string Create         = GroupName + ".Create";
+    public const string Substitute     = GroupName + ".Substitute";
+    public const string Dashboard      = GroupName + ".Dashboard";
 }
 
 /// <summary>

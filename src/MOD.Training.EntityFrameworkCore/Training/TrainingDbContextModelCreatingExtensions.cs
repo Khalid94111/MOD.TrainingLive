@@ -362,27 +362,70 @@ builder.ConfigurePaymentsPhase4BBeta();
             b.HasIndex(x => x.TenantCourseId);
         });
 
+        // Phase 4C-α (v4.10.0): polymorphic-source session execution. CHECK constraint
+        // enforces exactly one of TrainingPlanItemId / TrainingCenterPlanItemId is set.
+        // Foreign keys to the source plan items are declared as soft refs (no nav property,
+        // no cascade) to keep the Phase 4C-β arm decoupled and avoid Phase-3 surface churn.
         builder.Entity<CourseSession>(b =>
         {
-            b.ToTable(TrainingConsts.DbTablePrefix + "CourseSessions", TrainingConsts.DbSchema);
+            b.ToTable(
+                TrainingConsts.DbTablePrefix + "CourseSessions",
+                TrainingConsts.DbSchema,
+                t => t.HasCheckConstraint(
+                    "CK_CourseSession_PolymorphicSource",
+                    "([TrainingPlanItemId] IS NOT NULL AND [TrainingCenterPlanItemId] IS NULL) OR ([TrainingPlanItemId] IS NULL AND [TrainingCenterPlanItemId] IS NOT NULL)"));
             b.ConfigureByConvention();
 
-            b.Property(x => x.CourseId).IsRequired();
-            b.Property(x => x.SessionCode).IsRequired().HasMaxLength(TrainingConsts.MaxSessionCodeLength);
-            b.Property(x => x.StartDate).IsRequired();
-            b.Property(x => x.EndDate).IsRequired();
-            b.Property(x => x.Location).HasMaxLength(TrainingConsts.MaxLocationLength);
-            b.Property(x => x.Country).HasMaxLength(TrainingConsts.MaxLocationLength);
-            b.Property(x => x.MaxSeats).IsRequired();
-            b.Property(x => x.AvailableSeats).IsRequired();
-            b.Property(x => x.Cost).HasColumnType("decimal(18,3)");
-            b.Property(x => x.Status).IsRequired();
-            b.Property(x => x.CompletionStatus).IsRequired();
+            // Polymorphic source (XOR via CHECK).
+            b.Property(x => x.TrainingPlanItemId).IsRequired(false);
+            b.Property(x => x.TrainingCenterPlanItemId).IsRequired(false);
 
-            b.HasOne(x => x.Course).WithMany().HasForeignKey(x => x.CourseId).OnDelete(DeleteBehavior.Cascade);
+            b.Property(x => x.TenantCourseId).IsRequired();
+            b.Property(x => x.CourseType).IsRequired();
 
-            b.HasIndex(x => x.CourseId);
-            b.HasIndex(x => x.SessionCode);
+            b.Property(x => x.PreferredQuarter).IsRequired();
+            b.Property(x => x.PlanYear).IsRequired();
+
+            // Nullable for external Planned sessions; set atomically by SelectPriceQuoteAsync.
+            b.Property(x => x.ActualStartDate).IsRequired(false);
+            b.Property(x => x.ActualEndDate).IsRequired(false);
+
+            b.Property(x => x.SelectedPriceQuoteId).IsRequired(false);
+
+            b.Property(x => x.Status).IsRequired().HasDefaultValue(SessionStatus.Planned);
+
+            b.Property(x => x.CancellationReason).HasMaxLength(TrainingConsts.MaxNotesLength);
+            b.Property(x => x.CancelledAt).IsRequired(false);
+            b.Property(x => x.CancelledById).IsRequired(false);
+
+            b.HasMany(x => x.Nominations)
+                .WithOne()
+                .HasForeignKey(x => x.SessionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            b.HasIndex(x => new { x.TenantId, x.TrainingPlanItemId });
+            b.HasIndex(x => new { x.TenantId, x.TrainingCenterPlanItemId });
+            b.HasIndex(x => new { x.TenantId, x.TenantCourseId });
+            b.HasIndex(x => new { x.TenantId, x.Status });
+            b.HasIndex(x => new { x.TenantId, x.PlanYear, x.PreferredQuarter });
+        });
+
+        builder.Entity<SessionNomination>(b =>
+        {
+            b.ToTable(TrainingConsts.DbTablePrefix + "SessionNominations", TrainingConsts.DbSchema);
+            b.ConfigureByConvention();
+
+            b.Property(x => x.SessionId).IsRequired();
+            b.Property(x => x.EmployeeId).IsRequired();
+            b.Property(x => x.OriginalEmployeeId).IsRequired();
+            b.Property(x => x.RankId).IsRequired();
+            b.Property(x => x.SubstitutionReason).HasMaxLength(TrainingConsts.MaxNotesLength);
+
+            // WasSubstituted is a [NotMapped] computed property.
+            b.Ignore(x => x.WasSubstituted);
+
+            b.HasIndex(x => new { x.TenantId, x.SessionId });
+            b.HasIndex(x => new { x.TenantId, x.SessionId, x.EmployeeId }).IsUnique();
         });
 
         builder.Entity<SessionCondition>(b =>

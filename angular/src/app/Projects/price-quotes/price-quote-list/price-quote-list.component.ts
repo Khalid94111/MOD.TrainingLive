@@ -147,12 +147,10 @@ export class PriceQuoteListComponent implements OnInit {
   }
 
   updateSessionId(value: string): void {
+    // Phase 4C-α (v4.10.0): CourseSession no longer carries MaxSeats — sessions use a
+    // fixed nominee snapshot taken at creation (Q-D). Participants count is now entered
+    // manually by Staff.
     this.formData.update(f => ({ ...f, sessionId: value }));
-    // Auto-fill participants from session capacity
-    const session = this.sessions().find(s => s.id === value);
-    if (session) {
-      this.formData.update(f => ({ ...f, participantsCount: session.maxSeats }));
-    }
   }
 
   updateProviderId(value: string): void {

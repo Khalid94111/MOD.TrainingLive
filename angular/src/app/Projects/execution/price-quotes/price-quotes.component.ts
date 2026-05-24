@@ -8,6 +8,11 @@ import type {
   CasualCourseDetailDto,
   SelectPriceQuoteDto,
 } from 'src/app/proxy/training/casual-courses/dtos/models';
+import { CourseSessionService } from 'src/app/proxy/training/plans/course-session.service';
+import type {
+  CourseSessionDetailDto,
+  SelectSessionPriceQuoteDto,
+} from 'src/app/proxy/training/plans/dtos/models';
 import { PriceQuoteService, TrainingProviderService } from 'src/app/proxy/training/finance';
 import type {
   CreateUpdatePriceQuoteDto,
@@ -18,26 +23,36 @@ import { GeographicalLocationService } from 'src/app/proxy/training/hr-integrati
 import type { GeographicalLocationDto } from 'src/app/proxy/training/hr-integration/dtos/models';
 import { ProviderScope } from 'src/app/proxy/training/enums/provider-scope.enum';
 
-import { CasualCourseStatus, TrainingLocalizationHelper } from '../../shared';
-import { CasualCourseDetailRefreshService } from '../casual-course-detail/casual-course-detail-refresh.service';
+import {
+  CasualCourseStatus,
+  TrainingLocalizationHelper,
+  VarianceChipComponent,
+} from '../../shared';
+import { CasualCourseDetailRefreshService } from '../../casual-courses/casual-course-detail/casual-course-detail-refresh.service';
+import { SessionDetailRefreshService } from '../../sessions/session-detail/session-detail-refresh.service';
 
 type ParentArm = 'casualCourse' | 'session';
 
+// Phase 4C-α (v4.10.0) — renamed from CasualCoursePriceQuotesComponent. Polymorphic
+// price-quote workflow shared between casual courses (Phase 4B-α) and annual-plan
+// sessions (Phase 4C-α); route data carries `parentArm: 'casualCourse' | 'session'`.
 @Component({
   standalone: true,
-  selector: 'app-casual-course-price-quotes',
-  templateUrl: './casual-course-price-quotes.component.html',
-  styleUrls: ['./casual-course-price-quotes.component.scss', '../../shared/gtms-design.scss'],
-  imports: [CommonModule, RouterLink],
+  selector: 'app-price-quotes',
+  templateUrl: './price-quotes.component.html',
+  styleUrls: ['./price-quotes.component.scss', '../../shared/gtms-design.scss'],
+  imports: [CommonModule, RouterLink, VarianceChipComponent],
 })
-export class CasualCoursePriceQuotesComponent implements OnInit {
+export class PriceQuotesComponent implements OnInit {
   private courseService = inject(CasualCourseService);
+  private sessionService = inject(CourseSessionService);
   private quoteService = inject(PriceQuoteService);
   private providerService = inject(TrainingProviderService);
   private geoService = inject(GeographicalLocationService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private refreshShell = inject(CasualCourseDetailRefreshService);
+  private refreshSessionShell = inject(SessionDetailRefreshService);
   l = inject(TrainingLocalizationHelper);
 
   ProviderScope = ProviderScope;
@@ -48,6 +63,9 @@ export class CasualCoursePriceQuotesComponent implements OnInit {
   embedded = signal<boolean>(false);
 
   course = signal<CasualCourseDetailDto | null>(null);
+  // Patch 1 (v4.10.1) — session arm needs the parent detail too so variance chips can
+  // compare against ApprovedCostOMR. loadSession() populates this when parentArm === 'session'.
+  session = signal<CourseSessionDetailDto | null>(null);
   quotes = signal<PriceQuoteDto[]>([]);
   providers = signal<TrainingProviderDto[]>([]);
   countries = signal<GeographicalLocationDto[]>([]);
@@ -72,7 +90,16 @@ export class CasualCoursePriceQuotesComponent implements OnInit {
   fActualStartDate = signal<string>('');
   fActualEndDate = signal<string>('');
 
-  estimatedTotalCost = computed(() => this.course()?.estimatedTotalCost ?? 0);
+  // Patch 1 (v4.10.1) — polymorphic approved-cost source. For casual courses we use
+  // EstimatedTotalCost (post-StaffReviewed); for sessions we use ApprovedCostOMR from
+  // the originating TrainingPlanItem. Surface name kept for backwards compatibility.
+  estimatedTotalCost = computed(() => {
+    if (this.parentArm() === 'session') {
+      return this.session()?.approvedCostOMR ?? 0;
+    }
+    return this.course()?.estimatedTotalCost ?? 0;
+  });
+  approvedCost = computed(() => this.estimatedTotalCost());
   hasSelected = computed(() => this.quotes().some(q => q.isSelected));
   selectedQuote = computed(() => this.quotes().find(q => q.isSelected) ?? null);
 
@@ -87,7 +114,14 @@ export class CasualCoursePriceQuotesComponent implements OnInit {
     return list;
   });
 
-  isCourseTHApproved = computed(() => this.course()?.status === CasualCourseStatus.THApproved);
+  // Phase 4C-α (v4.10.0): session-arm equivalent is "session is in Planned status",
+  // which is enforced server-side by SessionCreationValidator before this page renders.
+  // So for the session arm, treat the gate as always passed; the casual-course arm keeps
+  // the original THApproved check.
+  isCourseTHApproved = computed(() =>
+    this.parentArm() === 'session'
+      ? true
+      : this.course()?.status === CasualCourseStatus.THApproved);
 
   citiesForSelected = computed(() => {
     const cid = this.fCountryId();
@@ -110,6 +144,7 @@ export class CasualCoursePriceQuotesComponent implements OnInit {
     try {
       const tasks: Promise<unknown>[] = [
         this.loadCourse(),
+        this.loadSession(),
         this.loadQuotes(),
         this.loadProviders(),
         this.loadCountries(),
@@ -124,6 +159,16 @@ export class CasualCoursePriceQuotesComponent implements OnInit {
     if (this.parentArm() !== 'casualCourse') return;
     const detail = await firstValueFrom(this.courseService.getDetail(this.parentId()));
     this.course.set(detail);
+  }
+
+  private async loadSession(): Promise<void> {
+    if (this.parentArm() !== 'session') return;
+    try {
+      const detail = await firstValueFrom(this.sessionService.get(this.parentId()));
+      this.session.set(detail);
+    } catch {
+      this.session.set(null);
+    }
   }
 
   private async loadQuotes(): Promise<void> {
@@ -150,26 +195,6 @@ export class CasualCoursePriceQuotesComponent implements OnInit {
     if (this.citiesByCountry()[countryId]) return;
     const result = await firstValueFrom(this.geoService.getCities(countryId));
     this.citiesByCountry.update(map => ({ ...map, [countryId]: result.items ?? [] }));
-  }
-
-  // ── Variance helpers ──
-  variance(quote: PriceQuoteDto): number {
-    return (quote.quotedPriceOMR ?? 0) - this.estimatedTotalCost();
-  }
-
-  variancePercent(quote: PriceQuoteDto): number {
-    const est = this.estimatedTotalCost();
-    if (est <= 0) return 0;
-    return ((quote.quotedPriceOMR ?? 0) - est) / est * 100;
-  }
-
-  varianceCssClass(quote: PriceQuoteDto): string {
-    const v = this.variance(quote);
-    const est = this.estimatedTotalCost();
-    if (est <= 0) return 'variance-neutral';
-    if (v < 0) return 'variance-ok';
-    if (v > est * 0.10) return 'variance-warn';
-    return 'variance-neutral';
   }
 
   // ── Provider helpers ──
@@ -303,7 +328,7 @@ export class CasualCoursePriceQuotesComponent implements OnInit {
       }
       this.quoteDialogOpen.set(false);
       await this.loadQuotes();
-      if (this.embedded()) this.refreshShell.refresh();
+      if (this.embedded()) this.fireShellRefresh();
     } catch (err: unknown) {
       this.saveError.set(this.extractError(err));
     }
@@ -318,7 +343,7 @@ export class CasualCoursePriceQuotesComponent implements OnInit {
     try {
       await firstValueFrom(this.quoteService.delete(quote.id));
       await this.loadQuotes();
-      if (this.embedded()) this.refreshShell.refresh();
+      if (this.embedded()) this.fireShellRefresh();
     } catch (err: unknown) {
       this.saveError.set(this.extractError(err));
     }
@@ -356,20 +381,28 @@ export class CasualCoursePriceQuotesComponent implements OnInit {
       return;
     }
 
-    const dto: SelectPriceQuoteDto = {
-      priceQuoteId: quote.id,
-      actualStartDate: this.fActualStartDate(),
-      actualEndDate: this.fActualEndDate(),
-    };
-
     try {
       if (this.parentArm() === 'casualCourse') {
+        const dto: SelectPriceQuoteDto = {
+          priceQuoteId: quote.id,
+          actualStartDate: this.fActualStartDate(),
+          actualEndDate: this.fActualEndDate(),
+        };
         await firstValueFrom(this.courseService.selectPriceQuote(this.parentId(), dto));
+      } else {
+        // Phase 4C-α (v4.10.0): atomic session select — flips quote IsSelected,
+        // writes session ActualStart/End, transitions Status Planned → Scheduled.
+        const dto: SelectSessionPriceQuoteDto = {
+          priceQuoteId: quote.id,
+          actualStartDate: this.fActualStartDate(),
+          actualEndDate: this.fActualEndDate(),
+        };
+        await firstValueFrom(this.sessionService.selectPriceQuote(this.parentId(), dto));
       }
       this.pickDialogOpen.set(false);
       this.pickQuote.set(null);
-      await Promise.all([this.loadCourse(), this.loadQuotes()]);
-      if (this.embedded()) this.refreshShell.refresh();
+      await Promise.all([this.loadCourse(), this.loadSession(), this.loadQuotes()]);
+      if (this.embedded()) this.fireShellRefresh();
     } catch (err: unknown) {
       this.saveError.set(this.extractError(err));
     }
@@ -380,6 +413,17 @@ export class CasualCoursePriceQuotesComponent implements OnInit {
       this.router.navigate(['/training/casual-courses', this.parentId(), 'details']);
     } else {
       this.router.navigate(['/training']);
+    }
+  }
+
+  // Phase 4C-α (v4.10.0): polymorphic shell refresh — dispatches to the casual-course or
+  // session refresh service based on the route's parentArm. Both services are root-provided
+  // so injecting both is harmless even when only one shell is mounted.
+  private fireShellRefresh(): void {
+    if (this.parentArm() === 'session') {
+      this.refreshSessionShell.refresh();
+    } else {
+      this.refreshShell.refresh();
     }
   }
 

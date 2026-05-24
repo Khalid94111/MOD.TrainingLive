@@ -5,7 +5,7 @@ import { CasualCourseStatus, TrainingLocalizationHelper } from '../../../../shar
 import type { CasualCourseDetailDto } from 'src/app/proxy/training/casual-courses/dtos/models';
 import type { PriceQuoteDto } from 'src/app/proxy/training/finance/dtos/models';
 
-import { CasualCoursePriceQuotesComponent } from '../../../casual-course-price-quotes/casual-course-price-quotes.component';
+import { PriceQuotesComponent } from '../../../../execution/price-quotes/price-quotes.component';
 
 import type { SectionState } from '../section-details/casual-course-section-details.component';
 
@@ -30,7 +30,7 @@ import type { SectionState } from '../section-details/casual-course-section-deta
   ],
   imports: [
     CommonModule,
-    CasualCoursePriceQuotesComponent,
+    PriceQuotesComponent,
   ],
 })
 export class CasualCourseSectionQuotesComponent {

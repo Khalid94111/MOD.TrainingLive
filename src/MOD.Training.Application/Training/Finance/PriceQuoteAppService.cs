@@ -183,9 +183,11 @@ public class PriceQuoteAppService(
                 dto.ProviderScope = prov.Scope;
             }
 
-            if (ent.SessionId.HasValue && sessionLookup.TryGetValue(ent.SessionId.Value, out var sess))
+            // Phase 4C-α (v4.10.0): CourseSession no longer carries a SessionCode column.
+            // Step 5 of 4C-α will project a session display label via TenantCourse join.
+            if (ent.SessionId.HasValue && sessionLookup.TryGetValue(ent.SessionId.Value, out _))
             {
-                dto.SessionCode = sess.SessionCode;
+                dto.SessionCode = string.Empty;
             }
 
             if (ent.CountryId.HasValue && geoLookup.TryGetValue(ent.CountryId.Value, out var country))

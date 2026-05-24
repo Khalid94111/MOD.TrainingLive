@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
+import { LocalizationPipe } from '@abp/ng.core';
+
 import { CasualCourseService } from 'src/app/proxy/training/casual-courses';
 import type { CasualCourseDetailDto } from 'src/app/proxy/training/casual-courses/dtos/models';
 import { TravelInstructionService } from 'src/app/proxy/training/execution/travel-instruction.service';
@@ -10,20 +12,27 @@ import type {
   CreateUpdateTravelInstructionDto,
   TravelInstructionDto,
 } from 'src/app/proxy/training/execution/dtos/models';
+import { CourseType } from 'src/app/proxy/training/enums/course-type.enum';
 import { TravelInstructionStatus } from 'src/app/proxy/training/enums/travel-instruction-status.enum';
 
 import { TrainingLocalizationHelper } from '../../shared';
 
 type ParentArm = 'casualCourse' | 'session';
 
+// Phase 4C-α (v4.10.0) — renamed from CasualCourseTravelInstructionsComponent. Polymorphic
+// travel-instruction workflow shared between casual courses (Phase 4B-α) and annual-plan
+// sessions (Phase 4C-α); route data carries `parentArm: 'casualCourse' | 'session'`.
+// Patch 3 (v4.10.3) — defaults expanded: visa/insurance booleans now seed from CourseType
+// (true for International, false for Local) alongside the date defaults. Edit preserves
+// persisted values.
 @Component({
   standalone: true,
-  selector: 'app-casual-course-travel-instructions',
-  templateUrl: './casual-course-travel-instructions.component.html',
-  styleUrls: ['./casual-course-travel-instructions.component.scss', '../../shared/gtms-design.scss'],
-  imports: [CommonModule],
+  selector: 'app-travel-instructions',
+  templateUrl: './travel-instructions.component.html',
+  styleUrls: ['./travel-instructions.component.scss', '../../shared/gtms-design.scss'],
+  imports: [CommonModule, LocalizationPipe],
 })
-export class CasualCourseTravelInstructionsComponent implements OnInit {
+export class TravelInstructionsComponent implements OnInit {
   private courseService = inject(CasualCourseService);
   private travelService = inject(TravelInstructionService);
   private route = inject(ActivatedRoute);
@@ -137,7 +146,7 @@ export class CasualCourseTravelInstructionsComponent implements OnInit {
       await Promise.all([this.loadCourse(), this.loadInstruction()]);
       const inst = this.instruction();
       if (inst) this.populateFormFromInstruction(inst);
-      else this.seedDatesFromCourse();
+      else this.seedDefaultsFromCourse();
     } finally {
       this.loading.set(false);
     }
@@ -174,9 +183,14 @@ export class CasualCourseTravelInstructionsComponent implements OnInit {
     this.fOverrideTravelDays.set(inst.overrideTravelDays ?? null);
   }
 
-  private seedDatesFromCourse(): void {
+  // Patch 3 (v4.10.3) — seed dates AND visa/insurance/tickets booleans for a fresh
+  // instruction. International courses default visa+insurance to true; Local defaults
+  // them to false. Tickets always start false (booked later by Staff). Text fields stay
+  // empty — Staff fills them when info is available. Edit path bypasses this entirely.
+  private seedDefaultsFromCourse(): void {
     const c = this.course();
     if (!c) return;
+
     const start = (c.actualStartDate ?? c.estimatedDateFrom ?? '').substring(0, 10);
     const end   = (c.actualEndDate   ?? c.estimatedDateTo   ?? '').substring(0, 10);
     if (start) {
@@ -188,6 +202,14 @@ export class CasualCourseTravelInstructionsComponent implements OnInit {
       this.fReturnDate.set(end);
       this.fArrivalBackDate.set(this.shiftDate(end, 1));
     }
+
+    const isInternational = c.courseType === CourseType.ExternalInternational;
+    this.fVisaRequired.set(isInternational);
+    this.fVisaNotes.set('');
+    this.fInsuranceArranged.set(isInternational);
+    this.fInsuranceProvider.set('');
+    this.fTicketsBooked.set(false);
+    this.fTicketReference.set('');
   }
 
   private shiftDate(isoDate: string, days: number): string {

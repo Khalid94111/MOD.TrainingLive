@@ -193,20 +193,63 @@ export const TRAINING_ROUTES: Routes = [
       { path: 'casual-courses/:id/price-quotes',        redirectTo: 'casual-courses/:id', pathMatch: 'full' },
       { path: 'casual-courses/:id/travel-instructions', redirectTo: 'casual-courses/:id', pathMatch: 'full' },
 
-      // ===== Phase 4B-α: Session-arm pages (still standalone — no tabbed shell yet) =====
+      // ===== Phase 4B-α: Session-arm standalone routes (kept for backward links) =====
+      // Components renamed in Phase 4C-α v4.10.0 to PriceQuotesComponent /
+      // TravelInstructionsComponent under Projects/execution/.
       {
         path: 'sessions/:id/travel-instructions',
         data: { parentArm: 'session' },
         loadComponent: () =>
-          import('./casual-courses/casual-course-travel-instructions/casual-course-travel-instructions.component')
-            .then(m => m.CasualCourseTravelInstructionsComponent),
+          import('./execution/travel-instructions/travel-instructions.component')
+            .then(m => m.TravelInstructionsComponent),
       },
       {
         path: 'sessions/:id/price-quotes',
         data: { parentArm: 'session' },
         loadComponent: () =>
-          import('./casual-courses/casual-course-price-quotes/casual-course-price-quotes.component')
-            .then(m => m.CasualCoursePriceQuotesComponent),
+          import('./execution/price-quotes/price-quotes.component')
+            .then(m => m.PriceQuotesComponent),
+      },
+
+      // ===== Phase 4C-α: Annual Plan Sessions =====
+      {
+        path: 'annual-plan/sessions-queue',
+        loadComponent: () =>
+          import('./annual-plan-sessions/sessions-queue/sessions-queue.component')
+            .then(m => m.SessionsQueueComponent),
+      },
+      {
+        path: 'annual-plan/create-session/internal/:planItemId',
+        data: { mode: 'internal' },
+        loadComponent: () =>
+          import('./annual-plan-sessions/create-session/create-session.component')
+            .then(m => m.CreateSessionComponent),
+      },
+      {
+        path: 'annual-plan/create-session/external/:planItemId',
+        data: { mode: 'external' },
+        loadComponent: () =>
+          import('./annual-plan-sessions/create-session/create-session.component')
+            .then(m => m.CreateSessionComponent),
+      },
+      {
+        path: 'sessions',
+        loadComponent: () =>
+          import('./sessions/sessions-list/sessions-list.component')
+            .then(m => m.SessionsListComponent),
+      },
+      {
+        path: 'sessions/:id',
+        data: { parentArm: 'session', embedded: true },
+        loadComponent: () =>
+          import('./sessions/session-detail/session-detail.component')
+            .then(m => m.SessionDetailComponent),
+      },
+      {
+        path: 'annual-plan/dashboard',
+        loadComponent: () =>
+          import('./annual-plan-sessions/dashboard/dashboard.component')
+            .then(m => m.AnnualPlanDashboardComponent),
       },
 
       // ===== Phase 4B-β: Payments + Auto-Reallocation =====

@@ -6,7 +6,7 @@ import type { CasualCourseDetailDto } from 'src/app/proxy/training/casual-course
 import type { TravelInstructionDto } from 'src/app/proxy/training/execution/dtos/models';
 import { TravelInstructionStatus } from 'src/app/proxy/training/enums/travel-instruction-status.enum';
 
-import { CasualCourseTravelInstructionsComponent } from '../../../casual-course-travel-instructions/casual-course-travel-instructions.component';
+import { TravelInstructionsComponent } from '../../../../execution/travel-instructions/travel-instructions.component';
 
 import type { SectionState } from '../section-details/casual-course-section-details.component';
 
@@ -26,7 +26,7 @@ import type { SectionState } from '../section-details/casual-course-section-deta
   ],
   imports: [
     CommonModule,
-    CasualCourseTravelInstructionsComponent,
+    TravelInstructionsComponent,
   ],
 })
 export class CasualCourseSectionTravelComponent {

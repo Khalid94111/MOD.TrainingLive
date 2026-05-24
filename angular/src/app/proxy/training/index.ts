@@ -1,3 +1,4 @@
+import * as AnnualPlanSessions from './annual-plan-sessions';
 import * as CasualCourses from './casual-courses';
 import * as Catalog from './catalog';
 import * as Centers from './centers';
@@ -11,4 +12,4 @@ import * as Nominations from './nominations';
 import * as Payments from './payments';
 import * as Plans from './plans';
 import * as TenantCourses from './tenant-courses';
-export { CasualCourses, Catalog, Centers, CourseFields, CourseProposals, Enums, Execution, Finance, HrIntegration, Nominations, Payments, Plans, TenantCourses };
+export { AnnualPlanSessions, CasualCourses, Catalog, Centers, CourseFields, CourseProposals, Enums, Execution, Finance, HrIntegration, Nominations, Payments, Plans, TenantCourses };

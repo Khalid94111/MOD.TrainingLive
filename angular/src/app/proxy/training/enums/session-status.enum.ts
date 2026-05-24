@@ -1,10 +1,12 @@
 import { mapEnumToOptions } from '@abp/ng.core';
 
 export enum SessionStatus {
-  Scheduled = 0,
-  InProgress = 1,
-  Completed = 2,
-  Cancelled = 3,
+  Planned = 0,
+  Scheduled = 1,
+  InProgress = 2,
+  Completed = 3,
+  Cancelled = 4,
+  FinanciallyClosed = 5,
 }
 
 export const sessionStatusOptions = mapEnumToOptions(SessionStatus);

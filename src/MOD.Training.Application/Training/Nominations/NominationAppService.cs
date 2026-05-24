@@ -75,15 +75,18 @@ public class NominationAppService(
         var employees = await employeeResolver.BatchResolveByIdsAsync(employeeIds);
         var nominators = await employeeResolver.BatchResolveByUserIdsAsync(nominatorUserIds);
 
-        // Resolve session → course names
+        // Resolve session → course names.
+        // Phase 4C-α (v4.10.0): CourseSession.CourseId removed, replaced by TenantCourseId.
+        // The Phase 3 CourseNameResolver still expects a Courses.Id, so the SessionCode
+        // and course-name fields are left empty for the new shape — step 5 of 4C-α will
+        // project a session display label via TenantCourse join.
         var sessionCourseMap = new Dictionary<Guid, (string code, string nameAr)>();
         foreach (var sid in sessionIds)
         {
             var session = await sessionRepository.FindAsync(sid);
             if (session != null)
             {
-                var course = await courseNameResolver.ResolveAsync(session.CourseId);
-                sessionCourseMap[sid] = (session.SessionCode, course?.NameAr ?? "");
+                sessionCourseMap[sid] = (string.Empty, string.Empty);
             }
         }
 
@@ -176,13 +179,9 @@ public class NominationAppService(
         nomination.Status = NominationStatus.Rejected;
         await repository.UpdateAsync(nomination, autoSave: true);
 
-        // Restore available seat if session is assigned
-        if (nomination.SessionId.HasValue)
-        {
-            var session = await sessionRepository.GetAsync(nomination.SessionId.Value);
-            session.AvailableSeats++;
-            await sessionRepository.UpdateAsync(session, autoSave: true);
-        }
+        // Phase 4C-α (v4.10.0): CourseSession no longer tracks AvailableSeats — sessions
+        // have a fixed nominee snapshot taken at creation (Q-D, locked after creation).
+        // Rejection at the plan-item level no longer adjusts session seat counts.
     }
 
     public async Task<List<NominationApprovalDto>> GetApprovalChainAsync(Guid nominationId)
@@ -285,10 +284,12 @@ public class NominationAppService(
         var nominator = await employeeResolver.GetByUserIdAsync(entity.NominatedById);
         if (nominator != null) dto.NominatedByName = nominator.FullNameAr;
 
+        // Phase 4C-α (v4.10.0): CourseSession no longer carries a SessionCode column.
+        // Step 5 of 4C-α will project a session display label via TenantCourse join.
         if (entity.SessionId.HasValue)
         {
             var session = await sessionRepository.FindAsync(entity.SessionId.Value);
-            if (session != null) dto.SessionCode = session.SessionCode;
+            if (session != null) dto.SessionCode = string.Empty;
         }
     }
 }

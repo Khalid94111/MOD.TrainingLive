@@ -1,32 +1,76 @@
 import type { CreationAuditedEntityDto, EntityDto, FullAuditedEntityDto, PagedAndSortedResultRequestDto } from '@abp/ng.core';
-import type { SessionStatus } from '../../enums/session-status.enum';
-import type { CompletionStatus } from '../../enums/completion-status.enum';
-import type { PlanNoteEntityType } from '../../enums/plan-note-entity-type.enum';
 import type { CourseType } from '../../enums/course-type.enum';
+import type { SessionStatus } from '../../enums/session-status.enum';
+import type { SessionExecutionStage } from '../../enums/session-execution-stage.enum';
+import type { PlanNoteEntityType } from '../../enums/plan-note-entity-type.enum';
 import type { PreferredQuarter } from '../../enums/preferred-quarter.enum';
 import type { ConditionType } from '../../enums/condition-type.enum';
 import type { PlanNoteAuthorRole } from '../../enums/plan-note-author-role.enum';
 import type { PlanStatus } from '../../enums/plan-status.enum';
 
-export interface CourseSessionDto extends FullAuditedEntityDto<string> {
-  courseId?: string;
-  courseName?: string;
-  sessionCode?: string;
-  startDate?: string;
-  endDate?: string;
-  location?: string | null;
-  country?: string | null;
-  maxSeats?: number;
-  availableSeats?: number;
-  cost?: number | null;
+export interface CancelSessionDto {
+  reason: string;
+}
+
+export interface CourseSessionDetailDto extends FullAuditedEntityDto<string> {
+  trainingPlanItemId?: string | null;
+  trainingCenterPlanItemId?: string | null;
+  tenantCourseId?: string;
+  tenantCourseNameAr?: string | null;
+  tenantCourseNameEn?: string | null;
+  courseType?: CourseType;
+  preferredQuarter?: number;
+  planYear?: number;
+  actualStartDate?: string | null;
+  actualEndDate?: string | null;
   status?: SessionStatus;
-  completionStatus?: CompletionStatus;
-  completedAt?: string | null;
+  executionStage?: SessionExecutionStage;
+  selectedPriceQuoteId?: string | null;
+  selectedPriceQuoteAmountOMR?: number | null;
+  selectedPriceQuoteProviderId?: string | null;
+  selectedPriceQuoteProviderNameAr?: string | null;
+  cancellationReason?: string | null;
+  cancelledAt?: string | null;
+  cancelledById?: string | null;
+  nominations?: SessionNominationDto[];
+  durationDays?: number;
+  nomineesCount?: number;
+  officersCount?: number;
+  enlistedCount?: number;
+  approvedCostOMR?: number;
+  unitTotalOMR?: number;
+  unitName?: string | null;
+}
+
+export interface CourseSessionDto extends FullAuditedEntityDto<string> {
+  trainingPlanItemId?: string | null;
+  trainingCenterPlanItemId?: string | null;
+  tenantCourseId?: string;
+  tenantCourseNameAr?: string | null;
+  tenantCourseNameEn?: string | null;
+  courseType?: CourseType;
+  preferredQuarter?: number;
+  planYear?: number;
+  actualStartDate?: string | null;
+  actualEndDate?: string | null;
+  selectedPriceQuoteId?: string | null;
+  status?: SessionStatus;
+  executionStage?: SessionExecutionStage;
+  nomineesCount?: number;
+  cancellationReason?: string | null;
+  cancelledAt?: string | null;
+  cancelledById?: string | null;
 }
 
 export interface CourseSessionGetListInput extends PagedAndSortedResultRequestDto {
-  courseId?: string | null;
+  trainingPlanItemId?: string | null;
+  trainingCenterPlanItemId?: string | null;
+  tenantCourseId?: string | null;
+  courseType?: CourseType | null;
   status?: SessionStatus | null;
+  executionStage?: SessionExecutionStage | null;
+  planYear?: number | null;
+  preferredQuarter?: number | null;
 }
 
 export interface CreatePlanNoteDto {
@@ -34,17 +78,6 @@ export interface CreatePlanNoteDto {
   entityId?: string;
   note?: string;
   isReturnReason?: boolean;
-}
-
-export interface CreateUpdateCourseSessionDto {
-  courseId: string;
-  sessionCode: string;
-  startDate: string;
-  endDate: string;
-  location?: string | null;
-  country?: string | null;
-  maxSeats: number;
-  cost?: number | null;
 }
 
 export interface CreateUpdatePlanItemFinancialItemDto {
@@ -125,6 +158,26 @@ export interface PlanNoteGetListInput extends PagedAndSortedResultRequestDto {
 
 export interface ReturnReasonDto {
   reason: string;
+}
+
+export interface SelectSessionPriceQuoteDto {
+  priceQuoteId: string;
+  actualStartDate: string;
+  actualEndDate: string;
+}
+
+export interface SessionNominationDto extends EntityDto<string> {
+  sessionId?: string;
+  employeeId?: string;
+  originalEmployeeId?: string;
+  wasSubstituted?: boolean;
+  substitutionReason?: string | null;
+  rankId?: string;
+  rankNameAr?: string | null;
+  employeeNameAr?: string | null;
+  employeeNameEn?: string | null;
+  originalEmployeeNameAr?: string | null;
+  creationTime?: string;
 }
 
 export interface TrainingPlanDto extends FullAuditedEntityDto<string> {

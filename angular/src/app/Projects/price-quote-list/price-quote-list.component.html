@@ -73,7 +73,7 @@
             <select class="form-input" [value]="fSessionId()" (change)="fSessionId.set($any($event.target).value); onSessionSelected()">
               <option value="">اختر جلسة...</option>
               @for (s of sessions(); track s.id) {
-                <option [value]="s.id">{{ s.sessionCode }} — {{ s.courseName }}</option>
+                <option [value]="s.id">{{ s.tenantCourseNameAr || s.tenantCourseNameEn || s.id }}</option>
               }
             </select>
           </div>

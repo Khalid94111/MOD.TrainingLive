@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<title>GTMS — Course Info Bar Mockup (Sessions + Casual Courses)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+body { font-family: 'Tajawal', sans-serif; background: #f8fafc; color: #1e293b; }
+.screen { padding: 32px 28px; max-width: 1280px; margin: 0 auto; }
+.card { background: white; border: 1px solid #e2e8f0; border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+.type-internal { background: #f1f5f9; color: #475569; font-size: 11px; padding: 3px 10px; border-radius: 6px; font-weight: 600; }
+.type-local { background: #dbeafe; color: #1e40af; font-size: 11px; padding: 3px 10px; border-radius: 6px; font-weight: 600; }
+.type-intl { background: #fef3c7; color: #92400e; font-size: 11px; padding: 3px 10px; border-radius: 6px; font-weight: 600; }
+.status-planned { background: #e0f2fe; color: #075985; }
+.status-scheduled { background: #dbeafe; color: #1e40af; }
+.status-thapproved { background: #fce7f3; color: #9d174d; }
+.status-badge { font-size: 11px; padding: 3px 10px; border-radius: 999px; font-weight: 600; display: inline-flex; gap: 4px; align-items: center; }
+.section-label { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 6px; }
+.label-blue { background: #dbeafe; color: #1e40af; }
+.label-amber { background: #fef3c7; color: #92400e; }
+.label-green { background: #dcfce7; color: #166534; }
+.btn-primary { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; }
+.btn-success { background: linear-gradient(135deg, #16a34a, #15803d); color: white; padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; }
+.btn-danger { background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; }
+.btn-ghost { background: white; border: 1px solid #cbd5e1; color: #475569; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.input-mock { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; font-size: 13px; min-height: 36px; display: flex; align-items: center; }
+.input-with-variance { background: #f8fafc; border: 2px solid #4f46e5; border-radius: 8px; padding: 8px 12px; font-size: 13px; min-height: 40px; display: flex; align-items: center; }
+.section-divider { border-top: 2px dashed #cbd5e1; margin: 48px 0; padding-top: 32px; }
+table.data-grid { width: 100%; font-size: 13px; }
+table.data-grid th { background: #f8fafc; padding: 10px; font-weight: 600; text-align: right; color: #475569; font-size: 12px; border-bottom: 2px solid #e2e8f0; }
+table.data-grid td { padding: 10px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+
+/* Course Info Bar - the star of this mockup */
+.course-info-bar {
+  background: linear-gradient(135deg, #f0f9ff, #fef3c7);
+  border: 1px solid #d8b4fe;
+  border-radius: 12px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  box-shadow: 0 2px 6px rgba(125, 60, 220, 0.1);
+}
+.course-info-icon {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 18px;
+  flex-shrink: 0;
+}
+.course-info-bit {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 0 12px;
+  border-right: 1px solid #d1d5db;
+}
+.course-info-bit:first-of-type { border-right: none; padding-right: 0; }
+.course-info-bit:last-of-type { padding-left: 0; }
+.cib-label { font-size: 10px; color: #64748b; font-weight: 600; }
+.cib-value { font-size: 14px; color: #1e293b; font-weight: 700; }
+.cib-value-money { font-size: 16px; color: #166534; font-weight: 700; }
+.cib-value-warn { font-size: 14px; color: #b45309; font-weight: 700; }
+
+/* Variance indicator inside dialogs */
+.variance-live {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  margin-top: 6px;
+}
+.variance-ok { background: #dcfce7; color: #166534; }
+.variance-neutral { background: #f1f5f9; color: #475569; }
+.variance-warn { background: #fef3c7; color: #92400e; }
+.variance-danger { background: #fee2e2; color: #991b1b; }
+
+.pipeline { display: flex; align-items: center; gap: 4px; padding: 8px 0; }
+.pipeline-node { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 65px; }
+.pipeline-dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+.dot-done { background: #16a34a; color: white; }
+.dot-active { background: #3b82f6; color: white; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25); }
+.dot-todo { background: #e2e8f0; color: #94a3b8; }
+.pipeline-label { font-size: 9px; color: #475569; font-weight: 600; }
+.pipeline-line { width: 18px; height: 2px; background: #e2e8f0; }
+.pipeline-line-done { background: #16a34a; }
+
+.accordion-section { background: white; border: 1px solid #e2e8f0; border-radius: 14px; margin-bottom: 12px; overflow: hidden; }
+.accordion-header { padding: 14px 18px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.accordion-header.active { background: linear-gradient(135deg, #f5f3ff, #ffffff); border-right: 3px solid #4f46e5; }
+.accordion-header.locked { opacity: 0.5; }
+.accordion-body { padding: 20px 18px; border-top: 1px solid #e2e8f0; }
+
+.modal-shell { background: white; border-radius: 14px; box-shadow: 0 20px 40px rgba(0,0,0,0.15); max-width: 600px; margin: 0 auto; }
+.modal-header { padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+.modal-body { padding: 20px; }
+.modal-footer { padding: 16px 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 8px; }
+
+.diff-block { background: #fef3c7; border: 2px dashed #d97706; border-radius: 10px; padding: 16px; margin: 16px 0; }
+.nav-pill { background: white; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- ====================================================================== -->
+<!-- NAV -->
+<!-- ====================================================================== -->
+<div class="bg-white border-b border-slate-200 sticky top-0 z-10">
+  <div class="max-w-7xl mx-auto px-7 py-3 flex items-center gap-3 flex-wrap">
+    <span class="text-sm font-bold text-slate-700">GTMS Patch — Course Info Bar</span>
+    <span class="text-xs px-2 py-0.5 bg-amber-100 text-amber-900 rounded font-bold">v1 — Both Sessions & Casual Courses</span>
+    <div class="mr-auto flex gap-2 flex-wrap">
+      <a href="#session-detail" class="nav-pill">🎯 Session Detail</a>
+      <a href="#casual-detail" class="nav-pill">📋 Casual Course Detail</a>
+      <a href="#add-quote-dialog" class="nav-pill">➕ Add Quote Dialog</a>
+      <a href="#pick-winner-dialog" class="nav-pill">🏆 Pick Winner Dialog</a>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- Intro -->
+<!-- ====================================================================== -->
+<div class="screen">
+  <div class="diff-block">
+    <h2 class="font-bold text-amber-900 mb-2">📌 ما الذي يتغيّر</h2>
+    <p class="text-sm text-slate-700 mb-3">
+      <b>إضافة:</b> Course Info Bar ثابت (sticky) أسفل الـ status pipeline في صفحة Session Detail
+      وصفحة Casual Course Detail. يعرض المعلومات المرجعية دائماً أثناء تصفّح الـ user للأقسام.
+    </p>
+    <p class="text-sm text-slate-700 mb-3">
+      <b>إضافة:</b> Variance indicator حيّ (live) داخل dialogs الـ Add Quote و Pick Winner
+      يقارن السعر المُدخل بالتكلفة المعتمدة فوراً.
+    </p>
+    <p class="text-sm text-slate-700">
+      <b>المعلومات في الـ bar:</b> اسم الدورة، المدة، عدد المرشحين، التكلفة المعتمدة الإجمالية،
+      للوحدة (إن أمكن).
+    </p>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- SESSION DETAIL -->
+<!-- ====================================================================== -->
+<div id="session-detail" class="screen">
+  <h1 class="text-2xl font-bold text-slate-800 mb-2">🎯 Session Detail — مع Course Info Bar</h1>
+  <p class="text-sm text-slate-500 mb-4">جلسة CISSP خارجية محلية، في حالة Planned · المستخدم في Section 3 (Quotes)</p>
+
+  <!-- Header (existing) -->
+  <div class="card p-5 mb-3">
+    <div class="flex justify-between items-start gap-3 mb-4">
+      <div>
+        <div class="text-xs text-slate-500 mb-1">جلسة من الخطة السنوية · القوات الجوية</div>
+        <h2 class="text-xl font-bold">CISSP — أمن المعلومات المعتمد</h2>
+        <div class="text-xs text-slate-500 mt-1 flex items-center gap-2 flex-wrap">
+          <span class="type-local">🇴🇲 خارجية محلية</span>
+          <span>·</span>
+          <span class="text-amber-700"><b>التواريخ لم تُحدَّد بعد</b></span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="status-badge status-planned">⏱ مخطّطة</span>
+        <button class="btn-ghost text-xs">🖨</button>
+        <button class="btn-danger">⛔ إلغاء</button>
+      </div>
+    </div>
+
+    <!-- Status pipeline (existing) -->
+    <div class="pipeline overflow-x-auto">
+      <div class="pipeline-node"><div class="pipeline-dot dot-done">✓</div><div class="pipeline-label">بالخطة</div></div>
+      <div class="pipeline-line pipeline-line-done"></div>
+      <div class="pipeline-node"><div class="pipeline-dot dot-done">✓</div><div class="pipeline-label">منشأة</div></div>
+      <div class="pipeline-line"></div>
+      <div class="pipeline-node"><div class="pipeline-dot dot-active">●</div><div class="pipeline-label">عرض السعر</div></div>
+      <div class="pipeline-line"></div>
+      <div class="pipeline-node"><div class="pipeline-dot dot-todo">○</div><div class="pipeline-label">التواريخ</div></div>
+      <div class="pipeline-line"></div>
+      <div class="pipeline-node"><div class="pipeline-dot dot-todo">○</div><div class="pipeline-label">السفر</div></div>
+      <div class="pipeline-line"></div>
+      <div class="pipeline-node"><div class="pipeline-dot dot-todo">○</div><div class="pipeline-label">المدفوعات</div></div>
+      <div class="pipeline-line"></div>
+      <div class="pipeline-node"><div class="pipeline-dot dot-todo">○</div><div class="pipeline-label">جارية</div></div>
+      <div class="pipeline-line"></div>
+      <div class="pipeline-node"><div class="pipeline-dot dot-todo">○</div><div class="pipeline-label">مكتملة</div></div>
+    </div>
+  </div>
+
+  <!-- ★★★ NEW: Course Info Bar (sticky) ★★★ -->
+  <div class="course-info-bar mb-4 sticky top-16 z-9" style="position: sticky;">
+    <div class="course-info-icon">📚</div>
+    <div class="course-info-bit">
+      <span class="cib-label">الدورة</span>
+      <span class="cib-value">CISSP</span>
+    </div>
+    <div class="course-info-bit">
+      <span class="cib-label">المدة</span>
+      <span class="cib-value">5 أيام</span>
+    </div>
+    <div class="course-info-bit">
+      <span class="cib-label">المرشحون</span>
+      <span class="cib-value">8 <span class="text-xs font-normal text-slate-500">(3 ضباط · 5 أفراد)</span></span>
+    </div>
+    <div class="course-info-bit">
+      <span class="cib-label">التكلفة المعتمدة</span>
+      <span class="cib-value-money">8,500 ر.ع</span>
+    </div>
+    <div class="course-info-bit">
+      <span class="cib-label">للوحدة (إجمالي)</span>
+      <span class="cib-value-money">12,750 ر.ع</span>
+    </div>
+    <div class="mr-auto">
+      <button class="btn-ghost text-xs">📊 تفاصيل البنود المالية</button>
+    </div>
+  </div>
+
+  <!-- Sections (collapsed Section 1 + 2, Section 3 active) -->
+  <div class="accordion-section">
+    <div class="accordion-header">
+      <span>▼</span>
+      <span class="section-label label-blue">القسم 1</span>
+      <span class="font-bold">📋 تفاصيل الجلسة</span>
+      <span class="text-xs text-slate-500 mr-auto">CISSP · 5 أيام · 8 مرشحين</span>
+    </div>
+  </div>
+
+  <div class="accordion-section">
+    <div class="accordion-header">
+      <span>▼</span>
+      <span class="section-label label-blue">القسم 2</span>
+      <span class="font-bold">👥 المرشحون (8)</span>
+      <span class="text-xs text-slate-500 mr-auto">من اعتماد الخطة</span>
+    </div>
+  </div>
+
+  <div class="accordion-section">
+    <div class="accordion-header active">
+      <span>▼</span>
+      <span class="section-label label-blue">القسم 3 — نشط</span>
+      <span class="font-bold">💼 عروض الأسعار</span>
+      <span class="text-xs text-amber-700 mr-auto">2 / 3 عروض · لم يُختر فائز بعد</span>
+    </div>
+    <div class="accordion-body">
+      <div class="flex justify-between items-center mb-3">
+        <div class="text-sm text-slate-600">
+          أضف العروض من المعاهد المحلية المعتمدة. عند اختيار الفائز، سيُطلب منك إدخال التواريخ.
+        </div>
+        <button class="btn-primary">+ إضافة عرض سعر</button>
+      </div>
+
+      <table class="data-grid">
+        <thead>
+          <tr>
+            <th>الجهة</th>
+            <th>النطاق</th>
+            <th>الموقع</th>
+            <th>السعر المعروض</th>
+            <th>الفرق عن المعتمد</th>
+            <th>إجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>SANS Institute</b></td>
+            <td><span class="type-local">محلية</span></td>
+            <td>مسقط</td>
+            <td><b>8,200 ر.ع</b></td>
+            <td><span class="variance-live variance-ok">↓ -3.5% (300 ر.ع أقل)</span></td>
+            <td class="flex gap-1">
+              <button class="btn-success text-xs">🏆 اختيار</button>
+              <button class="btn-ghost text-xs">✏️</button>
+            </td>
+          </tr>
+          <tr>
+            <td><b>معهد الإدارة</b></td>
+            <td><span class="type-local">محلية</span></td>
+            <td>مسقط</td>
+            <td><b>9,200 ر.ع</b></td>
+            <td><span class="variance-live variance-warn">↑ +8.2% (700 ر.ع أكثر)</span></td>
+            <td class="flex gap-1">
+              <button class="btn-success text-xs">🏆 اختيار</button>
+              <button class="btn-ghost text-xs">✏️</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="bg-blue-50 border border-blue-200 rounded-md p-3 mt-4 text-xs text-blue-900">
+        <b>💡 ملاحظة:</b> عمود "الفرق عن المعتمد" يحسب: (السعر المعروض − التكلفة المعتمدة).
+        أخضر = أقل من المعتمد، أصفر = أعلى بحدود معقولة، أحمر = أعلى بكثير.
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion-section">
+    <div class="accordion-header locked">
+      <span>▽</span>
+      <span class="section-label label-amber">القسم 4 — مقفل</span>
+      <span class="font-bold text-slate-500">✈️ تعليمات السفر</span>
+      <span class="text-xs text-slate-400 mr-auto">يُفتح بعد اختيار العرض</span>
+    </div>
+  </div>
+
+  <div class="accordion-section">
+    <div class="accordion-header locked">
+      <span>▽</span>
+      <span class="section-label label-amber">القسم 5 — مقفل</span>
+      <span class="font-bold text-slate-500">💸 المدفوعات</span>
+    </div>
+  </div>
+
+  <div class="card p-4 mt-5 bg-gradient-to-r from-amber-50 to-white text-xs">
+    <b>🎯 الفائدة:</b> الـ user الآن يرى التكلفة المعتمدة (8,500 ر.ع) دائماً أثناء إضافة العروض.
+    لا يحتاج لفتح Section 1 أو الذهاب للخطة السنوية للتأكد. المقارنة فورية في الجدول.
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- CASUAL COURSE DETAIL -->
+<!-- ====================================================================== -->
+<div class="section-divider"></div>
+<div id="casual-detail" class="screen">
+  <h1 class="text-2xl font-bold text-slate-800 mb-2">📋 Casual Course Detail — مع Course Info Bar</h1>
+  <p class="text-sm text-slate-500 mb-4">نفس النمط للدورات العرضية · في حالة THApproved، Section 3 نشط</p>
+
+  <!-- Header -->
+  <div class="card p-5 mb-3">
+    <div class="flex justify-between items-start gap-3 mb-4">
+      <div>
+        <div class="text-xs text-slate-500 mb-1">دورة عرضية · القوات الجوية</div>
+        <h2 class="text-xl font-bold">PMP — إدارة المشاريع الاحترافية</h2>
+        <div class="text-xs text-slate-500 mt-1 flex items-center gap-2 flex-wrap">
+          <span class="type-intl">🌍 خارجية دولية</span>
+          <span>·</span>
+          <span>طُلبت من: UTM رائد الراشدي</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="status-badge status-thapproved">✓ معتمدة من TH</span>
+        <button class="btn-ghost text-xs">🖨</button>
+      </div>
+    </div>
+
+    <!-- Status pipeline -->
+    <div class="pipeline overflow-x-auto">
+      <div class="pipeline-node"><div class="pipeline-dot dot-done">✓</div><div class="pipeline-label">مسودة</div></div>
+      <div class="pipeline-line pipeline-line-done"></div>
+      <div class="pipeline-node"><div class="pipeline-dot dot-done">✓</div><div class="pipeline-label">UTM</div></div>
+      <div class="pipeline-line pipeline-line-done"></div>
+      <div class="pipeline-node"><div class="pipeline-dot dot-done">✓</div><div class="pipeline-label">UGM</div></div>
+      <div class="pipeline-line pipeline-line-done"></div>
+      <div class="pipeline-node"><div class="pipeline-dot dot-done">✓</div><div class="pipeline-label">مراجعة Staff</div></div>
+      <div class="pipeline-line pipeline-line-done"></div>
+      <div class="pipeline-node"><div class="pipeline-dot dot-done">✓</div><div class="pipeline-label">TD</div></div>
+      <div class="pipeline-line pipeline-line-done"></div>
+      <div class="pipeline-node"><div class="pipeline-dot dot-done">✓</div><div class="pipeline-label">TH</div></div>
+      <div class="pipeline-line"></div>
+      <div class="pipeline-node"><div class="pipeline-dot dot-active">●</div><div class="pipeline-label">عرض السعر</div></div>
+      <div class="pipeline-line"></div>
+      <div class="pipeline-node"><div class="pipeline-dot dot-todo">○</div><div class="pipeline-label">السفر</div></div>
+      <div class="pipeline-line"></div>
+      <div class="pipeline-node"><div class="pipeline-dot dot-todo">○</div><div class="pipeline-label">المدفوعات</div></div>
+    </div>
+  </div>
+
+  <!-- ★★★ NEW: Course Info Bar for Casual Course ★★★ -->
+  <div class="course-info-bar mb-4 sticky top-16 z-9">
+    <div class="course-info-icon">📚</div>
+    <div class="course-info-bit">
+      <span class="cib-label">الدورة</span>
+      <span class="cib-value">PMP</span>
+    </div>
+    <div class="course-info-bit">
+      <span class="cib-label">المدة</span>
+      <span class="cib-value">5 أيام</span>
+    </div>
+    <div class="course-info-bit">
+      <span class="cib-label">المرشحون</span>
+      <span class="cib-value">2 <span class="text-xs font-normal text-slate-500">(2 ضباط)</span></span>
+    </div>
+    <div class="course-info-bit">
+      <span class="cib-label">سيناريو التمويل</span>
+      <span class="cib-value text-orange-600">2 — جزئي</span>
+    </div>
+    <div class="course-info-bit">
+      <span class="cib-label">التكلفة المعتمدة</span>
+      <span class="cib-value-money">7,145 ر.ع</span>
+    </div>
+    <div class="mr-auto">
+      <button class="btn-ghost text-xs">📊 تفاصيل البنود</button>
+    </div>
+  </div>
+
+  <!-- Sections -->
+  <div class="accordion-section">
+    <div class="accordion-header">
+      <span>▼</span>
+      <span class="section-label label-blue">القسم 1</span>
+      <span class="font-bold">📋 تفاصيل الدورة</span>
+      <span class="text-xs text-slate-500 mr-auto">PMP · 5 أيام · 2 مرشحين</span>
+    </div>
+  </div>
+
+  <div class="accordion-section">
+    <div class="accordion-header">
+      <span>▼</span>
+      <span class="section-label label-blue">القسم 2</span>
+      <span class="font-bold">💰 البنود المالية</span>
+      <span class="text-xs text-slate-500 mr-auto">5 بنود · سيناريو 2 · 7,145 ر.ع</span>
+    </div>
+  </div>
+
+  <div class="accordion-section">
+    <div class="accordion-header active">
+      <span>▼</span>
+      <span class="section-label label-blue">القسم 3 — نشط</span>
+      <span class="font-bold">💼 عروض الأسعار</span>
+      <span class="text-xs text-amber-700 mr-auto">1 / 3 عروض</span>
+    </div>
+    <div class="accordion-body">
+      <button class="btn-primary mb-3">+ إضافة عرض سعر</button>
+      <table class="data-grid">
+        <thead>
+          <tr>
+            <th>الجهة</th>
+            <th>الموقع</th>
+            <th>السعر المعروض</th>
+            <th>الفرق</th>
+            <th>إجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>PMI Global</b></td>
+            <td>لندن · المملكة المتحدة</td>
+            <td><b>5,400 ر.ع</b></td>
+            <td><span class="variance-live variance-ok">↓ -1,745 ر.ع</span></td>
+            <td><button class="btn-success text-xs">🏆 اختيار</button></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="bg-blue-50 border border-blue-200 rounded-md p-3 mt-4 text-xs text-blue-900">
+        <b>💡 المقارنة:</b> العرض (5,400 ر.ع) أقل من التكلفة المعتمدة (7,145 ر.ع) بـ 1,745 ر.ع — وفر للوحدة.
+      </div>
+    </div>
+  </div>
+
+  <div class="card p-4 mt-5 bg-gradient-to-r from-green-50 to-white text-xs">
+    <b>🎯 الفائدة:</b> نفس Course Info Bar يعمل للدورات العرضية. الفرق الوحيد: يعرض "سيناريو التمويل"
+    (خاص بالدورات العرضية، لا يظهر للجلسات).
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- ADD QUOTE DIALOG -->
+<!-- ====================================================================== -->
+<div class="section-divider"></div>
+<div id="add-quote-dialog" class="screen">
+  <h1 class="text-2xl font-bold text-slate-800 mb-2">➕ Add Quote Dialog — مع Variance Indicator</h1>
+  <p class="text-sm text-slate-500 mb-4">عند إدخال السعر، الـ user يرى المقارنة فوراً</p>
+
+  <div class="modal-shell">
+    <div class="modal-header">
+      <h3 class="font-bold">➕ إضافة عرض سعر</h3>
+      <button class="btn-ghost text-xs">×</button>
+    </div>
+    <div class="modal-body">
+      
+      <!-- ★★★ Mini course info inside dialog ★★★ -->
+      <div class="course-info-bar mb-4" style="background: linear-gradient(135deg, #f0f9ff, #fef9c3);">
+        <div class="course-info-icon" style="width: 32px; height: 32px; font-size: 14px;">📚</div>
+        <div class="course-info-bit">
+          <span class="cib-label">الدورة</span>
+          <span class="cib-value text-sm">CISSP · 5 أيام · 8 مرشحين</span>
+        </div>
+        <div class="course-info-bit">
+          <span class="cib-label">التكلفة المعتمدة</span>
+          <span class="cib-value-money text-sm">8,500 ر.ع</span>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="text-xs text-slate-600 mb-1 block">جهة التدريب <span class="text-red-500">*</span></label>
+          <div class="input-mock">SANS Institute</div>
+        </div>
+        
+        <div>
+          <label class="text-xs text-slate-600 mb-1 block">السعر المعروض (ر.ع) <span class="text-red-500">*</span></label>
+          <div class="input-with-variance">
+            <span>8,200</span>
+          </div>
+          <!-- ★★★ LIVE VARIANCE INDICATOR ★★★ -->
+          <div class="flex items-center gap-2">
+            <span class="variance-live variance-ok">↓ -3.5% (300 ر.ع أقل من المعتمد)</span>
+            <span class="text-xs text-slate-500">المعتمد: 8,500 ر.ع</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-slate-600 mb-1 block">الدولة</label>
+            <div class="input-mock">عُمان</div>
+          </div>
+          <div>
+            <label class="text-xs text-slate-600 mb-1 block">المدينة</label>
+            <div class="input-mock">مسقط</div>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs text-slate-600 mb-1 block">ملاحظات</label>
+          <div class="input-mock" style="min-height: 60px;">شامل الشهادة الدولية</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost">إلغاء</button>
+      <button class="btn-primary">💾 حفظ</button>
+    </div>
+  </div>
+
+  <!-- Variance examples -->
+  <div class="card p-5 mt-5">
+    <h3 class="font-bold mb-3">أمثلة على Variance Indicator حسب السعر المُدخل:</h3>
+    <div class="space-y-3 text-sm">
+      <div class="flex items-center gap-3">
+        <span class="font-mono w-32">7,500 ر.ع</span>
+        <span class="variance-live variance-ok">↓ -11.8% (1,000 ر.ع أقل)</span>
+        <span class="text-xs text-slate-500">→ وفر ممتاز</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="font-mono w-32">8,300 ر.ع</span>
+        <span class="variance-live variance-ok">↓ -2.4% (200 ر.ع أقل)</span>
+        <span class="text-xs text-slate-500">→ ضمن النطاق المتوقع</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="font-mono w-32">8,500 ر.ع</span>
+        <span class="variance-live variance-neutral">= مطابق للمعتمد</span>
+        <span class="text-xs text-slate-500">→ بالضبط كما خُطط</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="font-mono w-32">9,000 ر.ع</span>
+        <span class="variance-live variance-warn">↑ +5.9% (500 ر.ع أكثر)</span>
+        <span class="text-xs text-slate-500">→ ضمن الحدود (~10%)</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="font-mono w-32">10,500 ر.ع</span>
+        <span class="variance-live variance-danger">⚠ +23.5% (2,000 ر.ع أكثر)</span>
+        <span class="text-xs text-slate-500">→ تجاوز كبير — قد يحتاج اعتماد إضافي</span>
+      </div>
+    </div>
+    <div class="bg-amber-50 border border-amber-200 rounded-md p-3 mt-4 text-xs text-amber-900">
+      <b>🎯 المنطق:</b> ينطبق على Casual Course و Session — لكليهما تكلفة معتمدة موروثة من
+      الخطة السنوية أو الدراسة الأصلية للدورة العرضية.
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- PICK WINNER DIALOG -->
+<!-- ====================================================================== -->
+<div class="section-divider"></div>
+<div id="pick-winner-dialog" class="screen">
+  <h1 class="text-2xl font-bold text-slate-800 mb-2">🏆 Pick Winner Dialog — مع Variance</h1>
+  <p class="text-sm text-slate-500 mb-4">عند اختيار الفائز، الـ user يؤكد المقارنة قبل الحفظ</p>
+
+  <div class="modal-shell">
+    <div class="modal-header">
+      <h3 class="font-bold">🏆 اختيار العرض الفائز + قفل التواريخ</h3>
+      <button class="btn-ghost text-xs">×</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Course info recap -->
+      <div class="course-info-bar mb-4" style="background: linear-gradient(135deg, #f0f9ff, #fef9c3);">
+        <div class="course-info-icon" style="width: 32px; height: 32px; font-size: 14px;">📚</div>
+        <div class="course-info-bit">
+          <span class="cib-label">الدورة</span>
+          <span class="cib-value text-sm">CISSP · 5 أيام · 8 مرشحين</span>
+        </div>
+        <div class="course-info-bit">
+          <span class="cib-label">المعتمد</span>
+          <span class="cib-value-money text-sm">8,500 ر.ع</span>
+        </div>
+      </div>
+
+      <!-- Selected quote summary -->
+      <div class="bg-green-50 border border-green-300 rounded-lg p-4 mb-4">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-xl">🏆</span>
+          <h4 class="font-bold text-green-900">العرض المختار</h4>
+        </div>
+        <div class="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <div class="text-xs text-slate-500 mb-1">الجهة</div>
+            <div class="font-bold">SANS Institute</div>
+          </div>
+          <div>
+            <div class="text-xs text-slate-500 mb-1">الموقع</div>
+            <div class="font-bold">مسقط · عُمان</div>
+          </div>
+          <div>
+            <div class="text-xs text-slate-500 mb-1">السعر المعروض</div>
+            <div class="font-bold text-green-700 text-lg">8,200 ر.ع</div>
+          </div>
+          <div>
+            <div class="text-xs text-slate-500 mb-1">الفرق عن المعتمد</div>
+            <span class="variance-live variance-ok">↓ -3.5% (300 ر.ع وفر)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dates -->
+      <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-xl">📅</span>
+          <h4 class="font-bold text-amber-900">التواريخ المتفق عليها مع المعهد</h4>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-slate-600 mb-1 block">تاريخ البدء <span class="text-red-500">*</span></label>
+            <div class="input-mock">15 / 05 / 2026</div>
+          </div>
+          <div>
+            <label class="text-xs text-slate-600 mb-1 block">تاريخ الانتهاء <span class="text-red-500">*</span></label>
+            <div class="input-mock">19 / 05 / 2026</div>
+            <div class="text-xs text-green-600 mt-1">✓ 5 أيام (مطابق للمدة)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Atomic warning -->
+      <div class="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-blue-900">
+        <b>⏱ اللحظة الحرجة:</b> الضغط على "تأكيد" يفعل ثلاثة أشياء معاً في معاملة واحدة:
+        <ol class="list-decimal mr-5 mt-2 space-y-1">
+          <li>PriceQuote.IsSelected = true (SANS Institute)</li>
+          <li>Session.ActualStartDate + EndDate تُحفظ</li>
+          <li>Session.Status: Planned → Scheduled</li>
+        </ol>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost">إلغاء</button>
+      <button class="btn-success">✅ تأكيد + قفل التواريخ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====================================================================== -->
+<!-- Summary -->
+<!-- ====================================================================== -->
+<div class="section-divider"></div>
+<div class="screen">
+  <div class="card p-6 bg-gradient-to-br from-green-50 to-blue-50 border-green-200">
+    <h2 class="text-xl font-bold text-slate-800 mb-3">📋 ملخّص التغييرات</h2>
+    <div class="space-y-3 text-sm">
+      <div class="flex items-start gap-3">
+        <span class="text-xl">1️⃣</span>
+        <div>
+          <b>Course Info Bar ثابت (sticky)</b> — يظهر تحت status pipeline في:
+          <ul class="list-disc mr-5 mt-1 text-xs space-y-1">
+            <li>صفحة Session Detail (PAGE D من Phase 4C-α)</li>
+            <li>صفحة Casual Course Detail (Phase 4B-α/β)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="flex items-start gap-3">
+        <span class="text-xl">2️⃣</span>
+        <div>
+          <b>Variance Indicator</b> — في عمود جديد بجدول العروض + داخل Add/Edit Quote dialog + Pick Winner dialog
+          <ul class="list-disc mr-5 mt-1 text-xs space-y-1">
+            <li>أخضر: السعر أقل من المعتمد (وفر)</li>
+            <li>رمادي: مطابق تماماً</li>
+            <li>أصفر: أعلى بحدود معقولة (~10%)</li>
+            <li>أحمر: تجاوز كبير (&gt;10%)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="flex items-start gap-3">
+        <span class="text-xl">3️⃣</span>
+        <div>
+          <b>إعادة استخدام</b> — مكوّن واحد <code class="bg-white px-1 rounded">CourseInfoBarComponent</code>
+          يأخذ inputs polymorphic (course أو session) ويعمل في كلا السياقين.
+        </div>
+      </div>
+      <div class="flex items-start gap-3">
+        <span class="text-xl">4️⃣</span>
+        <div>
+          <b>اختلاف Casual vs Session</b> — Casual Course Info Bar يعرض حقل إضافي "سيناريو التمويل" (1/2/3)
+          لأنه خاص بالدورات العرضية. Session Info Bar لا يعرضه.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section-divider"></div>
+<div class="screen text-center text-xs text-slate-400 py-10">
+  <b>End of Course Info Bar Mockup</b> — للدورات العرضية والجلسات
+</div>
+
+</body>
+</html>

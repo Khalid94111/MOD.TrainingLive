@@ -108,7 +108,7 @@
         <label>{{ '::Training.Session' | abpLocalization }}</label>
         <dx-select-box
           [dataSource]="sessions()"
-          displayExpr="sessionCode"
+          displayExpr="tenantCourseNameAr"
           valueExpr="id"
           [value]="formData().sessionId"
           (onValueChanged)="updateSessionId($event.value)"

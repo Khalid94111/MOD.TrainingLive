@@ -18,7 +18,7 @@
         جاري التحميل...
       </div>
     </div>
-  } @else if (course()) {
+  } @else if (course() || parentArm() === 'session') {
 
     @if (!embedded()) {
       <!-- Course summary (standalone mode only — shell already shows course identity) -->
@@ -109,18 +109,13 @@
                       <b class="price">{{ formatCurrency(quote.quotedPriceOMR) }} ر.ع</b>
                     </div>
                     <div>
-                      @if (estimatedTotalCost() > 0) {
-                        @if (variance(quote) < 0) {
-                          <span [class]="varianceCssClass(quote)">
-                            {{ formatCurrency(variance(quote)) }} تحت التقدير ✓
-                          </span>
-                        } @else if (variance(quote) > 0) {
-                          <span [class]="varianceCssClass(quote)">
-                            +{{ formatCurrency(variance(quote)) }} فوق التقدير
-                          </span>
-                        } @else {
-                          <span class="variance-neutral">مطابق للتقدير</span>
-                        }
+                      <span class="muted-xs">الفرق عن المعتمد:</span>
+                      @if (approvedCost() > 0) {
+                        <app-variance-chip
+                          [quotedPrice]="quote.quotedPriceOMR ?? 0"
+                          [approvedCost]="approvedCost()" />
+                      } @else {
+                        <span class="muted">—</span>
                       }
                     </div>
                   </div>
@@ -193,6 +188,16 @@
               <input type="number" min="0" step="0.001" class="form-input"
                 [value]="fQuotedPriceOMR()"
                 (input)="fQuotedPriceOMR.set(+$any($event.target).value)" />
+              @if (fQuotedPriceOMR() > 0 && approvedCost() > 0) {
+                <div class="variance-inline">
+                  <app-variance-chip
+                    [quotedPrice]="fQuotedPriceOMR()"
+                    [approvedCost]="approvedCost()" />
+                  <span class="approved-cost-hint">
+                    المعتمد: {{ formatCurrency(approvedCost()) }} ر.ع
+                  </span>
+                </div>
+              }
             </div>
           </div>
 
@@ -276,14 +281,13 @@
                 <b class="price">{{ formatCurrency(pickQuote()!.quotedPriceOMR) }} ر.ع</b>
               </div>
               <div>
-                @if (estimatedTotalCost() > 0) {
-                  @if (variance(pickQuote()!) < 0) {
-                    <span class="variance-ok">{{ formatCurrency(variance(pickQuote()!)) }} تحت التقدير</span>
-                  } @else if (variance(pickQuote()!) > 0) {
-                    <span class="variance-warn">+{{ formatCurrency(variance(pickQuote()!)) }} فوق التقدير</span>
-                  } @else {
-                    <span class="variance-neutral">مطابق للتقدير</span>
-                  }
+                <span class="muted-xs">الفرق عن المعتمد:</span>
+                @if (approvedCost() > 0) {
+                  <app-variance-chip
+                    [quotedPrice]="pickQuote()!.quotedPriceOMR ?? 0"
+                    [approvedCost]="approvedCost()" />
+                } @else {
+                  <span class="muted">—</span>
                 }
               </div>
             </div>

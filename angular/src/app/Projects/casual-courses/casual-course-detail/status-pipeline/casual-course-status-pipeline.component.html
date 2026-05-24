@@ -14,14 +14,15 @@
   <ol class="pipeline-track">
     @for (node of nodes(); track trackNode($index, node); let last = $last) {
       <li class="pipeline-item state-{{ node.state }}"
-          [class.placeholder]="node.placeholder">
+          [class.placeholder]="node.placeholder"
+          [class.skipped]="node.skipped">
         <button type="button"
                 class="pipeline-node"
-                [class.clickable]="!node.placeholder && node.state === 'completed'"
+                [class.clickable]="!node.placeholder && !node.skipped && node.state === 'completed'"
                 [attr.aria-current]="node.state === 'active' ? 'step' : null"
-                [disabled]="node.placeholder"
+                [disabled]="node.placeholder || node.skipped"
                 (click)="onNodeClick(node)">
-          <span class="pipeline-node-dot">{{ iconFor(node.state) }}</span>
+          <span class="pipeline-node-dot">{{ iconFor(node) }}</span>
           <span class="pipeline-node-label">
             {{ node.label }}
             @if (node.placeholder) { <span class="pipeline-node-suffix">(المرحلة 5)</span> }
@@ -29,7 +30,7 @@
         </button>
         @if (!last) {
           <span class="pipeline-connector"
-                [class.connector-completed]="node.state === 'completed'"></span>
+                [class.connector-completed]="node.state === 'completed' && !node.skipped"></span>
         }
       </li>
     }

@@ -1,0 +1,170 @@
+<div class="page-shell">
+  <!-- ── Header ── -->
+  <div class="page-header">
+    <div>
+      <h1>{{ '::Training.AnnualPlan.Dashboard.Title' | abpLocalization }}</h1>
+      <p class="page-subtitle">{{ '::Training.AnnualPlan.Dashboard.Subtitle' | abpLocalization }}</p>
+    </div>
+    <div class="header-controls">
+      <label class="year-field">
+        {{ '::Training.AnnualPlan.SessionsQueue.Filter.Year' | abpLocalization }}:
+        <input type="number" class="year-input" [value]="fYear()" (change)="onYearChange($event)" />
+      </label>
+      <button type="button" class="btn-ghost" (click)="goQueue()">
+        {{ '::Training.AnnualPlan.Dashboard.OpenQueue' | abpLocalization }}
+      </button>
+      <button type="button" class="btn-ghost" (click)="goSessions()">
+        {{ '::Training.AnnualPlan.Dashboard.OpenSessions' | abpLocalization }}
+      </button>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="error-banner">{{ errorMessage() }}</div>
+  }
+
+  @if (loading() && !progress()) {
+    <div class="card empty-state">{{ '::Training.AnnualPlan.SessionsQueue.Loading' | abpLocalization }}</div>
+  } @else if (!progress()) {
+    <div class="card empty-state">{{ '::Training.AnnualPlan.Dashboard.NoData' | abpLocalization }}</div>
+  } @else {
+    <!-- ── 5 stat cards ── -->
+    <div class="stat-row">
+      <div class="stat-card stat-total">
+        <div class="stat-label">{{ '::Training.AnnualPlan.Dashboard.Stat.Total' | abpLocalization }}</div>
+        <div class="stat-value">{{ stats().total }}</div>
+      </div>
+      <div class="stat-card stat-planned">
+        <div class="stat-label">{{ '::Training.Session.Status.Planned' | abpLocalization }}</div>
+        <div class="stat-value">{{ stats().planned }}</div>
+      </div>
+      <div class="stat-card stat-scheduled">
+        <div class="stat-label">{{ '::Training.Session.Status.Scheduled' | abpLocalization }}</div>
+        <div class="stat-value">{{ stats().scheduled }}</div>
+      </div>
+      <div class="stat-card stat-completed">
+        <div class="stat-label">{{ '::Training.Session.Status.Completed' | abpLocalization }}</div>
+        <div class="stat-value">{{ stats().completed }}</div>
+      </div>
+      <div class="stat-card stat-overdue" [class.has-value]="stats().overdue > 0">
+        <div class="stat-label">{{ '::Training.AnnualPlan.SessionsQueue.StatOverdue' | abpLocalization }}</div>
+        <div class="stat-value">{{ stats().overdue }}</div>
+      </div>
+    </div>
+
+    <!-- ── Overall progress ── -->
+    <div class="card progress-card">
+      <div class="progress-card-header">
+        <h2>{{ '::Training.AnnualPlan.Dashboard.OverallProgress' | abpLocalization }}</h2>
+        <span class="progress-percent">{{ stats().percent }}%</span>
+      </div>
+      <div class="progress-bar progress-bar-large">
+        <div class="progress-fill" [style.width.%]="stats().percent"></div>
+      </div>
+      <div class="progress-card-footer">
+        <span>
+          {{ stats().completed }} / {{ stats().total }}
+          {{ '::Training.AnnualPlan.Dashboard.CompletedOfTotal' | abpLocalization }}
+        </span>
+      </div>
+    </div>
+
+    <!-- ── Two-column: Quarter + Unit progress ── -->
+    <div class="two-column">
+      <!-- Per quarter -->
+      <div class="card panel-card">
+        <h2 class="panel-title">{{ '::Training.AnnualPlan.Dashboard.ByQuarter' | abpLocalization }}</h2>
+        @if (quarterBars().length === 0) {
+          <div class="empty-mini">{{ '::Training.AnnualPlan.Dashboard.NoData' | abpLocalization }}</div>
+        } @else {
+          <div class="quarter-list">
+            @for (q of quarterBars(); track q.quarter) {
+              <div class="quarter-row">
+                <div class="quarter-label">Q{{ q.quarter }}</div>
+                <div class="bar-host">
+                  <div class="progress-bar">
+                    <div class="progress-fill" [style.width.%]="quarterPercent(q)"></div>
+                  </div>
+                  <div class="bar-meta">
+                    <span class="meta-completed">
+                      {{ q.completed ?? 0 }} {{ '::Training.AnnualPlan.Dashboard.Completed' | abpLocalization }}
+                    </span>
+                    @if ((q.inProgress ?? 0) > 0) {
+                      <span class="meta-inprogress">
+                        · {{ q.inProgress }} {{ '::Training.AnnualPlan.Dashboard.InProgress' | abpLocalization }}
+                      </span>
+                    }
+                    @if ((q.pending ?? 0) > 0) {
+                      <span class="meta-pending">
+                        · {{ q.pending }} {{ '::Training.AnnualPlan.Dashboard.Pending' | abpLocalization }}
+                      </span>
+                    }
+                    <span class="meta-total">/ {{ q.total ?? 0 }}</span>
+                  </div>
+                </div>
+                <div class="quarter-percent">{{ quarterPercent(q) }}%</div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Per unit -->
+      <div class="card panel-card">
+        <h2 class="panel-title">{{ '::Training.AnnualPlan.Dashboard.ByUnit' | abpLocalization }}</h2>
+        @if (unitBars().length === 0) {
+          <div class="empty-mini">{{ '::Training.AnnualPlan.Dashboard.NoData' | abpLocalization }}</div>
+        } @else {
+          <div class="unit-list">
+            @for (u of unitBars(); track u.unitId) {
+              <div class="unit-row">
+                <div class="unit-name">{{ unitName(u) }}</div>
+                <div class="bar-host">
+                  <div class="progress-bar">
+                    <div class="progress-fill" [style.width.%]="unitPercent(u)"></div>
+                  </div>
+                  <div class="bar-meta">
+                    {{ u.completed ?? 0 }} / {{ u.total ?? 0 }}
+                    {{ '::Training.AnnualPlan.Dashboard.CompletedOfTotal' | abpLocalization }}
+                  </div>
+                </div>
+                <div class="unit-percent">{{ unitPercent(u) }}%</div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- ── Alerts ── -->
+    <div class="card alerts-card">
+      <h2 class="panel-title">
+        {{ '::Training.AnnualPlan.Dashboard.AlertsTitle' | abpLocalization }}
+        <span class="alerts-count">({{ alerts().length }})</span>
+      </h2>
+      @if (alerts().length === 0) {
+        <div class="empty-mini">
+          ✓ {{ '::Training.AnnualPlan.Dashboard.NoAlerts' | abpLocalization }}
+        </div>
+      } @else {
+        <ul class="alerts-list">
+          @for (alert of alerts(); track alert.entityId) {
+            <li [class]="alertCss(alert)" (click)="onAlertClick(alert)">
+              <div class="alert-icon">
+                @if (alert.type === 'StuckPlanned') { ⏱ } @else { ⚠ }
+              </div>
+              <div class="alert-body">
+                <div class="alert-type">{{ alertTypeLabelKey(alert) | abpLocalization }}</div>
+                <div class="alert-text">{{ alert.message }}</div>
+              </div>
+              <div class="alert-days">
+                {{ alert.daysOverdue ?? 0 }}
+                {{ '::Training.AnnualPlan.Dashboard.DaysSuffix' | abpLocalization }}
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  }
+</div>

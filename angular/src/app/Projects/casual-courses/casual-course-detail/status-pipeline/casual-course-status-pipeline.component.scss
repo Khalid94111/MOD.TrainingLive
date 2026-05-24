@@ -149,6 +149,22 @@
   opacity: 0.5;
 }
 
+/* Patch 4 (v4.10.4) — node not applicable for this courseType. Dash icon + dimmed. */
+.pipeline-item.skipped .pipeline-node-dot {
+  background: #f1f5f9;
+  color: #94a3b8;
+}
+.pipeline-item.skipped .pipeline-node {
+  color: #94a3b8;
+  font-weight: 500;
+  font-style: italic;
+  cursor: default;
+}
+.pipeline-item.skipped .pipeline-node:hover {
+  background: transparent;
+  color: #94a3b8;
+}
+
 @keyframes pipeline-pulse {
   0%, 100% { box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15); }
   50%      { box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.05); }

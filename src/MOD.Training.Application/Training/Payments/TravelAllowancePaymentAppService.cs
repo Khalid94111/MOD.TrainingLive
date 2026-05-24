@@ -450,12 +450,12 @@ public class TravelAllowancePaymentAppService(
         var travelBySession = travels.Where(t => t.SessionId.HasValue).ToDictionary(t => t.SessionId!.Value);
 
         // Resolve course names via TenantCourse → CourseCatalog (CourseNameResolver handles batching).
+        // Phase 4C-α (v4.10.0): CourseSession exposes TenantCourseId directly — no Course indirection.
         var casualLookup = await BatchByIdsAsync(casualCourseRepo, casualCourseIds);
         var sessionLookup = await BatchByIdsAsync(sessionRepo, sessionIds);
-        var courseLookup = await BatchByIdsAsync(courseRepo, sessionLookup.Values.Select(s => s.CourseId).Distinct().ToList());
 
         var tenantCourseIds = casualLookup.Values.Select(c => c.TenantCourseId)
-            .Concat(courseLookup.Values.Select(c => c.TenantCourseId))
+            .Concat(sessionLookup.Values.Select(s => s.TenantCourseId))
             .Distinct().ToList();
         var nameLookup = await courseNameResolver.BatchResolveAsync(tenantCourseIds);
 
@@ -483,11 +483,12 @@ public class TravelAllowancePaymentAppService(
             {
                 tenantCourseId = casual.TenantCourseId;
             }
+            // Phase 4C-α (v4.10.0): CourseSession exposes TenantCourseId directly —
+            // the Phase-3 indirection through Courses.CourseId is gone.
             else if (ent.SessionId.HasValue
-                && sessionLookup.TryGetValue(ent.SessionId.Value, out var session)
-                && courseLookup.TryGetValue(session.CourseId, out var course))
+                && sessionLookup.TryGetValue(ent.SessionId.Value, out var session))
             {
-                tenantCourseId = course.TenantCourseId;
+                tenantCourseId = session.TenantCourseId;
             }
             if (tenantCourseId.HasValue && nameLookup.TryGetValue(tenantCourseId.Value, out var name))
                 dto.CourseNameAr = name.NameAr;
