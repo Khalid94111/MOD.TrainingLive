@@ -16,7 +16,9 @@ public class FinancialItem : FullAuditedEntity<Guid>, IMultiTenant
 
     }
     public Guid? TenantId { get; set; }
+    // Deprecated: flat list — kept for backward-compatible schema only
     public Guid? ParentId { get; set; }
+
     public string NameAr { get; set; } = default!;
     public string NameEn { get; set; } = default!;
     public string Code { get; set; } = default!;
@@ -38,6 +40,5 @@ public class FinancialItem : FullAuditedEntity<Guid>, IMultiTenant
     public int ExtraDaysBefore { get; set; }
     public int ExtraDaysAfter { get; set; }
 
-    // Navigation
-    public FinancialItem? Parent { get; set; }
+    // Navigation removed — flat list model
 }

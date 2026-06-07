@@ -1,7 +1,6 @@
 <!-- ──────────────────────────────────────────────────────────── -->
 <!-- financial-item-defaults.component.html                      -->
-<!-- PAGE 2.2: Course Type Financial Item Defaults                -->
-<!-- Fixed: (onReorder) event + grouped select-box for add dialog -->
+<!-- PAGE 2.2: Course Type Financial Item Defaults (Flat list)    -->
 <!-- ──────────────────────────────────────────────────────────── -->
 
 <div class="page-card">
@@ -58,7 +57,6 @@
             (onReorder)="onReorder($event)"
           ></dxo-row-dragging>
 
-          <!-- Drag handle + SortOrder -->
           <dxi-column
             dataField="sortOrder"
             [caption]="'::Training.CourseTypeDefaults.SortOrder' | abpLocalization"
@@ -67,29 +65,18 @@
             [allowSorting]="false"
           ></dxi-column>
 
-          <!-- Financial item name (Arabic) -->
           <dxi-column
             dataField="financialItemNameAr"
             [caption]="'::Training.CourseTypeDefaults.FinancialItem' | abpLocalization"
             [allowSorting]="false"
           ></dxi-column>
 
-          <!-- Financial item name (English) -->
           <dxi-column
             dataField="financialItemNameEn"
             [caption]="'::Training.FinancialItems.NameEn' | abpLocalization"
             [allowSorting]="false"
           ></dxi-column>
 
-          <!-- Parent group name for context -->
-          <dxi-column
-            dataField="parentNameAr"
-            [caption]="'::Training.CourseTypeDefaults.ParentGroup' | abpLocalization"
-            [width]="160"
-            [allowSorting]="false"
-          ></dxi-column>
-
-          <!-- Delete action -->
           <dxi-column
             [caption]="'::Training.Common.Actions' | abpLocalization"
             [width]="80"
@@ -128,18 +115,21 @@
     <div class="form-group">
       <label class="form-label">{{ '::Training.CourseTypeDefaults.FinancialItem' | abpLocalization }}</label>
       <dx-select-box
-        [dataSource]="groupedSubItems()"
+        [dataSource]="subItems()"
         displayExpr="nameAr"
         valueExpr="id"
         [value]="selectedFinancialItemId()"
         (valueChange)="selectedFinancialItemId.set($event)"
-        [grouped]="true"
         [searchEnabled]="true"
         searchExpr="nameAr"
         [placeholder]="'::Training.CourseTypeDefaults.SelectItem' | abpLocalization"
         [showClearButton]="true"
-      >
-      </dx-select-box>
+      ></dx-select-box>
     </div>
+    @if (subItems().length === 0) {
+      <div class="empty-select-hint">
+        ✅ {{ '::Training.CourseTypeDefaults.AllAssigned' | abpLocalization }}
+      </div>
+    }
   </div>
 </dx-popup>

@@ -46,7 +46,7 @@ public class FinancialItemAppService(
 
         var totalCount = await AsyncExecuter.CountAsync(queryable);
 
-        queryable = queryable.OrderBy(x => x.ParentId).ThenBy(x => x.NameAr);
+        queryable = queryable.OrderBy(x => x.NameAr);
 
         if (input.SkipCount > 0)
             queryable = queryable.Skip(input.SkipCount);
@@ -62,42 +62,28 @@ public class FinancialItemAppService(
     [Authorize(TrainingPermissions.FinancialItems.Create)]
     public async Task<FinancialItemDto> CreateAsync(CreateUpdateFinancialItemDto input)
     {
-        // Validate: max 2 levels (sub-items cannot have children)
-        if (input.ParentId.HasValue)
-        {
-            var parent = await financialItemRepo.GetAsync(input.ParentId.Value);
-            if (parent.ParentId.HasValue)
-            {
-                throw new BusinessException("Training:FinancialItem:MaxTwoLevels");
-            }
-        }
-
         var entity = toEntityMapper.Map(input);
-        entity.Code = GenerateCode(input.NameEn);
-        entity.IsGeneral = !input.ParentId.HasValue; // Parents are general, sub-items are not
-
-        // Parent rows are grouping containers — ItemType lives on leaves only.
-        if (!input.ParentId.HasValue) entity.ItemType = null;
+        entity.Code = GenerateCode(input.NameAr);
+        entity.IsGeneral = true; // All items are top-level in flat model
+        entity.ParentId = null;  // Flat list — no parent
 
         await financialItemRepo.InsertAsync(entity, autoSave: true);
 
-        if (!input.ParentId.HasValue)
-        {
-            var currentYear = DateTime.Now.Year;
-            var budgetExists = await budgetRepo.AnyAsync(
-                x => x.Year == currentYear && x.FinancialItemId == entity.Id);
+        // Auto-create budget for current year (flat model — every item gets a budget)
+        var currentYear = DateTime.Now.Year;
+        var budgetExists = await budgetRepo.AnyAsync(
+            x => x.Year == currentYear && x.FinancialItemId == entity.Id);
 
-            if (!budgetExists)
+        if (!budgetExists)
+        {
+            await budgetRepo.InsertAsync(new TrainingBudget
             {
-                await budgetRepo.InsertAsync(new TrainingBudget
-                {
-                    Year = currentYear,
-                    FinancialItemId = entity.Id,
-                    TotalAmount = 0,
-                    SpentAmount = 0,
-                    AlertThreshold = 80
-                }, autoSave: true);
-            }
+                Year = currentYear,
+                FinancialItemId = entity.Id,
+                TotalAmount = 0,
+                SpentAmount = 0,
+                AlertThreshold = 80
+            }, autoSave: true);
         }
 
         return toDtoMapper.Map(entity);
@@ -109,10 +95,8 @@ public class FinancialItemAppService(
         var entity = await financialItemRepo.GetAsync(id);
         toEntityMapper.Map(input, entity);
         entity.Code = GenerateCode(input.NameAr);
-        entity.IsGeneral = !input.ParentId.HasValue;
-
-        // Parent rows are grouping containers — ItemType lives on leaves only.
-        if (!input.ParentId.HasValue) entity.ItemType = null;
+        entity.IsGeneral = true;
+        entity.ParentId = null; // Ensure flat on update too
 
         await financialItemRepo.UpdateAsync(entity);
         return toDtoMapper.Map(entity);
@@ -121,46 +105,26 @@ public class FinancialItemAppService(
     [Authorize(TrainingPermissions.FinancialItems.Delete)]
     public async Task DeleteAsync(Guid id)
     {
-        // Check if parent has children
-        var hasChildren = await financialItemRepo.AnyAsync(x => x.ParentId == id);
-        if (hasChildren)
-        {
-            throw new BusinessException("Training:FinancialItem:HasChildren");
-        }
-
         await financialItemRepo.DeleteAsync(id);
     }
 
-
     /// <summary>
-    /// Returns active sub-items (ParentId != null) with parent name for UI grouping.
-    /// Used by PAGE 2.2 "Add Financial Item" grouped dropdown.
+    /// Returns all active financial items for dropdown selection.
+    /// Replaces the old GetSubItemsAsync (which only returned children).
     /// </summary>
     [Authorize(TrainingPermissions.FinancialItems.Default)]
     public async Task<List<FinancialItemSubItemDto>> GetSubItemsAsync()
     {
-        // Get all active items in one query
-        var allItems = await financialItemRepo.GetListAsync(x => x.IsActive);
+        var items = await financialItemRepo.GetListAsync(x => x.IsActive);
 
-        // Build parent lookup
-        var parentMap = allItems
-            .Where(x => x.ParentId == null)
-            .ToDictionary(x => x.Id);
-
-        // Map sub-items with parent names
-        return allItems
-            .Where(x => x.ParentId != null && parentMap.ContainsKey(x.ParentId.Value))
-            .OrderBy(x => parentMap[x.ParentId!.Value].NameAr)
-            .ThenBy(x => x.NameAr)
+        return items
+            .OrderBy(x => x.NameAr)
             .Select(x => new FinancialItemSubItemDto
             {
                 Id = x.Id,
                 NameAr = x.NameAr,
                 NameEn = x.NameEn,
                 Code = x.Code,
-                ParentId = x.ParentId!.Value,
-                ParentNameAr = parentMap[x.ParentId!.Value].NameAr,
-                ParentNameEn = parentMap[x.ParentId!.Value].NameEn
             })
             .ToList();
     }
@@ -176,6 +140,4 @@ public class FinancialItemAppService(
 
         return string.Join(".", letters);
     }
-
-     
 }

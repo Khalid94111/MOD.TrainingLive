@@ -197,18 +197,20 @@
   margin-bottom: 6px;
 }
 
-// ── DevExtreme grouped select-box styling ──
+.empty-select-hint {
+  text-align: center;
+  padding: 16px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #15803d;
+  font-weight: 600;
+}
+
+// ── DevExtreme styling ──
 
 ::ng-deep {
-  .dx-list-group-header {
-    font-weight: 600;
-    font-size: 13px;
-    color: #1e40af;
-    background: #eff6ff;
-    padding: 6px 12px;
-    border-bottom: 1px solid #bfdbfe;
-  }
-
   // Drag icons visibility
   .dx-sortable-dragging {
     opacity: 0.85;

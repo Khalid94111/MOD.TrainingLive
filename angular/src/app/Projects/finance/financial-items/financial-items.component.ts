@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { LocalizationPipe } from '@abp/ng.core';
 import { firstValueFrom } from 'rxjs';
 import { FinancialItemService } from 'src/app/proxy/training/finance/financial-item.service';
 import { FinancialItemRankAmountService } from 'src/app/proxy/training/finance/financial-item-rank-amount.service';
@@ -14,15 +15,7 @@ import { HrLookupService } from 'src/app/proxy/training/hr-integration/hr-lookup
 import { RankLookupDto } from 'src/app/proxy/training/hr-integration/models';
 import { TrainingLocalizationHelper } from '../../shared';
 
-const ITEM_TYPE_LABELS_AR: Record<FinancialItemType, string> = {
-  [FinancialItemType.Other]: 'أخرى',
-  [FinancialItemType.CourseCost]: 'تكلفة الدورة',
-  [FinancialItemType.Ticket]: 'تذكرة',
-  [FinancialItemType.Insurance]: 'تأمين',
-  [FinancialItemType.Visa]: 'تأشيرة',
-  [FinancialItemType.Allowance]: 'بدل سفر',
-  [FinancialItemType.Clothing]: 'بدل ملابس',
-};
+
 
 const ITEM_TYPE_ORDER: FinancialItemType[] = [
   FinancialItemType.CourseCost,
@@ -34,14 +27,10 @@ const ITEM_TYPE_ORDER: FinancialItemType[] = [
   FinancialItemType.Other,
 ];
 
-interface ParentItemView extends FinancialItemDto {
-  children: FinancialItemDto[];
-}
-
 @Component({
   selector: 'app-financial-items',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LocalizationPipe],
   templateUrl: './financial-items.component.html',
   styleUrls: ['./financial-items.component.scss', '../../shared/gtms-design.scss'],
 })
@@ -60,20 +49,16 @@ export class FinancialItemsComponent implements OnInit {
   filterPerDay = signal<'all' | 'yes' | 'no'>('all');
   filterPerNominee = signal<'all' | 'yes' | 'no'>('all');
 
-  // Rank-overrides inline panel (any row — parent or child)
+  // Rank-overrides inline panel
   expandedItemId = signal<string | null>(null);
   rankAmountsMap = signal(new Map<string, FinancialItemRankAmountDto[]>());
   loadingItemId = signal<string | null>(null);
-
-  // Parent-children tree expansion (independent of rank-overrides)
-  expandedParentIds = signal<Set<string>>(new Set());
 
   // Item dialog
   isDialogOpen = signal(false);
   isEditMode = signal(false);
   editingId = signal<string | null>(null);
 
-  fParentId = signal<string>('');
   fNameAr = signal('');
   fNameEn = signal('');
   fVoteCode = signal('');
@@ -95,38 +80,9 @@ export class FinancialItemsComponent implements OnInit {
   rFRankId = signal('');
   rFAmount = signal(0);
 
-  parentItems = computed(() => this.items().filter(i => !i.parentId));
-
-  parentsWithChildren = computed<ParentItemView[]>(() => {
-    const all = this.items();
-    const parents = all.filter(i => !i.parentId);
-    const childrenByParent = new Map<string, FinancialItemDto[]>();
-    all.filter(i => i.parentId).forEach(c => {
-      const arr = childrenByParent.get(c.parentId!) ?? [];
-      arr.push(c);
-      childrenByParent.set(c.parentId!, arr);
-    });
-    return parents.map(p => ({ ...p, children: childrenByParent.get(p.id!) ?? [] }));
-  });
-
-  filteredParentsWithChildren = computed<ParentItemView[]>(() => {
+  filteredItems = computed<FinancialItemDto[]>(() => {
     const q = this.searchText().trim().toLowerCase();
-    const result: ParentItemView[] = [];
-    for (const p of this.parentsWithChildren()) {
-      const parentMatchesSearch = this.matchesSearch(p, q);
-      const parentPassesFilters = this.matchesNonSearchFilters(p);
-      const matchingChildren = p.children.filter(c =>
-        this.matchesNonSearchFilters(c) && this.matchesSearch(c, q),
-      );
-
-      if (parentPassesFilters && parentMatchesSearch) {
-        const visibleChildren = p.children.filter(c => this.matchesNonSearchFilters(c));
-        result.push({ ...p, children: visibleChildren });
-      } else if (matchingChildren.length > 0) {
-        result.push({ ...p, children: matchingChildren });
-      }
-    }
-    return result;
+    return this.items().filter(i => this.matchesSearch(i, q) && this.matchesNonSearchFilters(i));
   });
 
   totalCount = computed(() => this.items().length);
@@ -199,7 +155,6 @@ export class FinancialItemsComponent implements OnInit {
     event.stopPropagation();
     this.isEditMode.set(true);
     this.editingId.set(item.id);
-    this.fParentId.set(item.parentId ?? '');
     this.fNameAr.set(item.nameAr ?? '');
     this.fNameEn.set(item.nameEn ?? '');
     this.fVoteCode.set(item.voteCode ?? '');
@@ -214,7 +169,6 @@ export class FinancialItemsComponent implements OnInit {
   }
 
   private resetForm(): void {
-    this.fParentId.set('');
     this.fNameAr.set('');
     this.fNameEn.set('');
     this.fVoteCode.set('');
@@ -229,12 +183,7 @@ export class FinancialItemsComponent implements OnInit {
 
   async onSave(): Promise<void> {
     if (!this.fNameAr().trim() || !this.fVoteCode().trim()) return;
-    const parentId = this.fParentId() || undefined;
-    // Parents are grouping containers — ItemType lives on leaves only. The server
-    // enforces this too, but mirror the rule client-side so the payload is clean.
-    const itemType = parentId ? this.fItemType() : null;
     const data: CreateUpdateFinancialItemDto = {
-      parentId,
       nameAr: this.fNameAr().trim(),
       nameEn: this.fNameEn().trim() || undefined,
       voteCode: this.fVoteCode().trim(),
@@ -244,7 +193,7 @@ export class FinancialItemsComponent implements OnInit {
       isPerNominee: this.fIsPerNominee(),
       extraDaysBefore: this.fIsPerDay() ? this.fExtraDaysBefore() : 0,
       extraDaysAfter: this.fIsPerDay() ? this.fExtraDaysAfter() : 0,
-      itemType,
+      itemType: this.fItemType(),
     };
     if (this.isEditMode() && this.editingId()) {
       await firstValueFrom(this.fiService.update(this.editingId()!, data));
@@ -257,43 +206,10 @@ export class FinancialItemsComponent implements OnInit {
 
   async onDelete(id: string, event: Event): Promise<void> {
     event.stopPropagation();
-    if (!confirm('هل أنت متأكد من حذف هذا البند المالي؟')) return;
+    if (!confirm(this.l.t('::Training.FinancialItems.Confirm.DeleteItem'))) return;
     await firstValueFrom(this.fiService.delete(id));
     if (this.expandedItemId() === id) this.expandedItemId.set(null);
     await this.loadData();
-  }
-
-  // ── Parent tree expansion ──
-  onParentRowClick(parent: ParentItemView, event: Event): void {
-    // Empty parents have no children to toggle — fall back to rank-overrides expansion
-    if (parent.children.length === 0) {
-      void this.toggleExpand(parent.id!, event);
-      return;
-    }
-    this.toggleParent(parent.id!, event);
-  }
-
-  toggleParent(parentId: string, event: Event): void {
-    event.stopPropagation();
-    this.expandedParentIds.update(set => {
-      const next = new Set(set);
-      if (next.has(parentId)) next.delete(parentId);
-      else next.add(parentId);
-      return next;
-    });
-  }
-
-  isParentExpanded(parentId: string): boolean {
-    if (this.expandedParentIds().has(parentId)) return true;
-    // Auto-expand when a child matches the search but the parent itself doesn't
-    const q = this.searchText().trim().toLowerCase();
-    if (!q) return false;
-    const parent = this.parentsWithChildren().find(p => p.id === parentId);
-    if (!parent) return false;
-    if (this.matchesSearch(parent, q) && this.matchesNonSearchFilters(parent)) return false;
-    return parent.children.some(c =>
-      this.matchesNonSearchFilters(c) && this.matchesSearch(c, q),
-    );
   }
 
   // ── Rank-overrides row expansion ──
@@ -361,7 +277,7 @@ export class FinancialItemsComponent implements OnInit {
 
   async onDeleteRankAmount(rankAmountId: string, itemId: string, event: Event): Promise<void> {
     event.stopPropagation();
-    if (!confirm('حذف هذا المبلغ للرتبة؟')) return;
+    if (!confirm(this.l.t('::Training.FinancialItems.RankAmounts.DeleteConfirm'))) return;
     await firstValueFrom(this.rankAmountService.delete(rankAmountId));
     await this.reloadRankAmounts(itemId);
   }
@@ -411,21 +327,42 @@ export class FinancialItemsComponent implements OnInit {
     return r?.nameAr ?? '—';
   }
 
-  getParentName(parentId?: string | null): string {
-    if (!parentId) return '—';
-    const p = this.items().find(x => x.id === parentId);
-    return p?.nameAr ?? '—';
+  itemTypeLabel(type: FinancialItemType | null | undefined): string {
+    if (type == null) return this.l.t('::Training.FinancialItems.Table.No');
+    const key = this.itemTypeKey(type);
+    return key ? this.l.t(key) : this.l.t('::Training.FinancialItems.Table.No');
   }
 
-  itemTypeLabel(type: FinancialItemType | null | undefined): string {
-    if (type == null) return '—';
-    return ITEM_TYPE_LABELS_AR[type] ?? '—';
+  private itemTypeKey(type: FinancialItemType): string | null {
+    switch (type) {
+      case FinancialItemType.Other: return '::Training.FinancialItems.ItemType.Other';
+      case FinancialItemType.CourseCost: return '::Training.FinancialItems.ItemType.CourseCost';
+      case FinancialItemType.Ticket: return '::Training.FinancialItems.ItemType.Ticket';
+      case FinancialItemType.Insurance: return '::Training.FinancialItems.ItemType.Insurance';
+      case FinancialItemType.Visa: return '::Training.FinancialItems.ItemType.Visa';
+      case FinancialItemType.Allowance: return '::Training.FinancialItems.ItemType.Allowance';
+      case FinancialItemType.Clothing: return '::Training.FinancialItems.ItemType.Clothing';
+      default: return null;
+    }
   }
 
   onItemTypeChange(raw: string): void {
     if (raw === '') { this.fItemType.set(null); return; }
     const parsed = +raw;
     this.fItemType.set(Number.isFinite(parsed) ? (parsed as FinancialItemType) : null);
+  }
+
+  getTypeClass(type: FinancialItemType): string {
+    switch (type) {
+      case FinancialItemType.CourseCost: return 'cost';
+      case FinancialItemType.Ticket: return 'ticket';
+      case FinancialItemType.Insurance: return 'insurance';
+      case FinancialItemType.Visa: return 'visa';
+      case FinancialItemType.Allowance: return 'allowance';
+      case FinancialItemType.Clothing: return 'clothing';
+      case FinancialItemType.Other: return 'other';
+      default: return 'other';
+    }
   }
 
   trackById(_: number, i: FinancialItemDto): string { return i.id ?? ''; }

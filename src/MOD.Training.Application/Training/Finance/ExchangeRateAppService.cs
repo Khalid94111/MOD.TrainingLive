@@ -48,6 +48,11 @@ public class ExchangeRateAppService(
     [Authorize(TrainingPermissions.ExchangeRates.Create)]
     public async Task<ExchangeRateDto> CreateAsync(CreateExchangeRateDto input)
     {
+        if (input.Rate <= 0)
+        {
+            throw new BusinessException("Training:ExchangeRate:RateMustBePositive");
+        }
+
         // Deactivate all current active rates
         var queryable = await exchangeRateRepo.GetQueryableAsync();
         var activeRates = await AsyncExecuter.ToListAsync(
@@ -65,6 +70,7 @@ public class ExchangeRateAppService(
             FromCurrency = "USD",
             ToCurrency = "OMR",
             Rate = input.Rate,
+            Notes = input.Notes,
             IsActive = true,
             SetById = CurrentUser.Id!.Value,
             SetAt = DateTime.UtcNow

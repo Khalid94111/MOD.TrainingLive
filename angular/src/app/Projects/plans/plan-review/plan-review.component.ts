@@ -27,10 +27,10 @@ import {
   TrainingLocalizationHelper,
 } from '../../shared';
 
-interface FinancialItemGroup {
-  parentNameAr: string;
-  parentCode: string;
-  children: { id: string; nameAr: string; code: string }[];
+interface FinancialItemOption {
+  id: string;
+  nameAr: string;
+  code: string;
 }
 
 interface UnitGroup {
@@ -99,7 +99,7 @@ export class PlanReviewComponent implements OnInit {
   batchFilling = signal(false);
   batchProgress = signal('');
 
-  groupedFinancialItems = signal<FinancialItemGroup[]>([]);
+  flatFinancialItems = signal<FinancialItemOption[]>([]);
 
   // Return modal
   returnModalOpen = signal(false);
@@ -213,14 +213,8 @@ export class PlanReviewComponent implements OnInit {
     for (const fi of all) if (fi.id) byId.set(fi.id, fi);
     this.allFinancialItems.set(byId);
 
-    const parents = all.filter(fi => !fi.parentId);
-    const children = all.filter(fi => fi.parentId);
-    this.groupedFinancialItems.set(
-      parents.map(p => ({
-        parentNameAr: p.nameAr ?? '',
-        parentCode: p.code ?? '',
-        children: children.filter(c => c.parentId === p.id).map(c => ({ id: c.id!, nameAr: c.nameAr ?? '', code: c.code ?? '' })),
-      })).filter(g => g.children.length > 0),
+    this.flatFinancialItems.set(
+      all.map(fi => ({ id: fi.id!, nameAr: fi.nameAr ?? '', code: fi.code ?? '' })),
     );
   }
 

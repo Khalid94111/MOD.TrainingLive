@@ -11,8 +11,6 @@ export interface CourseTypeFinancialItemDefaultDto extends EntityDto<string> {
   financialItemNameAr?: string;
   financialItemNameEn?: string;
   sortOrder?: number;
-  parentNameAr?: string;
-  parentNameEn?: string;
   financialItemCode?: string;
 }
 
@@ -27,7 +25,6 @@ export interface CreateExchangeRateDto {
 }
 
 export interface CreateUpdateFinancialItemDto {
-  parentId?: string | null;
   nameAr?: string;
   nameEn?: string;
   voteCode?: string;
@@ -77,6 +74,7 @@ export interface ExchangeRateDto extends EntityDto<string> {
   fromCurrency?: string;
   toCurrency?: string;
   rate?: number;
+  notes?: string | null;
   isActive?: boolean;
   setAt?: string;
 }
@@ -85,7 +83,6 @@ export interface ExchangeRateGetListInput extends PagedAndSortedResultRequestDto
 }
 
 export interface FinancialItemDto extends EntityDto<string> {
-  parentId?: string | null;
   nameAr?: string;
   nameEn?: string;
   code?: string;
@@ -118,9 +115,6 @@ export interface FinancialItemSubItemDto {
   nameAr?: string;
   nameEn?: string;
   code?: string;
-  parentId?: string;
-  parentNameAr?: string;
-  parentNameEn?: string;
 }
 
 export interface PriceQuoteDto extends FullAuditedEntityDto<string> {
@@ -164,6 +158,7 @@ export interface TrainingBudgetDto extends EntityDto<string> {
   totalAmount?: number;
   spentAmount?: number;
   remaining?: number;
+  amountToRecoverOMR?: number;
   alertThreshold?: number;
   isOverThreshold?: boolean;
   spentPercent?: number;

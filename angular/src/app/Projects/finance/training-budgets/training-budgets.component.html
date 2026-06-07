@@ -62,6 +62,10 @@
               <span class="detail-value remaining-value" [class.danger]="budget.isOverThreshold">{{ formatCurrency(budget.remaining!) }} {{ '::Training.Currency.OMR' | abpLocalization }}</span>
             </div>
             <div>
+              <span class="detail-label">{{ '::Training.AmountToRecover' | abpLocalization }}:</span>
+              <span class="detail-value recover-value">{{ formatCurrency(budget.amountToRecoverOMR!) }} {{ '::Training.Currency.OMR' | abpLocalization }}</span>
+            </div>
+            <div>
               <span class="detail-label">{{ '::Training.AlertThreshold' | abpLocalization }}:</span>
               <span class="detail-value">{{ budget.alertThreshold }}%</span>
             </div>
@@ -118,6 +122,13 @@
       ></dxi-column>
 
       <dxi-column
+        dataField="amountToRecoverOMR"
+        [caption]="'::Training.AmountToRecover' | abpLocalization"
+        [width]="150"
+        cellTemplate="recoverTemplate"
+      ></dxi-column>
+
+      <dxi-column
         dataField="alertThreshold"
         [caption]="'::Training.AlertThreshold' | abpLocalization"
         [width]="120"
@@ -150,6 +161,12 @@
       <div *dxTemplate="let cell of 'remainingTemplate'">
         <span class="amount-remaining" [class.danger]="cell.data.isOverThreshold">
           {{ formatCurrency(cell.data.remaining) }} {{ '::Training.Currency.OMR' | abpLocalization }}
+        </span>
+      </div>
+
+      <div *dxTemplate="let cell of 'recoverTemplate'">
+        <span class="amount-recover">
+          {{ formatCurrency(cell.data.amountToRecoverOMR) }} {{ '::Training.Currency.OMR' | abpLocalization }}
         </span>
       </div>
 

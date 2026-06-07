@@ -168,15 +168,13 @@ builder.ConfigurePaymentsPhase4BBeta();
             b.Property(x => x.Code).IsRequired().HasMaxLength(50);
             b.Property(x => x.VoteCode).HasMaxLength(50);
 
-            b.HasOne(x => x.Parent)
-                .WithMany()
-                .HasForeignKey(x => x.ParentId)
-                .OnDelete(DeleteBehavior.Restrict);
+            // ParentId kept for schema compatibility (flat migration) but no FK constraint
+            b.Property(x => x.ParentId).IsRequired(false);
 
             b.Property(x => x.DefaultAmountOMR).IsRequired().HasColumnType("decimal(18,3)");
             b.Property(x => x.ItemType).HasConversion<int?>();
 
-            b.HasIndex(x => new { x.TenantId, x.ParentId });
+            b.HasIndex(x => new { x.TenantId, x.NameAr });
         });
 
         // ============================================================
@@ -210,6 +208,7 @@ builder.ConfigurePaymentsPhase4BBeta();
             b.Property(x => x.FromCurrency).IsRequired().HasMaxLength(10);
             b.Property(x => x.ToCurrency).IsRequired().HasMaxLength(10);
             b.Property(x => x.Rate).HasPrecision(18, 6);
+            b.Property(x => x.Notes).HasMaxLength(500);
 
             b.HasIndex(x => x.IsActive);
         });

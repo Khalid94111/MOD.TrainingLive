@@ -11,6 +11,27 @@
       {{ '::Training.ExchangeRates.Info' | abpLocalization }}
     </div>
 
+    <!-- Active Rate Card -->
+    @if (activeRate(); as rate) {
+      <div class="active-rate-card">
+        <div class="active-rate-header">
+          <span class="active-rate-badge">{{ '::Training.ExchangeRates.ActiveBadge' | abpLocalization }}</span>
+          <span class="active-rate-date">{{ formatDate(rate.setAt) }}</span>
+        </div>
+        <div class="active-rate-body">
+          <div class="active-rate-pair">USD → OMR</div>
+          <div class="active-rate-value">{{ rate.rate?.toFixed(6) }}</div>
+          @if (rate.notes) {
+            <div class="active-rate-notes">📝 {{ rate.notes }}</div>
+          }
+        </div>
+      </div>
+    } @else {
+      <div class="no-active-rate">
+        <span>⚠️ {{ '::Training.ExchangeRates.NoActiveRate' | abpLocalization }}</span>
+      </div>
+    }
+
     <!-- Toolbar -->
     <div class="toolbar-row">
       <div></div>
@@ -43,6 +64,12 @@
         [caption]="'::Training.ExchangeRates.Rate' | abpLocalization"
         [width]="150"
         cellTemplate="rateTemplate"
+      ></dxi-column>
+
+      <dxi-column
+        dataField="notes"
+        [caption]="'::Training.ExchangeRates.Notes' | abpLocalization"
+        [allowSorting]="false"
       ></dxi-column>
 
       <dxi-column
@@ -134,18 +161,21 @@
       <label class="form-label">{{ '::Training.ExchangeRates.Rate' | abpLocalization }} *</label>
       <dx-number-box
         [(value)]="formData.rate"
-        [min]="0"
+        [min]="0.001"
         [step]="0.001"
         format="#0.000"
         [rtlEnabled]="false"
       ></dx-number-box>
+      @if (rateError()) {
+        <div class="field-error">{{ rateError() }}</div>
+      }
     </div>
 
     <div class="form-group">
       <label class="form-label">{{ '::Training.ExchangeRates.Notes' | abpLocalization }}</label>
       <dx-text-box
         [(value)]="formData.notes"
-        [placeholder]="'::Training.ExchangeRates.Notes' | abpLocalization"
+        [placeholder]="'::Training.ExchangeRates.NotesPlaceholder' | abpLocalization"
       ></dx-text-box>
     </div>
   </div>

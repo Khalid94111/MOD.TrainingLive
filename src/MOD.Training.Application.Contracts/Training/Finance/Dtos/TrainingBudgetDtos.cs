@@ -13,6 +13,7 @@ public class TrainingBudgetDto : EntityDto<Guid>
     public decimal TotalAmount { get; set; }
     public decimal SpentAmount { get; set; }
     public decimal Remaining { get; set; } // Computed: TotalAmount - SpentAmount
+    public decimal AmountToRecoverOMR { get; set; } // Computed: sum of pending reallocations
     public decimal AlertThreshold { get; set; }
     public bool IsOverThreshold { get; set; } // Computed: SpentPercent > AlertThreshold
     public decimal SpentPercent { get; set; } // Computed

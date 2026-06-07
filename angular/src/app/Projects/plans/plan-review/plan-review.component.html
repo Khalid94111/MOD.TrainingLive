@@ -429,12 +429,8 @@
           <label class="form-label">البند المالي <span class="required">*</span></label>
           <select class="form-input" [value]="fiFiId()" (change)="fiFiId.set($any($event.target).value)">
             <option value="">اختر بنداً مالياً...</option>
-            @for (group of groupedFinancialItems(); track group.parentCode) {
-              <optgroup [label]="group.parentNameAr + ' (' + group.parentCode + ')'">
-                @for (fi of group.children; track fi.id) {
-                  <option [value]="fi.id">{{ fi.nameAr }} ({{ fi.code }})</option>
-                }
-              </optgroup>
+            @for (fi of flatFinancialItems(); track fi.id) {
+              <option [value]="fi.id">{{ fi.nameAr }} ({{ fi.code }})</option>
             }
           </select>
         </div>
