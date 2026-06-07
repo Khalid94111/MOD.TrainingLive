@@ -681,6 +681,7 @@
     "Training.ExchangeRates.Add": "Add Exchange Rate",
     "Training.ExchangeRates.Currency": "Currency",
     "Training.ExchangeRates.Rate": "Exchange Rate (OMR)",
+    "Training.ExchangeRates.RateHint": "Maximum 3 decimal places (e.g. 0.385)",
     "Training.ExchangeRates.EffectiveDate": "Effective Date",
     "Training.ExchangeRates.Notes": "Notes",
     "Training.ExchangeRates.Status": "Status",
@@ -695,6 +696,8 @@
     "Training.ExchangeRates.NotesPlaceholder": "Add optional notes...",
     "Training.ExchangeRates.ActiveBadge": "Active",
     "Training.ExchangeRates.RateMustBePositive": "Rate must be greater than zero",
+    "Training.ExchangeRates.AddSubtitle": "Add a new exchange rate for USD → OMR",
+    "Training.ExchangeRates.AddFirstHint": "Add your first exchange rate to get started",
     "Training.ExchangeRates.ConfirmCreate": "Creating a new rate will deactivate the current active rate. Are you sure?",
 
     "Training.CourseTypeDefaults.AllAssigned": "All financial items are assigned to this type",

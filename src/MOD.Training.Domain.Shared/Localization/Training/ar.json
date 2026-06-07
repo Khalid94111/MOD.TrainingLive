@@ -370,6 +370,7 @@
     "Training.ExchangeRates.Add": "إضافة سعر صرف",
     "Training.ExchangeRates.Currency": "العملة",
     "Training.ExchangeRates.Rate": "سعر الصرف (OMR)",
+    "Training.ExchangeRates.RateHint": "أقصى 3 أرقام بعد الفاصلة (مثال: 0.385)",
     "Training.ExchangeRates.EffectiveDate": "تاريخ السريان",
     "Training.ExchangeRates.Notes": "ملاحظات",
     "Training.ExchangeRates.Status": "الحالة",
@@ -384,6 +385,8 @@
     "Training.ExchangeRates.NotesPlaceholder": "أضف ملاحظة اختيارية...",
     "Training.ExchangeRates.ActiveBadge": "نشط",
     "Training.ExchangeRates.RateMustBePositive": "يجب أن يكون السعر أكبر من صفر",
+    "Training.ExchangeRates.AddSubtitle": "إضافة سعر صرف جديد لـ USD → OMR",
+    "Training.ExchangeRates.AddFirstHint": "أضف أول سعر صرف للبدء",
     "Training.ExchangeRates.ConfirmCreate": "إنشاء سعر صرف جديد سيؤدي إلى تعطيل السعر النشط الحالي. هل أنت متأكد؟",
 
     "Training.CourseTypeDefaults.AllAssigned": "جميع البنود المالية مخصصة لهذا النوع",
