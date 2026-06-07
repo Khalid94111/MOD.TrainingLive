@@ -1,13 +1,12 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LocalizationService, LocalizationPipe } from '@abp/ng.core';
-import { DxDataGridModule } from 'devextreme-angular/ui/data-grid';
-import { DxSelectBoxModule } from 'devextreme-angular/ui/select-box';
+import { LocalizationPipe } from '@abp/ng.core';
 import { DxPopupModule } from 'devextreme-angular/ui/popup';
+import { DxSelectBoxModule } from 'devextreme-angular/ui/select-box';
 import { ToolbarItem } from 'devextreme/ui/popup';
 import { firstValueFrom } from 'rxjs';
 import { CourseTypeFinancialDefaultService, FinancialItemService } from 'src/app/proxy/training/finance';
-import type { FinancialItemSubItemDto } from 'src/app/proxy/training/finance/dtos';
+import type { CourseTypeFinancialItemDefaultDto, FinancialItemDto } from 'src/app/proxy/training/finance/dtos';
 import { CourseType, TrainingLocalizationHelper } from '../../shared';
 
 @Component({
@@ -15,25 +14,26 @@ import { CourseType, TrainingLocalizationHelper } from '../../shared';
   selector: 'app-financial-item-defaults',
   templateUrl: './financial-item-defaults.component.html',
   styleUrl: './financial-item-defaults.component.scss',
-  imports: [
-    CommonModule,
-    LocalizationPipe,
-    DxDataGridModule,
-    DxSelectBoxModule,
-    DxPopupModule,
-  ],
+  imports: [CommonModule, LocalizationPipe, DxPopupModule, DxSelectBoxModule],
 })
 export class FinancialItemDefaultsComponent implements OnInit {
   private readonly defaultService = inject(CourseTypeFinancialDefaultService);
   private readonly financialItemService = inject(FinancialItemService);
   private readonly l = inject(TrainingLocalizationHelper);
 
+  readonly CourseType = CourseType;
+
   selectedCourseType = signal<CourseType>(CourseType.ExternalInternational);
-  defaults = signal<any[]>([]);
-  subItems = signal<FinancialItemSubItemDto[]>([]);
+  defaults = signal<CourseTypeFinancialItemDefaultDto[]>([]);
+  availableItems = signal<FinancialItemDto[]>([]);
   isAddDialogVisible = signal(false);
   selectedFinancialItemId = signal<string | null>(null);
   isLoading = signal(false);
+  isSaving = signal(false);
+
+  externalIntlCount = signal(0);
+  externalLocalCount = signal(0);
+  itemCount = computed(() => this.defaults().length);
 
   courseTypeOptions: { value: CourseType; label: string; icon: string }[] = [];
   addDialogToolbarItems: ToolbarItem[] | undefined;
@@ -61,6 +61,7 @@ export class FinancialItemDefaultsComponent implements OnInit {
           text: this.l.t('::Training.CourseTypeDefaults.AddItem'),
           type: 'default',
           stylingMode: 'contained',
+          disabled: false,
           onClick: () => this.onAddConfirm(),
         },
       },
@@ -77,7 +78,8 @@ export class FinancialItemDefaultsComponent implements OnInit {
     ];
 
     this.loadDefaults();
-    this.loadSubItems();
+    this.loadAvailableItems();
+    this.loadAllCounts();
   }
 
   async loadDefaults(): Promise<void> {
@@ -93,17 +95,31 @@ export class FinancialItemDefaultsComponent implements OnInit {
     }
   }
 
-  async loadSubItems(): Promise<void> {
-    const items = await firstValueFrom(this.financialItemService.getSubItems());
-    // Filter out already-assigned items
-    const assignedIds = new Set(this.defaults().map((d: any) => d.financialItemId));
-    this.subItems.set((items ?? []).filter(i => !assignedIds.has(i.id)));
+  async loadAvailableItems(): Promise<void> {
+    const result = await firstValueFrom(
+      this.financialItemService.getList({ maxResultCount: 1000, isActive: true })
+    );
+    const assignedIds = new Set(this.defaults().map((d) => d.financialItemId));
+    this.availableItems.set((result.items ?? []).filter((i) => !assignedIds.has(i.id)));
+  }
+
+  async loadAllCounts(): Promise<void> {
+    try {
+      const [intlResult, localResult] = await Promise.all([
+        firstValueFrom(this.defaultService.getList(CourseType.ExternalInternational)),
+        firstValueFrom(this.defaultService.getList(CourseType.ExternalLocal)),
+      ]);
+      this.externalIntlCount.set((intlResult.items ?? []).length);
+      this.externalLocalCount.set((localResult.items ?? []).length);
+    } catch {
+      // silently fail — counts are cosmetic
+    }
   }
 
   onCourseTypeSelect(type: CourseType): void {
     this.selectedCourseType.set(type);
     this.loadDefaults();
-    this.loadSubItems();
+    this.loadAvailableItems();
   }
 
   isCourseTypeSelected(type: CourseType): boolean {
@@ -116,67 +132,68 @@ export class FinancialItemDefaultsComponent implements OnInit {
   }
 
   async onAddConfirm(): Promise<void> {
-    if (!this.selectedFinancialItemId()) return;
-
-    await firstValueFrom(
-      this.defaultService.create({
-        courseType: this.selectedCourseType(),
-        financialItemId: this.selectedFinancialItemId()!,
-      })
-    );
-
-    this.isAddDialogVisible.set(false);
-    await this.loadDefaults();
-    await this.loadSubItems();
+    if (!this.selectedFinancialItemId() || this.isSaving()) return;
+    this.isSaving.set(true);
+    try {
+      await firstValueFrom(
+        this.defaultService.create({
+          courseType: this.selectedCourseType(),
+          financialItemId: this.selectedFinancialItemId()!,
+        })
+      );
+      this.isAddDialogVisible.set(false);
+      await this.loadDefaults();
+      await this.loadAvailableItems();
+    } finally {
+      this.isSaving.set(false);
+    }
   }
 
   async onDeleteDefault(id: string): Promise<void> {
+    if (!confirm(this.l.t('::Training.CourseTypeDefaults.DeleteConfirm'))) return;
     await firstValueFrom(this.defaultService.delete(id));
     await this.loadDefaults();
-    await this.loadSubItems();
+    await this.loadAvailableItems();
+    await this.loadAllCounts();
   }
 
-  async onReorder(e: any): Promise<void> {
-    e.promise = this.applyReorder(e);
+  async moveUp(index: number): Promise<void> {
+    if (index <= 0) return;
+    await this.swapOrder(index, index - 1);
   }
 
-  private async applyReorder(e: any): Promise<void> {
+  async moveDown(index: number): Promise<void> {
+    const items = this.defaults();
+    if (index >= items.length - 1) return;
+    await this.swapOrder(index, index + 1);
+  }
+
+  private async swapOrder(fromIndex: number, toIndex: number): Promise<void> {
     const items = [...this.defaults()];
-    const movedId = e.itemData?.id;
-    if (!movedId) return;
+    const temp = items[fromIndex];
+    items[fromIndex] = items[toIndex];
+    items[toIndex] = temp;
 
-    const fromIndex = items.findIndex((x: any) => x.id === movedId);
-    if (fromIndex < 0) return;
-
-    const visibleRows = e.component?.getVisibleRows?.() ?? [];
-    const targetRowData = visibleRows[e.toIndex]?.data;
-    let toIndex = targetRowData?.id
-      ? items.findIndex((x: any) => x.id === targetRowData.id)
-      : items.length - 1;
-
-    if (toIndex < 0) toIndex = items.length - 1;
-    if (fromIndex === toIndex) return;
-
-    const movedItem = items.splice(fromIndex, 1)[0];
-    items.splice(toIndex, 0, movedItem);
-
-    const sortOrderUpdates = items.map((item: any, index: number) => ({
-      id: item.id,
-      sortOrder: index + 1,
-    }));
-
-    const updatedItems = items.map((item: any, index: number) => ({
+    const updated = items.map((item, index) => ({
       ...item,
       sortOrder: index + 1,
     }));
-    this.defaults.set(updatedItems);
+    this.defaults.set(updated);
 
     try {
       await firstValueFrom(
-        this.defaultService.updateSortOrder({ items: sortOrderUpdates })
+        this.defaultService.updateSortOrder({
+          items: updated.map((x) => ({ id: x.id!, sortOrder: x.sortOrder })),
+        })
       );
     } catch {
       await this.loadDefaults();
     }
+  }
+
+  selectBoxDisplayExpr(item: FinancialItemDto): string {
+    if (!item) return '';
+    const code = item.voteCode ? `(${item.voteCode})` : '';
+    return `${item.nameAr ?? ''} ${code}`.trim();
   }
 }

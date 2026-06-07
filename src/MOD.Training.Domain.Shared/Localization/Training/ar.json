@@ -359,7 +359,7 @@
     "Training.CourseTypeDefaults.ExternalInternational": "خارجي دولي",
     "Training.CourseTypeDefaults.ExternalLocal": "خارجي محلي",
     "Training.CourseTypeDefaults.ItemCount": "{0} بنود مالية",
-    "Training.CourseTypeDefaults.Info": "اختر نوع الدورة من القائمة اليمنى ثم أضف البنود المالية المطلوبة. الخارجي الدولي = 6 بنود، الخارجي المحلي = 1 بند، الداخلي = لا بنود.",
+    "Training.CourseTypeDefaults.Info": "اختر نوع الدورة ثم أضف البنود المالية المطلوبة. يمكن ترتيب البنود باستخدام الأسهم.",
     "Training.CourseTypeDefaults.InternalWarning": "الدورات الداخلية لا تحتاج بنود مالية",
     "Training.CourseTypeDefaults.SelectFinancialItem": "اختر البند المالي",
     "Training.CourseTypeDefaults.DeleteConfirm": "هل أنت متأكد من حذف هذا الربط؟",
@@ -387,6 +387,12 @@
     "Training.ExchangeRates.ConfirmCreate": "إنشاء سعر صرف جديد سيؤدي إلى تعطيل السعر النشط الحالي. هل أنت متأكد؟",
 
     "Training.CourseTypeDefaults.AllAssigned": "جميع البنود المالية مخصصة لهذا النوع",
+    "Training.CourseTypeDefaults.NoItems": "لا توجد بنود مالية مخصصة",
+    "Training.CourseTypeDefaults.NoItemsHint": "اختر نوع الدورة وأضف البنود المالية المطلوبة",
+    "Training.CourseTypeDefaults.ReorderHint": "استخدم الأسهم لتغيير الترتيب — يؤثر على ظهور البنود في الخطط",
+
+    "Training.Common.MoveUp": "نقل لأعلى",
+    "Training.Common.MoveDown": "نقل لأسفل",
 
     "Training.TrainingBudgets": "ميزانيات التدريب",
     "Training.TrainingBudgets.Title": "ميزانيات التدريب",

@@ -670,7 +670,7 @@
     "Training.CourseTypeDefaults.ExternalInternational": "External International",
     "Training.CourseTypeDefaults.ExternalLocal": "External Local",
     "Training.CourseTypeDefaults.ItemCount": "{0} financial items",
-    "Training.CourseTypeDefaults.Info": "Select a course type from the left panel then add the required financial items. External International = 6 items, External Local = 1 item, Internal = no items.",
+    "Training.CourseTypeDefaults.Info": "Select a course type then add the required financial items. You can reorder items using the arrows.",
     "Training.CourseTypeDefaults.InternalWarning": "Internal courses do not require financial items",
     "Training.CourseTypeDefaults.SelectFinancialItem": "Select Financial Item",
     "Training.CourseTypeDefaults.DeleteConfirm": "Are you sure you want to remove this default?",
@@ -698,6 +698,12 @@
     "Training.ExchangeRates.ConfirmCreate": "Creating a new rate will deactivate the current active rate. Are you sure?",
 
     "Training.CourseTypeDefaults.AllAssigned": "All financial items are assigned to this type",
+    "Training.CourseTypeDefaults.NoItems": "No financial items assigned",
+    "Training.CourseTypeDefaults.NoItemsHint": "Select a course type and add the required financial items",
+    "Training.CourseTypeDefaults.ReorderHint": "Use arrows to change the order — this affects how items appear in plans",
+
+    "Training.Common.MoveUp": "Move up",
+    "Training.Common.MoveDown": "Move down",
 
     "Training.TrainingBudgets": "Training Budgets",
     "Training.TrainingBudgets.Title": "Training Budgets",

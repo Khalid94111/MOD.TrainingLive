@@ -2,6 +2,7 @@
 using Volo.Abp.SettingManagement;
 using Volo.Abp.Account;
 using Volo.Abp.Identity;
+using Volo.Abp.AutoMapper;
 using Volo.Abp.Mapperly;
 using Volo.Abp.FeatureManagement;
 using Volo.Abp.Modularity;
@@ -18,6 +19,7 @@ namespace MOD.Training;
 [DependsOn(
     typeof(TrainingDomainModule),
     typeof(TrainingApplicationContractsModule),
+    typeof(AbpAutoMapperModule),
     typeof(AbpPermissionManagementApplicationModule),
     typeof(AbpFeatureManagementApplicationModule),
     typeof(AbpIdentityApplicationModule),
@@ -33,5 +35,9 @@ namespace MOD.Training;
     )]
 public class TrainingApplicationModule : AbpModule
 {
-
+    public override void ConfigureServices(ServiceConfigurationContext context)
+    {
+        context.Services.AddAutoMapperObjectMapper<TrainingApplicationModule>();
+        context.Services.AddAutoMapper(typeof(TrainingApplicationModule).Assembly);
+    }
 }

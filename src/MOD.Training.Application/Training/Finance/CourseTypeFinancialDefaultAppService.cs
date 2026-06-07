@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using MOD.Training.Shared;
 using MOD.Training.Training.Enums;
@@ -17,7 +18,8 @@ namespace MOD.Training.Training.Finance;
 [Authorize(TrainingPermissions.CourseTypeFinancialDefaults.Default)]
 public class CourseTypeFinancialDefaultAppService(
     IRepository<CourseTypeFinancialItemDefault, Guid> defaultRepo,
-    IRepository<FinancialItem, Guid> financialItemRepo)
+    IRepository<FinancialItem, Guid> financialItemRepo,
+    IMapper mapper)
     : ApplicationService, ICourseTypeFinancialDefaultAppService
 {
     /// <summary>
@@ -47,13 +49,8 @@ public class CourseTypeFinancialDefaultAppService(
 
         var dtos = entities.Select(entity =>
         {
-            var dto = new CourseTypeFinancialItemDefaultDto
-            {
-                Id = entity.Id,
-                CourseType = (CourseType)(int)entity.CourseType,
-                FinancialItemId = entity.FinancialItemId,
-                SortOrder = entity.SortOrder
-            };
+            var dto = mapper.Map<CourseTypeFinancialItemDefaultDto>(entity);
+            dto.CourseType = (CourseType)(int)entity.CourseType;
 
             if (fiMap.TryGetValue(entity.FinancialItemId, out var fi))
             {
@@ -100,24 +97,16 @@ public class CourseTypeFinancialDefaultAppService(
             maxSortOrder = existingItems.Max(x => x.SortOrder);
         }
 
-        var entity = new CourseTypeFinancialItemDefault
-        {
-            CourseType = input.CourseType,
-            FinancialItemId = input.FinancialItemId,
-            SortOrder = maxSortOrder + 1
-        };
+        var entity = mapper.Map<CourseTypeFinancialItemDefault>(input);
+        entity.SortOrder = maxSortOrder + 1;
 
         await defaultRepo.InsertAsync(entity);
 
-        return new CourseTypeFinancialItemDefaultDto
-        {
-            Id = entity.Id,
-            CourseType = entity.CourseType,
-            FinancialItemId = entity.FinancialItemId,
-            FinancialItemNameAr = financialItem.NameAr,
-            FinancialItemNameEn = financialItem.NameEn,
-            SortOrder = entity.SortOrder
-        };
+        var dto = mapper.Map<CourseTypeFinancialItemDefaultDto>(entity);
+        dto.FinancialItemNameAr = financialItem.NameAr;
+        dto.FinancialItemNameEn = financialItem.NameEn;
+        dto.FinancialItemCode = financialItem.Code;
+        return dto;
     }
 
     [Authorize(TrainingPermissions.CourseTypeFinancialDefaults.Delete)]
