@@ -16,9 +16,10 @@ namespace MOD.Training.Training;
 public static partial class TrainingMapper
 {
     // ── Course Catalog ──
-    public static partial CourseCatalogDto ToDto(this CourseCatalog source);
-    public static partial CourseCatalog ToEntity(this CreateUpdateCourseCatalogDto source);
-    public static partial void MapTo(this CreateUpdateCourseCatalogDto source, CourseCatalog target);
+    // NOTE: Migrated to AutoMapper (TrainingAutoMapperProfile)
+    // public static partial CourseCatalogDto ToDto(this CourseCatalog source);
+    // public static partial CourseCatalog ToEntity(this CreateUpdateCourseCatalogDto source);
+    // public static partial void MapTo(this CreateUpdateCourseCatalogDto source, CourseCatalog target);
 
     // ── Course Fields ──
     public static partial CourseFieldDto ToDto(this CourseField source);

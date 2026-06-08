@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using MOD.Training.Training.Catalog;
 using MOD.Training.Training.Catalog.Dtos;
@@ -21,7 +22,8 @@ public class TenantCourseAppService(
     IRepository<TenantCourse, Guid> tenantCourseRepo,
     IRepository<TenantCourseCondition, Guid> conditionRepo,
     IRepository<CourseCatalog, Guid> catalogRepo,
-    IRepository<CatalogEnrollmentCondition, Guid> catalogConditionRepo)
+    IRepository<CatalogEnrollmentCondition, Guid> catalogConditionRepo,
+    IMapper mapper)
     : ApplicationService, ITenantCourseAppService
 {
     public async Task<TenantCourseDto> GetAsync(Guid id)
@@ -162,7 +164,7 @@ public class TenantCourseAppService(
             totalCount,
             items.Select(x =>
             {
-                var dto = x.ToDto();
+                var dto = mapper.Map<CourseCatalogDto>(x);
                 dto.FieldNameAr = x.Field?.FieldNameAr;
                 dto.FieldNameEn = x.Field?.FieldNameEn;
                 return dto;

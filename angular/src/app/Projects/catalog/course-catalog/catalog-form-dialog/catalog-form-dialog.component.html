@@ -1,98 +1,177 @@
-<dx-popup [visible]="visible()" [title]="dialogTitle" [showCloseButton]="true" [dragEnabled]="true"
-  [width]="720" [height]="'auto'" [maxHeight]="'85vh'" (onHidden)="onCancel()" [toolbarItems]="dialogToolbarItems">
-  <div *dxTemplate="let data of 'content'" class="dialog-body">
-
-    <div class="form-row-2">
-      <div class="form-group">
-        <label class="form-label">{{ '::Training.CourseNameAr' | abpLocalization }} <span class="req">*</span></label>
-        <dx-text-box [value]="formData().courseNameAr" (valueChange)="updateField('courseNameAr', $event)" [stylingMode]="'outlined'" [rtlEnabled]="true"></dx-text-box>
-      </div>
-      <div class="form-group">
-        <label class="form-label">{{ '::Training.CourseNameEn' | abpLocalization }} <span class="req">*</span></label>
-        <dx-text-box [value]="formData().courseNameEn" (valueChange)="updateField('courseNameEn', $event)" [stylingMode]="'outlined'" [rtlEnabled]="false"></dx-text-box>
-      </div>
-    </div>
-
-    <div class="form-row-2">
-      <div class="form-group">
-        <label class="form-label">{{ '::Training.DescriptionAr' | abpLocalization }}</label>
-        <dx-text-area [value]="formData().descriptionAr" (valueChange)="updateField('descriptionAr', $event)" [height]="80" [stylingMode]="'outlined'"></dx-text-area>
-      </div>
-      <div class="form-group">
-        <label class="form-label">{{ '::Training.DescriptionEn' | abpLocalization }}</label>
-        <dx-text-area [value]="formData().descriptionEn" (valueChange)="updateField('descriptionEn', $event)" [height]="80" [stylingMode]="'outlined'" [rtlEnabled]="false"></dx-text-area>
-      </div>
-    </div>
-
-    <div class="form-row-3">
-      <div class="form-group">
-        <label class="form-label">{{ '::Training.Category' | abpLocalization }} <span class="req">*</span></label>
-        <dx-select-box [dataSource]="categoryDataSource" displayExpr="text" valueExpr="value" [value]="formData().category" (valueChange)="updateField('category', $event)" [stylingMode]="'outlined'"></dx-select-box>
-      </div>
-      <div class="form-group">
-        <label class="form-label">{{ '::Training.Nature' | abpLocalization }} <span class="req">*</span></label>
-        <dx-select-box [dataSource]="natureDataSource" displayExpr="text" valueExpr="value" [value]="formData().nature" (valueChange)="updateField('nature', $event)" [stylingMode]="'outlined'"></dx-select-box>
-      </div>
-      <div class="form-group">
-        <label class="form-label">{{ '::Training.Field' | abpLocalization }} <span class="req">*</span></label>
-        <dx-select-box [dataSource]="courseFields()" displayExpr="fieldNameAr" valueExpr="id" [value]="formData().fieldId" (valueChange)="updateField('fieldId', $event)" [stylingMode]="'outlined'"></dx-select-box>
-      </div>
-    </div>
-
-    <div class="form-row-2">
-      <div class="form-group">
-        <label class="form-label">{{ '::Training.ResultType' | abpLocalization }} <span class="req">*</span></label>
-        <dx-select-box [dataSource]="resultTypeDataSource" displayExpr="text" valueExpr="value" [value]="formData().resultType" (valueChange)="updateField('resultType', $event)" [stylingMode]="'outlined'"></dx-select-box>
-      </div>
-      <div class="form-switch-row">
-        <span class="form-switch-label">{{ '::Training.IsActive' | abpLocalization }}:</span>
-        <dx-switch [value]="formData().isActive" (valueChange)="updateField('isActive', $event)"></dx-switch>
-        @if (formData().isActive) {
-          <span class="badge badge--success badge--sm">{{ '::Training.Active' | abpLocalization }}</span>
-        } @else {
-          <span class="badge badge--muted badge--sm">{{ '::Training.Inactive' | abpLocalization }}</span>
-        }
-      </div>
-    </div>
-
-    <div class="form-checkbox-box">
-      <div class="form-checkbox-box__row">
-        <dx-check-box [text]="'::Training.RequiresEvaluation' | abpLocalization" [value]="formData().requiresEvaluation" (valueChange)="updateField('requiresEvaluation', $event)"></dx-check-box>
-        <dx-check-box [text]="'::Training.RequiresProviderEvaluation' | abpLocalization" [value]="formData().requiresProviderEvaluation" (valueChange)="updateField('requiresProviderEvaluation', $event)"></dx-check-box>
-        <dx-check-box [text]="'::Training.HasCertificate' | abpLocalization" [value]="formData().hasCertificate" (valueChange)="updateField('hasCertificate', $event)"></dx-check-box>
-      </div>
-      @if (showEvaluationBlocks) {
-        <dx-check-box [text]="'::Training.EvaluationBlocksCertificate' | abpLocalization" [value]="formData().evaluationBlocksCertificate" (valueChange)="updateField('evaluationBlocksCertificate', $event)"></dx-check-box>
-      }
-    </div>
-
-    <!-- Conditions -->
-    <div class="conditions-section">
-      <div class="conditions-section__header">
-        <h4 class="conditions-section__title">📋 {{ '::Training.EnrollmentConditions' | abpLocalization }}</h4>
-        <button class="btn-gradient btn-gradient--primary btn-gradient--sm" (click)="onAddCondition()">
-          ➕ {{ '::Training.AddCondition' | abpLocalization }}
+@if (visible()) {
+  <div class="modal-backdrop-modern" (click)="$event.target === $event.currentTarget ? onCancel() : null">
+    <div class="modal-modern modal-lg">
+      <div class="modal-modern-header header-edit">
+        <div class="modal-modern-header-content">
+          <div class="modal-header-icon">📚</div>
+          <div>
+            <div class="modal-modern-title">{{ dialogTitle }}</div>
+            <div class="modal-modern-subtitle">{{ '::Training.CourseCatalog' | abpLocalization }}</div>
+          </div>
+        </div>
+        <button class="modal-modern-close" (click)="onCancel()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
-      @if (conditions().length === 0) {
-        <div class="conditions-section__empty">{{ '::Training.NoConditions' | abpLocalization }}</div>
-      }
-      @for (cond of conditions(); track cond.id; let i = $index) {
-        <div class="condition-row">
-          <dx-select-box [dataSource]="conditionTypeDataSource" displayExpr="text" valueExpr="value"
-            [value]="cond.conditionType" (valueChange)="updateCondition(i, 'conditionType', $event)"
-            [stylingMode]="'outlined'" class="condition-row__type-select">
-          </dx-select-box>
-          <dx-text-box [value]="cond.conditionValue" (valueChange)="updateCondition(i, 'conditionValue', $event)"
-            [placeholder]="'::Training.ConditionValuePlaceholder' | abpLocalization"
-            [stylingMode]="'outlined'" [rtlEnabled]="false" class="condition-row__value-input">
-          </dx-text-box>
-          @if (cond._isNew && isEditMode) {
-            <span class="emoji-action" (click)="onSaveCondition(cond)">💾</span>
-          }
-          <span class="emoji-action" (click)="onRemoveCondition(i)">🗑️</span>
+
+      <div class="modal-modern-body">
+        @if (validationErrors().length > 0) {
+          <div class="validation-banner">
+            @for (err of validationErrors(); track $index) {
+              <div class="validation-item">⚠️ {{ err }}</div>
+            }
+          </div>
+        }
+
+        <!-- Basic Info -->
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">{{ '::Training.CourseNameAr' | abpLocalization }} <span class="required">*</span></label>
+            <input type="text" class="form-input" [value]="formData().courseNameAr" (input)="updateField('courseNameAr', $any($event.target).value)" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">{{ '::Training.CourseNameEn' | abpLocalization }} <span class="required">*</span></label>
+            <input type="text" class="form-input" [value]="formData().courseNameEn" (input)="updateField('courseNameEn', $any($event.target).value)" dir="ltr" />
+          </div>
         </div>
-      }
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">{{ '::Training.DescriptionAr' | abpLocalization }}</label>
+            <textarea class="form-input form-textarea" rows="3" [value]="formData().descriptionAr" (input)="updateField('descriptionAr', $any($event.target).value)"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">{{ '::Training.DescriptionEn' | abpLocalization }}</label>
+            <textarea class="form-input form-textarea" rows="3" [value]="formData().descriptionEn" (input)="updateField('descriptionEn', $any($event.target).value)" dir="ltr"></textarea>
+          </div>
+        </div>
+
+        <div class="form-row-3">
+          <div class="form-group">
+            <label class="form-label">{{ '::Training.Category' | abpLocalization }} <span class="required">*</span></label>
+            <select class="form-input" [value]="formData().category" (change)="updateField('category', $any($event.target).value)">
+              <option value="">—</option>
+              @for (opt of categoryOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">{{ '::Training.Nature' | abpLocalization }} <span class="required">*</span></label>
+            <select class="form-input" [value]="formData().nature" (change)="updateField('nature', $any($event.target).value)">
+              <option value="">—</option>
+              @for (opt of natureOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">{{ '::Training.Field' | abpLocalization }} <span class="required">*</span></label>
+            <select class="form-input" [value]="formData().fieldId || ''" (change)="updateField('fieldId', $any($event.target).value || undefined)">
+              <option value="">—</option>
+              @for (field of courseFields(); track field.id) {
+                <option [value]="field.id">{{ field.fieldNameAr }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">{{ '::Training.ResultType' | abpLocalization }} <span class="required">*</span></label>
+            <select class="form-input" [value]="formData().resultType" (change)="updateField('resultType', +$any($event.target).value)">
+              <option value="">—</option>
+              @for (opt of resultTypeOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-switch-row-modern">
+            <span class="form-switch-label">{{ '::Training.IsActive' | abpLocalization }}</span>
+            <label class="switch-modern">
+              <input type="checkbox" [checked]="formData().isActive" (change)="updateField('isActive', $any($event.target).checked)" />
+              <span class="switch-slider"></span>
+            </label>
+            @if (formData().isActive) {
+              <span class="status-mini status-active">{{ '::Training.Active' | abpLocalization }}</span>
+            } @else {
+              <span class="status-mini status-inactive">{{ '::Training.Inactive' | abpLocalization }}</span>
+            }
+          </div>
+        </div>
+
+        <!-- Checkboxes -->
+        <div class="form-checkbox-box-modern">
+          <div class="form-checkbox-row">
+            <label class="checkbox-modern">
+              <input type="checkbox" [checked]="formData().requiresEvaluation" (change)="updateField('requiresEvaluation', $any($event.target).checked)" />
+              <span class="checkbox-box"></span>
+              <span class="checkbox-label">{{ '::Training.RequiresEvaluation' | abpLocalization }}</span>
+            </label>
+            <label class="checkbox-modern">
+              <input type="checkbox" [checked]="formData().requiresProviderEvaluation" (change)="updateField('requiresProviderEvaluation', $any($event.target).checked)" />
+              <span class="checkbox-box"></span>
+              <span class="checkbox-label">{{ '::Training.RequiresProviderEvaluation' | abpLocalization }}</span>
+            </label>
+            <label class="checkbox-modern">
+              <input type="checkbox" [checked]="formData().hasCertificate" (change)="updateField('hasCertificate', $any($event.target).checked)" />
+              <span class="checkbox-box"></span>
+              <span class="checkbox-label">{{ '::Training.HasCertificate' | abpLocalization }}</span>
+            </label>
+          </div>
+          @if (showEvaluationBlocks) {
+            <label class="checkbox-modern">
+              <input type="checkbox" [checked]="formData().evaluationBlocksCertificate" (change)="updateField('evaluationBlocksCertificate', $any($event.target).checked)" />
+              <span class="checkbox-box"></span>
+              <span class="checkbox-label">{{ '::Training.EvaluationBlocksCertificate' | abpLocalization }}</span>
+            </label>
+          }
+        </div>
+
+        <!-- Conditions -->
+        <div class="conditions-section-modern">
+          <div class="conditions-section-header">
+            <h4 class="conditions-section-title">
+              <span class="section-icon">📋</span>
+              {{ '::Training.EnrollmentConditions' | abpLocalization }}
+            </h4>
+            <button class="btn btn-primary btn-sm" (click)="onAddCondition()">
+              <span class="btn-icon-symbol">+</span>
+              {{ '::Training.AddCondition' | abpLocalization }}
+            </button>
+          </div>
+          @if (conditions().length === 0) {
+            <div class="conditions-empty">{{ '::Training.NoConditions' | abpLocalization }}</div>
+          }
+          @for (cond of conditions(); track cond.id; let i = $index) {
+            <div class="condition-row-modern">
+              <select class="form-input condition-type-select" [value]="cond.conditionType" (change)="updateCondition(i, 'conditionType', +$any($event.target).value)">
+                @for (opt of conditionTypeOptions; track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+              <input type="text" class="form-input condition-value-input" [value]="cond.conditionValue" (input)="updateCondition(i, 'conditionValue', $any($event.target).value)" dir="ltr" />
+              <div class="condition-actions">
+                @if (cond._isNew && isEditMode) {
+                  <button class="action-btn action-save" (click)="onSaveCondition(cond)" title="{{ '::Training.Common.Save' | abpLocalization }}">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                  </button>
+                }
+                <button class="action-btn action-delete" (click)="onRemoveCondition(i)" title="{{ '::Training.Common.Delete' | abpLocalization }}">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="modal-modern-footer">
+        <button class="btn btn-ghost" (click)="onCancel()">{{ '::Training.Cancel' | abpLocalization }}</button>
+        <button class="btn btn-primary btn-glow" (click)="onSave()" [disabled]="isSaving()">
+          <span>{{ '::Training.Save' | abpLocalization }}</span>
+        </button>
+      </div>
     </div>
   </div>
-</dx-popup>
+}

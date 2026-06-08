@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using MOD.Training.Training.Catalog.Dtos;
 using MOD.Training.Training.Permissions;
@@ -16,7 +17,8 @@ namespace MOD.Training.Training.Catalog;
 [Authorize(TrainingPermissions.CourseCatalog.Default)]
 public class CourseCatalogAppService(
     IRepository<CourseCatalog, Guid> catalogRepo,
-    IRepository<CatalogEnrollmentCondition, Guid> conditionRepo)
+    IRepository<CatalogEnrollmentCondition, Guid> conditionRepo,
+    IMapper mapper)
     : ApplicationService, ICourseCatalogAppService
 {
     // ═══════════════════════════════════════════
@@ -58,7 +60,7 @@ public class CourseCatalogAppService(
     public async Task<CourseCatalogDto> CreateAsync(CreateUpdateCourseCatalogDto input)
     {
         await ValidateUniqueNameAsync(input.CourseNameAr, input.CourseNameEn, null);
-        var entity = input.ToEntity();
+        var entity = mapper.Map<CourseCatalog>(input);
         entity = await catalogRepo.InsertAsync(entity, autoSave: true);
         return await GetAsync(entity.Id);
     }
@@ -68,7 +70,7 @@ public class CourseCatalogAppService(
     {
         var entity = await catalogRepo.GetAsync(id);
         await ValidateUniqueNameAsync(input.CourseNameAr, input.CourseNameEn, id);
-        input.MapTo(entity);
+        mapper.Map(input, entity);
         await catalogRepo.UpdateAsync(entity, autoSave: true);
         return await GetAsync(id);
     }
@@ -86,7 +88,7 @@ public class CourseCatalogAppService(
     public async Task<List<CatalogEnrollmentConditionDto>> GetConditionsAsync(Guid catalogCourseId)
     {
         var conditions = await conditionRepo.GetListAsync(c => c.CatalogCourseId == catalogCourseId);
-        return conditions.Select(c => c.ToDto()).ToList();
+        return conditions.Select(c => mapper.Map<CatalogEnrollmentConditionDto>(c)).ToList();
     }
 
     [Authorize(TrainingPermissions.CourseCatalog.Update)]
@@ -103,7 +105,7 @@ public class CourseCatalogAppService(
         };
 
         condition = await conditionRepo.InsertAsync(condition, autoSave: true);
-        return condition.ToDto();
+        return mapper.Map<CatalogEnrollmentConditionDto>(condition);
     }
 
     [Authorize(TrainingPermissions.CourseCatalog.Update)]
@@ -144,9 +146,9 @@ public class CourseCatalogAppService(
         return groups.ToDictionary(x => x.Id, x => x.Count);
     }
 
-    private static CourseCatalogDto MapToDto(CourseCatalog entity, int conditionsCount)
+    private CourseCatalogDto MapToDto(CourseCatalog entity, int conditionsCount)
     {
-        var dto = entity.ToDto();
+        var dto = mapper.Map<CourseCatalogDto>(entity);
         dto.FieldNameAr = entity.Field?.FieldNameAr;
         dto.FieldNameEn = entity.Field?.FieldNameEn;
         dto.ConditionsCount = conditionsCount;
