@@ -1,15 +1,9 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DxDataGridModule } from 'devextreme-angular/ui/data-grid';
-import { DxPopupModule } from 'devextreme-angular/ui/popup';
-import { DxNumberBoxModule } from 'devextreme-angular/ui/number-box';
-import { DxSelectBoxModule } from 'devextreme-angular/ui/select-box';
-import { DxButtonModule } from 'devextreme-angular/ui/button';
-import { ToolbarItem } from 'devextreme/ui/popup';
+import { LocalizationPipe } from '@abp/ng.core';
 import { TrainingBudgetService } from '../../shared/services/finance-proxy.service';
 import { TrainingLocalizationHelper } from '../../shared';
 import { TrainingBudgetDto } from 'src/app/proxy/training/finance/dtos';
-import { LocalizationPipe } from '@abp/ng.core';
 
 interface BudgetCardPalette {
   colorClass: string;
@@ -24,15 +18,7 @@ interface BudgetCardPalette {
 @Component({
   selector: 'app-training-budgets',
   standalone: true,
-  imports: [
-    CommonModule,
-    LocalizationPipe,
-    DxDataGridModule,
-    DxPopupModule,
-    DxNumberBoxModule,
-    DxSelectBoxModule,
-    DxButtonModule,
-  ],
+  imports: [CommonModule, LocalizationPipe],
   templateUrl: './training-budgets.component.html',
   styleUrl: './training-budgets.component.scss',
 })
@@ -41,19 +27,28 @@ export class TrainingBudgetsComponent implements OnInit {
   readonly l = inject(TrainingLocalizationHelper);
 
   budgets = signal<TrainingBudgetDto[]>([]);
+  isLoading = signal(false);
+  isSaving = signal(false);
+
   activeBudgets = computed(() =>
     this.budgets().filter(b => b.isFinancialItemActive)
   );
   visibleBudgets = computed(() =>
     this.budgets().filter(b => b.isFinancialItemActive || (b.totalAmount ?? 0) > 0)
   );
+
+  // Stat counts
+  totalCount = computed(() => this.visibleBudgets().length);
+  activeCount = computed(() => this.activeBudgets().length);
+  overThresholdCount = computed(() => this.budgets().filter(b => b.isOverThreshold).length);
+
   selectedYear = signal<number>(new Date().getFullYear());
   isThresholdDialogVisible = signal(false);
+  areBudgetCardsExpanded = signal(false);
 
   editingId: string | null = null;
   thresholdValue = signal<number>(80);
 
-  dialogToolbarItems: ToolbarItem[] | undefined;
   yearOptions: number[] = [];
 
   private readonly palettes: BudgetCardPalette[] = [
@@ -116,41 +111,22 @@ export class TrainingBudgetsComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     const currentYear = new Date().getFullYear();
     this.yearOptions = [currentYear + 1, currentYear, currentYear - 1, currentYear - 2];
-
-    this.dialogToolbarItems = [
-      {
-        widget: 'dxButton',
-        location: 'after',
-        toolbar: 'bottom',
-        options: {
-          text: this.l.t('::Training.Common.Save'),
-          type: 'default',
-          stylingMode: 'contained',
-          onClick: () => this.onSaveThreshold(),
-        },
-      },
-      {
-        widget: 'dxButton',
-        location: 'after',
-        toolbar: 'bottom',
-        options: {
-          text: this.l.t('::Training.Common.Cancel'),
-          onClick: () => this.isThresholdDialogVisible.set(false),
-        },
-      },
-    ];
-
     await this.loadData();
   }
 
   async loadData(): Promise<void> {
-    const result = await this.service.getList({
-      year: this.selectedYear(),
-      maxResultCount: 100,
-      skipCount: 0,
-      sorting: '',
-    });
-    this.budgets.set(result.items ?? []);
+    this.isLoading.set(true);
+    try {
+      const result = await this.service.getList({
+        year: this.selectedYear(),
+        maxResultCount: 100,
+        skipCount: 0,
+        sorting: '',
+      });
+      this.budgets.set(result.items ?? []);
+    } finally {
+      this.isLoading.set(false);
+    }
   }
 
   paletteFor(index: number): BudgetCardPalette {
@@ -162,6 +138,10 @@ export class TrainingBudgetsComponent implements OnInit {
     this.loadData();
   }
 
+  toggleBudgetCards(): void {
+    this.areBudgetCardsExpanded.update(v => !v);
+  }
+
   onEditThreshold(item: TrainingBudgetDto): void {
     this.editingId = item.id ?? null;
     this.thresholdValue.set(item.alertThreshold ?? 80);
@@ -169,12 +149,17 @@ export class TrainingBudgetsComponent implements OnInit {
   }
 
   async onSaveThreshold(): Promise<void> {
-    if (!this.editingId) return;
-    await this.service.updateThreshold(this.editingId, {
-      alertThreshold: this.thresholdValue(),
-    });
-    this.isThresholdDialogVisible.set(false);
-    await this.loadData();
+    if (!this.editingId || this.isSaving()) return;
+    this.isSaving.set(true);
+    try {
+      await this.service.updateThreshold(this.editingId, {
+        alertThreshold: this.thresholdValue(),
+      });
+      this.isThresholdDialogVisible.set(false);
+      await this.loadData();
+    } finally {
+      this.isSaving.set(false);
+    }
   }
 
   formatCurrency(amount: number): string {
