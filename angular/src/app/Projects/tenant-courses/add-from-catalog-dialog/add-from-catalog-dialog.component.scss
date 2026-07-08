@@ -1,7 +1,417 @@
-@use '../../shared/styles/training-common' as *;
+/* ============================================================
+   Add From Catalog Dialog — Modern Design
+   ============================================================ */
 
-.catalog-select-grid { border-radius: 10px; overflow: hidden; }
-.cell-name { font-weight: 500; color: #1e293b; }
+/* ── Animations ── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ── Modal ── */
+.modal-backdrop-modern {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-modern {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.2);
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: fadeInUp 0.3s ease;
+}
+
+.modal-lg { max-width: 800px; }
+
+.modal-modern-header {
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.modal-modern-header-content {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.modal-header-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  background: #f0fdfa;
+}
+
+.modal-modern-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.modal-modern-subtitle {
+  font-size: 0.82rem;
+  color: #64748b;
+  margin: 2px 0 0;
+}
+
+.modal-modern-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.modal-modern-close:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.modal-modern-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+}
+
+.modal-modern-footer {
+  padding: 14px 24px;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ── Info Banner ── */
+.info-banner-modern {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #f0fdfa;
+  border: 1px solid #99f6e4;
+  border-radius: 12px;
+}
+
+.info-banner-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.info-banner-text { font-size: 13px; color: #115e59; line-height: 1.6; }
+
+/* ── Search ── */
+.filter-search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+}
+
+.filter-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.filter-input {
+  width: 100%;
+  padding: 10px 14px 10px 40px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  font-family: 'Tajawal', sans-serif;
+  transition: all 0.25s;
+  background: white;
+  color: #1e293b;
+  box-sizing: border-box;
+}
+
+.filter-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+  outline: none;
+}
+
+.filter-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: #e2e8f0;
+  color: #64748b;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* ── Catalog Table ── */
+.catalog-table-wrap {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.catalog-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.catalog-table thead th {
+  background: #f8fafc;
+  padding: 10px 14px;
+  text-align: right;
+  font-weight: 700;
+  color: #475569;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border-bottom: 2px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.catalog-table tbody td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.catalog-table tbody tr {
+  transition: all 0.2s ease;
+  animation: fadeInUp 0.3s ease both;
+  cursor: pointer;
+}
+
+.catalog-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.catalog-table tbody tr.selected {
+  background: #eff6ff;
+}
+
+/* ── Checkbox ── */
+.checkbox-modern {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #475569;
+  font-weight: 500;
+}
+
+.checkbox-modern input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.checkbox-mark {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #cbd5e1;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  background: white;
+}
+
+.checkbox-mark::after {
+  content: '✓';
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.checkbox-modern input:checked + .checkbox-mark {
+  background: #6366f1;
+  border-color: #6366f1;
+}
+
+.checkbox-modern input:checked + .checkbox-mark::after {
+  opacity: 1;
+}
+
+.checkbox--header .checkbox-mark {
+  border-radius: 4px;
+}
+
+/* ── Pills ── */
+.pill {
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.pill--green  { background: #f0fdf4; color: #15803d; }
+.pill--indigo { background: #eef2ff; color: #4338ca; }
+.pill--gray   { background: #f1f5f9; color: #64748b; }
+
+/* ── Cells ── */
+.cell-name { font-weight: 600; color: #1e293b; font-size: 13px; }
 .cell-sub { font-size: 12px; color: #64748b; margin-top: 2px; }
 
-.btn-gradient--disabled { opacity: 0.5; cursor: not-allowed; }
+/* ── Skeleton ── */
+.catalog-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.catalog-skel-row {
+  height: 48px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ── Empty Block ── */
+.empty-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 36px;
+}
+
+.empty-icon { font-size: 36px; }
+.empty-title { font-size: 14px; font-weight: 600; color: #64748b; }
+
+/* ── Selection Info ── */
+.selection-info { flex: 1; }
+.selection-count {
+  color: #4338ca;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.footer-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Tajawal', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #4338ca, #6d28d9);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.btn-ghost:hover {
+  background: #f8fafc;
+  color: #334155;
+}
+
+.btn-glow {
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.25);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .modal-modern { max-width: 100%; }
+  .catalog-table { font-size: 12px; }
+  .catalog-table thead th,
+  .catalog-table tbody td { padding: 8px 10px; }
+}
+
+@media (max-width: 576px) {
+  .modal-modern-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .selection-info { text-align: center; }
+  .footer-actions { justify-content: stretch; }
+  .footer-actions .btn { flex: 1; justify-content: center; }
+}

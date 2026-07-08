@@ -1,9 +1,28 @@
-import { Component, OnInit, computed, effect, inject, input, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, OnInit, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { HrLookupService } from 'src/app/proxy/training/hr-integration/hr-lookup.service';
 import { EmployeeLookupDto } from 'src/app/proxy/training/hr-integration/models';
 
+/**
+ * Nomination picker that collects nominees by service number lookup
+ * instead of browsing a long employee list.
+ *
+ * Usage (create mode):
+ *   <gtms-nomination-picker
+ *     [unitId]="unitId"
+ *     [minCount]="1"
+ *     (selectionChange)="onNomineesChange($event)">
+ *   </gtms-nomination-picker>
+ *
+ * Usage (edit mode — pass pre-resolved employees):
+ *   <gtms-nomination-picker
+ *     [unitId]="unitId"
+ *     [minCount]="1"
+ *     [initialEmployees]="resolvedEmployees"
+ *     (selectionChange)="onNomineesChange($event)">
+ *   </gtms-nomination-picker>
+ */
 @Component({
   standalone: true,
   selector: 'gtms-nomination-picker',
@@ -17,130 +36,126 @@ export class NominationPickerComponent implements OnInit {
   unitId = input.required<string>();
   minCount = input<number>(1);
   maxCount = input<number>(0);
-  existingEmployeeIds = input<string[]>([]);
+  /** Array of employee IDs for create mode (unused after initial setup) */
   initialSelection = input<string[]>([]);
+  /** Pre-resolved employee objects for edit mode (displays chips immediately) */
+  initialEmployees = input<Partial<EmployeeLookupDto>[]>([]);
 
   selectionChange = output<string[]>();
 
-  employees = signal<EmployeeLookupDto[]>([]);
-  loading = signal(false);
-  loadError = signal<string | null>(null);
-  searchText = signal('');
-  selectedIds = signal<Set<string>>(new Set());
+  /** Currently selected employees (resolved from backend) */
+  selectedEmployees = signal<EmployeeLookupDto[]>([]);
 
-  constructor() {
-    effect(() => {
-      const u = this.unitId();
-      if (u) this.loadEmployees(u);
-    });
+  /** Input state */
+  serviceNumberInput = signal('');
+  isResolving = signal(false);
+  resolveError = signal<string | null>(null);
 
-    effect(() => {
-      const init = this.initialSelection();
-      if (init?.length) this.selectedIds.set(new Set(init));
-    });
-  }
-
-  ngOnInit(): void {}
-
-  async loadEmployees(unitId: string): Promise<void> {
-    this.loading.set(true);
-    this.loadError.set(null);
-    try {
-      const list = await firstValueFrom(this.hrService.getEmployeesByUnit(unitId));
-      this.employees.set(
-        (list ?? []).slice().sort((a, b) => {
-          const ar = a.rankSortOrder ?? 999;
-          const br = b.rankSortOrder ?? 999;
-          if (ar !== br) return ar - br;
-          return (a.fullNameAr ?? '').localeCompare(b.fullNameAr ?? '', 'ar');
-        }),
-      );
-    } catch (e: any) {
-      this.loadError.set(e?.error?.error?.message ?? 'تعذر تحميل قائمة المرشحين');
-    } finally {
-      this.loading.set(false);
-    }
-  }
-
-  filteredEmployees = computed(() => {
-    const q = this.searchText().trim().toLowerCase();
-    const existing = new Set(this.existingEmployeeIds());
-    const list = this.employees().filter(e => !existing.has(e.id ?? ''));
-    if (!q) return list;
-    return list.filter(e => {
-      const name = (e.fullNameAr ?? '').toLowerCase();
-      const nameEn = (e.fullNameEn ?? '').toLowerCase();
-      const svc = (e.serviceNumber ?? '').toLowerCase();
-      return name.includes(q) || nameEn.includes(q) || svc.includes(q);
-    });
-  });
-
-  selectedEmployees = computed(() => {
-    const sel = this.selectedIds();
-    return this.employees().filter(e => sel.has(e.id ?? ''));
-  });
-
-  selectedCount = computed(() => this.selectedIds().size);
+  selectedCount = computed(() => this.selectedEmployees().length);
 
   isMaxReached = computed(() => {
     const m = this.maxCount();
-    return m > 0 && this.selectedIds().size >= m;
+    return m > 0 && this.selectedEmployees().length >= m;
   });
 
-  isValid = computed(() => this.selectedIds().size >= this.minCount());
+  isValid = computed(() => this.selectedEmployees().length >= this.minCount());
 
-  onSearchInput(event: Event): void {
-    this.searchText.set((event.target as HTMLInputElement).value);
+  constructor() {
+    effect(() => {
+      const pre = this.initialEmployees();
+      if (pre && pre.length > 0) {
+        // Hydrate from partial dtos passed by parent (edit mode)
+        this.selectedEmployees.set(
+          pre.map(p => ({
+            id: p.id ?? '',
+            userId: p.userId ?? '',
+            serviceNumber: p.serviceNumber ?? '',
+            fullNameAr: p.fullNameAr ?? '',
+            fullNameEn: p.fullNameEn ?? '',
+            rankNameAr: p.rankNameAr ?? '',
+            rankNameEn: p.rankNameEn ?? '',
+            rankSortOrder: p.rankSortOrder ?? 0,
+            personnelType: p.personnelType ?? '',
+            mainUnitId: p.mainUnitId ?? '',
+          } as EmployeeLookupDto)),
+        );
+      }
+    });
   }
 
-  isSelected(id?: string): boolean { return id ? this.selectedIds().has(id) : false; }
-
-  isDisabled(id?: string): boolean {
-    if (!id) return true;
-    return !this.isSelected(id) && this.isMaxReached();
+  ngOnInit(): void {
+    this.serviceNumberInput.set('');
+    this.resolveError.set(null);
   }
 
-  toggleEmployee(employee: EmployeeLookupDto): void {
-    const id = employee.id;
-    if (!id) return;
-    const next = new Set(this.selectedIds());
-    if (next.has(id)) next.delete(id);
-    else {
-      if (this.isMaxReached()) return;
-      next.add(id);
+  async onAddByServiceNumber(): Promise<void> {
+    const raw = this.serviceNumberInput().trim();
+    if (!raw) return;
+
+    if (this.isMaxReached()) {
+      this.resolveError.set('تم الوصول للحد الأقصى من المرشحين');
+      return;
     }
-    this.selectedIds.set(next);
-    this.emitSelection();
+
+    const unitId = this.unitId();
+    if (!unitId) {
+      this.resolveError.set('لم يتم تحديد الوحدة');
+      return;
+    }
+
+    // Prevent adding duplicate service numbers.
+    const alreadyAdded = this.selectedEmployees().some(
+      e => (e.serviceNumber ?? '').trim() === raw,
+    );
+    if (alreadyAdded) {
+      this.resolveError.set('هذا الرقم مُضاف مسبقاً');
+      return;
+    }
+
+    this.isResolving.set(true);
+    this.resolveError.set(null);
+
+    try {
+      const employee = await firstValueFrom(
+        this.hrService.getByServiceNumber(raw, unitId),
+      );
+
+      if (!employee || !employee.id) {
+        this.resolveError.set('لم يتم العثور على موظف بهذا الرقم في الوحدة المختارة');
+        return;
+      }
+
+      this.selectedEmployees.update(list => [...list, employee]);
+      this.serviceNumberInput.set('');
+      this.emitSelection();
+    } catch (e: any) {
+      const msg = e?.error?.error?.message ?? e?.message ?? 'تعذر البحث عن الموظف';
+      this.resolveError.set(msg);
+    } finally {
+      this.isResolving.set(false);
+    }
   }
 
-  removeChip(id: string, event: Event): void {
+  onInputKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.onAddByServiceNumber();
+    }
+  }
+
+  removeEmployee(id: string, event: Event): void {
     event.stopPropagation();
-    const next = new Set(this.selectedIds());
-    next.delete(id);
-    this.selectedIds.set(next);
+    this.selectedEmployees.update(list => list.filter(e => e.id !== id));
     this.emitSelection();
   }
 
   clearAll(): void {
-    this.selectedIds.set(new Set());
-    this.emitSelection();
-  }
-
-  selectAllVisible(): void {
-    const next = new Set(this.selectedIds());
-    const max = this.maxCount();
-    for (const e of this.filteredEmployees()) {
-      if (!e.id) continue;
-      if (max > 0 && next.size >= max) break;
-      next.add(e.id);
-    }
-    this.selectedIds.set(next);
+    this.selectedEmployees.set([]);
+    this.resolveError.set(null);
     this.emitSelection();
   }
 
   private emitSelection(): void {
-    this.selectionChange.emit(Array.from(this.selectedIds()));
+    this.selectionChange.emit(this.selectedEmployees().map(e => e.id!).filter(Boolean));
   }
-
-  trackById(_: number, e: EmployeeLookupDto): string { return e.id ?? ''; }
 }

@@ -30,6 +30,7 @@ export interface TenantCourseDto extends FullAuditedEntityDto<string> {
   conditionsCount?: number;
   addedByName?: string | null;
   addedAt?: string;
+  addedAtFormatted?: string | null;
 }
 
 export interface TenantCourseGetListInput extends PagedAndSortedResultRequestDto {

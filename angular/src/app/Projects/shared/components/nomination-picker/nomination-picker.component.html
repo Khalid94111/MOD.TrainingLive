@@ -18,87 +18,54 @@
     }
   </header>
 
+  <!-- Selected chips -->
   @if (selectedEmployees().length > 0) {
     <div class="selected-chips">
-      @for (e of selectedEmployees(); track trackById($index, e)) {
+      @for (e of selectedEmployees(); track e.id) {
         <span class="chip">
-          <span class="chip-rank" [title]="e.rankNameAr ?? ''">{{ e.rankNameAr ?? '—' }}</span>
-          <span class="chip-name">{{ e.fullNameAr }}</span>
-          <span class="chip-svc">{{ e.serviceNumber }}</span>
-          <button type="button" class="chip-remove" (click)="removeChip(e.id!, $event)" aria-label="إزالة">×</button>
+          @if (e.rankNameAr) {
+            <span class="chip-rank" [title]="e.rankNameAr">{{ e.rankNameAr }}</span>
+          }
+          <span class="chip-name">{{ e.fullNameAr || '—' }}</span>
+          @if (e.serviceNumber) {
+            <span class="chip-svc">{{ e.serviceNumber }}</span>
+          }
+          <button type="button" class="chip-remove" (click)="removeEmployee(e.id!, $event)" aria-label="إزالة">×</button>
         </span>
       }
       <button type="button" class="btn btn-ghost btn-sm clear-all" (click)="clearAll()">مسح الكل</button>
     </div>
   }
 
-  <div class="search-row">
-    <div class="search-input-wrap">
-      <span class="search-icon">🔍</span>
+  <!-- Service number input row -->
+  <div class="add-row">
+    <div class="add-input-wrap">
+      <span class="add-icon">🎖️</span>
       <input
         type="text"
-        class="form-input search-input"
-        placeholder="ابحث بالاسم أو الرقم العسكري…"
-        [value]="searchText()"
-        (input)="onSearchInput($event)"
+        class="form-input add-input"
+        placeholder="أدخل رقم الموظف (الرقم العسكري)…"
+        [value]="serviceNumberInput()"
+        (input)="serviceNumberInput.set($any($event.target).value)"
+        (keydown)="onInputKeydown($event)"
+        [disabled]="isResolving() || isMaxReached()"
       />
     </div>
-    <button type="button" class="btn btn-outline btn-sm" (click)="selectAllVisible()" [disabled]="loading() || isMaxReached()">
-      تحديد المعروضين
+    <button
+      type="button"
+      class="btn btn-primary btn-sm"
+      (click)="onAddByServiceNumber()"
+      [disabled]="isResolving() || !serviceNumberInput().trim() || isMaxReached()">
+      @if (isResolving()) { ⏳ } @else { ➕ إضافة }
     </button>
   </div>
 
-  @if (loading()) {
-    <div class="picker-skeleton">
-      @for (_ of [1,2,3,4,5]; track $index) {
-        <div class="skeleton-row">
-          <div class="skel-check"></div>
-          <div class="skel-lines">
-            <div class="skel-line skel-60"></div>
-            <div class="skel-line skel-40"></div>
-          </div>
-        </div>
-      }
-    </div>
-  } @else if (loadError()) {
-    <div class="alert alert-danger">
+  <!-- Error message -->
+  @if (resolveError()) {
+    <div class="alert alert-danger picker-error">
       <span class="alert-icon">⚠️</span>
-      <span>{{ loadError() }}</span>
+      <span>{{ resolveError() }}</span>
     </div>
-  } @else if (filteredEmployees().length === 0) {
-    <div class="empty-picker">
-      <div class="empty-icon">🕵️</div>
-      <div class="empty-title">
-        @if (searchText()) { لا توجد نتائج تطابق بحثك } @else { لا يوجد موظفون متاحون للترشيح }
-      </div>
-      @if (searchText()) { <div class="empty-sub">جرّب تعديل مفردات البحث</div> }
-    </div>
-  } @else {
-    <ul class="emp-list">
-      @for (e of filteredEmployees(); track trackById($index, e)) {
-        <li class="emp-row"
-            [class.emp-selected]="isSelected(e.id)"
-            [class.emp-disabled]="isDisabled(e.id)"
-            (click)="toggleEmployee(e)">
-          <label class="checkbox-wrap" (click)="$event.stopPropagation()">
-            <input type="checkbox"
-                   [checked]="isSelected(e.id)"
-                   [disabled]="isDisabled(e.id)"
-                   (change)="toggleEmployee(e)" />
-          </label>
-          <div class="emp-body">
-            <div class="emp-line-1">
-              <span class="emp-rank">{{ e.rankNameAr ?? '—' }}</span>
-              <span class="emp-name">{{ e.fullNameAr }}</span>
-            </div>
-            <div class="emp-line-2">
-              <span class="emp-svc">🎖️ {{ e.serviceNumber ?? '—' }}</span>
-              @if (e.personnelType) { <span class="emp-type">{{ e.personnelType }}</span> }
-            </div>
-          </div>
-        </li>
-      }
-    </ul>
   }
 
   @if (!isValid() && selectedCount() > 0) {

@@ -416,6 +416,7 @@
               [unitId]="pickerUnit"
               [minCount]="1"
               [initialSelection]="fNomineeIds()"
+              [initialEmployees]="isEditMode() ? editNominationEmployees() : []"
               (selectionChange)="onNomineesChange($event)">
             </gtms-nomination-picker>
           } @else if (!isEditMode() && showAccordions()) {

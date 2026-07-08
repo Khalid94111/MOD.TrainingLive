@@ -21,6 +21,7 @@ import {
   PlanStatus,
   TrainingLocalizationHelper,
 } from '../../shared';
+import { EmployeeLookupDto } from 'src/app/proxy/training/hr-integration/models';
 
 interface UnitGroup {
   unitId: string;
@@ -92,6 +93,7 @@ export class PlanEntryComponent implements OnInit {
   // Adding/removing nominees from an existing item needs a separate endpoint;
   // users are pointed to the review screen for nominee changes.
   editNominations = signal<NominationDto[]>([]);
+  editNominationEmployees = signal<Partial<EmployeeLookupDto>[]>([]);
   loadingEditNominations = signal(false);
 
   // Conditions preview (for new item dialog — from tenant course)
@@ -413,6 +415,13 @@ export class PlanEntryComponent implements OnInit {
       const list = r.items ?? [];
       this.editNominations.set(list);
       this.fNomineeIds.set(list.map(n => n.employeeId).filter((x): x is string => !!x));
+      this.editNominationEmployees.set(
+        list.map(n => ({
+          id: n.employeeId,
+          fullNameAr: n.employeeName ?? '',
+          serviceNumber: '',
+        } as Partial<EmployeeLookupDto>)),
+      );
     } catch {
       this.editNominations.set([]);
     } finally {

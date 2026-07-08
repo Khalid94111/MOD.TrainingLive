@@ -30,12 +30,15 @@ public static partial class TrainingMapper
     public static partial CatalogEnrollmentConditionDto ToDto(this CatalogEnrollmentCondition source);
 
     // ── Course Proposals ──
-    public static partial CourseProposalDto ToDto(this CourseProposal source);
+    // NOTE: Migrated to AutoMapper (TrainingAutoMapperProfile)
+    // public static partial CourseProposalDto ToDto(this CourseProposal source);
 
     // ── Tenant Courses ──
-    public static partial TenantCourseDto ToDto(this TenantCourse source);
-    public static partial void MapTo(this UpdateTenantCourseDto source, TenantCourse target);
+    // NOTE: Migrated to AutoMapper (TrainingAutoMapperProfile)
+    // public static partial TenantCourseDto ToDto(this TenantCourse source);
+    // public static partial void MapTo(this UpdateTenantCourseDto source, TenantCourse target);
 
     // ── Tenant Course Conditions ──
-    public static partial TenantCourseConditionDto ToDto(this TenantCourseCondition source);
+    // NOTE: Migrated to AutoMapper (TrainingAutoMapperProfile)
+    // public static partial TenantCourseConditionDto ToDto(this TenantCourseCondition source);
 }

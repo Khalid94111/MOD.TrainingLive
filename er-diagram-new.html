@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="ar" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ER Diagram — MOD.Training (نظام التدريب GTMS) Database Design</title>
+<style>
+:root {
+  --bg:#080b12; --surface:#0e1220; --surface2:#111827;
+  --border:#1e2840; --border2:#1a2235;
+  --text-p:#e2e8f8; --text-s:#8899bb; --text-m:#4a5570; --text-d:#2d3a55;
+  --tbl-bg:#0e1220; --tbl-border:#1e2840; --tbl-head:rgba(255,255,255,0.03);
+  --cnt-bg:#080b12; --cnt-border:#1a2035; --cnt-c:#2d3650;
+  --field-hover:rgba(255,255,255,0.02);
+  --toolbar:rgba(14,18,32,0.94); --panel:rgba(14,18,32,0.94);
+  --fl-bg:rgba(40,50,80,0.5); --fl-c:#2d3a55; --fl-b:#1a2235;
+  --fname:#8899bb; --ftype:#2d3a55;
+}
+body.light {
+  --bg:#eef2ff; --surface:#ffffff; --surface2:#f5f7ff;
+  --border:#c8d4ee; --border2:#dde4f5;
+  --text-p:#1a2240; --text-s:#3a4a70; --text-m:#6070a0; --text-d:#9aabcc;
+  --tbl-bg:#ffffff; --tbl-border:#c8d4ee; --tbl-head:rgba(79,142,247,0.04);
+  --cnt-bg:#eef2ff; --cnt-border:#c8d4ee; --cnt-c:#8090b8;
+  --field-hover:rgba(79,142,247,0.04);
+  --toolbar:rgba(255,255,255,0.96); --panel:rgba(255,255,255,0.96);
+  --fl-bg:rgba(190,205,240,0.4); --fl-c:#8090b0; --fl-b:#c8d4ee;
+  --fname:#3a4a70; --ftype:#9aabcc;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);font-family:'Cascadia Mono','JetBrains Mono','Consolas',monospace;overflow:hidden;height:100vh;width:100vw;user-select:none;transition:background .3s;}
+#canvas-wrap{position:relative;width:100%;height:100%;cursor:grab;}
+#canvas-wrap.grabbing{cursor:grabbing;}
+#bg-canvas,#er-canvas{position:absolute;inset:0;pointer-events:none;}
+#tables-layer{position:absolute;top:0;left:0;transform-origin:0 0;}
+
+.tbl{position:absolute;background:var(--tbl-bg);border:1.5px solid var(--tbl-border);border-radius:10px;min-width:195px;cursor:grab;transition:box-shadow .2s,border-color .2s,background .3s;box-shadow:0 4px 20px rgba(0,0,0,.25);}
+body.light .tbl{box-shadow:0 2px 14px rgba(0,0,0,.08);}
+.tbl:hover{border-color:var(--color);box-shadow:0 0 0 1px var(--color),0 8px 30px rgba(0,0,0,.2);z-index:100!important;}
+.tbl.dragging{cursor:grabbing;box-shadow:0 0 0 2px var(--color),0 20px 50px rgba(0,0,0,.35);z-index:999!important;}
+
+.tbl-head{padding:10px 14px 8px;border-bottom:1px solid var(--tbl-border);display:flex;align-items:center;gap:8px;border-radius:9px 9px 0 0;background:var(--tbl-head);transition:all .3s;}
+.tbl-icon{font-size:14px;width:24px;text-align:center;}
+.tbl-title{flex:1;}
+.tbl-name{font-size:11px;font-weight:700;color:var(--color);letter-spacing:.5px;}
+.tbl-name-ar{font-size:9px;color:var(--text-m);font-family:'Segoe UI','Tahoma',sans-serif;font-weight:400;direction:rtl;transition:color .3s;}
+.tbl-count{font-size:9px;color:var(--cnt-c);background:var(--cnt-bg);padding:2px 7px;border-radius:10px;border:1px solid var(--cnt-border);transition:all .3s;}
+.tbl-fields{padding:4px 0;}
+.tbl-field{padding:4px 14px;display:flex;align-items:center;gap:7px;font-size:10px;transition:background .1s;}
+.tbl-field:hover{background:var(--field-hover);}
+.badge{font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;flex-shrink:0;width:22px;text-align:center;}
+.pk{background:rgba(255,209,102,.12);color:#ffd166;border:1px solid rgba(255,209,102,.25);}
+.fk{background:rgba(6,214,160,.10);color:#06d6a0;border:1px solid rgba(6,214,160,.25);}
+.fl{background:var(--fl-bg);color:var(--fl-c);border:1px solid var(--fl-b);transition:all .3s;}
+.fname{color:var(--fname);flex:1;transition:color .3s;}
+.fname.pk-f{color:#ffd166;}.fname.fk-f{color:#06d6a0;}
+.ftype{color:var(--ftype);font-size:9px;transition:color .3s;}
+
+/* ── Toolbar ── */
+#toolbar{position:fixed;top:16px;left:50%;transform:translateX(-50%);display:flex;gap:5px;align-items:center;background:var(--toolbar);border:1px solid var(--border);border-radius:40px;padding:7px 14px;backdrop-filter:blur(20px);z-index:1000;box-shadow:0 6px 28px rgba(0,0,0,.22);transition:background .3s,border-color .3s;flex-wrap:wrap;justify-content:center;max-width:96vw;}
+.tb-title{font-size:12px;color:var(--text-s);font-family:'Segoe UI','Tahoma',sans-serif;font-weight:700;padding:0 4px;transition:color .3s;}
+.tb-sep{width:1px;height:20px;background:var(--border);margin:0 2px;transition:background .3s;}
+.tb-btn{padding:5px 11px;border-radius:20px;font-size:11px;font-family:'JetBrains Mono',monospace;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-m);transition:all .15s;white-space:nowrap;}
+.tb-btn:hover{background:var(--surface2);color:var(--text-p);border-color:var(--text-m);}
+.tb-btn.on{background:rgba(79,142,247,.12);color:#4f8ef7;border-color:rgba(79,142,247,.3);}
+
+#btn-theme{width:36px;padding:5px 0;text-align:center;font-size:15px;transition:transform .3s;}
+#btn-theme:hover{transform:rotate(25deg)!important;}
+
+#btn-screenshot{background:rgba(6,214,160,.08);color:#06d6a0;border-color:rgba(6,214,160,.25);}
+#btn-screenshot:hover{background:rgba(6,214,160,.18);border-color:rgba(6,214,160,.5);}
+#btn-screenshot.busy{animation:pulse-g .9s infinite;}
+@keyframes pulse-g{0%,100%{box-shadow:0 0 0 0 rgba(6,214,160,.4);}50%{box-shadow:0 0 0 7px rgba(6,214,160,0);}}
+
+/* ── Panels ── */
+#legend{position:fixed;bottom:16px;left:16px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px 16px;backdrop-filter:blur(20px);z-index:1000;font-size:10px;transition:all .3s;}
+.leg-title{color:var(--text-m);margin-bottom:8px;font-size:9px;letter-spacing:2px;text-transform:uppercase;}
+.leg-item{display:flex;align-items:center;gap:7px;color:var(--text-m);margin-bottom:5px;font-size:9px;}
+.leg-line{width:22px;height:2px;border-radius:1px;}
+#info-panel{position:fixed;bottom:16px;right:16px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:10px 14px;backdrop-filter:blur(20px);z-index:1000;font-size:10px;color:var(--text-m);text-align:right;transition:all .3s;}
+.info-val{color:#4f8ef7;font-weight:700;}
+#zoom-ind{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:10px;color:var(--text-m);backdrop-filter:blur(10px);z-index:1000;transition:all .3s;}
+
+/* ── Export overlay ── */
+#sc-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+#sc-overlay.show{display:flex;}
+.sc-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px 36px;text-align:center;min-width:260px;}
+.sc-spin{width:40px;height:40px;border:3px solid var(--border);border-top-color:#06d6a0;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.sc-t{color:var(--text-p);font-size:14px;font-weight:700;margin-bottom:6px;}
+.sc-s{color:var(--text-m);font-size:11px;line-height:1.6;}
+
+/* ── Search box (in toolbar) ── */
+#search-wrap{position:relative;display:flex;align-items:center;}
+#search-box{width:150px;padding:5px 26px 5px 11px;border-radius:20px;font-size:11px;font-family:'JetBrains Mono',monospace;border:1px solid var(--border);background:var(--surface2);color:var(--text-p);outline:none;transition:all .15s,width .2s;direction:rtl;text-align:right;}
+#search-box:focus{width:200px;border-color:#4f8ef7;box-shadow:0 0 0 2px rgba(79,142,247,.15);}
+#search-box::placeholder{color:var(--text-m);}
+#search-count{position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:9px;color:var(--text-m);pointer-events:none;font-family:'JetBrains Mono',monospace;}
+
+/* ── Table highlight / dim states ── */
+.tbl.dim{opacity:.18;filter:grayscale(.4);}
+.tbl.match{border-color:var(--color)!important;box-shadow:0 0 0 2px var(--color),0 0 26px 2px var(--color)!important;z-index:200!important;}
+.tbl.focus-hit{animation:focus-pulse 1.2s ease-out;}
+@keyframes focus-pulse{0%{box-shadow:0 0 0 0 rgba(79,142,247,.6),0 0 0 2px var(--color);}70%{box-shadow:0 0 0 22px rgba(79,142,247,0),0 0 0 2px var(--color);}100%{box-shadow:0 0 0 2px var(--color),0 0 26px 2px var(--color);}}
+
+/* ── Table index / minimap panel ── */
+#index-panel{position:fixed;top:70px;right:16px;width:230px;max-height:calc(100vh - 120px);background:var(--panel);border:1px solid var(--border);border-radius:14px;backdrop-filter:blur(20px);z-index:1000;overflow:hidden;display:flex;flex-direction:column;transition:all .3s,transform .25s;box-shadow:0 6px 28px rgba(0,0,0,.22);}
+#index-panel.collapsed{transform:translateX(calc(100% + 24px));}
+.idx-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);}
+.idx-title{font-size:10px;color:var(--text-s);font-weight:700;letter-spacing:1px;font-family:'Segoe UI','Tahoma',sans-serif;}
+.idx-body{overflow-y:auto;padding:6px;}
+.idx-body::-webkit-scrollbar{width:7px;}
+.idx-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.idx-group-t{font-size:8px;color:var(--text-m);text-transform:uppercase;letter-spacing:1.5px;padding:8px 8px 4px;font-family:'Segoe UI','Tahoma',sans-serif;}
+.idx-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;cursor:pointer;transition:background .12s;}
+.idx-item:hover{background:var(--field-hover);}
+.idx-item.active{background:rgba(79,142,247,.14);}
+.idx-dot{width:9px;height:9px;border-radius:3px;flex-shrink:0;}
+.idx-txt{flex:1;min-width:0;}
+.idx-name{font-size:10px;color:var(--text-p);font-family:'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.idx-ar{font-size:8px;color:var(--text-m);font-family:'Segoe UI','Tahoma',sans-serif;direction:rtl;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.idx-cnt{font-size:8px;color:var(--text-m);background:var(--cnt-bg);border:1px solid var(--cnt-border);border-radius:8px;padding:1px 6px;flex-shrink:0;}
+
+/* ── Toast (saved-layout notice) ── */
+#toast{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-14px);background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:7px 16px;font-size:10px;color:var(--text-p);z-index:1002;opacity:0;pointer-events:none;transition:all .3s;font-family:'Segoe UI','Tahoma',sans-serif;box-shadow:0 6px 22px rgba(0,0,0,.25);}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div id="canvas-wrap">
+  <canvas id="bg-canvas"></canvas>
+  <canvas id="er-canvas"></canvas>
+  <div id="tables-layer"></div>
+</div>
+
+<div id="toolbar">
+  <span class="tb-title">MOD.Training — نظام إدارة التدريب GTMS (Trn)</span>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" onclick="resetView()">⌂ Reset</button>
+  <button class="tb-btn" onclick="zoomIn()">＋ In</button>
+  <button class="tb-btn" onclick="zoomOut()">－ Out</button>
+  <div class="tb-sep"></div>
+  <div id="search-wrap">
+    <input id="search-box" type="text" placeholder="🔍 ابحث عن جدول… (Ctrl+F)" autocomplete="off" spellcheck="false"
+      oninput="onSearch(this.value)" onkeydown="onSearchKey(event)">
+    <span id="search-count"></span>
+  </div>
+  <div class="tb-sep"></div>
+  <button class="tb-btn on" id="btn-rel" onclick="toggleRel()">⟶ Relations</button>
+  <button class="tb-btn on" id="btn-index" onclick="toggleIndex()" title="فهرس الجداول">☰ Index</button>
+  <button class="tb-btn" onclick="autoLayout()">⊞ Layout</button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn on" id="btn-drag" onclick="toggleDrag()" title="تبديل بين تحريك الجداول وتحريك اللوحة">✥ Drag Mode</button>
+  <button class="tb-btn" id="btn-theme" onclick="toggleTheme()" title="Dark / Light">🌙</button>
+  <button class="tb-btn" id="btn-screenshot" onclick="exportPNG()">📸 Export PNG</button>
+</div>
+
+<div id="index-panel">
+  <div class="idx-head">
+    <span class="idx-title">فهرس الجداول · Index</span>
+    <button class="tb-btn" style="padding:3px 9px;font-size:10px;" onclick="toggleIndex()">✕</button>
+  </div>
+  <div class="idx-body" id="idx-body"></div>
+</div>
+
+<div id="toast"></div>
+
+<div id="legend">
+  <div class="leg-title">Legend</div>
+  <div class="leg-item"><span class="badge pk">PK</span> Primary Key</div>
+  <div class="leg-item"><span class="badge fk">FK</span> Foreign Key</div>
+  <div class="leg-item"><div class="leg-line" style="background:linear-gradient(to right,#4f8ef7,#7c4fff)"></div> 1 : N (FK)</div>
+  <div class="leg-item"><div class="leg-line" style="background:#ffd166;"></div> 1 : 1 / 0..1 (Restrict)</div>
+  <div class="leg-item"><div class="leg-line" style="background:#94a3b8;"></div> مرجع منطقي (HR: موظف / رتبة / موقع)</div>
+  <div class="leg-item"><div class="leg-line" style="background:#f87171;"></div> Cascade Delete</div>
+  <div class="leg-item" style="margin-top:6px;opacity:.5;font-size:8px;" id="leg-hint">✥ Drag Mode: حرّك الجداول</div>
+  <div class="leg-item" style="opacity:.45;font-size:8px;">⌨ Ctrl+F بحث · +/- تكبير · 0 إعادة · مرّر على جدول لإبراز علاقاته</div>
+</div>
+
+<div id="info-panel">
+  <div>Tables <span class="info-val" id="info-tables">0</span></div>
+  <div>Relations <span class="info-val" id="info-relations">0</span></div>
+  <div style="margin-top:4px;font-size:9px;font-family:'Segoe UI','Tahoma',sans-serif;direction:rtl;">نظام MOD.Training (ABP طبقي / DDD) — الكتالوج، الخطط، الترشيح، المالية، الدورات العارضة، الصرف، والمراكز (بادئة الجداول: Trn) + مراجع HR/HRMS للقراءة</div>
+</div>
+
+<div id="zoom-ind">65%</div>
+
+<div id="sc-overlay">
+  <div class="sc-box">
+    <div class="sc-spin"></div>
+    <div class="sc-t">جاري تصوير مخطط نظام التدريب كاملاً…</div>
+    <div class="sc-s">يتم رسم كل جداول MOD.Training والعلاقات<br>بدقة عالية جداً 3×<br>قد يستغرق بضع ثوانٍ</div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────
+const T=[
+ // ════════ CATALOG (الكتالوج المركزي) — #4f8ef7 ════════
+ {id:'catalog',name:'TrnCourseCatalog',ar:'كتالوج الدورات (المرجع المركزي)',ic:'📚',col:'#4f8ef7',x:80,y:80,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'CourseNameAr',t:'NVARCHAR(256) unique',k:'f'},{n:'CourseNameEn',t:'NVARCHAR(256) unique',k:'f'},{n:'DescriptionAr',t:'NVARCHAR(2000)?',k:'f'},{n:'DescriptionEn',t:'NVARCHAR(2000)?',k:'f'},{n:'Category',t:'NVARCHAR(100)',k:'f'},{n:'Nature',t:'NVARCHAR(100)',k:'f'},{n:'FieldId',t:'→ CourseFields · restrict',k:'fk'},{n:'ResultType',t:'ResultType (enum)',k:'f'},{n:'RequiresEvaluation',t:'BIT',k:'f'},{n:'RequiresProviderEvaluation',t:'BIT',k:'f'},{n:'HasCertificate',t:'BIT',k:'f'},{n:'EvaluationBlocksCertificate',t:'BIT',k:'f'},{n:'IsActive',t:'BIT',k:'f'},{n:'…FullAudited',t:'audit cols',k:'f'}]},
+ {id:'field',name:'TrnCourseFields',ar:'مجالات الدورات',ic:'🗂️',col:'#4f8ef7',x:80,y:560,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'FieldNameAr',t:'NVARCHAR(200)',k:'f'},{n:'FieldNameEn',t:'NVARCHAR(200)',k:'f'},{n:'IsActive',t:'BIT',k:'f'},{n:'…FullAudited',t:'audit cols',k:'f'}]},
+ {id:'proposal',name:'TrnCourseProposals',ar:'مقترحات دورات جديدة',ic:'💡',col:'#4f8ef7',x:80,y:840,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'CourseNameAr',t:'NVARCHAR(256)',k:'f'},{n:'CourseNameEn',t:'NVARCHAR(256)',k:'f'},{n:'Category',t:'NVARCHAR(100)',k:'f'},{n:'Nature',t:'NVARCHAR(100)',k:'f'},{n:'FieldId',t:'→ CourseFields · restrict',k:'fk'},{n:'Status',t:'ProposalStatus (enum)',k:'f'},{n:'ProposedById',t:'UNIQUEIDENTIFIER (user)',k:'f'},{n:'ReviewedById',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'RejectionReason',t:'NVARCHAR(1000)?',k:'f'},{n:'ReviewedAt',t:'DATETIME2?',k:'f'},{n:'…FullAudited',t:'audit cols',k:'f'}]},
+ {id:'catcond',name:'TrnCatalogEnrollmentConditions',ar:'شروط التحاق الكتالوج',ic:'✔️',col:'#4f8ef7',x:80,y:1280,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'CatalogCourseId',t:'→ CourseCatalog · cascade',k:'fk'},{n:'ConditionType',t:'ConditionType (enum)',k:'f'},{n:'ConditionValue',t:'NVARCHAR(1000) json',k:'f'}]},
+
+ // ════════ TENANT COURSES (دورات الجهة) — #38bdf8 ════════
+ {id:'tcourse',name:'TrnTenantCourses',ar:'دورات الجهة (المُفعّلة)',ic:'🏫',col:'#38bdf8',x:560,y:80,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'CatalogCourseId',t:'→ CourseCatalog · restrict',k:'fk'},{n:'DefaultCapacity',t:'INT?',k:'f'},{n:'DefaultDurationWeeks',t:'INT?',k:'f'},{n:'ResultType',t:'ResultType (enum)',k:'f'},{n:'RequiresEvaluation',t:'BIT',k:'f'},{n:'RequiresProviderEvaluation',t:'BIT',k:'f'},{n:'HasCertificate',t:'BIT',k:'f'},{n:'EvaluationBlocksCertificate',t:'BIT',k:'f'},{n:'IsActive',t:'BIT',k:'f'},{n:'AddedById',t:'UNIQUEIDENTIFIER (user)',k:'f'},{n:'AddedAt',t:'DATETIME2',k:'f'},{n:'…FullAudited',t:'audit cols',k:'f'}]},
+ {id:'tcond',name:'TrnTenantCourseConditions',ar:'شروط دورة الجهة',ic:'☑️',col:'#38bdf8',x:560,y:640,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantCourseId',t:'→ TenantCourses · cascade',k:'fk'},{n:'ConditionType',t:'ConditionType (enum)',k:'f'},{n:'ConditionValue',t:'NVARCHAR(1000)',k:'f'},{n:'IsActive',t:'BIT',k:'f'}]},
+
+ // ════════ PLANS (الخطط التدريبية) — #a78bfa ════════
+ {id:'plan',name:'TrnTrainingPlans',ar:'الخطة التدريبية السنوية (جذر)',ic:'🗓️',col:'#a78bfa',x:1040,y:80,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'Year',t:'INT',k:'f'},{n:'Status',t:'PlanStatus (enum)',k:'f'},{n:'OpenDate',t:'DATETIME2?',k:'f'},{n:'CloseDate',t:'DATETIME2?',k:'f'},{n:'…FullAudited(Root)',t:'audit+stamp',k:'f'}]},
+ {id:'planitem',name:'TrnTrainingPlanItems',ar:'بنود الخطة (دورة مطلوبة)',ic:'📌',col:'#a78bfa',x:1040,y:420,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'PlanId',t:'→ TrainingPlans · cascade',k:'fk'},{n:'TenantCourseId',t:'→ TenantCourses',k:'fk'},{n:'CourseType',t:'CourseType (enum)',k:'f'},{n:'PreferredQuarter',t:'PreferredQuarter (enum)',k:'f'},{n:'Priority',t:'INT',k:'f'},{n:'Justification',t:'NVARCHAR(500)',k:'f'},{n:'Description/Objectives Ar/En',t:'NVARCHAR?',k:'f'},{n:'DurationYears/Months/Days',t:'INT',k:'f'},{n:'EstimatedDateFrom/To',t:'DATETIME2?',k:'f'},{n:'FundingSource',t:'NVARCHAR?',k:'f'},{n:'SubmittedById',t:'UNIQUEIDENTIFIER (user)',k:'f'},{n:'UnitId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'IsReturned',t:'BIT',k:'f'},{n:'LastReturnNoteId',t:'→ PlanNotes?',k:'fk'},{n:'…FullAudited',t:'audit cols',k:'f'}]},
+ {id:'planitemcond',name:'TrnPlanItemConditions',ar:'شروط بند الخطة',ic:'📋',col:'#a78bfa',x:1040,y:1080,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'PlanItemId',t:'→ TrainingPlanItems · cascade',k:'fk'},{n:'ConditionType',t:'ConditionType (enum)',k:'f'},{n:'ConditionValue',t:'NVARCHAR(1000)',k:'f'}]},
+ {id:'plannote',name:'TrnPlanNotes',ar:'ملاحظات/أسباب الإرجاع (متعدد الأنواع)',ic:'📝',col:'#a78bfa',x:1040,y:1340,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'EntityType',t:'PlanNoteEntityType (enum)',k:'f'},{n:'EntityId',t:'UNIQUEIDENTIFIER (poly)',k:'f'},{n:'Note',t:'NVARCHAR(2000)',k:'f'},{n:'AuthorRole',t:'PlanNoteAuthorRole (enum)',k:'f'},{n:'IsReturnReason',t:'BIT',k:'f'},{n:'CreationTime/CreatorId',t:'audit',k:'f'}]},
+ {id:'course',name:'TrnCourses',ar:'الدورة المنفّذة (legacy)',ic:'🎓',col:'#a78bfa',x:1040,y:1700,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'TenantCourseId',t:'→ TenantCourses',k:'fk'},{n:'ProviderId',t:'→ TrainingProviders?',k:'fk'},{n:'CourseType',t:'CourseType (enum)',k:'f'},{n:'Status',t:'CourseStatus (enum)',k:'f'},{n:'…FullAudited',t:'audit cols',k:'f'}]},
+
+ // ════════ SESSIONS (تنفيذ الدورات) — #f472b6 ════════
+ {id:'session',name:'TrnCourseSessions',ar:'جلسة تنفيذ الدورة (جذر · مصدر متعدد)',ic:'▶️',col:'#f472b6',x:1560,y:420,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'TrainingPlanItemId',t:'→ PlanItems? (XOR)',k:'fk'},{n:'TrainingCenterPlanItemId',t:'→ CenterPlanItems? (XOR)',k:'fk'},{n:'TenantCourseId',t:'→ TenantCourses',k:'fk'},{n:'CourseType',t:'CourseType (enum)',k:'f'},{n:'PreferredQuarter',t:'INT',k:'f'},{n:'PlanYear',t:'INT',k:'f'},{n:'ActualStartDate/EndDate',t:'DATETIME2?',k:'f'},{n:'SelectedPriceQuoteId',t:'→ PriceQuotes?',k:'fk'},{n:'Status',t:'SessionStatus (enum)',k:'f'},{n:'CancellationReason',t:'NVARCHAR?',k:'f'},{n:'CancelledAt/ById',t:'DATETIME2?/GUID?',k:'f'},{n:'…FullAudited(Root)',t:'audit+stamp',k:'f'}]},
+ {id:'sessnom',name:'TrnSessionNominations',ar:'مرشحو الجلسة (مع الاستبدال)',ic:'👥',col:'#f472b6',x:1560,y:1080,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'SessionId',t:'→ CourseSessions · cascade',k:'fk'},{n:'EmployeeId',t:'→ HrEmployees',k:'fk'},{n:'OriginalEmployeeId',t:'→ HrEmployees',k:'fk'},{n:'RankId',t:'→ HrRanks',k:'fk'},{n:'SubstitutionReason',t:'NVARCHAR?',k:'f'},{n:'WasSubstituted',t:'[computed]',k:'f'},{n:'…FullAudited',t:'audit cols',k:'f'}]},
+ {id:'sesscond',name:'TrnSessionConditions',ar:'شروط الجلسة',ic:'📑',col:'#f472b6',x:1560,y:1500,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'SessionId',t:'→ CourseSessions · cascade',k:'fk'},{n:'ConditionType',t:'ConditionType (enum)',k:'f'},{n:'ConditionValue',t:'NVARCHAR(1000)',k:'f'}]},
+
+ // ════════ NOMINATIONS (الترشيح والاعتماد) — #fb7185 ════════
+ {id:'nom',name:'TrnNominations',ar:'ترشيح الموظف (الخطة/الجلسة)',ic:'🙋',col:'#fb7185',x:2040,y:420,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'SessionId',t:'→ CourseSessions? · restrict',k:'fk'},{n:'PlanItemId',t:'→ TrainingPlanItems · cascade',k:'fk'},{n:'EmployeeId',t:'→ HrEmployees',k:'fk'},{n:'NominatedById',t:'UNIQUEIDENTIFIER (user)',k:'f'},{n:'Status',t:'NominationStatus (enum)',k:'f'},{n:'NominatedAt',t:'DATETIME2',k:'f'},{n:'ApprovedAt',t:'DATETIME2?',k:'f'},{n:'AttendanceStatus',t:'AttendanceStatus? (enum)',k:'f'},{n:'ResultType',t:'ResultType? (enum)',k:'f'},{n:'ResultValue',t:'NVARCHAR?',k:'f'},{n:'ResultEnteredBy/At',t:'GUID?/DATETIME2?',k:'f'},{n:'IsReturned',t:'BIT',k:'f'},{n:'LastReturnNoteId',t:'→ PlanNotes?',k:'fk'},{n:'…FullAudited',t:'audit cols',k:'f'}]},
+ {id:'nomappr',name:'TrnNominationApprovals',ar:'سلسلة اعتماد الترشيح',ic:'✅',col:'#fb7185',x:2040,y:1080,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'NominationId',t:'→ Nominations · cascade',k:'fk'},{n:'ApprovalLevel',t:'INT (1=UTM,2=UGM,3=TD)',k:'f'},{n:'ApprovedById',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'Status',t:'ApprovalStatus (enum)',k:'f'},{n:'ActionDate',t:'DATETIME2?',k:'f'},{n:'Notes',t:'NVARCHAR?',k:'f'},{n:'CreationTime/CreatorId',t:'audit',k:'f'}]},
+
+ // ════════ FINANCE (المالية ومحرك الأسعار) — #34d399 ════════
+ {id:'finitem',name:'TrnFinancialItems',ar:'البنود المالية (وجوه الصرف)',ic:'💵',col:'#34d399',x:2560,y:80,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'ParentId',t:'UNIQUEIDENTIFIER? (flat)',k:'f'},{n:'NameAr',t:'NVARCHAR(200)',k:'f'},{n:'NameEn',t:'NVARCHAR(200)',k:'f'},{n:'Code',t:'NVARCHAR(50)',k:'f'},{n:'VoteCode',t:'NVARCHAR(50)?',k:'f'},{n:'IsGeneral',t:'BIT',k:'f'},{n:'IsActive',t:'BIT',k:'f'},{n:'ItemType',t:'FinancialItemType? (enum)',k:'f'},{n:'DefaultAmountOMR',t:'DECIMAL(18,3)',k:'f'},{n:'IsPerDay',t:'BIT',k:'f'},{n:'IsPerNominee',t:'BIT',k:'f'},{n:'ExtraDaysBefore/After',t:'INT',k:'f'},{n:'…FullAudited',t:'audit cols',k:'f'}]},
+ {id:'finrankamt',name:'TrnFinancialItemRankAmounts',ar:'مبالغ البند حسب الرتبة',ic:'🏷️',col:'#34d399',x:2560,y:600,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'FinancialItemId',t:'→ FinancialItems · cascade',k:'fk'},{n:'RankId',t:'→ HrRanks',k:'fk'},{n:'AmountOMR',t:'DECIMAL(18,3)',k:'f'},{n:'…FullAudited',t:'audit cols',k:'f'}]},
+ {id:'ctfid',name:'TrnCourseTypeFinancialItemDefaults',ar:'بنود افتراضية حسب نوع الدورة',ic:'⚙️',col:'#34d399',x:2560,y:900,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'CourseType',t:'CourseType (enum)',k:'f'},{n:'FinancialItemId',t:'→ FinancialItems · restrict',k:'fk'},{n:'SortOrder',t:'INT',k:'f'}]},
+ {id:'exrate',name:'TrnExchangeRates',ar:'أسعار الصرف',ic:'💱',col:'#34d399',x:2560,y:1180,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'FromCurrency',t:'NVARCHAR(10)',k:'f'},{n:'ToCurrency',t:'NVARCHAR(10)',k:'f'},{n:'Rate',t:'DECIMAL(18,6)',k:'f'},{n:'Notes',t:'NVARCHAR(500)?',k:'f'},{n:'IsActive',t:'BIT',k:'f'},{n:'SetById',t:'UNIQUEIDENTIFIER (user)',k:'f'},{n:'SetAt',t:'DATETIME2',k:'f'}]},
+ {id:'budget',name:'TrnTrainingBudgets',ar:'الميزانيات التدريبية',ic:'🏦',col:'#34d399',x:3040,y:80,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'Year',t:'INT',k:'f'},{n:'FinancialItemId',t:'→ FinancialItems · restrict',k:'fk'},{n:'TotalAmount',t:'DECIMAL(18,3)',k:'f'},{n:'SpentAmount',t:'DECIMAL(18,3)',k:'f'},{n:'AlertThreshold',t:'DECIMAL(5,2)',k:'f'},{n:'…FullAudited',t:'audit cols',k:'f'}]},
+ {id:'provider',name:'TrnTrainingProviders',ar:'الجهات المُقدِّمة للتدريب',ic:'🏢',col:'#34d399',x:3040,y:440,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'ProviderNameAr',t:'NVARCHAR',k:'f'},{n:'ProviderNameEn',t:'NVARCHAR',k:'f'},{n:'ContactPerson/Email/Phone',t:'NVARCHAR?',k:'f'},{n:'Address/Website',t:'NVARCHAR?',k:'f'},{n:'AverageRating',t:'DECIMAL(3,2)',k:'f'},{n:'TotalRatings',t:'INT',k:'f'},{n:'IsApproved/IsActive',t:'BIT',k:'f'},{n:'IsFromNebras',t:'BIT',k:'f'},{n:'NebrasId',t:'NVARCHAR(100)?',k:'f'},{n:'Scope',t:'ProviderScope (enum)',k:'f'},{n:'CountryId',t:'→ HrGeoLocations?',k:'fk'},{n:'…FullAudited',t:'audit cols',k:'f'}]},
+ {id:'pifi',name:'TrnPlanItemFinancialItems',ar:'التكلفة التقديرية لبند الخطة',ic:'🧾',col:'#34d399',x:3040,y:1080,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'PlanItemId',t:'→ TrainingPlanItems',k:'fk'},{n:'FinancialItemId',t:'→ FinancialItems',k:'fk'},{n:'EstimatedAmountOMR',t:'DECIMAL(18,3)',k:'f'},{n:'EstimatedAmountUSD',t:'DECIMAL(18,2)?',k:'f'},{n:'ActualAmountOMR/USD',t:'DECIMAL?',k:'f'},{n:'Notes',t:'NVARCHAR?',k:'f'},{n:'…FullAudited',t:'audit cols',k:'f'}]},
+ {id:'pifirank',name:'TrnPlanItemFinancialItemRanks',ar:'توزيع تكلفة البند حسب الرتبة',ic:'📊',col:'#34d399',x:3040,y:1500,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'PlanItemFinancialItemId',t:'→ PlanItemFinancialItems · cascade',k:'fk'},{n:'RankId',t:'→ HrRanks',k:'fk'},{n:'NomineeCount',t:'INT',k:'f'},{n:'RatePerUnitOMR',t:'DECIMAL(18,3)',k:'f'},{n:'SubtotalOMR',t:'DECIMAL(18,3)',k:'f'},{n:'…FullAudited',t:'audit cols',k:'f'}]},
+ {id:'quote',name:'TrnPriceQuotes',ar:'عروض الأسعار (متعدد المصدر)',ic:'💲',col:'#34d399',x:2040,y:1500,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'SessionId',t:'→ CourseSessions? · restrict',k:'fk'},{n:'CasualCourseId',t:'→ CasualCourses? (poly)',k:'fk'},{n:'ProviderId',t:'→ TrainingProviders · restrict',k:'fk'},{n:'PricingType',t:'PricingType (enum)',k:'f'},{n:'QuotedPrice',t:'DECIMAL(18,3)',k:'f'},{n:'PricePerPerson/TotalPrice',t:'DECIMAL?',k:'f'},{n:'ParticipantsCount',t:'INT',k:'f'},{n:'Status',t:'ApprovalStatus (enum)',k:'f'},{n:'QuotedPriceOMR',t:'DECIMAL(18,3)',k:'f'},{n:'IsSelected',t:'BIT',k:'f'},{n:'CountryId/CityId',t:'→ HrGeoLocations?',k:'fk'},{n:'…FullAudited',t:'audit cols',k:'f'}]},
+
+ // ════════ CASUAL COURSES (الدورات العارضة) — #fbbf24 ════════
+ {id:'casual',name:'TrnCasualCourses',ar:'الدورة العارضة (خارج الخطة)',ic:'⚡',col:'#fbbf24',x:2560,y:1560,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'TenantCourseId',t:'→ TenantCourses',k:'fk'},{n:'UnitId',t:'UNIQUEIDENTIFIER',k:'f'},{n:'RequestedById',t:'UNIQUEIDENTIFIER (user)',k:'f'},{n:'CourseType',t:'CourseType (enum)',k:'f'},{n:'Priority/Justification',t:'INT/NVARCHAR',k:'f'},{n:'Description/Objectives Ar',t:'NVARCHAR?',k:'f'},{n:'DurationYears/Months/Days',t:'INT',k:'f'},{n:'EstimatedDateFrom/To',t:'DATETIME2',k:'f'},{n:'FundingSourceName/VoteCode',t:'NVARCHAR?',k:'f'},{n:'CourseCost/EstimatedTotalCost',t:'DECIMAL(18,3)?',k:'f'},{n:'FundingScenario',t:'FundingScenario? (enum)',k:'f'},{n:'SelectedPriceQuoteId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'ActualStartDate/EndDate',t:'DATETIME2?',k:'f'},{n:'Status',t:'CasualCourseStatus (enum)',k:'f'},{n:'ReturnedFromStatus',t:'CasualCourseStatus?',k:'f'},{n:'IsReturned/LastReturnNoteId',t:'BIT/GUID?',k:'f'},{n:'RejectedReason',t:'NVARCHAR?',k:'f'},{n:'…FullAudited',t:'audit cols',k:'f'}]},
+ {id:'casualfi',name:'TrnCasualCourseFinancialItems',ar:'بنود الدورة العارضة المالية',ic:'🧮',col:'#fbbf24',x:2560,y:2200,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'CasualCourseId',t:'→ CasualCourses · cascade',k:'fk'},{n:'FinancialItemId',t:'→ FinancialItems',k:'fk'},{n:'EstimatedAmountOMR',t:'DECIMAL(18,3)',k:'f'},{n:'ActualAmountOMR',t:'DECIMAL(18,3)?',k:'f'},{n:'Source',t:'FinancialAmountSource (enum)',k:'f'},{n:'Notes',t:'NVARCHAR?',k:'f'},{n:'…FullAudited',t:'audit cols',k:'f'}]},
+ {id:'casualfirank',name:'TrnCasualCourseFinancialItemRanks',ar:'توزيع بند العارضة حسب الرتبة',ic:'📈',col:'#fbbf24',x:2560,y:2560,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'CasualCourseFinancialItemId',t:'→ CasualCourseFinancialItems · cascade',k:'fk'},{n:'RankId',t:'→ HrRanks',k:'fk'},{n:'NomineeCount',t:'INT',k:'f'},{n:'RatePerUnitOMR/SubtotalOMR',t:'DECIMAL(18,3)',k:'f'},{n:'RateSource',t:'NVARCHAR(20)',k:'f'},{n:'…FullAudited',t:'audit cols',k:'f'}]},
+ {id:'casualnom',name:'TrnCasualCourseNominations',ar:'مرشحو الدورة العارضة',ic:'👤',col:'#fbbf24',x:3040,y:2200,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'CasualCourseId',t:'→ CasualCourses · cascade',k:'fk'},{n:'EmployeeId',t:'→ HrEmployees',k:'fk'},{n:'IsReturned',t:'BIT',k:'f'},{n:'LastReturnNoteId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'ConditionSnapshotJson',t:'NVARCHAR(MAX)?',k:'f'},{n:'…FullAudited',t:'audit cols',k:'f'}]},
+
+ // ════════ PAYMENTS & EXECUTION (الصرف والتنفيذ) — #f87171 ════════
+ {id:'travelinstr',name:'TrnTravelInstructions',ar:'أمر الحركة/السفر (متعدد المصدر)',ic:'🧳',col:'#f87171',x:2040,y:2200,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'CasualCourseId',t:'→ CasualCourses? (XOR)',k:'fk'},{n:'SessionId',t:'→ CourseSessions? (XOR)',k:'fk'},{n:'DepartureDate/ArrivalDate',t:'DATETIME2',k:'f'},{n:'ReturnDate/ArrivalBackDate',t:'DATETIME2',k:'f'},{n:'VisaRequired/VisaNotes',t:'BIT/NVARCHAR?',k:'f'},{n:'InsuranceArranged/Provider',t:'BIT/NVARCHAR?',k:'f'},{n:'TicketsBooked/TicketReference',t:'BIT/NVARCHAR?',k:'f'},{n:'CalculatedTravelDays',t:'INT',k:'f'},{n:'OverrideTravelDays',t:'INT?',k:'f'},{n:'Status',t:'TravelInstructionStatus (enum)',k:'f'},{n:'…FullAudited(Root)',t:'audit+stamp',k:'f'}]},
+ {id:'travelpay',name:'TrnTravelAllowancePayments',ar:'صرف بدلات السفر (لكل مرشح)',ic:'💸',col:'#f87171',x:2040,y:2680,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'SessionId',t:'→ CourseSessions? (XOR)',k:'fk'},{n:'CasualCourseId',t:'→ CasualCourses? (XOR)',k:'fk'},{n:'NominationId',t:'→ Nominations (unique)',k:'fk'},{n:'PersonnelType',t:'PersonnelType (enum)',k:'f'},{n:'TicketAmountOMR',t:'DECIMAL(18,3)',k:'f'},{n:'TravelAllowanceOMR',t:'DECIMAL(18,3)',k:'f'},{n:'ClothingAllowanceOMR',t:'DECIMAL(18,3)',k:'f'},{n:'InsuranceOMR/VisaFeesOMR',t:'DECIMAL(18,3)',k:'f'},{n:'TotalOMR',t:'DECIMAL(18,3) computed',k:'f'},{n:'Status',t:'PaymentStatus (enum)',k:'f'},{n:'ConfirmedAt/ById',t:'DATETIME2?/GUID?',k:'f'},{n:'External*',t:'NVARCHAR?/DATETIME2?',k:'f'},{n:'Notes',t:'NVARCHAR?',k:'f'},{n:'…FullAudited(Root)',t:'audit+stamp',k:'f'}]},
+ {id:'coursepay',name:'TrnCoursePayments',ar:'صرف فاتورة الدورة (متعدد المصدر)',ic:'🧾',col:'#f87171',x:3040,y:2560,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'SessionId',t:'→ CourseSessions? (XOR)',k:'fk'},{n:'CasualCourseId',t:'→ CasualCourses? (XOR)',k:'fk'},{n:'TrainingProviderId',t:'→ TrainingProviders',k:'fk'},{n:'InvoiceAmountOMR',t:'DECIMAL(18,3)',k:'f'},{n:'InvoiceDate',t:'DATETIME2',k:'f'},{n:'InvoiceBlobName',t:'NVARCHAR(200)?',k:'f'},{n:'InvoiceOriginalFileName',t:'NVARCHAR(260)?',k:'f'},{n:'Status',t:'PaymentStatus (enum)',k:'f'},{n:'ConfirmedAt/ById',t:'DATETIME2?/GUID?',k:'f'},{n:'Notes',t:'NVARCHAR?',k:'f'},{n:'…FullAudited(Root)',t:'audit+stamp',k:'f'}]},
+ {id:'realloc',name:'TrnBudgetReallocations',ar:'إعادة توجيه الميزانية (عارضة فقط)',ic:'🔀',col:'#f87171',x:3520,y:2560,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'CasualCourseId',t:'→ CasualCourses',k:'fk'},{n:'CoursePaymentId',t:'→ CoursePayments',k:'fk'},{n:'FundingSourceVoteCode',t:'NVARCHAR',k:'f'},{n:'ToFinancialItemId',t:'→ FinancialItems',k:'fk'},{n:'AmountOMR',t:'DECIMAL(18,3)',k:'f'},{n:'Status',t:'ReallocationStatus (enum)',k:'f'},{n:'ApprovedAt/ById',t:'DATETIME2?/GUID?',k:'f'},{n:'ApprovalNote',t:'NVARCHAR?',k:'f'},{n:'…FullAudited(Root)',t:'audit+stamp',k:'f'}]},
+
+ // ════════ CENTERS (المراكز وخططها) — #22d3ee ════════
+ {id:'center',name:'TrainingCenters',ar:'مراكز التدريب (جذر)',ic:'🏛️',col:'#22d3ee',x:3560,y:80,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'OrgUnitId',t:'UNIQUEIDENTIFIER',k:'f'},{n:'CenterNameAr',t:'NVARCHAR',k:'f'},{n:'CenterNameEn',t:'NVARCHAR',k:'f'},{n:'Location',t:'NVARCHAR?',k:'f'},{n:'IsActive',t:'BIT',k:'f'},{n:'…FullAudited(Root)',t:'audit+stamp',k:'f'}]},
+ {id:'centerrole',name:'CenterRoleAssignments',ar:'إسناد أدوار المركز (TCO/TCM)',ic:'🎖️',col:'#22d3ee',x:3560,y:440,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'CenterId',t:'→ TrainingCenters · cascade',k:'fk'},{n:'RoleType',t:'CenterRoleType (enum)',k:'f'},{n:'AssignmentType',t:'CenterAssignmentType (enum)',k:'f'},{n:'EmployeeId',t:'→ HrEmployees?',k:'fk'},{n:'ServiceNumber',t:'NVARCHAR?',k:'f'},{n:'PositionId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'…FullAudited',t:'audit cols',k:'f'}]},
+ {id:'centerwin',name:'CenterPlanWindows',ar:'نوافذ فتح خطط المراكز',ic:'🪟',col:'#22d3ee',x:3560,y:920,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'Year',t:'INT',k:'f'},{n:'OpenDate',t:'DATETIME2',k:'f'},{n:'CloseDate',t:'DATETIME2',k:'f'},{n:'OpenedById',t:'UNIQUEIDENTIFIER (user)',k:'f'},{n:'OpenedAt',t:'DATETIME2',k:'f'},{n:'…FullAudited(Root)',t:'audit+stamp',k:'f'}]},
+ {id:'centerplan',name:'TrainingCenterPlans',ar:'خطة المركز السنوية (جذر)',ic:'📅',col:'#22d3ee',x:3560,y:1260,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'CenterId',t:'→ TrainingCenters · cascade',k:'fk'},{n:'Year',t:'INT',k:'f'},{n:'Status',t:'CenterPlanStatus (enum)',k:'f'},{n:'OpenedAt/SubmittedAt/ApprovedAt',t:'DATETIME2?',k:'f'},{n:'OpenedById/SubmittedById/ApprovedById',t:'GUID?',k:'f'},{n:'…FullAudited(Root)',t:'audit+stamp',k:'f'}]},
+ {id:'centerplanitem',name:'TrainingCenterPlanItems',ar:'بنود خطة المركز',ic:'📎',col:'#22d3ee',x:3560,y:1700,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'PlanId',t:'→ TrainingCenterPlans · cascade',k:'fk'},{n:'TenantCourseId',t:'→ TenantCourses',k:'fk'},{n:'EstimatedStartDate/EndDate',t:'DATETIME2',k:'f'},{n:'Capacity',t:'INT',k:'f'},{n:'DurationWeeks',t:'INT',k:'f'},{n:'Objective',t:'NVARCHAR(1000)?',k:'f'},{n:'BeneficiaryType',t:'BeneficiaryType (enum)',k:'f'},{n:'BatchNumber',t:'INT',k:'f'},{n:'…FullAudited',t:'audit cols',k:'f'}]},
+ {id:'centerplanunit',name:'TrainingCenterPlanItemUnits',ar:'الجهات المستفيدة من بند المركز',ic:'🏘️',col:'#22d3ee',x:3560,y:2160,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'PlanItemId',t:'→ CenterPlanItems · cascade',k:'fk'},{n:'UnitId',t:'UNIQUEIDENTIFIER (OU)',k:'f'}]},
+
+ // ════════ HR / SYSTEM (بيانات مرجعية للقراءة) — #94a3b8 ════════
+ {id:'hremp',name:'HrEmployees',ar:'الموظفون (قراءة من HRMS)',ic:'🧑‍💼',col:'#94a3b8',x:2040,y:80,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'UserId',t:'→ AbpUsers',k:'fk'},{n:'MainUnitId',t:'→ AbpOrganizationUnits',k:'fk'},{n:'RankId',t:'→ HrRanks · NoAction',k:'fk'},{n:'ServiceNumber',t:'NVARCHAR(20)',k:'f'},{n:'FullNameAr',t:'NVARCHAR(256)',k:'f'},{n:'FullNameEn',t:'NVARCHAR(256)',k:'f'},{n:'DateOfBirth/JoinDate',t:'DATETIME2?',k:'f'},{n:'Education/Nationality',t:'NVARCHAR?',k:'f'},{n:'MedicalFitness',t:'BIT',k:'f'},{n:'SecurityClearance',t:'NVARCHAR?',k:'f'},{n:'LanguageLevel',t:'NVARCHAR(500)? json',k:'f'},{n:'IsActive',t:'BIT',k:'f'}]},
+ {id:'hrrank',name:'HrRanks',ar:'الرتب (قراءة من HRMS)',ic:'⭐',col:'#94a3b8',x:1560,y:80,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'NameAr',t:'NVARCHAR(100)',k:'f'},{n:'NameEn',t:'NVARCHAR(100)',k:'f'},{n:'SortOrder',t:'INT',k:'f'},{n:'PersonnelType',t:'NVARCHAR(20)',k:'f'},{n:'IsActive',t:'BIT',k:'f'}]},
+ {id:'hrgeo',name:'HrGeographicalLocations',ar:'المواقع الجغرافية (دول/مدن)',ic:'🌍',col:'#94a3b8',x:4080,y:440,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'ArabicName',t:'NVARCHAR(200)',k:'f'},{n:'EnglishName',t:'NVARCHAR(200)',k:'f'},{n:'LocationParentId',t:'↺ self? · NoAction',k:'fk'}]},
+ {id:'country',name:'TrnCountries',ar:'الدول (مرجع النظام)',ic:'🚩',col:'#94a3b8',x:560,y:1560,
+  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'NameAr',t:'NVARCHAR(100)',k:'f'},{n:'NameEn',t:'NVARCHAR(100)',k:'f'},{n:'Code',t:'NVARCHAR(3) unique ISO',k:'f'},{n:'IsActive',t:'BIT',k:'f'}]},
+];
+
+const R=[
+ // ── Catalog (restrict / cascade) ───────────────────
+ {f:'field',t:'catalog',type:'1',lbl:'FieldId · restrict'},
+ {f:'field',t:'proposal',type:'1',lbl:'FieldId · restrict'},
+ {f:'catalog',t:'catcond',type:'s',lbl:'CatalogCourseId · cascade'},
+ {f:'catalog',t:'tcourse',type:'1',lbl:'CatalogCourseId · restrict'},
+
+ // ── Tenant courses (cascade) ───────────────────────
+ {f:'tcourse',t:'tcond',type:'s',lbl:'TenantCourseId · cascade'},
+ {f:'tcourse',t:'planitem',type:'r',lbl:'TenantCourseId'},
+ {f:'tcourse',t:'course',type:'r',lbl:'TenantCourseId'},
+ {f:'tcourse',t:'session',type:'r',lbl:'TenantCourseId'},
+ {f:'tcourse',t:'casual',type:'r',lbl:'TenantCourseId'},
+ {f:'tcourse',t:'centerplanitem',type:'r',lbl:'TenantCourseId'},
+
+ // ── Plans (cascade) ────────────────────────────────
+ {f:'plan',t:'planitem',type:'s',lbl:'PlanId · cascade'},
+ {f:'planitem',t:'planitemcond',type:'s',lbl:'PlanItemId · cascade'},
+ {f:'plannote',t:'planitem',type:'r',lbl:'LastReturnNoteId?'},
+ {f:'plannote',t:'nom',type:'r',lbl:'LastReturnNoteId?'},
+ {f:'plannote',t:'casual',type:'r',lbl:'LastReturnNoteId?'},
+
+ // ── Sessions (polymorphic source · cascade children) ─
+ {f:'planitem',t:'session',type:'r',lbl:'TrainingPlanItemId? (XOR)'},
+ {f:'centerplanitem',t:'session',type:'r',lbl:'TrainingCenterPlanItemId? (XOR)'},
+ {f:'session',t:'sessnom',type:'s',lbl:'SessionId · cascade'},
+ {f:'session',t:'sesscond',type:'s',lbl:'SessionId · cascade'},
+ {f:'quote',t:'session',type:'r',lbl:'SelectedPriceQuoteId?'},
+
+ // ── Nominations (cascade / restrict) ───────────────
+ {f:'planitem',t:'nom',type:'s',lbl:'PlanItemId · cascade'},
+ {f:'session',t:'nom',type:'1',lbl:'SessionId? · restrict'},
+ {f:'nom',t:'nomappr',type:'s',lbl:'NominationId · cascade'},
+ {f:'nom',t:'travelpay',type:'1',lbl:'NominationId · unique'},
+
+ // ── Finance (cascade / restrict) ───────────────────
+ {f:'finitem',t:'finrankamt',type:'s',lbl:'FinancialItemId · cascade'},
+ {f:'finitem',t:'ctfid',type:'1',lbl:'FinancialItemId · restrict'},
+ {f:'finitem',t:'budget',type:'1',lbl:'FinancialItemId · restrict'},
+ {f:'finitem',t:'pifi',type:'r',lbl:'FinancialItemId'},
+ {f:'finitem',t:'casualfi',type:'r',lbl:'FinancialItemId'},
+ {f:'finitem',t:'realloc',type:'r',lbl:'ToFinancialItemId'},
+ {f:'planitem',t:'pifi',type:'r',lbl:'PlanItemId'},
+ {f:'pifi',t:'pifirank',type:'s',lbl:'PlanItemFinancialItemId · cascade'},
+ {f:'provider',t:'quote',type:'1',lbl:'ProviderId · restrict'},
+ {f:'provider',t:'course',type:'r',lbl:'ProviderId?'},
+ {f:'provider',t:'coursepay',type:'r',lbl:'TrainingProviderId'},
+
+ // ── Casual courses (cascade) ───────────────────────
+ {f:'casual',t:'casualfi',type:'s',lbl:'CasualCourseId · cascade'},
+ {f:'casual',t:'casualnom',type:'s',lbl:'CasualCourseId · cascade'},
+ {f:'casualfi',t:'casualfirank',type:'s',lbl:'CasualCourseFinancialItemId · cascade'},
+ {f:'casual',t:'quote',type:'r',lbl:'CasualCourseId? (poly)'},
+
+ // ── Payments & Execution (polymorphic · CHECK XOR) ──
+ {f:'session',t:'travelinstr',type:'r',lbl:'SessionId? (XOR)'},
+ {f:'casual',t:'travelinstr',type:'r',lbl:'CasualCourseId? (XOR)'},
+ {f:'session',t:'travelpay',type:'r',lbl:'SessionId? (XOR)'},
+ {f:'casual',t:'travelpay',type:'r',lbl:'CasualCourseId? (XOR)'},
+ {f:'session',t:'coursepay',type:'r',lbl:'SessionId? (XOR)'},
+ {f:'casual',t:'coursepay',type:'r',lbl:'CasualCourseId? (XOR)'},
+ {f:'casual',t:'realloc',type:'r',lbl:'CasualCourseId'},
+ {f:'coursepay',t:'realloc',type:'r',lbl:'CoursePaymentId'},
+
+ // ── Centers (cascade) ──────────────────────────────
+ {f:'center',t:'centerrole',type:'s',lbl:'CenterId · cascade'},
+ {f:'center',t:'centerplan',type:'s',lbl:'CenterId · cascade'},
+ {f:'centerplan',t:'centerplanitem',type:'s',lbl:'PlanId · cascade'},
+ {f:'centerplanitem',t:'centerplanunit',type:'s',lbl:'PlanItemId · cascade'},
+
+ // ── HR / System logical references (read-only) ─────
+ {f:'hrrank',t:'hremp',type:'r',lbl:'RankId → HR'},
+ {f:'hremp',t:'sessnom',type:'r',lbl:'EmployeeId → HR'},
+ {f:'hremp',t:'nom',type:'r',lbl:'EmployeeId → HR'},
+ {f:'hremp',t:'casualnom',type:'r',lbl:'EmployeeId → HR'},
+ {f:'hremp',t:'centerrole',type:'r',lbl:'EmployeeId? → HR'},
+ {f:'hrrank',t:'sessnom',type:'r',lbl:'RankId → HR'},
+ {f:'hrrank',t:'finrankamt',type:'r',lbl:'RankId → HR'},
+ {f:'hrrank',t:'pifirank',type:'r',lbl:'RankId → HR'},
+ {f:'hrrank',t:'casualfirank',type:'r',lbl:'RankId → HR'},
+ {f:'hrgeo',t:'provider',type:'r',lbl:'CountryId? → HR Geo'},
+ {f:'hrgeo',t:'quote',type:'r',lbl:'Country/CityId? → HR Geo'},
+ {f:'hrgeo',t:'hrgeo',type:'r',lbl:'LocationParentId? (self)'},
+];
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let dark=true, zoom=.65, panX=30, panY=30;
+let panning=false, panS={x:0,y:0};
+let dragId=null, dragOff={x:0,y:0};
+let showRel=true, dragMode=true, indexOpen=true;
+const EL={}, POS={};
+
+// Search / hover-highlight state
+let searchHits=[], searchIdx=-1, hoverId=null;
+
+// ── Persistence (localStorage) ──
+const LS_KEY='mod-training-er-diagram-v1';
+function saveState(){
+  try{
+    const positions={}; T.forEach(t=>{positions[t.id]=POS[t.id];});
+    localStorage.setItem(LS_KEY,JSON.stringify({zoom,panX,panY,dark,positions}));
+  }catch(e){}
+}
+function loadState(){
+  try{
+    const raw=localStorage.getItem(LS_KEY);
+    if(!raw) return false;
+    const s=JSON.parse(raw);
+    if(typeof s.zoom==='number') zoom=s.zoom;
+    if(typeof s.panX==='number') panX=s.panX;
+    if(typeof s.panY==='number') panY=s.panY;
+    if(typeof s.dark==='boolean') dark=s.dark;
+    if(s.positions){ T.forEach(t=>{ if(s.positions[t.id]) POS[t.id]={...s.positions[t.id]}; }); }
+    return true;
+  }catch(e){ return false; }
+}
+let saveTimer=null;
+function saveSoon(){ clearTimeout(saveTimer); saveTimer=setTimeout(saveState,400); }
+
+const wrap=document.getElementById('canvas-wrap');
+const erC=document.getElementById('er-canvas');
+const bgC=document.getElementById('bg-canvas');
+const ctx=erC.getContext('2d');
+const bgX=bgC.getContext('2d');
+const layer=document.getElementById('tables-layer');
+
+// ─────────────────────────────────────────────
+// THEME
+// ─────────────────────────────────────────────
+function toggleTheme(){
+  dark=!dark;
+  document.body.classList.toggle('light',!dark);
+  document.getElementById('btn-theme').textContent=dark?'🌙':'☀️';
+  drawBg(); drawRel(); saveSoon();
+}
+
+// ─────────────────────────────────────────────
+// RESIZE
+// ─────────────────────────────────────────────
+function resize(){
+  erC.width=bgC.width=window.innerWidth;
+  erC.height=bgC.height=window.innerHeight;
+  drawBg(); drawRel();
+}
+
+// ─────────────────────────────────────────────
+// BACKGROUND
+// ─────────────────────────────────────────────
+function drawBg(){
+  const W=bgC.width,H=bgC.height;
+  bgX.clearRect(0,0,W,H);
+  bgX.strokeStyle=dark?'rgba(79,142,247,.045)':'rgba(79,142,247,.08)';
+  bgX.lineWidth=1;
+  const s=40*zoom;
+  const ox=((panX%s)+s)%s, oy=((panY%s)+s)%s;
+  for(let x=ox;x<W;x+=s){bgX.beginPath();bgX.moveTo(x,0);bgX.lineTo(x,H);bgX.stroke();}
+  for(let y=oy;y<H;y+=s){bgX.beginPath();bgX.moveTo(0,y);bgX.lineTo(W,y);bgX.stroke();}
+}
+
+// ─────────────────────────────────────────────
+// BUILD TABLES
+// ─────────────────────────────────────────────
+function buildTables(){
+  T.forEach(t=>{
+    const el=document.createElement('div');
+    el.className='tbl'; el.id='tbl-'+t.id;
+    el.style.setProperty('--color',t.col);
+    el.style.zIndex=10;
+    const rows=t.f.map(f=>{
+      const bc=f.k==='pk'?'pk':f.k==='fk'?'fk':'fl';
+      const nc=f.k==='pk'?'pk-f':f.k==='fk'?'fk-f':'';
+      const lb=f.k==='pk'?'PK':f.k==='fk'?'FK':'—';
+      return `<div class="tbl-field"><span class="badge ${bc}">${lb}</span><span class="fname ${nc}">${f.n}</span><span class="ftype">${f.t}</span></div>`;
+    }).join('');
+    el.innerHTML=`<div class="tbl-head"><div class="tbl-icon">${t.ic}</div><div class="tbl-title"><div class="tbl-name">${t.name}</div><div class="tbl-name-ar">${t.ar}</div></div><div class="tbl-count">${t.f.length}</div></div><div class="tbl-fields">${rows}</div>`;
+    layer.appendChild(el);
+    EL[t.id]=el;
+    if(!POS[t.id]) POS[t.id]={x:t.x,y:t.y};   // keep loaded position if present
+    el.addEventListener('mousedown',e=>{
+      if(!dragMode) return;
+      e.stopPropagation(); dragId=t.id;
+      const r=el.getBoundingClientRect();
+      dragOff.x=e.clientX-r.left; dragOff.y=e.clientY-r.top;
+      el.classList.add('dragging');
+      document.querySelectorAll('.tbl').forEach(x=>x.style.zIndex=10);
+      el.style.zIndex=500;
+    });
+    // hover → highlight this table + its related tables, dim the rest
+    el.addEventListener('mouseenter',()=>{ if(!dragId&&!panning) setHover(t.id); });
+    el.addEventListener('mouseleave',()=>{ if(!dragId&&!panning) setHover(null); });
+    posEl(t.id);
+  });
+}
+function posEl(id){
+  const el=EL[id],p=POS[id];
+  el.style.transform=`translate(${p.x*zoom+panX}px,${p.y*zoom+panY}px) scale(${zoom})`;
+  el.style.transformOrigin='0 0';
+}
+function posAll(){T.forEach(t=>posEl(t.id));}
+
+// ─────────────────────────────────────────────
+// RELATIONS
+// ─────────────────────────────────────────────
+function box(id){
+  const el=EL[id],p=POS[id],w=el.offsetWidth,h=el.offsetHeight;
+  const lx=p.x*zoom+panX,ty=p.y*zoom+panY;
+  return{x:lx+w*zoom/2,y:ty+h*zoom/2,left:lx,top:ty,right:lx+w*zoom,bottom:ty+h*zoom};
+}
+function edgePts(a,b){
+  const dx=b.x-a.x,dy=b.y-a.y;
+  let ax,ay,bx,by;
+  if(Math.abs(dx)>=Math.abs(dy)){
+    ax=dx>0?a.right:a.left; ay=clamp(b.y,a.top+10,a.bottom-10);
+    bx=dx>0?b.left:b.right; by=clamp(a.y,b.top+10,b.bottom-10);
+  }else{
+    ay=dy>0?a.bottom:a.top; ax=clamp(b.x,a.left+10,a.right-10);
+    by=dy>0?b.top:b.bottom; bx=clamp(a.x,b.left+10,b.right-10);
+  }
+  return{ax,ay,bx,by};
+}
+function clamp(v,lo,hi){return Math.min(Math.max(v,lo),hi);}
+
+function drawRel(){
+  ctx.clearRect(0,0,erC.width,erC.height);
+  if(!showRel) return;
+  R.forEach(r=>{
+    const fa=EL[r.f],fb=EL[r.t];
+    if(!fa||!fb) return;
+    // When hovering a table, fade relations not touching it.
+    const active = !hoverId || r.f===hoverId || r.t===hoverId;
+    const a=box(r.f),b=box(r.t);
+    const{ax,ay,bx,by}=edgePts(a,b);
+    ctx.save();
+    ctx.globalAlpha = active ? 1 : 0.08;
+    let color,dash=[];
+    if(r.type==='n')     {color=dark?'#4f8ef7':'#2563eb';}
+    else if(r.type==='1'){color=dark?'#ffd166':'#d97706';dash=[7,5];}
+    else if(r.type==='r'){color=dark?'#94a3b8':'#64748b';dash=[4,6];}
+    else                 {color=dark?'#f87171':'#dc2626';dash=[5,5];}
+    const gr=ctx.createLinearGradient(ax,ay,bx,by);
+    gr.addColorStop(0,color+'dd'); gr.addColorStop(1,color+'44');
+    ctx.setLineDash(dash); ctx.strokeStyle=gr; ctx.lineWidth=(active&&hoverId)?2.6:1.8;
+    const cp1x=ax+(bx-ax)*.5,cp1y=ay,cp2x=cp1x,cp2y=by;
+    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.bezierCurveTo(cp1x,cp1y,cp2x,cp2y,bx,by); ctx.stroke();
+    ctx.setLineDash([]);
+    const ang=Math.atan2(by-cp2y,bx-cp2x),sz=8;
+    ctx.beginPath(); ctx.fillStyle=color+'cc';
+    ctx.moveTo(bx,by);
+    ctx.lineTo(bx-sz*Math.cos(ang-.4),by-sz*Math.sin(ang-.4));
+    ctx.lineTo(bx-sz*Math.cos(ang+.4),by-sz*Math.sin(ang+.4));
+    ctx.closePath(); ctx.fill();
+    // Hide labels of faded relations to reduce clutter.
+    if(active){
+      const mx=(ax+bx)/2,my=(ay+by)/2-7;
+      ctx.font='600 9px "JetBrains Mono",monospace'; ctx.textAlign='center';
+      const tw=ctx.measureText(r.lbl).width;
+      ctx.fillStyle=dark?'rgba(8,11,18,.82)':'rgba(238,242,255,.9)';
+      ctx.fillRect(mx-tw/2-5,my-10,tw+10,14);
+      ctx.fillStyle=color; ctx.fillText(r.lbl,mx,my);
+    }
+    ctx.restore();
+  });
+}
+
+// ── Hover highlight: emphasise a table + its related tables ──
+function relatedSet(id){
+  const s=new Set([id]);
+  R.forEach(r=>{ if(r.f===id) s.add(r.t); if(r.t===id) s.add(r.f); });
+  return s;
+}
+function setHover(id){
+  if(hoverId===id) return;
+  hoverId=id;
+  if(id){
+    const rel=relatedSet(id);
+    T.forEach(t=>{
+      EL[t.id].classList.toggle('dim',!rel.has(t.id));
+      EL[t.id].classList.toggle('match',t.id===id);
+    });
+  }else{
+    T.forEach(t=>{ EL[t.id].classList.remove('dim'); if(!searchHits.includes(t.id)) EL[t.id].classList.remove('match'); });
+    // restore search matches highlighting if a search is active
+    searchHits.forEach(hid=>EL[hid].classList.add('match'));
+  }
+  drawRel();
+}
+
+// ─────────────────────────────────────────────
+// INTERACTION
+// ─────────────────────────────────────────────
+wrap.addEventListener('mousedown',e=>{
+  if(e.target===wrap||e.target===erC||e.target===bgC){
+    panning=true; panS.x=e.clientX-panX; panS.y=e.clientY-panY;
+    wrap.classList.add('grabbing');
+  }
+});
+document.addEventListener('mousemove',e=>{
+  if(dragId){
+    const p=POS[dragId];
+    p.x=(e.clientX-dragOff.x-panX)/zoom;
+    p.y=(e.clientY-dragOff.y-panY)/zoom;
+    posEl(dragId); drawRel();
+  }else if(panning){
+    panX=e.clientX-panS.x; panY=e.clientY-panS.y;
+    posAll(); drawBg(); drawRel();
+  }
+});
+document.addEventListener('mouseup',()=>{
+  if(dragId){EL[dragId].classList.remove('dragging');dragId=null; saveSoon();}
+  if(panning) saveSoon();
+  panning=false; wrap.classList.remove('grabbing');
+});
+wrap.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const d=e.deltaY>0?.9:1.1,old=zoom;
+  zoom=Math.max(.14,Math.min(3,zoom*d));
+  panX=e.clientX-(e.clientX-panX)*(zoom/old);
+  panY=e.clientY-(e.clientY-panY)*(zoom/old);
+  posAll(); drawBg(); drawRel();
+  document.getElementById('zoom-ind').textContent=Math.round(zoom*100)+'%';
+  saveSoon();
+},{passive:false});
+
+function applyZoom(nz){
+  const cx=innerWidth/2,cy=innerHeight/2,old=zoom;
+  zoom=Math.max(.14,Math.min(3,nz));
+  panX=cx-(cx-panX)*(zoom/old); panY=cy-(cy-panY)*(zoom/old);
+  posAll(); drawBg(); drawRel();
+  document.getElementById('zoom-ind').textContent=Math.round(zoom*100)+'%';
+  saveSoon();
+}
+function zoomIn(){applyZoom(zoom*1.18);}
+function zoomOut(){applyZoom(zoom/1.18);}
+
+function resetView(){
+  zoom=.65; panX=30; panY=30;
+  T.forEach(t=>{POS[t.id]={x:t.x,y:t.y};});
+  posAll(); drawBg(); drawRel();
+  document.getElementById('zoom-ind').textContent='65%';
+  saveSoon();
+}
+function toggleRel(){
+  showRel=!showRel;
+  document.getElementById('btn-rel').classList.toggle('on',showRel);
+  drawRel();
+}
+function toggleDrag(){
+  dragMode=!dragMode;
+  const btn=document.getElementById('btn-drag');
+  btn.classList.toggle('on',dragMode);
+  btn.textContent=dragMode?'✥ Drag Mode':'↔ Pan Mode';
+  const hint=document.getElementById('leg-hint');
+  hint.textContent=dragMode?'✥ Drag Mode: حرّك الجداول':'↔ Pan Mode: تحريك اللوحة';
+  document.querySelectorAll('.tbl').forEach(el=>{
+    el.style.cursor=dragMode?'grab':'default';
+    el.style.pointerEvents=dragMode?'auto':'none';
+  });
+  wrap.style.cursor=dragMode?'default':'grab';
+}
+function autoLayout(){
+  // Reset every table back to its authored (x,y) — single source of truth.
+  T.forEach(t=>{POS[t.id]={x:t.x,y:t.y};});
+  zoom=.65; panX=30; panY=30;
+  posAll(); drawBg(); drawRel();
+  document.getElementById('zoom-ind').textContent='65%';
+  try{ localStorage.removeItem(LS_KEY); }catch(e){}
+  showToast('↺ تمت إعادة التخطيط الأصلي ومسح المواضع المحفوظة');
+}
+
+// ─────────────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────────────
+let toastTimer=null;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+// ─────────────────────────────────────────────
+// SEARCH
+// ─────────────────────────────────────────────
+function normalizeAr(s){
+  return (s||'').toString().toLowerCase()
+    .replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه')
+    .replace(/[ًٌٍَُِّْـ]/g,'').trim();
+}
+function onSearch(q){
+  const cnt=document.getElementById('search-count');
+  // clear previous match classes (that aren't from hover)
+  T.forEach(t=>EL[t.id].classList.remove('match'));
+  const nq=normalizeAr(q);
+  if(!nq){
+    searchHits=[]; searchIdx=-1; cnt.textContent='';
+    T.forEach(t=>EL[t.id].classList.remove('dim'));
+    updateIndexActive(null); drawRel();
+    return;
+  }
+  searchHits = T.filter(t =>
+    normalizeAr(t.name).includes(nq) ||
+    normalizeAr(t.ar).includes(nq) ||
+    normalizeAr(t.id).includes(nq)
+  ).map(t=>t.id);
+  T.forEach(t=>{
+    const hit=searchHits.includes(t.id);
+    EL[t.id].classList.toggle('match',hit);
+    EL[t.id].classList.toggle('dim',searchHits.length>0 && !hit);
+  });
+  if(searchHits.length){
+    searchIdx=0; focusTable(searchHits[0],false);
+    cnt.textContent = `1/${searchHits.length}`;
+  }else{
+    searchIdx=-1; cnt.textContent='0';
+  }
+  drawRel();
+}
+function onSearchKey(e){
+  if(e.key==='Enter'){
+    e.preventDefault();
+    if(!searchHits.length) return;
+    searchIdx=(searchIdx + (e.shiftKey?-1:1) + searchHits.length) % searchHits.length;
+    focusTable(searchHits[searchIdx],false);
+    document.getElementById('search-count').textContent=`${searchIdx+1}/${searchHits.length}`;
+  }else if(e.key==='Escape'){
+    e.target.value=''; onSearch(''); e.target.blur();
+  }
+}
+// Center a table in the viewport (pan + gentle zoom) and pulse it.
+function focusTable(id,keepZoom){
+  const el=EL[id]; if(!el) return;
+  if(!keepZoom && zoom<0.55){ zoom=0.75; document.getElementById('zoom-ind').textContent='75%'; }
+  const p=POS[id], w=el.offsetWidth, h=el.offsetHeight;
+  panX = innerWidth/2  - (p.x + w/2)*zoom;
+  panY = innerHeight/2 - (p.y + h/2)*zoom;
+  posAll(); drawBg(); drawRel();
+  el.classList.remove('focus-hit'); void el.offsetWidth; el.classList.add('focus-hit');
+  updateIndexActive(id); saveSoon();
+}
+
+// ─────────────────────────────────────────────
+// TABLE INDEX (side panel)
+// ─────────────────────────────────────────────
+const GROUP_LABELS={
+  '#4f8ef7':'الكتالوج المركزي','#38bdf8':'دورات الجهة','#a78bfa':'الخطط التدريبية',
+  '#f472b6':'تنفيذ الجلسات','#fb7185':'الترشيح والاعتماد','#34d399':'المالية والأسعار',
+  '#fbbf24':'الدورات العارضة','#f87171':'الصرف والتنفيذ','#22d3ee':'المراكز وخططها','#94a3b8':'مراجع HR / النظام'
+};
+function buildIndex(){
+  const body=document.getElementById('idx-body');
+  const groups={};
+  T.forEach(t=>{ (groups[t.col]=groups[t.col]||[]).push(t); });
+  let html='';
+  Object.keys(groups).forEach(col=>{
+    html+=`<div class="idx-group-t">${GROUP_LABELS[col]||''}</div>`;
+    groups[col].forEach(t=>{
+      html+=`<div class="idx-item" id="idx-${t.id}" onclick="focusTable('${t.id}',true)">
+        <span class="idx-dot" style="background:${t.col}"></span>
+        <span class="idx-txt"><span class="idx-name">${t.ic} ${t.name}</span><span class="idx-ar">${t.ar}</span></span>
+        <span class="idx-cnt">${t.f.length}</span>
+      </div>`;
+    });
+  });
+  body.innerHTML=html;
+}
+function updateIndexActive(id){
+  document.querySelectorAll('.idx-item').forEach(i=>i.classList.remove('active'));
+  if(id){ const el=document.getElementById('idx-'+id); if(el){ el.classList.add('active'); el.scrollIntoView({block:'nearest'}); } }
+}
+function toggleIndex(){
+  indexOpen=!indexOpen;
+  document.getElementById('index-panel').classList.toggle('collapsed',!indexOpen);
+  document.getElementById('btn-index').classList.toggle('on',indexOpen);
+}
+
+// ─────────────────────────────────────────────
+// KEYBOARD SHORTCUTS
+// ─────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  const box=document.getElementById('search-box');
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='f'){ e.preventDefault(); box.focus(); box.select(); return; }
+  if(document.activeElement===box) return;   // don't hijack typing
+  if(e.key==='+'||e.key==='='){ zoomIn(); }
+  else if(e.key==='-'||e.key==='_'){ zoomOut(); }
+  else if(e.key==='0'){ resetView(); }
+  else if(e.key==='r'||e.key==='R'){ toggleRel(); }
+  else if(e.key==='i'||e.key==='I'){ toggleIndex(); }
+});
+
+// ─────────────────────────────────────────────
+// EXPORT PNG — full canvas render
+// ─────────────────────────────────────────────
+async function exportPNG(){
+  const btn=document.getElementById('btn-screenshot');
+  const ov=document.getElementById('sc-overlay');
+  btn.classList.add('busy'); ov.classList.add('show');
+  await new Promise(r=>setTimeout(r,100));
+
+  try{
+    // Bounding box
+    let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+    T.forEach(t=>{
+      const el=EL[t.id],p=POS[t.id];
+      x0=Math.min(x0,p.x); y0=Math.min(y0,p.y);
+      x1=Math.max(x1,p.x+el.offsetWidth);
+      y1=Math.max(y1,p.y+el.offsetHeight);
+    });
+    const PAD=80, S=3;
+    x0-=PAD; y0-=PAD; x1+=PAD; y1+=PAD;
+    const WW=x1-x0, HH=y1-y0;
+    const IW=Math.round(WW*S), IH=Math.round(HH*S);
+
+    const off=document.createElement('canvas');
+    off.width=IW; off.height=IH;
+    const oc=off.getContext('2d');
+
+    // BG
+    oc.fillStyle=dark?'#080b12':'#eef2ff';
+    oc.fillRect(0,0,IW,IH);
+
+    // Grid
+    oc.strokeStyle=dark?'rgba(79,142,247,.05)':'rgba(79,142,247,.09)';
+    oc.lineWidth=1;
+    const gs=40*S;
+    for(let x=0;x<IW;x+=gs){oc.beginPath();oc.moveTo(x,0);oc.lineTo(x,IH);oc.stroke();}
+    for(let y=0;y<IH;y+=gs){oc.beginPath();oc.moveTo(0,y);oc.lineTo(IW,y);oc.stroke();}
+
+    // Helper: world→canvas
+    const wx=(v)=>(v-x0)*S, wy=(v)=>(v-y0)*S;
+
+    function bxE(id){
+      const el=EL[id],p=POS[id],w=el.offsetWidth,h=el.offsetHeight;
+      return{x:wx(p.x+w/2),y:wy(p.y+h/2),left:wx(p.x),top:wy(p.y),right:wx(p.x+w),bottom:wy(p.y+h)};
+    }
+    function epE(a,b){
+      const dx=b.x-a.x,dy=b.y-a.y;
+      let ax,ay,bx,by;
+      if(Math.abs(dx)>=Math.abs(dy)){
+        ax=dx>0?a.right:a.left; ay=clamp(b.y,a.top+10,a.bottom-10);
+        bx=dx>0?b.left:b.right; by=clamp(a.y,b.top+10,b.bottom-10);
+      }else{
+        ay=dy>0?a.bottom:a.top; ax=clamp(b.x,a.left+10,a.right-10);
+        by=dy>0?b.top:b.bottom; bx=clamp(a.x,b.left+10,b.right-10);
+      }
+      return{ax,ay,bx,by};
+    }
+
+    // Draw relations
+    R.forEach(r=>{
+      const fa=EL[r.f],fb=EL[r.t];
+      if(!fa||!fb) return;
+      const a=bxE(r.f),b=bxE(r.t);
+      const{ax,ay,bx,by}=epE(a,b);
+      oc.save();
+      let color,dash=[];
+      if(r.type==='n')     {color=dark?'#4f8ef7':'#2563eb';}
+      else if(r.type==='1'){color=dark?'#ffd166':'#d97706';dash=[12,8];}
+      else if(r.type==='r'){color=dark?'#94a3b8':'#64748b';dash=[8,8];}
+      else                 {color=dark?'#f87171':'#dc2626';dash=[8,8];}
+      const gr=oc.createLinearGradient(ax,ay,bx,by);
+      gr.addColorStop(0,color+'dd'); gr.addColorStop(1,color+'55');
+      oc.setLineDash(dash); oc.strokeStyle=gr; oc.lineWidth=3.2;
+      const cp1x=ax+(bx-ax)*.5,cp1y=ay,cp2x=cp1x,cp2y=by;
+      oc.beginPath(); oc.moveTo(ax,ay); oc.bezierCurveTo(cp1x,cp1y,cp2x,cp2y,bx,by); oc.stroke();
+      oc.setLineDash([]);
+      const ang=Math.atan2(by-cp2y,bx-cp2x),sz=12;
+      oc.beginPath(); oc.fillStyle=color+'bb';
+      oc.moveTo(bx,by);
+      oc.lineTo(bx-sz*Math.cos(ang-.42),by-sz*Math.sin(ang-.42));
+      oc.lineTo(bx-sz*Math.cos(ang+.42),by-sz*Math.sin(ang+.42));
+      oc.closePath(); oc.fill();
+      // label
+      const mx=(ax+bx)/2,my=(ay+by)/2-9;
+      oc.font=`700 ${13*S/2.5}px "JetBrains Mono",monospace`; oc.textAlign='center';
+      const tw=oc.measureText(r.lbl).width;
+      oc.fillStyle=dark?'rgba(8,11,18,.85)':'rgba(238,242,255,.92)';
+      oc.beginPath(); oc.roundRect(mx-tw/2-8,my-13,tw+16,18,4); oc.fill();
+      oc.fillStyle=color; oc.fillText(r.lbl,mx,my);
+      oc.restore();
+    });
+
+    // Draw table cards
+    T.forEach(t=>{
+      const el=EL[t.id],p=POS[t.id];
+      const W=el.offsetWidth,H=el.offsetHeight;
+      const cx=wx(p.x),cy=wy(p.y),cw=W*S,ch=H*S,R=10*S;
+
+      oc.save();
+      // shadow
+      oc.shadowColor=dark?'rgba(0,0,0,.55)':'rgba(0,0,0,.1)';
+      oc.shadowBlur=18*S; oc.shadowOffsetY=5*S;
+      // card bg
+      oc.fillStyle=dark?'#0e1220':'#ffffff';
+      rr(oc,cx,cy,cw,ch,R); oc.fill();
+      oc.shadowColor='transparent'; oc.shadowBlur=0; oc.shadowOffsetY=0;
+      // border
+      oc.strokeStyle=t.col+'60'; oc.lineWidth=2.5;
+      rr(oc,cx,cy,cw,ch,R); oc.stroke();
+      // top accent strip
+      oc.fillStyle=t.col;
+      oc.beginPath();
+      oc.moveTo(cx+R,cy); oc.lineTo(cx+cw-R,cy);
+      oc.arcTo(cx+cw,cy,cx+cw,cy+R,R); oc.lineTo(cx+cw,cy+5*S);
+      oc.lineTo(cx,cy+5*S); oc.arcTo(cx,cy,cx+R,cy,R); oc.closePath(); oc.fill();
+      // header bg
+      const hH=40*S;
+      oc.fillStyle=dark?'rgba(255,255,255,.025)':t.col+'12';
+      oc.fillRect(cx,cy+5*S,cw,hH-5*S);
+      // header divider
+      oc.strokeStyle=dark?'#1e2840':'#c8d4ee'; oc.lineWidth=1.2;
+      oc.beginPath(); oc.moveTo(cx,cy+hH); oc.lineTo(cx+cw,cy+hH); oc.stroke();
+      // icon
+      oc.font=`${16*S}px serif`; oc.textAlign='left';
+      oc.fillText(t.ic,cx+12*S,cy+hH-10*S);
+      // name
+      oc.font=`700 ${11*S}px "JetBrains Mono",monospace`;
+      oc.fillStyle=t.col; oc.textAlign='left';
+      oc.fillText(t.name,cx+36*S,cy+hH-18*S);
+      // arabic
+      oc.font=`400 ${9*S}px "Tajawal",sans-serif`;
+      oc.fillStyle=dark?'#4a5570':'#6070a0';
+      oc.fillText(t.ar,cx+36*S,cy+hH-5*S);
+      // field count badge
+      const cnt=String(t.f.length);
+      oc.font=`600 ${9*S}px "JetBrains Mono",monospace`;
+      const ctw=oc.measureText(cnt).width;
+      const bx2=cx+cw-12*S-ctw/2,by2=cy+hH/2+2*S;
+      oc.fillStyle=dark?'#080b12':'#eef2ff';
+      oc.beginPath(); oc.roundRect(bx2-9*S,by2-9*S,ctw+18*S,18*S,9*S); oc.fill();
+      oc.strokeStyle=dark?'#1a2035':'#c8d4ee'; oc.lineWidth=1;
+      oc.stroke();
+      oc.fillStyle=dark?'#2d3650':'#8090b8';
+      oc.textAlign='center';
+      oc.fillText(cnt,bx2+ctw/2,by2+5*S);
+      // fields
+      let fy=cy+hH+5*S;
+      const fh=19*S;
+      t.f.forEach(f=>{
+        const bw=24*S,bh=13*S,fbx=cx+12*S,fby=fy+3*S;
+        let bgC,txtC,bdC;
+        if(f.k==='pk')     {bgC='rgba(255,209,102,.13)';txtC='#ffd166';bdC='rgba(255,209,102,.28)';}
+        else if(f.k==='fk'){bgC='rgba(6,214,160,.11)';txtC='#06d6a0';bdC='rgba(6,214,160,.28)';}
+        else               {bgC=dark?'rgba(40,50,80,.5)':'rgba(190,205,240,.4)';txtC=dark?'#2d3a55':'#8090b0';bdC=dark?'#1a2235':'#c8d4ee';}
+        oc.fillStyle=bgC; oc.strokeStyle=bdC; oc.lineWidth=1.2;
+        oc.beginPath(); oc.roundRect(fbx,fby,bw,bh,3); oc.fill(); oc.stroke();
+        oc.font=`700 ${8.5*S}px "JetBrains Mono",monospace`;
+        oc.fillStyle=txtC; oc.textAlign='center';
+        const lb=f.k==='pk'?'PK':f.k==='fk'?'FK':'—';
+        oc.fillText(lb,fbx+bw/2,fby+bh-2.5*S);
+        // field name
+        oc.font=`400 ${10*S}px "JetBrains Mono",monospace`; oc.textAlign='left';
+        oc.fillStyle=f.k==='pk'?'#ffd166':f.k==='fk'?'#06d6a0':dark?'#8899bb':'#3a4a70';
+        oc.fillText(f.n,fbx+bw+7*S,fy+14*S);
+        // type right-aligned
+        oc.font=`400 ${8.5*S}px "JetBrains Mono",monospace`;
+        oc.fillStyle=dark?'#2d3a55':'#9aabcc';
+        oc.textAlign='right';
+        oc.fillText(f.t,cx+cw-10*S,fy+14*S);
+        fy+=fh;
+      });
+      oc.restore();
+    });
+
+    // Watermark
+    oc.save();
+    oc.font=`500 ${14*S/2.5}px "JetBrains Mono",monospace`;
+    oc.fillStyle=dark?'rgba(79,142,247,.22)':'rgba(79,142,247,.28)';
+    oc.textAlign='right';
+    oc.fillText('ER Diagram — MOD.Training (نظام التدريب GTMS) — ABP Layered / DDD Database',IW-22,IH-16);
+    oc.restore();
+
+    // Download
+    off.toBlob(blob=>{
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      a.href=url; a.download='er-diagram-'+Date.now()+'.png';
+      a.click(); URL.revokeObjectURL(url);
+      btn.classList.remove('busy'); ov.classList.remove('show');
+    },'image/png');
+
+  }catch(err){
+    console.error(err);
+    btn.classList.remove('busy'); ov.classList.remove('show');
+    alert('Error: '+err.message);
+  }
+}
+
+// roundRect helper
+function rr(oc,x,y,w,h,r){
+  oc.beginPath();
+  oc.moveTo(x+r,y); oc.lineTo(x+w-r,y); oc.arcTo(x+w,y,x+w,y+r,r);
+  oc.lineTo(x+w,y+h-r); oc.arcTo(x+w,y+h,x+w-r,y+h,r);
+  oc.lineTo(x+r,y+h); oc.arcTo(x,y+h,x,y+h-r,r);
+  oc.lineTo(x,y+r); oc.arcTo(x,y,x+r,y,r);
+  oc.closePath();
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+const hadSaved=loadState();          // restore positions/zoom/theme (fills POS)
+if(!dark) document.body.classList.add('light');
+document.getElementById('btn-theme').textContent=dark?'🌙':'☀️';
+buildTables();
+buildIndex();
+document.getElementById('info-tables').textContent=String(T.length);
+document.getElementById('info-relations').textContent=String(R.length);
+document.getElementById('zoom-ind').textContent=Math.round(zoom*100)+'%';
+document.getElementById('btn-index').classList.toggle('on',indexOpen);
+resize();
+window.addEventListener('resize',resize);
+requestAnimationFrame(drawRel);
+if(hadSaved) showToast('✓ تم استرجاع تخطيطك المحفوظ · زر «⊞ Layout» يعيد الأصل');
+</script>
+</body>
+</html>

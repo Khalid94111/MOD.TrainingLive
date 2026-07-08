@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Linq.Dynamic.Core;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using MOD.Training.Training.Catalog;
 using MOD.Training.Training.CourseProposals.Dtos;
@@ -12,13 +13,14 @@ using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Users;
- 
+
 namespace MOD.Training.Training.CourseProposals;
 
 [Authorize(TrainingPermissions.CourseProposals.Default)]
 public class CourseProposalAppService(
     IRepository<CourseProposal, Guid> proposalRepo,
-    IRepository<CourseCatalog, Guid> catalogRepo)
+    IRepository<CourseCatalog, Guid> catalogRepo,
+    IMapper mapper)
     : ApplicationService, ICourseProposalAppService
 {
     public async Task<CourseProposalDto> GetAsync(Guid id)
@@ -63,16 +65,9 @@ public class CourseProposalAppService(
     [Authorize(TrainingPermissions.CourseProposals.Create)]
     public async Task<CourseProposalDto> CreateAsync(CreateCourseProposalDto input)
     {
-        var entity = new CourseProposal
-        {
-            CourseNameAr = input.CourseNameAr,
-            CourseNameEn = input.CourseNameEn,
-            Category = input.Category,
-            Nature = input.Nature,
-            FieldId = input.FieldId,
-            Status = ProposalStatus.Pending,
-            ProposedById = CurrentUser.GetId(),
-        };
+        var entity = mapper.Map<CourseProposal>(input);
+        entity.Status = ProposalStatus.Pending;
+        entity.ProposedById = CurrentUser.GetId();
 
         entity = await proposalRepo.InsertAsync(entity, autoSave: true);
         return await GetAsync(entity.Id);
@@ -121,10 +116,14 @@ public class CourseProposalAppService(
 
     // ── Private ──
 
-    private static CourseProposalDto MapToDto(CourseProposal entity)
+    private CourseProposalDto MapToDto(CourseProposal entity)
     {
-        var dto = entity.ToDto();
+        var dto = mapper.Map<CourseProposalDto>(entity);
         dto.FieldNameAr = entity.Field?.FieldNameAr;
+        dto.CreationTimeFormatted = entity.CreationTime.ToString("yyyy-MM-dd HH:mm", global::System.Globalization.CultureInfo.InvariantCulture);
+        dto.ReviewedAtFormatted = entity.ReviewedAt.HasValue
+            ? entity.ReviewedAt.Value.ToString("yyyy-MM-dd HH:mm", global::System.Globalization.CultureInfo.InvariantCulture)
+            : null;
         return dto;
     }
 

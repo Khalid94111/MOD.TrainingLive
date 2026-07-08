@@ -1,173 +1,349 @@
-<div class="page-card">
-  <div class="page-card__header">
+<div class="fi-page">
+  <!-- ════════════════════════════════════════
+       HEADER BANNER
+       ════════════════════════════════════════ -->
+  <div class="header-banner">
+    <div class="header-banner-bg"></div>
+    <div class="header-banner-pattern"></div>
+    <div class="header-banner-content">
+      <div class="header-banner-left">
+        <div class="header-banner-icon"><span>🏛️</span></div>
+        <div class="header-banner-text">
+          <h1 class="header-banner-title">{{ '::Training.TenantCourses' | abpLocalization }}</h1>
+          <p class="header-banner-desc">{{ '::Training.TenantCoursesDescription' | abpLocalization }}</p>
+        </div>
+      </div>
+      <div class="header-banner-right">
+        <button type="button" class="btn btn-white" (click)="onOpenAddDialog()">
+          <span class="btn-icon-symbol">+</span>
+          <span>{{ '::Training.AddFromCatalog' | abpLocalization }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       STAT CARDS
+       ════════════════════════════════════════ -->
+  <div class="stat-cards-row">
+    <div class="stat-card-modern card-total">
+      <div class="stat-card-glow"></div>
+      <div class="stat-card-body">
+        <div class="stat-card-icon">📊</div>
+        <div class="stat-card-value">{{ totalCount() }}</div>
+        <div class="stat-card-label">{{ '::Training.Common.Total' | abpLocalization }}</div>
+      </div>
+      <div class="stat-card-bar" [style.width.%]="100"></div>
+    </div>
+    <div class="stat-card-modern card-active">
+      <div class="stat-card-glow"></div>
+      <div class="stat-card-body">
+        <div class="stat-card-icon">✅</div>
+        <div class="stat-card-value">{{ activeCount() }}</div>
+        <div class="stat-card-label">{{ '::Training.Active' | abpLocalization }}</div>
+      </div>
+      <div class="stat-card-bar" [style.width.%]="totalCount() ? (activeCount() / totalCount() * 100) : 0"></div>
+    </div>
+    <div class="stat-card-modern card-conditions">
+      <div class="stat-card-glow"></div>
+      <div class="stat-card-body">
+        <div class="stat-card-icon">🔒</div>
+        <div class="stat-card-value">{{ withConditionsCount() }}</div>
+        <div class="stat-card-label">{{ '::Training.Conditions' | abpLocalization }}</div>
+      </div>
+      <div class="stat-card-bar" [style.width.%]="totalCount() ? (withConditionsCount() / totalCount() * 100) : 0"></div>
+    </div>
+    <div class="stat-card-modern card-certificate">
+      <div class="stat-card-glow"></div>
+      <div class="stat-card-body">
+        <div class="stat-card-icon">📜</div>
+        <div class="stat-card-value">{{ withCertificateCount() }}</div>
+        <div class="stat-card-label">{{ '::Training.Certificate' | abpLocalization }}</div>
+      </div>
+      <div class="stat-card-bar" [style.width.%]="totalCount() ? (withCertificateCount() / totalCount() * 100) : 0"></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       INFO BANNER
+       ════════════════════════════════════════ -->
+  <div class="info-banner-modern">
+    <span class="info-banner-icon">ℹ️</span>
     <div>
-      <h2 class="page-card__title">🏛️ {{ '::Training.TenantCourses' | abpLocalization }} <span class="badge badge--new">v4</span></h2>
-      <p class="page-card__subtitle">{{ '::Training.TenantCoursesDescription' | abpLocalization }}</p>
-    </div>
-    <button class="btn-gradient btn-gradient--primary" (click)="onOpenAddDialog()">
-      ➕ {{ '::Training.AddFromCatalog' | abpLocalization }}
-    </button>
-  </div>
-
-  <!-- Info Banner -->
-  <div class="tenant-banner-wrap">
-    <div class="info-banner">
-      <span class="info-banner__icon">ℹ️</span>
-      <div>
-        <div class="info-banner__title">{{ '::Training.TenantCoursesLayerTitle' | abpLocalization }}</div>
-        <div class="info-banner__text">{{ '::Training.TenantCoursesLayerInfo' | abpLocalization }}</div>
-      </div>
+      <div class="info-banner-title">{{ '::Training.TenantCoursesLayerTitle' | abpLocalization }}</div>
+      <div class="info-banner-text">{{ '::Training.TenantCoursesLayerInfo' | abpLocalization }}</div>
     </div>
   </div>
 
-  <!-- Filters -->
-  <div class="filters-bar">
-    <dx-text-box [placeholder]="'::Training.SearchByName' | abpLocalization" [value]="searchText()"
-      (valueChange)="searchText.set($event)" (onEnterKey)="onSearch()" [stylingMode]="'outlined'"
-      [showClearButton]="true" class="filter-search"></dx-text-box>
-    <dx-select-box [dataSource]="resultTypeDataSource" displayExpr="text" valueExpr="value"
-      [value]="filterResultType()" (valueChange)="filterResultType.set($event); onFilterChange()"
-      [placeholder]="'::Training.AllResultTypes' | abpLocalization" [showClearButton]="true"
-      [stylingMode]="'outlined'" class="filter-select"></dx-select-box>
+  <!-- ════════════════════════════════════════
+       FILTER BAR
+       ════════════════════════════════════════ -->
+  <div class="filters-bar-modern">
+    <div class="filter-search-wrap">
+      <svg class="filter-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" class="filter-input" [placeholder]="'::Training.SearchByName' | abpLocalization"
+        [value]="searchText()" (input)="searchText.set($any($event.target).value)" (keyup.enter)="onSearch()" />
+      @if (searchText()) {
+        <button class="filter-clear" (click)="searchText.set(''); onSearch()">×</button>
+      }
+    </div>
+    <select class="filter-select" [value]="filterFieldId() ?? ''" (change)="filterFieldId.set($any($event.target).value || null); onFilterChange()">
+      <option value="">{{ '::Training.AllFields' | abpLocalization }}</option>
+      @for (field of courseFields(); track field.id) {
+        <option [value]="field.id">{{ field.fieldNameAr }}</option>
+      }
+    </select>
+    <select class="filter-select" [value]="filterResultType() ?? ''" (change)="filterResultType.set($any($event.target).value ? +$any($event.target).value : null); onFilterChange()">
+      <option value="">{{ '::Training.AllResultTypes' | abpLocalization }}</option>
+      @for (opt of resultTypeOptions(); track opt.value) {
+        <option [value]="opt.value">{{ opt.text }}</option>
+      }
+    </select>
+    <select class="filter-select" [value]="filterStatus() === null ? '' : filterStatus()" (change)="filterStatus.set($any($event.target).value === '' ? null : $any($event.target).value === 'true'); onFilterChange()">
+      @for (opt of statusFilterOptions(); track opt.value) {
+        <option [value]="opt.value === null ? '' : opt.value">{{ opt.text }}</option>
+      }
+    </select>
   </div>
 
-  <!-- Grid -->
-  <dx-data-grid #tenantGrid [dataSource]="dataSource" [showBorders]="false" [showRowLines]="true"
-    [showColumnLines]="false" [hoverStateEnabled]="true" [remoteOperations]="true"
-    [columnAutoWidth]="true" keyExpr="id" class="tenant-grid">
-    <dxo-paging [pageSize]="10"></dxo-paging>
-    <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[10, 20, 50]" [showInfo]="true"></dxo-pager>
-    <dxo-sorting mode="single"></dxo-sorting>
-
-    <dxi-column [caption]="'#'" [width]="50" cellTemplate="indexTpl" [allowSorting]="false"></dxi-column>
-    <div *dxTemplate="let c of 'indexTpl'"><span class="row-index">{{ c.rowIndex + 1 }}</span></div>
-
-    <dxi-column dataField="catalogCourseNameAr" [caption]="'::Training.CourseName' | abpLocalization" [minWidth]="220" cellTemplate="nameTpl"></dxi-column>
-    <div *dxTemplate="let c of 'nameTpl'">
-      <div class="cell-name">{{ c.data.catalogCourseNameAr }}</div>
-      <div class="cell-sub">{{ c.data.catalogCourseNameEn }}</div>
+  <!-- ════════════════════════════════════════
+       DATA TABLE
+       ════════════════════════════════════════ -->
+  @if (isLoading()) {
+    <div class="table-skeleton">
+      <div class="skel-row skel-header"></div>
+      @for (_ of [1,2,3,4,5]; track $index) {
+        <div class="skel-row"></div>
+      }
     </div>
-
-    <dxi-column dataField="catalogCourseFieldNameAr" [caption]="'::Training.Field' | abpLocalization" [width]="140" cellTemplate="fieldTpl"></dxi-column>
-    <div *dxTemplate="let c of 'fieldTpl'"><span class="pill pill--indigo">{{ c.data.catalogCourseFieldNameAr }}</span></div>
-
-    <dxi-column dataField="defaultCapacity" [caption]="'::Training.Capacity' | abpLocalization" [width]="80" alignment="center" cellTemplate="capTpl"></dxi-column>
-    <div *dxTemplate="let c of 'capTpl'"><span class="cell-value">{{ c.data.defaultCapacity ?? '—' }}</span></div>
-
-    <dxi-column dataField="defaultDurationWeeks" [caption]="'::Training.Duration' | abpLocalization" [width]="100" cellTemplate="durTpl"></dxi-column>
-    <div *dxTemplate="let c of 'durTpl'">
-      <span class="cell-sub">
-        @if (c.data.defaultDurationWeeks) { {{ c.data.defaultDurationWeeks }} {{ '::Training.Weeks' | abpLocalization }} } @else { — }
-      </span>
+  } @else if (tenantCourses().length === 0) {
+    <div class="empty-block">
+      <div class="empty-icon">📭</div>
+      <div class="empty-title">{{ '::Training.TenantCourse.NoCourses' | abpLocalization }}</div>
+      <div class="empty-desc">{{ '::Training.TenantCourse.NoCoursesHint' | abpLocalization }}</div>
+      <button class="btn btn-primary" (click)="onOpenAddDialog()">
+        <span class="btn-icon-symbol">+</span>
+        {{ '::Training.AddFromCatalog' | abpLocalization }}
+      </button>
     </div>
-
-    <dxi-column dataField="resultType" [caption]="'::Training.ResultType' | abpLocalization" [width]="140" cellTemplate="rtTpl"></dxi-column>
-    <div *dxTemplate="let c of 'rtTpl'"><span class="pill pill--purple">{{ getResultTypeText(c.data) }}</span></div>
-
-    <dxi-column dataField="requiresEvaluation" [caption]="'::Training.Evaluation' | abpLocalization" [width]="70" alignment="center" cellTemplate="evalTpl"></dxi-column>
-    <div *dxTemplate="let c of 'evalTpl'">
-      @if (c.data.requiresEvaluation) { <span class="check-yes">✓</span> } @else { <span class="check-no">—</span> }
+  } @else {
+    <div class="table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width: 50px;">#</th>
+            <th>{{ '::Training.CourseName' | abpLocalization }}</th>
+            <th style="width: 130px;">{{ '::Training.Field' | abpLocalization }}</th>
+            <th style="width: 90px;">{{ '::Training.Capacity' | abpLocalization }}</th>
+            <th style="width: 100px;">{{ '::Training.Duration' | abpLocalization }}</th>
+            <th style="width: 130px;">{{ '::Training.ResultType' | abpLocalization }}</th>
+            <th style="width: 70px; text-align: center;">{{ '::Training.Evaluation' | abpLocalization }}</th>
+            <th style="width: 70px; text-align: center;">{{ '::Training.Certificate' | abpLocalization }}</th>
+            <th style="width: 90px; text-align: center;">{{ '::Training.Conditions' | abpLocalization }}</th>
+            <th style="width: 90px;">{{ '::Training.Status' | abpLocalization }}</th>
+            <th style="width: 90px;">{{ '::Training.Actions' | abpLocalization }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (course of tenantCourses(); track course.id; let i = $index) {
+            <tr [style.animation-delay.ms]="i * 30">
+              <td><span class="row-index">{{ i + 1 }}</span></td>
+              <td>
+                <div class="cell-name">{{ course.catalogCourseNameAr }}</div>
+                <div class="cell-sub">{{ course.catalogCourseNameEn }}</div>
+              </td>
+              <td>
+                @if (course.catalogCourseFieldNameAr) {
+                  <span class="pill pill--indigo">{{ course.catalogCourseFieldNameAr }}</span>
+                } @else { <span class="cell-sub">—</span> }
+              </td>
+              <td>
+                <span class="cell-value">{{ course.defaultCapacity ?? '—' }}</span>
+              </td>
+              <td>
+                @if (course.defaultDurationWeeks) {
+                  <span class="cell-sub">{{ course.defaultDurationWeeks }} {{ '::Training.Weeks' | abpLocalization }}</span>
+                } @else { <span class="cell-sub">—</span> }
+              </td>
+              <td>
+                <span class="pill pill--purple">{{ getResultTypeText(course.resultType) }}</span>
+              </td>
+              <td style="text-align: center;">
+                @if (course.requiresEvaluation) { <span class="check-yes">✓</span> }
+                @else { <span class="check-no">—</span> }
+              </td>
+              <td style="text-align: center;">
+                @if (course.hasCertificate) { <span class="check-yes">✓</span> }
+                @else { <span class="check-no">—</span> }
+              </td>
+              <td style="text-align: center;">
+                @if ((course.conditionsCount ?? 0) > 0) {
+                  <span class="pill pill--locked">🔒 {{ course.conditionsCount }}</span>
+                } @else { <span class="cell-sub">—</span> }
+              </td>
+              <td>
+                @if (course.isActive) {
+                  <span class="status-pill status-active">{{ '::Training.Active' | abpLocalization }}</span>
+                } @else {
+                  <span class="status-pill status-inactive">{{ '::Training.Inactive' | abpLocalization }}</span>
+                }
+              </td>
+              <td>
+                <div class="actions-row">
+                  <button class="action-btn" (click)="onEditCourse(course)" title="{{ '::Training.Edit' | abpLocalization }}">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                  </button>
+                  <button class="action-btn action-btn--danger" (click)="onDeleteCourse(course)" title="{{ '::Training.Common.Delete' | abpLocalization }}">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
     </div>
-
-    <dxi-column dataField="hasCertificate" [caption]="'::Training.Certificate' | abpLocalization" [width]="70" alignment="center" cellTemplate="certTpl"></dxi-column>
-    <div *dxTemplate="let c of 'certTpl'">
-      @if (c.data.hasCertificate) { <span class="check-yes">✓</span> } @else { <span class="check-no">—</span> }
-    </div>
-
-    <dxi-column dataField="conditionsCount" [caption]="'::Training.Conditions' | abpLocalization" [width]="90" cellTemplate="condTpl" [allowSorting]="false"></dxi-column>
-    <div *dxTemplate="let c of 'condTpl'">
-      @if (c.data.conditionsCount > 0) {
-        <span class="pill pill--locked">🔒 {{ c.data.conditionsCount }}</span>
-      } @else { <span class="cell-sub">—</span> }
-    </div>
-
-    <dxi-column dataField="isActive" [caption]="'::Training.Status' | abpLocalization" [width]="90" cellTemplate="statusTpl"></dxi-column>
-    <div *dxTemplate="let c of 'statusTpl'">
-      @if (c.data.isActive) { <span class="badge badge--success">{{ '::Training.Active' | abpLocalization }}</span> }
-      @else { <span class="badge badge--muted">{{ '::Training.Inactive' | abpLocalization }}</span> }
-    </div>
-
-    <dxi-column [caption]="'::Training.Actions' | abpLocalization" [width]="100" cellTemplate="actTpl" [allowSorting]="false"></dxi-column>
-    <div *dxTemplate="let c of 'actTpl'">
-      <div class="actions-row">
-        <span class="emoji-action" (click)="onEditCourse(c.data)">✏️</span>
-        <span class="emoji-action">📋</span>
-      </div>
-    </div>
-  </dx-data-grid>
+  }
 </div>
 
-<!-- Add from Catalog Dialog -->
+<!-- ════════════════════════════════════════
+     ADD FROM CATALOG DIALOG
+     ════════════════════════════════════════ -->
 @if (isAddDialogVisible()) {
-  <app-add-from-catalog-dialog [visible]="isAddDialogVisible()"
-    (saved)="onCoursesAdded()" (cancelled)="isAddDialogVisible.set(false)">
+  <app-add-from-catalog-dialog
+    [visible]="isAddDialogVisible()"
+    (saved)="onCoursesAdded()"
+    (cancelled)="isAddDialogVisible.set(false)">
   </app-add-from-catalog-dialog>
 }
 
-<!-- Edit Dialog -->
-<dx-popup [visible]="isEditDialogVisible()" (visibleChange)="isEditDialogVisible.set($event)"
-  [title]="'::Training.EditTenantCourse' | abpLocalization" [showCloseButton]="true" [dragEnabled]="true"
-  [width]="600" [height]="'auto'" [maxHeight]="'85vh'" [toolbarItems]="editDialogToolbarItems">
-  <div *dxTemplate="let data of 'content'" class="dialog-body">
-    @if (editingCourse(); as course) {
-      <div class="course-info-header">
-        <div class="course-info-header__name">{{ course.catalogCourseNameAr }}</div>
-        <div class="course-info-header__name-en">{{ course.catalogCourseNameEn }}</div>
-        <div class="course-info-header__warning">⚠️ {{ '::Training.CannotChangeCourse' | abpLocalization }}</div>
-      </div>
-    }
-
-    <div class="form-row-2">
-      <div class="form-group">
-        <label class="form-label">{{ '::Training.Capacity' | abpLocalization }}</label>
-        <dx-number-box [value]="editForm().defaultCapacity" (valueChange)="updateEditField('defaultCapacity', $event)" [stylingMode]="'outlined'" [min]="1"></dx-number-box>
-      </div>
-      <div class="form-group">
-        <label class="form-label">{{ '::Training.DurationWeeks' | abpLocalization }}</label>
-        <dx-number-box [value]="editForm().defaultDurationWeeks" (valueChange)="updateEditField('defaultDurationWeeks', $event)" [stylingMode]="'outlined'" [min]="1"></dx-number-box>
-      </div>
-    </div>
-
-    <div class="form-row-2">
-      <div class="form-group">
-        <label class="form-label">{{ '::Training.ResultType' | abpLocalization }} <span class="req">*</span></label>
-        <dx-select-box [dataSource]="resultTypeDataSource" displayExpr="text" valueExpr="value" [value]="editForm().resultType" (valueChange)="updateEditField('resultType', $event)" [stylingMode]="'outlined'"></dx-select-box>
-      </div>
-      <div class="form-switch-row">
-        <span class="form-switch-label">{{ '::Training.IsActive' | abpLocalization }}:</span>
-        <dx-switch [value]="editForm().isActive" (valueChange)="updateEditField('isActive', $event)"></dx-switch>
-        @if (editForm().isActive) { <span class="badge badge--success badge--sm">{{ '::Training.Active' | abpLocalization }}</span> }
-        @else { <span class="badge badge--muted badge--sm">{{ '::Training.Inactive' | abpLocalization }}</span> }
-      </div>
-    </div>
-
-    <div class="form-checkbox-box">
-      <div class="form-checkbox-box__row">
-        <dx-check-box [text]="'::Training.RequiresEvaluation' | abpLocalization" [value]="editForm().requiresEvaluation" (valueChange)="updateEditField('requiresEvaluation', $event)"></dx-check-box>
-        <dx-check-box [text]="'::Training.RequiresProviderEvaluation' | abpLocalization" [value]="editForm().requiresProviderEvaluation" (valueChange)="updateEditField('requiresProviderEvaluation', $event)"></dx-check-box>
-        <dx-check-box [text]="'::Training.HasCertificate' | abpLocalization" [value]="editForm().hasCertificate" (valueChange)="updateEditField('hasCertificate', $event)"></dx-check-box>
-      </div>
-      @if (showEvaluationBlocks) {
-        <dx-check-box [text]="'::Training.EvaluationBlocksCertificate' | abpLocalization" [value]="editForm().evaluationBlocksCertificate" (valueChange)="updateEditField('evaluationBlocksCertificate', $event)"></dx-check-box>
-      }
-    </div>
-
-    <!-- Locked Conditions -->
-    <div class="conditions-section">
-      <div class="conditions-section__header">
-        <h4 class="conditions-section__title">📋 {{ '::Training.EnrollmentConditions' | abpLocalization }}</h4>
-        <span class="locked-badge">🔒 {{ '::Training.Locked' | abpLocalization }}</span>
-      </div>
-      <div class="warning-banner">⚠️ {{ '::Training.LockedConditionsWarning' | abpLocalization }}</div>
-      @if (conditions().length === 0) {
-        <div class="conditions-section__empty">{{ '::Training.NoConditions' | abpLocalization }}</div>
-      }
-      @for (cond of conditions(); track cond.id) {
-        <div class="condition-row condition-row--locked">
-          <span class="condition-row__type">{{ l.conditionType(cond.conditionType) }}</span>
-          <span class="condition-row__value">{{ cond.conditionValue }}</span>
+<!-- ════════════════════════════════════════
+     EDIT MODAL
+     ════════════════════════════════════════ -->
+@if (isEditDialogVisible()) {
+  <div class="modal-backdrop-modern" (click)="$event.target === $event.currentTarget ? onCancelEdit() : null">
+    <div class="modal-modern modal-lg">
+      <div class="modal-modern-header header-edit">
+        <div class="modal-modern-header-content">
+          <div class="modal-header-icon">📝</div>
+          <div>
+            <div class="modal-modern-title">{{ '::Training.EditTenantCourse' | abpLocalization }}</div>
+            <div class="modal-modern-subtitle">{{ '::Training.TenantCourses' | abpLocalization }}</div>
+          </div>
         </div>
-      }
+        <button class="modal-modern-close" (click)="onCancelEdit()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div class="modal-modern-body">
+        @if (editingCourse(); as course) {
+          <div class="course-info-header">
+            <div class="course-info-name">{{ course.catalogCourseNameAr }}</div>
+            <div class="course-info-name-en">{{ course.catalogCourseNameEn }}</div>
+            <div class="course-info-warning">⚠️ {{ '::Training.CannotChangeCourse' | abpLocalization }}</div>
+          </div>
+        }
+
+        @if (editValidationErrors().length > 0) {
+          <div class="validation-banner">
+            @for (err of editValidationErrors(); track $index) {
+              <div class="validation-item">⚠️ {{ err }}</div>
+            }
+          </div>
+        }
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">{{ '::Training.Capacity' | abpLocalization }}</label>
+            <input type="number" class="form-input" min="1" max="9999"
+              [value]="editForm().defaultCapacity ?? ''" (input)="updateEditField('defaultCapacity', $any($event.target).value ? +$any($event.target).value : undefined)" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">{{ '::Training.DurationWeeks' | abpLocalization }}</label>
+            <input type="number" class="form-input" min="1" max="999"
+              [value]="editForm().defaultDurationWeeks ?? ''" (input)="updateEditField('defaultDurationWeeks', $any($event.target).value ? +$any($event.target).value : undefined)" />
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label class="form-label">{{ '::Training.ResultType' | abpLocalization }} <span class="required">*</span></label>
+            <select class="form-select" [value]="editForm().resultType" (change)="updateEditField('resultType', +$any($event.target).value)">
+              @for (opt of resultTypeOptions(); track opt.value) {
+                <option [value]="opt.value">{{ opt.text }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-switch-row-modern">
+            <span class="form-switch-label">{{ '::Training.IsActive' | abpLocalization }}</span>
+            <label class="switch-modern">
+              <input type="checkbox" [checked]="editForm().isActive" (change)="updateEditField('isActive', $any($event.target).checked)" />
+              <span class="switch-slider"></span>
+            </label>
+            @if (editForm().isActive) {
+              <span class="status-mini status-active">{{ '::Training.Active' | abpLocalization }}</span>
+            } @else {
+              <span class="status-mini status-inactive">{{ '::Training.Inactive' | abpLocalization }}</span>
+            }
+          </div>
+        </div>
+
+        <div class="form-checkbox-box">
+          <div class="form-checkbox-box__row">
+            <label class="checkbox-modern">
+              <input type="checkbox" [checked]="editForm().requiresEvaluation" (change)="updateEditField('requiresEvaluation', $any($event.target).checked)" />
+              <span class="checkbox-mark"></span>
+              <span class="checkbox-label">{{ '::Training.RequiresEvaluation' | abpLocalization }}</span>
+            </label>
+            <label class="checkbox-modern">
+              <input type="checkbox" [checked]="editForm().requiresProviderEvaluation" (change)="updateEditField('requiresProviderEvaluation', $any($event.target).checked)" />
+              <span class="checkbox-mark"></span>
+              <span class="checkbox-label">{{ '::Training.RequiresProviderEvaluation' | abpLocalization }}</span>
+            </label>
+            <label class="checkbox-modern">
+              <input type="checkbox" [checked]="editForm().hasCertificate" (change)="updateEditField('hasCertificate', $any($event.target).checked)" />
+              <span class="checkbox-mark"></span>
+              <span class="checkbox-label">{{ '::Training.HasCertificate' | abpLocalization }}</span>
+            </label>
+          </div>
+          @if (showEvaluationBlocks) {
+            <label class="checkbox-modern">
+              <input type="checkbox" [checked]="editForm().evaluationBlocksCertificate" (change)="updateEditField('evaluationBlocksCertificate', $any($event.target).checked)" />
+              <span class="checkbox-mark"></span>
+              <span class="checkbox-label">{{ '::Training.EvaluationBlocksCertificate' | abpLocalization }}</span>
+            </label>
+          }
+        </div>
+
+        <!-- Locked Conditions -->
+        <div class="conditions-section">
+          <div class="conditions-section__header">
+            <h4 class="conditions-section__title">📋 {{ '::Training.EnrollmentConditions' | abpLocalization }}</h4>
+            <span class="locked-badge">🔒 {{ '::Training.Locked' | abpLocalization }}</span>
+          </div>
+          <div class="warning-banner-modern">
+            <span>⚠️</span>
+            <span>{{ '::Training.LockedConditionsWarning' | abpLocalization }}</span>
+          </div>
+          @if (conditions().length === 0) {
+            <div class="conditions-section__empty">{{ '::Training.NoConditions' | abpLocalization }}</div>
+          }
+          @for (cond of conditions(); track cond.id) {
+            <div class="condition-row condition-row--locked">
+              <span class="condition-row__type">{{ l.conditionType(cond.conditionType) }}</span>
+              <span class="condition-row__value">{{ cond.conditionValue }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="modal-modern-footer">
+        <button class="btn btn-ghost" (click)="onCancelEdit()">{{ '::Training.Cancel' | abpLocalization }}</button>
+        <button class="btn btn-primary btn-glow" (click)="onSaveEdit()" [disabled]="isSaving()">
+          <span>{{ '::Training.Save' | abpLocalization }}</span>
+        </button>
+      </div>
     </div>
   </div>
-</dx-popup>
+}

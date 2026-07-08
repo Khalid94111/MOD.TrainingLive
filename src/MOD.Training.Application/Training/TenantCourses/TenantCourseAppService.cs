@@ -118,7 +118,7 @@ public class TenantCourseAppService(
     public async Task<TenantCourseDto> UpdateAsync(Guid id, UpdateTenantCourseDto input)
     {
         var entity = await tenantCourseRepo.GetAsync(id);
-        input.MapTo(entity);
+        mapper.Map(input, entity);
         await tenantCourseRepo.UpdateAsync(entity, autoSave: true);
         return await GetAsync(id);
     }
@@ -136,7 +136,7 @@ public class TenantCourseAppService(
     public async Task<List<TenantCourseConditionDto>> GetConditionsAsync(Guid tenantCourseId)
     {
         var conditions = await conditionRepo.GetListAsync(c => c.TenantCourseId == tenantCourseId);
-        return conditions.Select(c => c.ToDto()).ToList();
+        return conditions.Select(c => mapper.Map<TenantCourseConditionDto>(c)).ToList();
     }
 
     /// <summary>
@@ -185,14 +185,15 @@ public class TenantCourseAppService(
         return groups.ToDictionary(x => x.Id, x => x.Count);
     }
 
-    private static TenantCourseDto MapToDto(TenantCourse entity, int conditionsCount)
+    private TenantCourseDto MapToDto(TenantCourse entity, int conditionsCount)
     {
-        var dto = entity.ToDto();
+        var dto = mapper.Map<TenantCourseDto>(entity);
         dto.CatalogCourseNameAr = entity.CatalogCourse?.CourseNameAr ?? string.Empty;
         dto.CatalogCourseNameEn = entity.CatalogCourse?.CourseNameEn ?? string.Empty;
         dto.CatalogCourseFieldNameAr = entity.CatalogCourse?.Field?.FieldNameAr;
         dto.CatalogCourseCategory = entity.CatalogCourse?.Category;
         dto.ConditionsCount = conditionsCount;
+        dto.AddedAtFormatted = entity.AddedAt.ToString("yyyy-MM-dd HH:mm", global::System.Globalization.CultureInfo.InvariantCulture);
         return dto;
     }
 

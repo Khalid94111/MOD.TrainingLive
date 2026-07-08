@@ -14,6 +14,8 @@ export interface CourseProposalDto extends FullAuditedEntityDto<string> {
   reviewedById?: string | null;
   rejectionReason?: string | null;
   reviewedAt?: string | null;
+  creationTimeFormatted?: string | null;
+  reviewedAtFormatted?: string | null;
 }
 
 export interface CourseProposalGetListInput extends PagedAndSortedResultRequestDto {

@@ -1,5 +1,6 @@
 using MOD.Training.Training.Enums;
 using System;
+using System.ComponentModel.DataAnnotations;
 using Volo.Abp.Application.Dtos;
 
 namespace MOD.Training.Training.TenantCourses.Dtos;
@@ -22,12 +23,11 @@ public class TenantCourseDto : FullAuditedEntityDto<Guid>
     public int ConditionsCount { get; set; }
     public string? AddedByName { get; set; }
     public DateTime AddedAt { get; set; }
+
+    /// <summary>AddedAt formatted for display (e.g. "2025-06-04 14:30").</summary>
+    public string? AddedAtFormatted { get; set; }
 }
 
-/// <summary>
-/// Used when adding course(s) from catalog to tenant.
-/// Supports multi-select — catalogCourseIds array.
-/// </summary>
 public class AddFromCatalogDto
 {
     public Guid[] CatalogCourseIds { get; set; } = Array.Empty<Guid>();
@@ -35,9 +35,15 @@ public class AddFromCatalogDto
 
 public class UpdateTenantCourseDto
 {
+    [Range(1, 9999, ErrorMessage = "Training:TenantCourse:CapacityOutOfRange")]
     public int? DefaultCapacity { get; set; }
+
+    [Range(1, 999, ErrorMessage = "Training:TenantCourse:DurationOutOfRange")]
     public int? DefaultDurationWeeks { get; set; }
+
+    [Required]
     public ResultType ResultType { get; set; }
+
     public bool RequiresEvaluation { get; set; }
     public bool RequiresProviderEvaluation { get; set; }
     public bool HasCertificate { get; set; }
