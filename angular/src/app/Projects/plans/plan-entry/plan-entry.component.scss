@@ -768,3 +768,139 @@
   font-size: 0.78rem;
   font-weight: 700;
 }
+
+/* ═══ Searchable course combobox (typeahead dropdown) ═══ */
+.course-combobox { position: relative; }
+
+.combobox-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  cursor: pointer;
+  text-align: start;
+  background: white;
+}
+.combobox-placeholder { color: #94a3b8; }
+.combobox-arrow {
+  color: #64748b;
+  font-size: 0.75rem;
+  transition: transform 0.15s;
+}
+.combobox-arrow.open { transform: rotate(180deg); }
+
+.combobox-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+.combobox-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  inset-inline: 0;
+  z-index: 50;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.combobox-search { width: 100%; font-size: 0.84rem; }
+
+.combobox-list {
+  max-height: 240px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.combobox-option {
+  display: block;
+  width: 100%;
+  text-align: start;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.86rem;
+  color: #0f172a;
+}
+.combobox-option:hover { background: #f1f5f9; }
+.combobox-option.selected {
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
+.combobox-empty {
+  padding: 10px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.82rem;
+}
+
+/* ═══ Nominees sub-table inside expanded course detail ═══ */
+.btn-icon-sm { padding: 2px 4px; font-size: 0.9rem; }
+
+.rank-badge {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.nominees-subtable-wrap {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-top: 12px;
+}
+
+.sub-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.sub-title { font-weight: 700; color: #1e293b; font-size: 0.88rem; }
+
+.nominees-empty {
+  padding: 14px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.82rem;
+}
+
+.nominees-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+
+  th {
+    background: #f1f5f9;
+    padding: 6px 10px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #475569;
+    text-align: right;
+  }
+  th.center, td.center { text-align: center; }
+  td { padding: 6px 10px; border-bottom: 1px solid #f1f5f9; }
+  tr.nom-returned {
+    background: linear-gradient(to right, #fffbeb, #fef9c3);
+    box-shadow: inset 3px 0 0 #d97706;
+  }
+}

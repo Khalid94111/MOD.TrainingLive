@@ -1,18 +1,22 @@
-<div class="gtms-card">
-  <!-- HEADER -->
-  <div class="page-toolbar">
-    <div class="page-toolbar-title">
-      <h2 class="gtms-card-title">🔍 مراجعة الخطة — {{ plan()?.year }}</h2>
+<div class="plans-page">
+  <!-- Header banner -->
+  <div class="header-banner">
+    <div class="header-banner-content">
+      <div class="header-icon">🔍</div>
+      <div class="header-titles">
+        <h1 class="header-title">مراجعة الخطة السنوية — {{ plan()?.year }}</h1>
+        <p class="header-subtitle">مراجعة دورات الخطة والتكاليف التقديرية والمرشحين، ومعالجة الدورات المُعادة قبل اعتماد الخطة</p>
+      </div>
       @if (plan(); as p) {
         <span class="badge" [class]="statusBadgeClass(p.status)">{{ statusText(p.status) }}</span>
         @if (returnedItemsCount() > 0 || returnedNominationsCount() > 0) {
           <span class="badge badge-submitted returned-counter">
-            ⚠️ {{ returnedItemsCount() }} بند + {{ returnedNominationsCount() }} ترشيح مُعاد
+            ⚠️ {{ returnedItemsCount() }} دورة + {{ returnedNominationsCount() }} ترشيح مُعاد
           </span>
         }
       }
     </div>
-    <div class="page-toolbar-actions">
+    <div class="header-actions">
       <button class="btn btn-ghost" (click)="openPlanNotes()" title="ملاحظات الخطة">💬 ملاحظات</button>
       @if (plan()?.status === PlanStatus.Submitted) {
         <button class="btn btn-primary"
@@ -25,7 +29,7 @@
         <button class="btn btn-warning btn-sm" (click)="openReturnPlanModal()">🔙 إعادة الخطة</button>
         <button class="btn btn-success"
                 [disabled]="!canStaffApprove() || approving()"
-                [title]="!canStaffApprove() ? 'يجب معالجة كل البنود بدون تكلفة والبنود/الترشيحات المُعادة أولاً' : ''"
+                [title]="!canStaffApprove() ? 'يجب معالجة كل الدورات بدون تكلفة والدورات/الترشيحات المُعادة أولاً' : ''"
                 (click)="onStaffApprove()">
           @if (approving()) { جارٍ الاعتماد… } @else { ✓ اعتماد الخطة }
         </button>
@@ -55,12 +59,27 @@
   }
 
   <!-- STATS -->
-  <div class="stat-cards">
-    <div class="stat-card"><div class="stat-value">{{ totalItems() }}</div><div class="stat-label">إجمالي البنود</div></div>
-    <div class="stat-card card-green"><div class="stat-value">{{ itemsWithCostCount() }}</div><div class="stat-label">مكتمل التكلفة</div></div>
-    <div class="stat-card card-amber"><div class="stat-value">{{ itemsMissingCostCount() }}</div><div class="stat-label">بدون تكلفة</div></div>
-    <div class="stat-card card-blue"><div class="stat-value">{{ formatCost(totalCost()) || '0' }}</div><div class="stat-label">الإجمالي (ر.ع.)</div></div>
-    <div class="stat-card"><div class="stat-value">{{ unitGroups().length }}</div><div class="stat-label">وحدات</div></div>
+  <div class="stat-cards-row">
+    <div class="stat-card">
+      <div class="stat-icon total">📋</div>
+      <div class="stat-body"><div class="stat-value">{{ totalItems() }}</div><div class="stat-label">إجمالي الدورات</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon approved">✅</div>
+      <div class="stat-body"><div class="stat-value">{{ itemsWithCostCount() }}</div><div class="stat-label">مكتمل التكلفة</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon returned">⚠️</div>
+      <div class="stat-body"><div class="stat-value">{{ itemsMissingCostCount() }}</div><div class="stat-label">بدون تكلفة</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon submitted">💰</div>
+      <div class="stat-body"><div class="stat-value">{{ formatCost(totalCost()) || '0' }}</div><div class="stat-label">الإجمالي (ر.ع.)</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon open">🏢</div>
+      <div class="stat-body"><div class="stat-value">{{ unitGroups().length }}</div><div class="stat-label">وحدات</div></div>
+    </div>
   </div>
 
   <div class="progress-bar-wrap">
@@ -69,7 +88,7 @@
   </div>
 
   <!-- FILTERS -->
-  <div class="filter-bar">
+  <div class="filters-bar-modern">
     <select class="form-input" (change)="filterUnit.set($any($event.target).value)">
       <option value="">جميع الوحدات ({{ uniqueUnits().length }})</option>
       @for (u of uniqueUnits(); track u.id) { <option [value]="u.id">{{ u.name }}</option> }
@@ -99,7 +118,7 @@
         <span class="unit-name">{{ group.unitName }}</span>
       </div>
       <div class="unit-header-stats">
-        <span class="unit-stat">{{ group.totalItems }} بند</span>
+        <span class="unit-stat">{{ group.totalItems }} دورة</span>
         @if (group.itemsMissingCost > 0) {
           <span class="badge badge-rejected">{{ group.itemsMissingCost }} بدون تكلفة</span>
         } @else {
@@ -172,9 +191,9 @@
                   @else { <span class="badge badge-open">—</span> }
                 </td>
                 <td class="center" (click)="$event.stopPropagation()">
-                  <button class="btn-icon" title="ملاحظات البند" (click)="openItemNotes(item, $event)">💬</button>
+                  <button class="btn-icon" title="ملاحظات الدورة" (click)="openItemNotes(item, $event)">💬</button>
                   @if (plan()?.status === PlanStatus.UnderReview && !item.isReturned) {
-                    <button class="btn-icon" title="إعادة البند" (click)="openReturnItemModal(item, $event)">🔙</button>
+                    <button class="btn-icon" title="إعادة الدورة" (click)="openReturnItemModal(item, $event)">🔙</button>
                   }
                 </td>
               </tr>
@@ -217,7 +236,7 @@
 
                           @if (plan()?.status === PlanStatus.UnderReview && !item.isReturned) {
                             <div class="card-actions">
-                              <button class="btn btn-warning btn-sm" (click)="openReturnItemModal(item, $event)">🔙 إعادة هذا البند</button>
+                              <button class="btn btn-warning btn-sm" (click)="openReturnItemModal(item, $event)">🔙 إعادة هذه الدورة</button>
                             </div>
                           }
                         </div>
@@ -351,6 +370,9 @@
                               @for (n of getNominationsFor(item.id!); track n.id) {
                                 <tr [class.nom-returned]="n.isReturned">
                                   <td>
+                                    @if (n.rankNameAr) {
+                                      <span class="rank-badge">🎖️ {{ n.rankNameAr }}</span>
+                                    }
                                     <span class="cell-bold">{{ n.employeeName ?? '—' }}</span>
                                   </td>
                                   <td>

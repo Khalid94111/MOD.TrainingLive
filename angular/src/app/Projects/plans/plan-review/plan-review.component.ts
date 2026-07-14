@@ -138,8 +138,6 @@ export class PlanReviewComponent implements OnInit {
 
     const map = new Map<string, UnitGroup>();
     for (const item of items) {
-      console.log('Processing item', item
-        , 'with unit', item.unitId, item.unitName);
       const uid = item.unitId ?? 'unknown';
       const uname = item.unitName ?? 'غير محدد';
       if (!map.has(uid)) map.set(uid, { unitId: uid, unitName: uname, allItems: [], totalItems: 0, itemsWithCost: 0, itemsMissingCost: 0, totalCost: 0, isComplete: true });
@@ -151,9 +149,7 @@ export class PlanReviewComponent implements OnInit {
         else { g.itemsMissingCost++; g.isComplete = false; }
       } else { g.itemsWithCost++; }
     }
-    var sss= Array.from(map.values()).sort((a, b) => a.unitName.localeCompare(b.unitName, 'ar'));
-    console.log(sss); 
-    return sss;
+    return Array.from(map.values()).sort((a, b) => a.unitName.localeCompare(b.unitName, 'ar'));
   });
 
   totalItems = computed(() => this.allItems().length);
@@ -194,7 +190,6 @@ export class PlanReviewComponent implements OnInit {
 
   async loadItems(): Promise<void> {
     const r = await firstValueFrom(this.itemService.getList({ planId: this.planId, maxResultCount: 1000 }));
-    console.log('Loaded items', r.items);
     this.allItems.set(r.items ?? []);
   }
 
@@ -273,8 +268,14 @@ export class PlanReviewComponent implements OnInit {
 
   // ── Refresh ──
   private async refreshExpandedItem(itemId: string): Promise<void> {
-    const fis = await firstValueFrom(this.fiService.getListByPlanItem(itemId));
+    const [fis, noms] = await Promise.all([
+      firstValueFrom(this.fiService.getListByPlanItem(itemId)),
+      firstValueFrom(this.nominationService.getList({ planItemId: itemId, maxResultCount: 500 })),
+    ]);
     this.financialItemsMap.update(m => { const n = new Map(m); n.set(itemId, fis); return n; });
+    // Reload nominations too — otherwise a returned nomination keeps showing as "normal"
+    // after onReturnConfirmed until the item is manually collapsed/re-expanded.
+    this.nominationsMap.update(m => { const n = new Map(m); n.set(itemId, noms.items ?? []); return n; });
 
     await Promise.all(
       (fis ?? [])
@@ -348,7 +349,7 @@ export class PlanReviewComponent implements OnInit {
     event.stopPropagation();
     this.returnModalEntityType.set(PlanNoteEntityType.PlanItem);
     this.returnModalEntityId.set(item.id!);
-    this.returnModalTitle.set('إعادة بند للمُنشئ');
+    this.returnModalTitle.set('إعادة دورة للمُنشئ');
     this.returnModalSubtitle.set(item.tenantCourseNameAr ?? '');
     this.returnModalOpen.set(true);
   }

@@ -176,7 +176,6 @@ public static class TrainingPermissions
         public const string ApproveUGM = Default + ".ApproveUGM";
         public const string ApproveTD = Default + ".ApproveTD";
         public const string Return = Default + ".Return";     // CHG-05
-        public const string Replace = Default + ".Replace";   // CHG-05 — UTM replaces returned nominee
     }
 
     // --- Phase 3 v4.4: New groups ---

@@ -1,21 +1,25 @@
-<div class="gtms-card">
-  <!-- HEADER -->
-  <div class="page-toolbar">
-    <div class="page-toolbar-title">
-      <h2 class="gtms-card-title">✅ اعتماد الخطة — {{ plan()?.year }}</h2>
+<div class="plans-page">
+  <!-- Header banner -->
+  <div class="header-banner">
+    <div class="header-banner-content">
+      <div class="header-icon">✅</div>
+      <div class="header-titles">
+        <h1 class="header-title">اعتماد الخطة السنوية — {{ plan()?.year }}</h1>
+        <p class="header-subtitle">مراجعة نهائية لدورات الخطة والتكاليف والمرشحين قبل الاعتماد النهائي واعتمادها</p>
+      </div>
       @if (plan(); as p) {
         <span class="badge" [class]="getStatusBadge(p.status)">{{ getStatusText(p.status) }}</span>
         @if (returnedItemsCount() > 0 || returnedNominationsCount() > 0) {
           <span class="badge badge-submitted">
-            ⚠️ {{ returnedItemsCount() }} بند + {{ returnedNominationsCount() }} ترشيح مُعاد
+            ⚠️ {{ returnedItemsCount() }} دورة + {{ returnedNominationsCount() }} ترشيح مُعاد
           </span>
         }
       }
     </div>
-    <div class="page-toolbar-actions">
+    <div class="header-actions">
       <button class="btn btn-ghost" (click)="openPlanNotes()" title="ملاحظات الخطة">💬 ملاحظات</button>
       @if (showActions) {
-        <button class="btn btn-warning btn-sm" (click)="openReturnPlanModal()">🔙 إعادة إلى UTM</button>
+        <button class="btn btn-warning btn-sm" (click)="openReturnPlanModal()">🔙 إعادة إلى المُنشئ</button>
         <button class="btn btn-danger btn-sm" (click)="openRejectDialog()">❌ رفض</button>
         <button class="btn btn-success"
           [disabled]="!canExecuteApprove || approving()"
@@ -42,8 +46,8 @@
     <div class="alert alert-danger">
       <span class="alert-icon">⚠️</span>
       <div>
-        <strong>يجب إدخال التكلفة المقدرة لجميع البنود الخارجية قبل الاعتماد</strong>
-        <div style="font-size:0.78rem; margin-top:2px;">{{ itemsMissingCost() }} بند بدون تكلفة</div>
+        <strong>يجب إدخال التكلفة المقدرة لجميع الدورات الخارجية قبل الاعتماد</strong>
+        <div style="font-size:0.78rem; margin-top:2px;">{{ itemsMissingCost() }} دورة بدون تكلفة</div>
       </div>
     </div>
   }
@@ -51,17 +55,32 @@
   @if (hasUnresolvedReturns()) {
     <div class="alert alert-warning">
       <span class="alert-icon">🔙</span>
-      لا يمكن الاعتماد — يوجد بنود أو ترشيحات مُعادة يجب حلها أولاً
+      لا يمكن الاعتماد — يوجد دورات أو ترشيحات مُعادة يجب حلها أولاً
     </div>
   }
 
   <!-- STATS -->
-  <div class="stat-cards">
-    <div class="stat-card"><div class="stat-value">{{ totalItems() }}</div><div class="stat-label">إجمالي البنود</div></div>
-    <div class="stat-card card-green"><div class="stat-value">{{ formatCost(totalCost()) || '0' }}</div><div class="stat-label">التكلفة المقدرة (ر.ع.)</div></div>
-    <div class="stat-card card-blue"><div class="stat-value">{{ totalNominees() }}</div><div class="stat-label">مرشحون</div></div>
-    <div class="stat-card card-purple"><div class="stat-value">{{ internalCount() }}</div><div class="stat-label">داخلية</div></div>
-    <div class="stat-card card-amber"><div class="stat-value">{{ extLocalCount() + extIntlCount() }}</div><div class="stat-label">خارجية</div></div>
+  <div class="stat-cards-row">
+    <div class="stat-card">
+      <div class="stat-icon total">📋</div>
+      <div class="stat-body"><div class="stat-value">{{ totalItems() }}</div><div class="stat-label">إجمالي الدورات</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon submitted">💰</div>
+      <div class="stat-body"><div class="stat-value">{{ formatCost(totalCost()) || '0' }}</div><div class="stat-label">التكلفة المقدرة (ر.ع.)</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon open">👥</div>
+      <div class="stat-body"><div class="stat-value">{{ totalNominees() }}</div><div class="stat-label">مرشحون</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon approved">🏠</div>
+      <div class="stat-body"><div class="stat-value">{{ internalCount() }}</div><div class="stat-label">داخلية</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon returned">✈️</div>
+      <div class="stat-body"><div class="stat-value">{{ extLocalCount() + extIntlCount() }}</div><div class="stat-label">خارجية</div></div>
+    </div>
   </div>
 
   <!-- ITEMS TABLE -->
@@ -74,8 +93,6 @@
           <th class="center">النوع</th>
           <th class="center">الأولوية</th>
           <th class="center">👥 مرشحون</th>
-          <th class="center">التكلفة</th>
-          <th>مصدر التمويل</th>
           <th class="center">الوحدة</th>
           <th class="center">الحالة</th>
           <th class="center">ملاحظات</th>
@@ -103,12 +120,6 @@
             <td class="center"><span class="badge" [class]="getCourseTypeBadge(item.courseType)">{{ getCourseTypeText(item.courseType) }}</span></td>
             <td class="center"><span class="badge" [class]="'priority-' + item.priority">{{ item.priority }}</span></td>
             <td class="center"><span class="nominees-pill">👥 {{ item.nomineesCount ?? 0 }}</span></td>
-            <td class="center">
-              @if (item.courseType === 0) { <span class="cell-na">—</span> }
-              @else if (isMissingCost(item)) { <span class="cell-missing">⚠️</span> }
-              @else { <span class="cell-money">{{ formatCost(item.estimatedCost) }}</span> }
-            </td>
-            <td style="font-size:0.78rem; color:#64748b;">{{ item.fundingSource || '—' }}</td>
             <td class="center" style="font-size:0.78rem; color:#64748b;">{{ item.unitName || '—' }}</td>
             <td class="center">
               @if (item.isReturned) { <span class="badge badge-submitted">مُعاد</span> }
@@ -121,7 +132,7 @@
 
           @if (isItemExpanded(item.id!)) {
             <tr class="detail-row">
-              <td colspan="10">
+              <td colspan="8">
                 <div class="inline-detail-wrap">
                   <div class="detail-grid-v3">
                     <!-- Course detail (read-only) -->
@@ -148,7 +159,7 @@
                     @if (item.courseType !== 0) {
                       @if (getFinancialItemsFor(item.id!).length === 0) {
                         <div class="alert alert-danger" style="margin:0;">
-                          <span class="alert-icon">⚠️</span> لم يتم تعيين بنود مالية — يجب إعادة البند للـ UTM
+                          <span class="alert-icon">⚠️</span> لم يتم تعيين بنود مالية — يجب إعادة الدورة إلى المُنشئ
                         </div>
                       } @else {
                         <div class="financial-panel-ro">
@@ -221,7 +232,10 @@
                         <tbody>
                           @for (n of getNominationsFor(item.id!); track n.id) {
                             <tr [class.nom-returned]="n.isReturned">
-                              <td><span class="cell-bold">{{ n.employeeName ?? '—' }}</span></td>
+                              <td>
+                                @if (n.rankNameAr) { <span class="rank-badge">🎖️ {{ n.rankNameAr }}</span> }
+                                <span class="cell-bold">{{ n.employeeName ?? '—' }}</span>
+                              </td>
                               <td>
                                 @if (n.isReturned) { <span class="badge badge-submitted">🔙 مُعاد</span> }
                                 @else { <span class="badge badge-open">عادي</span> }
@@ -237,7 +251,7 @@
             </tr>
           }
         } @empty {
-          <tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📋</div>لا توجد بنود</div></td></tr>
+          <tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📋</div>لا توجد دورات</div></td></tr>
         }
       </tbody>
     </table>
@@ -274,7 +288,7 @@
   [isOpen]="returnModalOpen()"
   [entityType]="PlanNoteEntityType.Plan"
   [entityId]="planId"
-  title="إعادة الخطة إلى UTM"
+  title="إعادة الخطة إلى المُنشئ"
   subtitle="ستعود الخطة للمُنشئ للتعديل"
   (confirmed)="onReturnConfirmed()"
   (cancelled)="onReturnCancelled()">

@@ -13,6 +13,7 @@ import { TenantCourseService } from 'src/app/proxy/training/tenant-courses';
 import { HrLookupService } from 'src/app/proxy/training/hr-integration/hr-lookup.service';
 import { NominationService } from 'src/app/proxy/training/nominations/nomination.service';
 import { NominationDto } from 'src/app/proxy/training/nominations/dtos';
+import { NominationStatus } from 'src/app/proxy/training/enums/nomination-status.enum';
 import { PlanNoteEntityType } from 'src/app/proxy/training/enums/plan-note-entity-type.enum';
 import {
   NominationPickerComponent,
@@ -59,6 +60,8 @@ export class PlanEntryComponent implements OnInit {
   // Inline expand
   expandedItemId = signal<string | null>(null);
   loadingItemId = signal<string | null>(null);
+  // Nominations loaded per expanded item, so the creator can see returned nominees + reasons.
+  itemNominations = signal(new Map<string, NominationDto[]>());
 
   // Dialog
   isDialogOpen = signal(false);
@@ -67,6 +70,8 @@ export class PlanEntryComponent implements OnInit {
 
   // Form fields (Section A: course info)
   fTenantCourseId = signal('');
+  courseSearch = signal(''); // typeahead text typed inside the course combobox
+  courseDropdownOpen = signal(false); // whether the combobox result list is visible
   fCourseType = signal(0);
   fPreferredQuarter = signal(1);
   fPriority = signal(1);
@@ -161,6 +166,42 @@ export class PlanEntryComponent implements OnInit {
       return true;
     });
   });
+
+  // Tenant courses filtered by the typeahead text inside the combobox (Ar/En name).
+  filteredTenantCourses = computed<any[]>(() => {
+    const q = this.courseSearch().trim().toLowerCase();
+    const all = this.tenantCourses();
+    if (!q) return all;
+    return all.filter(tc =>
+      (tc.catalogCourseNameAr ?? '').toLowerCase().includes(q) ||
+      (tc.catalogCourseNameEn ?? '').toLowerCase().includes(q),
+    );
+  });
+
+  // Display name of the currently-selected course (shown in the combobox when closed).
+  selectedCourseName = computed<string>(() => {
+    const id = this.fTenantCourseId();
+    if (!id) return '';
+    return this.tenantCourses().find(tc => tc.id === id)?.catalogCourseNameAr ?? '';
+  });
+
+  // ── Course combobox (typeahead) ──
+  openCourseDropdown(): void {
+    // Start each open with an empty filter so the full list shows.
+    this.courseSearch.set('');
+    this.courseDropdownOpen.set(true);
+  }
+
+  selectCourse(tc: any): void {
+    this.fTenantCourseId.set(tc.id);
+    this.courseDropdownOpen.set(false);
+    this.courseSearch.set('');
+  }
+
+  closeCourseDropdown(): void {
+    this.courseDropdownOpen.set(false);
+    this.courseSearch.set('');
+  }
 
   groupedByUnit = computed<UnitGroup[]>(() => {
     const byUnit = new Map<string, UnitGroup>();
@@ -323,11 +364,41 @@ export class PlanEntryComponent implements OnInit {
     if (this.expandedItemId() === itemId) { this.expandedItemId.set(null); return; }
     this.expandedItemId.set(itemId);
     this.loadingItemId.set(itemId);
-    this.loadingItemId.set(null);
+    try {
+      if (!this.itemNominations().has(itemId)) {
+        const r = await firstValueFrom(
+          this.nominationService.getList({ planItemId: itemId, maxResultCount: 500 }),
+        );
+        this.itemNominations.update(m => { const n = new Map(m); n.set(itemId, r.items ?? []); return n; });
+      }
+    } finally {
+      this.loadingItemId.set(null);
+    }
   }
 
   isItemExpanded(id: string): boolean { return this.expandedItemId() === id; }
   isItemLoading(id: string): boolean { return this.loadingItemId() === id; }
+  // Show only live nominees (rejected rows are not active nominations).
+  getNominationsFor(itemId: string): NominationDto[] {
+    return (this.itemNominations().get(itemId) ?? [])
+      .filter(n => n.status !== NominationStatus.Rejected);
+  }
+
+  async onDeleteNominee(n: NominationDto, itemId: string, event: Event): Promise<void> {
+    event.stopPropagation();
+    if (!confirm(`حذف المرشح "${n.employeeName ?? ''}"؟`)) return;
+    try {
+      await firstValueFrom(this.nominationService.delete(n.id!));
+      const r = await firstValueFrom(
+        this.nominationService.getList({ planItemId: itemId, maxResultCount: 500 }),
+      );
+      this.itemNominations.update(m => { const map = new Map(m); map.set(itemId, r.items ?? []); return map; });
+      await this.loadItems();
+      await this.loadReturnedNominationsCount();
+    } catch (e: any) {
+      alert(e?.error?.error?.message ?? e?.message ?? 'تعذّر حذف المرشح');
+    }
+  }
 
   // ── Accordion ──
   toggleUnit(unitId: string): void {
@@ -416,6 +487,7 @@ export class PlanEntryComponent implements OnInit {
         list.map(n => ({
           id: n.employeeId,
           fullNameAr: n.employeeName ?? '',
+          rankNameAr: n.rankNameAr ?? '',
           serviceNumber: '',
         } as Partial<EmployeeLookupDto>)),
       );
@@ -433,6 +505,7 @@ export class PlanEntryComponent implements OnInit {
     this.fObjectivesAr.set(''); this.fObjectivesEn.set('');
     this.fDurationYears.set(0); this.fDurationMonths.set(0); this.fDurationDays.set(0);
     this.fEstimatedDateFrom.set(''); this.fEstimatedDateTo.set(''); this.fFundingSource.set('');
+    this.courseSearch.set('');
     this.fUnitId.set('');
     this.fNomineeIds.set([]);
     this.editNominations.set([]);
@@ -531,7 +604,14 @@ export class PlanEntryComponent implements OnInit {
     };
     try {
       if (this.isEditMode() && this.editItemId()) {
-        await firstValueFrom(this.itemService.update(this.editItemId()!, data));
+        const editedId = this.editItemId()!;
+        await firstValueFrom(this.itemService.update(editedId, data));
+        // Refresh the cached nominations for this item so the expanded sub-table
+        // reflects nominee add/remove immediately.
+        const r = await firstValueFrom(
+          this.nominationService.getList({ planItemId: editedId, maxResultCount: 500 }),
+        );
+        this.itemNominations.update(m => { const n = new Map(m); n.set(editedId, r.items ?? []); return n; });
       } else {
         await firstValueFrom(this.itemService.create(data));
       }
@@ -584,6 +664,14 @@ export class PlanEntryComponent implements OnInit {
     this.notesEntityType.set(PlanNoteEntityType.PlanItem);
     this.notesEntityId.set(item.id!);
     this.notesTitle.set('ملاحظات الدورة — ' + (item.tenantCourseNameAr ?? ''));
+    this.notesOpen.set(true);
+  }
+
+  openNominationNotes(n: NominationDto, event: Event): void {
+    event.stopPropagation();
+    this.notesEntityType.set(PlanNoteEntityType.Nomination);
+    this.notesEntityId.set(n.id!);
+    this.notesTitle.set('ملاحظات الترشيح — ' + (n.employeeName ?? ''));
     this.notesOpen.set(true);
   }
 

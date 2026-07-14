@@ -1,4 +1,4 @@
-import type { ApproveRejectNominationDto, CreateNominationDto, NominationApprovalDto, NominationDto, NominationGetListInput, ReplaceNominationDto } from './dtos/models';
+import type { ApproveRejectNominationDto, CreateNominationDto, NominationApprovalDto, NominationDto, NominationGetListInput } from './dtos/models';
 import { RestService, Rest } from '@abp/ng.core';
 import type { PagedResultDto } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
@@ -64,11 +64,10 @@ export class NominationService {
     { apiName: this.apiName,...config });
   
 
-  replace = (id: string, input: ReplaceNominationDto, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, NominationDto>({
-      method: 'POST',
-      url: `/api/app/nomination/${id}/replace`,
-      body: input,
+  delete = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, void>({
+      method: 'DELETE',
+      url: `/api/app/nomination/${id}`,
     },
     { apiName: this.apiName,...config });
   

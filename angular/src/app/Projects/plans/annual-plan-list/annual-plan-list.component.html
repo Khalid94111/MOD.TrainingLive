@@ -145,10 +145,9 @@
                     }
                   }
                   @case (PlanStatus.TDApproved) {
+                    <button class="btn-icon" title="معاينة" (click)="navigateToApproval(plan.id)">👁️</button>
                     @if (canFinalApprove) {
                       <button class="btn-icon" title="الاعتماد النهائي" (click)="navigateToApproval(plan.id)">✅</button>
-                    } @else {
-                      <button class="btn-icon" title="عرض" (click)="navigateToApproval(plan.id)">👁️</button>
                     }
                   }
                   @default {

@@ -874,7 +874,7 @@
     "Training:Nomination:NotReturned": "الترشيح ليس في حالة مُعادة",
     "Training:Nomination:CannotRemoveWithResult": "لا يمكن حذف مرشح تم إدخال نتيجته بالفعل",
     "Training:Nomination:UsePlanItemCreate": "الترشيحات تُدار عبر إنشاء بنود الخطة وليس مباشرةً",
-    "Training:Nomination:AlreadyNominated": "الموظف مرشح بالفعل لهذه الجلسة",
+    "Training:Nomination:AlreadyNominated": "الموظف مرشح بالفعل في هذه الدورة",
     "Training:Nomination:SessionFull": "لا توجد مقاعد متاحة في الجلسة",
     "Training:PlanNote:InvalidEntityType": "نوع الكيان غير صالح للملاحظة",
     "Training:FinancialItemRankAmount:Duplicate": "يوجد مبلغ مسجل لهذه الرتبة بالفعل",

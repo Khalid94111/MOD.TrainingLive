@@ -181,7 +181,7 @@
                   <th class="center">الربع</th>
                   <th class="center">المرشحون</th>
                   <th class="center">المدة</th>
-                  <th>مصدر التمويل</th>
+                  <th>الوحدة</th>
                   <th class="center">الحالة</th>
                   <th class="center">إجراءات</th>
                 </tr>
@@ -209,7 +209,7 @@
               <th class="center">الربع</th>
               <th class="center">المرشحون</th>
               <th class="center">المدة</th>
-              <th>مصدر التمويل</th>
+              <th>الوحدة</th>
               <th class="center">الحالة</th>
               <th class="center">إجراءات</th>
             </tr>
@@ -257,7 +257,7 @@
       <span class="nominees-pill">👥 {{ item.nomineesCount ?? 0 }}</span>
     </td>
     <td class="center cell-sub-text">{{ getDurationText(item) }}</td>
-    <td class="cell-sub-text">{{ item.fundingSource || '—' }}</td>
+    <td class="cell-sub-text">{{ item.unitName || '—' }}</td>
     <td class="center">
       @if (item.isReturned) { <span class="badge badge-submitted">مُعاد</span> }
       @else { <span class="badge badge-open">عادي</span> }
@@ -309,6 +309,48 @@
               </div>
             </div>
 
+            <!-- Nominees sub-table (lets the creator see returned nominees + reasons) -->
+            <div class="nominees-subtable-wrap">
+              <div class="sub-header">
+                <span class="sub-title">👥 المرشحون ({{ getNominationsFor(item.id!).length }})</span>
+              </div>
+              @if (getNominationsFor(item.id!).length === 0) {
+                <div class="nominees-empty">لا يوجد مرشحون</div>
+              } @else {
+                <table class="nominees-table">
+                  <thead>
+                    <tr>
+                      <th>المرشح</th>
+                      <th>الحالة</th>
+                      <th class="center">إجراءات</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (n of getNominationsFor(item.id!); track n.id) {
+                      <tr [class.nom-returned]="n.isReturned">
+                        <td>
+                          @if (n.rankNameAr) { <span class="rank-badge">🎖️ {{ n.rankNameAr }}</span> }
+                          <span class="cell-bold">{{ n.employeeName ?? '—' }}</span>
+                        </td>
+                        <td>
+                          @if (n.isReturned) {
+                            <span class="badge badge-submitted">🔙 مُعاد</span>
+                          } @else {
+                            <span class="badge badge-open">عادي</span>
+                          }
+                        </td>
+                        <td class="center">
+                          <button class="btn-icon btn-icon-sm" title="ملاحظات" (click)="openNominationNotes(n, $event)">💬</button>
+                          @if (canEdit()) {
+                            <button class="btn-icon btn-icon-sm" title="حذف المرشح" (click)="onDeleteNominee(n, item.id!, $event)">🗑️</button>
+                          }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+            </div>
 
           </div>
         </div>
@@ -351,14 +393,39 @@
           <div class="form-row">
             <div class="form-group flex-2">
               <label class="form-label">الدورة <span class="required">*</span></label>
-              <select class="form-input"
-                      [value]="fTenantCourseId()"
-                      (change)="fTenantCourseId.set($any($event.target).value)">
-                <option value="" [selected]="!fTenantCourseId()">اختر دورة...</option>
-                @for (tc of tenantCourses(); track tc.id) {
-                  <option [value]="tc.id" [selected]="tc.id === fTenantCourseId()">{{ tc.catalogCourseNameAr }}</option>
+              <div class="course-combobox">
+                <button type="button" class="form-input combobox-trigger"
+                        (click)="courseDropdownOpen() ? closeCourseDropdown() : openCourseDropdown()">
+                  <span [class.combobox-placeholder]="!selectedCourseName()">
+                    {{ selectedCourseName() || 'اختر دورة...' }}
+                  </span>
+                  <span class="combobox-arrow" [class.open]="courseDropdownOpen()">▾</span>
+                </button>
+
+                @if (courseDropdownOpen()) {
+                  <!-- Click-away backdrop -->
+                  <div class="combobox-backdrop" (click)="closeCourseDropdown()"></div>
+                  <div class="combobox-panel">
+                    <input type="text" class="form-input combobox-search"
+                           placeholder="🔍 اكتب للبحث عن دورة..."
+                           [value]="courseSearch()"
+                           (input)="courseSearch.set($any($event.target).value)"
+                           (keydown.escape)="closeCourseDropdown()"
+                           autofocus>
+                    <div class="combobox-list">
+                      @for (tc of filteredTenantCourses(); track tc.id) {
+                        <button type="button" class="combobox-option"
+                                [class.selected]="tc.id === fTenantCourseId()"
+                                (click)="selectCourse(tc)">
+                          {{ tc.catalogCourseNameAr }}
+                        </button>
+                      } @empty {
+                        <div class="combobox-empty">لا توجد دورات مطابقة للبحث.</div>
+                      }
+                    </div>
+                  </div>
                 }
-              </select>
+              </div>
             </div>
             <div class="form-group">
               <label class="form-label">نوع الدورة <span class="required">*</span></label>

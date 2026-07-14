@@ -114,7 +114,7 @@ export class PlanApprovalComponent implements OnInit {
   }
 
   get approveLabel(): string {
-    return this.plan()?.status === PlanStatus.TDApproved ? '✅ الاعتماد النهائي (TH)' : '✅ اعتماد (TD)';
+    return this.plan()?.status === PlanStatus.TDApproved ? '✅ الاعتماد النهائي' : '✅ اعتماد';
   }
 
   get disabledApproveTitle(): string {
@@ -261,7 +261,7 @@ export class PlanApprovalComponent implements OnInit {
       [PlanStatus.Submitted]: 'مُرسلة',
       [PlanStatus.UnderReview]: 'قيد المراجعة',
       [PlanStatus.ReturnedToCreator]: 'مُعادة للمُنشئ',
-      [PlanStatus.TDApproved]: 'معتمدة TD',
+      [PlanStatus.TDApproved]: 'معتمدة مبدئياً',
       [PlanStatus.THApproved]: 'معتمدة نهائياً',
       [PlanStatus.Closed]: 'مغلقة',
       [PlanStatus.Rejected]: 'مرفوضة',

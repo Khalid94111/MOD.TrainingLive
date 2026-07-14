@@ -21,7 +21,7 @@ public interface INominationAppService : IApplicationService
     Task RejectAsync(Guid id, ApproveRejectNominationDto input);
     Task<List<NominationApprovalDto>> GetApprovalChainAsync(Guid nominationId);
 
-    // CHG-05: Return + Replace
+    // CHG-05: Return
     Task ReturnAsync(Guid id, ReturnReasonDto input);
-    Task<NominationDto> ReplaceAsync(Guid id, ReplaceNominationDto input);
+    Task DeleteAsync(Guid id);
 }

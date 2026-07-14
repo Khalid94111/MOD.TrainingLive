@@ -94,7 +94,10 @@ public class NominationAppService(
             var dto = toDtoMapper.Map(e);
 
             if (employees.TryGetValue(e.EmployeeId, out var emp))
+            {
                 dto.EmployeeName = emp.FullNameAr;
+                dto.RankNameAr = emp.Rank?.NameAr ?? string.Empty;
+            }
 
             if (nominators.TryGetValue(e.NominatedById, out var nominator))
                 dto.NominatedByName = nominator.FullNameAr;
@@ -237,38 +240,31 @@ public class NominationAppService(
         await repository.UpdateAsync(entity, autoSave: true);
     }
 
-    [Authorize(TrainingPermissions.Nomination.Replace)]
-    public async Task<NominationDto> ReplaceAsync(Guid id, ReplaceNominationDto input)
+    /// <summary>
+    /// Deletes a single nominee directly (creator convenience — avoids opening the
+    /// full course-edit dialog). Blocked once a result/attendance has been recorded.
+    /// </summary>
+    [Authorize(TrainingPermissions.Nomination.Create)]
+    public async Task DeleteAsync(Guid id)
     {
-        var oldNom = await repository.GetAsync(id);
-        await unitScope.EnsureCanAccessPlanItemAsync(oldNom.PlanItemId);
-        if (!oldNom.IsReturned)
-            throw new Volo.Abp.BusinessException("Training:Nomination:NotReturned");
+        var entity = await repository.GetAsync(id);
+        await unitScope.EnsureCanAccessPlanItemAsync(entity.PlanItemId);
 
-        // Mark old as rejected
-        oldNom.Status = NominationStatus.Rejected;
-        await repository.UpdateAsync(oldNom, autoSave: true);
+        if (entity.ResultValue != null || entity.AttendanceStatus != null)
+            throw new Volo.Abp.BusinessException("Training:Nomination:CannotRemoveWithResult");
 
-        // Create new nomination
-        var newNom = new Nomination(
-            GuidGenerator.Create(),
-            oldNom.PlanItemId,
-            input.NewEmployeeId,
-            CurrentUser.Id!.Value);
-        await repository.InsertAsync(newNom, autoSave: true);
-
-        // Refresh rank breakdown
-        await rankBreakdownManager.RefreshForNomineeChangeAsync(oldNom.PlanItemId);
-
-        var dto = toDtoMapper.Map(newNom);
-        await EnrichDtoAsync(dto, newNom);
-        return dto;
+        await repository.DeleteAsync(entity, autoSave: true);
+        await rankBreakdownManager.RefreshForNomineeChangeAsync(entity.PlanItemId);
     }
 
     private async Task EnrichDtoAsync(NominationDto dto, Nomination entity)
     {
         var emp = await employeeResolver.GetByIdAsync(entity.EmployeeId);
-        if (emp != null) dto.EmployeeName = emp.FullNameAr;
+        if (emp != null)
+        {
+            dto.EmployeeName = emp.FullNameAr;
+            dto.RankNameAr = emp.Rank?.NameAr ?? string.Empty;
+        }
 
         var nominator = await employeeResolver.GetByUserIdAsync(entity.NominatedById);
         if (nominator != null) dto.NominatedByName = nominator.FullNameAr;

@@ -205,8 +205,6 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
             TrainingPermissions.Nomination.ApproveTD, L("Permission:Nomination.ApproveTD"));
         nominationGroup.AddChild(
             TrainingPermissions.Nomination.Return, L("Permission:Nomination.Return"));
-        nominationGroup.AddChild(
-            TrainingPermissions.Nomination.Replace, L("Permission:Nomination.Replace"));
 
         // --- Phase 3: Price Quotes ---
         var priceQuoteGroup = group.AddPermission(

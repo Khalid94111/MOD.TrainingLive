@@ -31,6 +31,7 @@ export interface NominationDto extends FullAuditedEntityDto<string> {
   planItemId?: string;
   employeeId?: string;
   employeeName?: string;
+  rankNameAr?: string;
   nominatedById?: string;
   nominatedByName?: string;
   status?: NominationStatus;
@@ -48,8 +49,4 @@ export interface NominationGetListInput extends PagedAndSortedResultRequestDto {
   sessionId?: string | null;
   status?: NominationStatus | null;
   employeeId?: string | null;
-}
-
-export interface ReplaceNominationDto {
-  newEmployeeId: string;
 }

@@ -1179,7 +1179,7 @@
     "Training:Nomination:NotReturned": "Nomination is not in Returned state",
     "Training:Nomination:CannotRemoveWithResult": "Cannot remove a nominee whose result has already been entered",
     "Training:Nomination:UsePlanItemCreate": "Nominations are managed via plan item creation, not directly",
-    "Training:Nomination:AlreadyNominated": "Employee is already nominated for this session",
+    "Training:Nomination:AlreadyNominated": "Employee is already nominated for this course",
     "Training:Nomination:SessionFull": "Session has no available seats",
     "Training:PlanNote:InvalidEntityType": "Invalid entity type for note",
     "Training:FinancialItemRankAmount:Duplicate": "A rank amount for this rank already exists",
