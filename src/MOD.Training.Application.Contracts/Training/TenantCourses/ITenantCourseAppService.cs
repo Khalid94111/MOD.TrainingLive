@@ -15,6 +15,5 @@ public interface ITenantCourseAppService : IApplicationService
     Task<List<TenantCourseDto>> AddFromCatalogAsync(AddFromCatalogDto input);
     Task<TenantCourseDto> UpdateAsync(Guid id, UpdateTenantCourseDto input);
     Task DeleteAsync(Guid id);
-    Task<List<TenantCourseConditionDto>> GetConditionsAsync(Guid tenantCourseId);
     Task<PagedResultDto<CourseCatalogDto>> GetAvailableCatalogCoursesAsync(PagedAndSortedResultRequestDto input);
 }

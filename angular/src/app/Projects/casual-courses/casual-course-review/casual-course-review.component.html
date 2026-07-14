@@ -187,12 +187,6 @@
             <button type="button" class="btn btn-outline btn-sm" [disabled]="actionBusy()" (click)="toggleAddItem()">
               ➕ إضافة بند
             </button>
-            <button type="button" class="btn btn-primary btn-sm"
-              [disabled]="actionBusy() || fScenario() === null"
-              [title]="fScenario() === null ? 'اختر سيناريو التمويل أولًا' : ''"
-              (click)="onAutoFill()">
-              ⚡ تعبئة تلقائية
-            </button>
           </div>
         }
       </div>

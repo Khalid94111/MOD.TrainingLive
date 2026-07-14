@@ -21,7 +21,6 @@ import type {
 } from 'src/app/proxy/training/payments/dtos/models';
 import { PaymentStatus } from 'src/app/proxy/training/enums/payment-status.enum';
 import { ReallocationStatus } from 'src/app/proxy/training/enums/reallocation-status.enum';
-import { ExchangeRateService } from '../../shared/services/finance-proxy.service';
 
 import {
   CASUAL_COURSE_STATUS_OPTIONS,
@@ -88,7 +87,6 @@ export class CasualCourseDetailComponent implements OnInit {
   private travelPaymentService = inject(TravelAllowancePaymentService);
   private coursePaymentService = inject(CoursePaymentService);
   private reallocationService = inject(BudgetReallocationService);
-  private exchangeService = inject(ExchangeRateService);
   private permissions = inject(PermissionService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -106,7 +104,6 @@ export class CasualCourseDetailComponent implements OnInit {
   travelAllowancePayments = signal<TravelAllowancePaymentDto[]>([]);
   coursePayment = signal<CoursePaymentDto | null>(null);
   reallocations = signal<BudgetReallocationDto[]>([]);
-  exchangeRate = signal<number>(2.6);
   loading = signal<boolean>(false);
 
   // Phase 4C-α Patch 1 — feeds <app-course-info-bar variant="casual">.
@@ -384,7 +381,6 @@ export class CasualCourseDetailComponent implements OnInit {
         this.loadQuoteCount(),
         this.loadTravelInstruction(),
         this.loadPaymentsBundle(),
-        this.loadExchangeRate(),
       ]);
     } finally {
       this.loading.set(false);
@@ -439,13 +435,6 @@ export class CasualCourseDetailComponent implements OnInit {
     const cpItems = courseRes?.items ?? [];
     this.coursePayment.set(cpItems[0] ?? null);
     this.reallocations.set(reallocRes?.items ?? []);
-  }
-
-  private async loadExchangeRate(): Promise<void> {
-    try {
-      const r = await this.exchangeService.getActive();
-      if (r?.rate && r.rate > 0) this.exchangeRate.set(r.rate);
-    } catch { /* keep default */ }
   }
 
   // ── Section toggle handlers ────────────────────────────────────────

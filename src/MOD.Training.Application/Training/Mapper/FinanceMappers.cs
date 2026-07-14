@@ -23,17 +23,6 @@ public partial class CreateUpdateFinancialItemToEntityMapper : MapperBase<Create
 }
 
 // ============================================================
-// ExchangeRate Mappers
-// ============================================================
-
-[Mapper(RequiredMappingStrategy = RequiredMappingStrategy.Target)]
-public partial class ExchangeRateToDtoMapper : MapperBase<ExchangeRate, ExchangeRateDto>
-{
-    public override partial ExchangeRateDto Map(ExchangeRate source);
-    public override partial void Map(ExchangeRate source, ExchangeRateDto destination);
-}
-
-// ============================================================
 // TrainingBudget Mappers
 // ============================================================
 

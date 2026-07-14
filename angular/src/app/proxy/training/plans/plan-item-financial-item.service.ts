@@ -10,14 +10,6 @@ export class PlanItemFinancialItemService {
   apiName = 'Default';
   
 
-  autoFillFromDefaults = (planItemId: string, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, void>({
-      method: 'POST',
-      url: `/api/app/plan-item-financial-item/auto-fill-from-defaults/${planItemId}`,
-    },
-    { apiName: this.apiName,...config });
-  
-
   create = (input: CreateUpdatePlanItemFinancialItemDto, config?: Partial<Rest.Config>) =>
     this.restService.request<any, PlanItemFinancialItemDto>({
       method: 'POST',

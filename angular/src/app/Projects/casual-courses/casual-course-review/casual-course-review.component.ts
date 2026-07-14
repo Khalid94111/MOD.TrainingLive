@@ -343,30 +343,7 @@ export class CasualCourseReviewComponent implements OnInit {
     }
   }
 
-  // ── Auto-fill + add + delete ─────────────────────────────────────
-
-  async onAutoFill(): Promise<void> {
-    if (this.actionBusy() || !this.isReviewable()) return;
-    // Patch 4 — scenario must already be set (via scenario picker) before auto-fill.
-    // Staff-invoked auto-fill is now just a top-up for any defaults added since creation.
-    if (this.fScenario() === null) return;
-    this.actionBusy.set(true);
-    this.error.set(null);
-    try {
-      // Patch 5 — pass UTM's CourseCost as the seed; backend uses it to set the
-      // course-cost row's rate (with RateSource = "FromUTMForm"). Null is OK if
-      // UTM didn't enter a value.
-      const seed = this.casualCourse()?.courseCost ?? undefined;
-      const items = await firstValueFrom(
-        this.financialService.autoFillFromDefaults(this.courseId(), false, seed),
-      );
-      this.financials.set(items);
-    } catch (e: unknown) {
-      this.error.set(this.mapError(e));
-    } finally {
-      this.actionBusy.set(false);
-    }
-  }
+  // ── Add + delete ─────────────────────────────────────────────────
 
   async onDeleteLine(fin: CasualCourseFinancialItemDto): Promise<void> {
     if (!fin.id || this.actionBusy()) return;

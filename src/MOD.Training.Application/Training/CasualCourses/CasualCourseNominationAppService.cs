@@ -8,7 +8,6 @@ using MOD.Training.Training.Plans.Dtos;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Application.Services;
@@ -23,7 +22,6 @@ public class CasualCourseNominationAppService(
     IRepository<CasualCourse, Guid> casualCourseRepo,
     IRepository<PlanNote, Guid> planNoteRepo,
     IOrganizationUnitRepository orgUnitRepository,
-    NominationConditionValidator conditionValidator,
     EmployeeResolver employeeResolver,
     IPlanNoteAppService planNoteAppService,
     CasualCourseNominationToDtoMapper toDtoMapper)
@@ -57,21 +55,6 @@ public class CasualCourseNominationAppService(
                     dto.UnitName = un;
             }
 
-            if (!string.IsNullOrWhiteSpace(n.ConditionSnapshotJson))
-            {
-                try
-                {
-                    var rs = JsonSerializer.Deserialize<List<NominationConditionValidator.ConditionResult>>(n.ConditionSnapshotJson);
-                    if (rs != null)
-                    {
-                        dto.ConditionPassed = rs.All(r => r.Passed);
-                        var failed = rs.Where(r => !r.Passed).Select(r => r.Details);
-                        dto.ConditionDetails = string.Join(" | ", failed);
-                    }
-                }
-                catch { /* ignore */ }
-            }
-
             if (n.LastReturnNoteId.HasValue)
             {
                 var note = await planNoteRepo.FindAsync(n.LastReturnNoteId.Value);
@@ -96,18 +79,7 @@ public class CasualCourseNominationAppService(
                 q.Where(x => x.CasualCourseId == casualCourseId && x.EmployeeId == employeeId)))
             throw new BusinessException("Training:CasualCourse:DuplicateNominee");
 
-        // Condition check — block-on-fail per Round-1 decision #6
-        var results = await conditionValidator.ValidateByTenantCourseAsync(cc.TenantCourseId, employeeId);
-        var failed = results.Where(r => !r.Passed).ToList();
-        if (failed.Any())
-            throw new BusinessException("Training:CasualCourse:ConditionsFailed")
-                .WithData("Failures", string.Join(" | ", failed.Select(f => f.Details)));
-
-        var snapshot = JsonSerializer.Serialize(results);
-        var entity = new CasualCourseNomination(GuidGenerator.Create(), casualCourseId, employeeId)
-        {
-            ConditionSnapshotJson = snapshot,
-        };
+        var entity = new CasualCourseNomination(GuidGenerator.Create(), casualCourseId, employeeId);
         await repository.InsertAsync(entity, autoSave: true);
         return toDtoMapper.Map(entity);
     }
@@ -172,14 +144,7 @@ public class CasualCourseNominationAppService(
                              x.Id != id)))
             throw new BusinessException("Training:CasualCourse:DuplicateNominee");
 
-        var results = await conditionValidator.ValidateByTenantCourseAsync(cc.TenantCourseId, newEmployeeId);
-        var failed = results.Where(r => !r.Passed).ToList();
-        if (failed.Any())
-            throw new BusinessException("Training:CasualCourse:ConditionsFailed")
-                .WithData("Failures", string.Join(" | ", failed.Select(f => f.Details)));
-
         entity.EmployeeId = newEmployeeId;
-        entity.ConditionSnapshotJson = JsonSerializer.Serialize(results);
         entity.IsReturned = false;
         entity.LastReturnNoteId = null;
         await repository.UpdateAsync(entity, autoSave: true);

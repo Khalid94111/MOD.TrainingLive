@@ -12,5 +12,4 @@ public interface IPlanItemFinancialItemAppService : IApplicationService
     Task<PlanItemFinancialItemDto> CreateAsync(CreateUpdatePlanItemFinancialItemDto input);
     Task<PlanItemFinancialItemDto> UpdateAsync(Guid id, CreateUpdatePlanItemFinancialItemDto input);
     Task DeleteAsync(Guid id);
-    Task AutoFillFromDefaultsAsync(Guid planItemId);
 }

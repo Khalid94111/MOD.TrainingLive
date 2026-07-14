@@ -19,15 +19,6 @@ export class CasualCourseFinancialItemService {
     { apiName: this.apiName,...config });
   
 
-  autoFillFromDefaults = (casualCourseId: string, runAsSystem?: boolean, courseCostSeed?: number, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, CasualCourseFinancialItemDto[]>({
-      method: 'POST',
-      url: `/api/app/casual-course-financial-item/auto-fill-from-defaults/${casualCourseId}`,
-      params: { runAsSystem, courseCostSeed },
-    },
-    { apiName: this.apiName,...config });
-  
-
   deleteItem = (id: string, config?: Partial<Rest.Config>) =>
     this.restService.request<any, void>({
       method: 'DELETE',

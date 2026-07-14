@@ -1,12 +1,12 @@
 <div class="entry-page">
-  <!-- Returned banner (CHG-06) -->
+  <!-- Returned banner -->
   @if (isReturnedToCreator()) {
     <div class="return-banner">
       <div class="return-banner-head">
         <span class="return-icon-big">🔙</span>
         <div>
           <div class="return-title">الخطة مُعادة إليك للتعديل</div>
-          <div class="return-sub">قم بمعالجة البنود المُعادة ثم اضغط "إعادة الإرسال"</div>
+          <div class="return-sub">قم بمعالجة الدورات المُعادة ثم اضغط "إعادة الإرسال"</div>
         </div>
         @if (returnNote(); as rn) {
           <button class="btn btn-ghost btn-sm" (click)="openPlanNotes()">
@@ -24,53 +24,104 @@
     </div>
   }
 
-  <div class="gtms-card">
-    <div class="page-toolbar">
-      <div class="page-toolbar-title">
-        <h2 class="gtms-card-title">✏️ إدخال بنود الخطة — {{ plan()?.year }}</h2>
-        @if (plan(); as p) {
-          <span class="badge" [class]="statusBadgeClass">{{ statusText }}</span>
-        }
-      </div>
-      <div class="page-toolbar-actions">
-        <button class="btn btn-ghost" (click)="openPlanNotes()" title="ملاحظات الخطة">💬 ملاحظات</button>
-        @if (canEdit()) {
-          <button class="btn btn-primary" (click)="openAddDialog()">➕ إضافة بند جديد</button>
-        }
-        @if (isReturnedToCreator()) {
-          <button class="btn btn-success" (click)="onResubmit()" [disabled]="!canResubmit() || resubmitting()"
-                  [title]="!canResubmit() ? 'عالج كل البنود المُعادة أولاً' : ''">
-            @if (resubmitting()) { جارٍ الإرسال… } @else { 🔄 إعادة الإرسال }
-          </button>
-        }
+  <!-- Header banner -->
+  <div class="header-banner">
+    <div class="header-banner-content">
+      <div class="header-icon">📋</div>
+      <div class="header-titles">
+        <h1 class="header-title">إدخال دورات الخطة — {{ plan()?.year }}</h1>
+        <p class="header-subtitle">
+          إضافة وإدارة الدورات التدريبية ضمن خطة السنة
+          @if (plan(); as p) {
+            <span class="status-badge-inline" [class]="statusBadgeClass">{{ statusText }}</span>
+          }
+        </p>
       </div>
     </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost" (click)="openPlanNotes()" title="ملاحظات الخطة">💬 ملاحظات</button>
+      @if (canEdit()) {
+        <button class="btn btn-primary" (click)="openAddDialog()">➕ إضافة دورة جديدة</button>
+      }
+      @if (isReturnedToCreator()) {
+        <button class="btn btn-success" (click)="onResubmit()" [disabled]="!canResubmit() || resubmitting()"
+                [title]="!canResubmit() ? 'عالج كل الدورات المُعادة أولاً' : ''">
+          @if (resubmitting()) { جارٍ الإرسال… } @else { 🔄 إعادة الإرسال }
+        </button>
+      }
+    </div>
+  </div>
 
-    @if (plan(); as p) {
-      <p class="page-meta">
-        📅 نافذة الاستلام: {{ formatDate(p.openDate) }} — {{ formatDate(p.closeDate) }}
-        &nbsp;|&nbsp; 📋 {{ items().length }} بند
-        @if (showAccordions()) {
-          &nbsp;|&nbsp; 🏢 {{ groupedByUnit().length }} وحدة
-        }
-        @if (hasUnresolvedReturns()) {
-          &nbsp;|&nbsp; <span class="meta-warn">⚠️ {{ returnedItems().length }} بند يحتاج تعديل</span>
-        }
-      </p>
-    }
+  <!-- Plan window + warning info bar -->
+  @if (plan(); as p) {
+    <div class="info-bar">
+      <span class="info-pill">📅 نافذة الاستلام: {{ formatDate(p.openDate) }} — {{ formatDate(p.closeDate) }}</span>
+      @if (showAccordions()) {
+        <span class="info-pill">🏢 {{ groupedByUnit().length }} وحدة</span>
+      }
+      @if (hasUnresolvedReturns()) {
+        <span class="info-pill warn">⚠️ {{ returnedItems().length }} دورة تحتاج تعديل</span>
+      }
+    </div>
+  }
 
-    @if (!canEdit() && !isReturnedToCreator()) {
-      <div class="alert alert-warning">
-        <span class="alert-icon">🔒</span>
-        نافذة الاستلام مغلقة أو الخطة قيد المراجعة — لا يمكن التعديل حالياً
+  @if (!canEdit() && !isReturnedToCreator()) {
+    <div class="alert alert-warning">
+      <span class="alert-icon">🔒</span>
+      نافذة الاستلام مغلقة أو الخطة قيد المراجعة — لا يمكن التعديل حالياً
+    </div>
+  }
+
+  <!-- Stat cards -->
+  <div class="stat-cards-row">
+    <div class="stat-card">
+      <div class="stat-icon courses">📚</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ totalCourses() }}</div>
+        <div class="stat-label">عدد الدورات</div>
       </div>
-    }
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon nominees">👥</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ totalNominees() }}</div>
+        <div class="stat-label">عدد المرشحين</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon cost">💰</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ formatCost(totalPlanCost()) || '0.000' }}</div>
+        <div class="stat-label">التكلفة الإجمالية (ر.ع.)</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon returned">🔙</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ returnedCoursesCount() }}</div>
+        <div class="stat-label">دورات مُعادة</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon missing">⚠️</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ coursesMissingNominees() }}</div>
+        <div class="stat-label">بدون مرشحين</div>
+      </div>
+    </div>
+  </div>
 
-    <!-- Filter bar (shown in accordion mode so Staff/TD/TH can narrow quickly) -->
-    @if (showAccordions()) {
-      <div class="filter-bar">
-        <input type="text" class="form-input" placeholder="🔍 ابحث في اسم الدورة…"
+  <!-- Main content card -->
+  <div class="main-card">
+    <!-- Filter bar -->
+    <div class="filters-bar-modern">
+      <div class="filter-group">
+        <span class="filter-icon">🔍</span>
+        <input type="text" class="form-input" placeholder="ابحث في اسم الدورة…"
                [value]="searchText()" (input)="onSearchInput($event)">
+      </div>
+      <div class="filter-group">
+        <span class="filter-icon">🏷️</span>
         <select class="form-input" [value]="filterCourseType()"
                 (change)="filterCourseType.set($any($event.target).value)">
           <option value="">جميع الأنواع</option>
@@ -78,15 +129,22 @@
           <option value="1">خارجية محلية</option>
           <option value="2">خارجية دولية</option>
         </select>
-        <select class="form-input" [value]="filterUnit()"
-                (change)="filterUnit.set($any($event.target).value)">
-          <option value="">جميع الوحدات ({{ uniqueUnits().length }})</option>
-          @for (u of uniqueUnits(); track u.id) { <option [value]="u.id">{{ u.name }}</option> }
-        </select>
-        <button class="btn btn-ghost btn-sm" (click)="expandAll()">📂 فتح الكل</button>
-        <button class="btn btn-ghost btn-sm" (click)="collapseAll()">📁 إغلاق الكل</button>
       </div>
-    }
+      @if (showAccordions()) {
+        <div class="filter-group">
+          <span class="filter-icon">🏢</span>
+          <select class="form-input" [value]="filterUnit()"
+                  (change)="filterUnit.set($any($event.target).value)">
+            <option value="">جميع الوحدات ({{ uniqueUnits().length }})</option>
+            @for (u of uniqueUnits(); track u.id) { <option [value]="u.id">{{ u.name }}</option> }
+          </select>
+        </div>
+        <div class="filter-actions">
+          <button class="btn btn-ghost btn-sm" (click)="expandAll()">📂 فتح الكل</button>
+          <button class="btn btn-ghost btn-sm" (click)="collapseAll()">📁 إغلاق الكل</button>
+        </div>
+      }
+    </div>
 
     <!-- BRANCH: accordions for Staff/TD/TH, flat table for UTM/UGM -->
     @if (showAccordions()) {
@@ -98,7 +156,7 @@
             <span class="unit-name">{{ group.unitName }}</span>
           </div>
           <div class="unit-header-stats">
-            <span class="unit-stat">{{ group.itemCount }} بند</span>
+            <span class="unit-stat">{{ group.itemCount }} دورة</span>
             @if (group.missingNominees > 0) {
               <span class="badge badge-rejected">⚠️ {{ group.missingNominees }} بدون مرشحين</span>
             }
@@ -113,10 +171,10 @@
 
         @if (isUnitExpanded(group.unitId)) {
           <div class="unit-items">
-            <table class="gtms-table">
+            <table class="data-table">
               <thead>
                 <tr>
-                  <th style="width:30px"></th>
+                  <th style="width:40px"></th>
                   <th>الدورة</th>
                   <th class="center">النوع</th>
                   <th class="center">الأولوية</th>
@@ -137,14 +195,14 @@
           </div>
         }
       } @empty {
-        <div class="empty-state"><div class="empty-icon">🔍</div>لا توجد بنود مطابقة للفلتر</div>
+        <div class="empty-state"><div class="empty-icon">🔍</div>لا توجد دورات مطابقة للفلتر</div>
       }
     } @else {
-      <div class="gtms-table-wrap">
-        <table class="gtms-table">
+      <div class="table-wrap">
+        <table class="data-table">
           <thead>
             <tr>
-              <th style="width:30px"></th>
+              <th style="width:40px"></th>
               <th>الدورة</th>
               <th class="center">النوع</th>
               <th class="center">الأولوية</th>
@@ -162,7 +220,7 @@
             } @empty {
               <tr>
                 <td colspan="10">
-                  <div class="empty-state"><div class="empty-icon">📝</div>لم يتم إضافة بنود بعد — اضغط "إضافة بند جديد"</div>
+                  <div class="empty-state"><div class="empty-icon">📝</div>لم يتم إضافة دورات بعد — اضغط "إضافة دورة جديدة"</div>
                 </td>
               </tr>
             }
@@ -173,7 +231,7 @@
   </div>
 </div>
 
-<!-- Shared row + expanded detail template (used by both flat and accordion modes) -->
+<!-- Shared row + expanded detail template -->
 <ng-template #itemRowTpl let-item>
   <tr class="item-row"
       [class.item-expanded]="isItemExpanded(item.id!)"
@@ -188,7 +246,7 @@
         <span class="cell-bold">{{ item.tenantCourseNameAr }}</span>
         @if (item.tenantCourseNameEn) { <span class="cell-sub">{{ item.tenantCourseNameEn }}</span> }
         @if (item.isReturned) {
-          <span class="return-badge">⚠️ يحتاج تعديل</span>
+          <span class="return-badge">⚠️ تحتاج تعديل</span>
         }
       </div>
     </td>
@@ -251,14 +309,7 @@
               </div>
             </div>
 
-            @if (getConditionsFor(item.id!).length > 0) {
-              <div class="conditions-inline">
-                <span class="conditions-label">🔒 شروط الالتحاق:</span>
-                @for (c of getConditionsFor(item.id!); track c.id) {
-                  <span class="condition-tag">{{ getConditionTypeName(c.conditionType!) }}: {{ c.conditionValue }}</span>
-                }
-              </div>
-            }
+
           </div>
         </div>
       </td>
@@ -266,10 +317,10 @@
   }
 </ng-template>
 
-<!-- Add/Edit Dialog — 2 sections (Course + Nominees) -->
+<!-- Add/Edit Dialog -->
 @if (isDialogOpen()) {
   <div class="modal-backdrop" (click)="$event.target === $event.currentTarget ? isDialogOpen.set(false) : null">
-    <div class="modal-content modal-lg entry-dialog">
+    <div class="modal-content modal-lg modal-modern entry-dialog">
       <div class="modal-header">
         <h3 class="modal-title">{{ dialogTitle }}</h3>
         <button class="modal-close" (click)="isDialogOpen.set(false)">✕</button>
@@ -293,7 +344,7 @@
                 <option value="">اختر الوحدة...</option>
                 @for (u of uniqueUnits(); track u.id) { <option [value]="u.id">{{ u.name }}</option> }
               </select>
-              <span class="form-hint">البند سيُسجَّل تحت هذه الوحدة.</span>
+              <span class="form-hint">الدورة ستُسجَّل تحت هذه الوحدة.</span>
             </div>
           }
 
@@ -302,7 +353,7 @@
               <label class="form-label">الدورة <span class="required">*</span></label>
               <select class="form-input"
                       [value]="fTenantCourseId()"
-                      (change)="fTenantCourseId.set($any($event.target).value); onCourseSelected()">
+                      (change)="fTenantCourseId.set($any($event.target).value)">
                 <option value="" [selected]="!fTenantCourseId()">اختر دورة...</option>
                 @for (tc of tenantCourses(); track tc.id) {
                   <option [value]="tc.id" [selected]="tc.id === fTenantCourseId()">{{ tc.catalogCourseNameAr }}</option>
@@ -380,32 +431,19 @@
             </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">مصدر التمويل (كود نبراس)</label>
-            <input type="text" class="form-input" placeholder="NEB-2027-EXT-001" style="max-width:300px;"
-                   [value]="fFundingSource()" (input)="fFundingSource.set($any($event.target).value)">
-          </div>
-
-          @if (dialogConditions().length > 0) {
-            <div class="conditions-panel" style="margin-top:6px;">
-              <p class="panel-title">🔒 شروط الالتحاق (ستُنسخ تلقائياً)</p>
-              <div class="condition-tags">
-                @for (c of dialogConditions(); track $index) {
-                  <span class="condition-tag">{{ getConditionTypeName(c.conditionType) }}: {{ c.conditionValue }}</span>
-                }
-              </div>
-            </div>
-          }
         </div>
 
-        <!-- Section B: Nominees (same picker for both create and edit; edit prefills from the backend) -->
+        <!-- Section B: Nominees -->
         <div class="dialog-section">
-          <div class="section-label"><span class="section-num">B</span> المرشحون <span class="required">*</span></div>
+          <div class="section-label">
+            <span class="section-num">B</span> المرشحون <span class="required">*</span>
+            <span class="nominee-count-badge">👥 {{ fNomineeIds().length }}</span>
+          </div>
           <div class="section-sub">
             @if (isEditMode()) {
               يمكنك إضافة أو إزالة مرشحين. لا يمكن حذف مرشح أُدخلت نتيجته بالفعل.
             } @else {
-              اختر مرشحاً واحداً على الأقل. سيتم التحقق من شروط الالتحاق لكل مرشح تلقائياً.
+              اختر مرشحاً واحداً على الأقل.
             }
           </div>
 

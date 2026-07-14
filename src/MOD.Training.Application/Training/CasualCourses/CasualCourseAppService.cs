@@ -11,7 +11,6 @@ using MOD.Training.Training.TenantCourses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
@@ -28,7 +27,6 @@ public class CasualCourseAppService(
     IRepository<CasualCourseFinancialItemRank, Guid> rankRepo,
     IRepository<CasualCourseNomination, Guid> nominationRepo,
     IRepository<FinancialItem, Guid> financialItemRepo,
-    IRepository<CourseTypeFinancialItemDefault, Guid> defaultsRepo,
     IRepository<Rank, Guid> rankRefRepo,
     IRepository<PlanNote, Guid> planNoteRepo,
     IRepository<PriceQuote, Guid> priceQuoteRepo,
@@ -39,7 +37,6 @@ public class CasualCourseAppService(
     IRepository<MOD.Training.Training.Payments.BudgetReallocation, Guid> reallocationRepo,
     IOrganizationUnitRepository orgUnitRepository,
     CasualCourseValidator validator,
-    NominationConditionValidator conditionValidator,
     FundingScenarioSourceResolver scenarioSourceResolver,
     FinancialItemDefaultResolver rateResolver,
     CasualCourseRankBreakdownManager rankManager,
@@ -328,16 +325,16 @@ public class CasualCourseAppService(
             })
             .ToList();
 
-        var defQ = await defaultsRepo.WithDetailsAsync(x => x.FinancialItem);
-        var defaults = await AsyncExecuter.ToListAsync(
-            defQ.Where(x => x.CourseType == input.CourseType).OrderBy(x => x.SortOrder));
+        // Preview uses all active financial items; no course-type defaults.
+        var fiQ = await financialItemRepo.GetQueryableAsync();
+        var financialItems = await AsyncExecuter.ToListAsync(
+            fiQ.Where(x => x.IsActive).OrderBy(x => x.NameAr));
 
-        var items = new List<PreviewItemDto>(defaults.Count);
+        var items = new List<PreviewItemDto>(financialItems.Count);
         decimal grandTotal = 0m;
 
-        foreach (var def in defaults)
+        foreach (var fi in financialItems)
         {
-            var fi = def.FinancialItem;
             var effectiveDays = fi.IsPerDay
                 ? input.DurationDays + fi.ExtraDaysBefore + fi.ExtraDaysAfter
                 : 1;
@@ -373,7 +370,8 @@ public class CasualCourseAppService(
             {
                 foreach (var grp in nomineesByRank)
                 {
-                    var (rate, _) = await rateResolver.ResolveRateWithSourceAsync(fi.Id, grp.RankId);
+                    var resolved = await rateResolver.ResolveRateWithSourceAsync(fi.Id, grp.RankId);
+                    var rate = resolved.Rate;
                     var subtotal = rate * effectiveDays * grp.Count;
                     itemTotal += subtotal;
 
@@ -440,14 +438,8 @@ public class CasualCourseAppService(
 
         foreach (var employeeId in input.NomineeEmployeeIds.Distinct())
         {
-            var results = await conditionValidator.ValidateByTenantCourseAsync(
-                input.TenantCourseId, employeeId);
-            var snapshotJson = JsonSerializer.Serialize(results);
             await nominationRepo.InsertAsync(
-                new CasualCourseNomination(GuidGenerator.Create(), entity.Id, employeeId)
-                {
-                    ConditionSnapshotJson = snapshotJson,
-                },
+                new CasualCourseNomination(GuidGenerator.Create(), entity.Id, employeeId),
                 autoSave: true);
         }
 
@@ -581,35 +573,21 @@ public class CasualCourseAppService(
         entity.FundingScenario = input.FundingScenario;
         await repository.UpdateAsync(entity, autoSave: true);
 
-        // Step 2 — first scenario pick → auto-fill creates rows with correct Source from
-        // the start (no placeholder phase). UTM's CourseCost flows through as the seed for
-        // the course-cost row's rate. Subsequent picks skip this branch and fall through
-        // to the re-derive logic below.
+        // Step 2 — scenario change: re-derive Source on every parent. Staff's manual rate
+        // edits on rank rows are preserved.
         var parentQ = await financialRepo.GetQueryableAsync();
-        var hasFinancialItems = await AsyncExecuter.AnyAsync(parentQ.Where(x => x.CasualCourseId == id));
+        var parents = await AsyncExecuter.ToListAsync(parentQ.Where(x => x.CasualCourseId == id));
+        var fiIds = parents.Select(p => p.FinancialItemId).Distinct().ToList();
+        var fiQ = await financialItemRepo.GetQueryableAsync();
+        var fis = (await AsyncExecuter.ToListAsync(fiQ.Where(x => fiIds.Contains(x.Id))))
+            .ToDictionary(x => x.Id);
 
-        if (!hasFinancialItems)
+        foreach (var parent in parents)
         {
-            await financialAppService.AutoFillInternalAsync(
-                id, runAsSystem: true, courseCostSeed: entity.CourseCost);
-        }
-        else
-        {
-            // Step 2b — scenario change on an existing populated course: re-derive Source on
-            // every parent. Staff's manual rate edits on rank rows are preserved.
-            var parents = await AsyncExecuter.ToListAsync(parentQ.Where(x => x.CasualCourseId == id));
-            var fiIds = parents.Select(p => p.FinancialItemId).Distinct().ToList();
-            var fiQ = await financialItemRepo.GetQueryableAsync();
-            var fis = (await AsyncExecuter.ToListAsync(fiQ.Where(x => fiIds.Contains(x.Id))))
-                .ToDictionary(x => x.Id);
-
-            foreach (var parent in parents)
+            if (fis.TryGetValue(parent.FinancialItemId, out var fi))
             {
-                if (fis.TryGetValue(parent.FinancialItemId, out var fi))
-                {
-                    parent.Source = scenarioSourceResolver.Resolve(input.FundingScenario, fi);
-                    await financialRepo.UpdateAsync(parent);
-                }
+                parent.Source = scenarioSourceResolver.Resolve(input.FundingScenario, fi);
+                await financialRepo.UpdateAsync(parent);
             }
         }
 
@@ -709,8 +687,8 @@ public class CasualCourseAppService(
             throw new BusinessException("Training:CasualCourse:InvalidStatusTransition");
 
         // Patch 4 — decision Q3 locked: no auto-fill on resubmit.
-        // UTM's edited rates (after return) must be preserved; AutoFillFromDefaultsAsync is only
-        // additive so a stray invocation would be harmless, but we keep it explicit for clarity.
+        // UTM's edited rates (after return) must be preserved; the CourseTypeFinancialItemDefaults
+        // feature has been removed, so auto-fill is no longer performed.
         await validator.ValidateForSubmitAsync(id);
 
         var target = entity.ReturnedFromStatus ?? CasualCourseStatus.Submitted;
@@ -817,14 +795,8 @@ public class CasualCourseAppService(
 
         foreach (var employeeId in toAdd)
         {
-            var results = await conditionValidator.ValidateByTenantCourseAsync(
-                entity.TenantCourseId, employeeId);
-            var snapshot = JsonSerializer.Serialize(results);
             await nominationRepo.InsertAsync(
-                new CasualCourseNomination(GuidGenerator.Create(), entity.Id, employeeId)
-                {
-                    ConditionSnapshotJson = snapshot,
-                },
+                new CasualCourseNomination(GuidGenerator.Create(), entity.Id, employeeId),
                 autoSave: true);
         }
     }
@@ -903,21 +875,6 @@ public class CasualCourseAppService(
                 dto.RankName = emp.Rank?.NameAr ?? "";
                 if (unitLookup.TryGetValue(emp.MainUnitId, out var un))
                     dto.UnitName = un;
-            }
-
-            if (!string.IsNullOrWhiteSpace(n.ConditionSnapshotJson))
-            {
-                try
-                {
-                    var results = JsonSerializer.Deserialize<List<NominationConditionValidator.ConditionResult>>(n.ConditionSnapshotJson);
-                    if (results != null)
-                    {
-                        dto.ConditionPassed = results.All(r => r.Passed);
-                        var failed = results.Where(r => !r.Passed).Select(r => r.Details);
-                        dto.ConditionDetails = string.Join(" | ", failed);
-                    }
-                }
-                catch { /* ignore malformed snapshot */ }
             }
 
             result.Add(dto);

@@ -128,42 +128,6 @@
           }
         </div>
 
-        <!-- Conditions -->
-        <div class="conditions-section-modern">
-          <div class="conditions-section-header">
-            <h4 class="conditions-section-title">
-              <span class="section-icon">📋</span>
-              {{ '::Training.EnrollmentConditions' | abpLocalization }}
-            </h4>
-            <button class="btn btn-primary btn-sm" (click)="onAddCondition()">
-              <span class="btn-icon-symbol">+</span>
-              {{ '::Training.AddCondition' | abpLocalization }}
-            </button>
-          </div>
-          @if (conditions().length === 0) {
-            <div class="conditions-empty">{{ '::Training.NoConditions' | abpLocalization }}</div>
-          }
-          @for (cond of conditions(); track cond.id; let i = $index) {
-            <div class="condition-row-modern">
-              <select class="form-input condition-type-select" [value]="cond.conditionType" (change)="updateCondition(i, 'conditionType', +$any($event.target).value)">
-                @for (opt of conditionTypeOptions; track opt.value) {
-                  <option [value]="opt.value">{{ opt.label }}</option>
-                }
-              </select>
-              <input type="text" class="form-input condition-value-input" [value]="cond.conditionValue" (input)="updateCondition(i, 'conditionValue', $any($event.target).value)" dir="ltr" />
-              <div class="condition-actions">
-                @if (cond._isNew && isEditMode) {
-                  <button class="action-btn action-save" (click)="onSaveCondition(cond)" title="{{ '::Training.Common.Save' | abpLocalization }}">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                  </button>
-                }
-                <button class="action-btn action-delete" (click)="onRemoveCondition(i)" title="{{ '::Training.Common.Delete' | abpLocalization }}">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                </button>
-              </div>
-            </div>
-          }
-        </div>
       </div>
 
       <div class="modal-modern-footer">

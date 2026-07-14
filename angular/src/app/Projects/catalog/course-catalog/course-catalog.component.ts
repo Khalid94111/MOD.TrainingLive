@@ -1,20 +1,22 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LocalizationPipe } from '@abp/ng.core';
+import { LocalizationPipe, PermissionService } from '@abp/ng.core';
 import { CourseCatalogService, CourseFieldService, TrainingLocalizationHelper } from '../../shared';
 import type { CourseCatalogDto, CourseFieldDto, CreateUpdateCourseCatalogDto } from '../../shared';
 import { CatalogFormDialogComponent } from './catalog-form-dialog/catalog-form-dialog.component';
+import { SubscribedTenantsDialogComponent } from './subscribed-tenants-dialog/subscribed-tenants-dialog.component';
 
 @Component({
   selector: 'app-course-catalog',
   standalone: true,
-  imports: [CommonModule, LocalizationPipe, CatalogFormDialogComponent],
+  imports: [CommonModule, LocalizationPipe, CatalogFormDialogComponent, SubscribedTenantsDialogComponent],
   templateUrl: './course-catalog.component.html',
   styleUrl: './course-catalog.component.scss',
 })
 export class CourseCatalogComponent implements OnInit {
   private readonly catalogService = inject(CourseCatalogService);
   private readonly fieldService = inject(CourseFieldService);
+  private readonly permissionService = inject(PermissionService);
   readonly l = inject(TrainingLocalizationHelper);
 
   courses = signal<CourseCatalogDto[]>([]);
@@ -29,13 +31,16 @@ export class CourseCatalogComponent implements OnInit {
   isDialogVisible = signal(false);
   editingCourse = signal<CourseCatalogDto | null>(null);
 
+  isTenantsDialogVisible = signal(false);
+  selectedCourseForTenants = signal<CourseCatalogDto | null>(null);
+
   totalCount = computed(() => this.courses().length);
   activeCount = computed(() => this.courses().filter(c => c.isActive).length);
   inactiveCount = computed(() => this.courses().filter(c => !c.isActive).length);
-  conditionsCount = computed(() => this.courses().reduce((sum, c) => sum + (c.conditionsCount || 0), 0));
 
   categoryOptions: { value: string; label: string }[] = [];
   statusOptions: { value: string; label: string }[] = [];
+  canViewSubscribedTenants = signal(false);
 
   async ngOnInit(): Promise<void> {
     this.categoryOptions = this.l.categoryDataSource().map(o => ({ value: o.value, label: o.text }));
@@ -43,6 +48,8 @@ export class CourseCatalogComponent implements OnInit {
       { value: 'true', label: this.l.t('::Training.Active') },
       { value: 'false', label: this.l.t('::Training.Inactive') },
     ];
+    this.canViewSubscribedTenants.set(
+      this.permissionService.getGrantedPolicy('Training.CourseCatalog.ViewSubscribedTenants'));
     await this.loadFields();
     await this.loadData();
   }
@@ -89,6 +96,16 @@ export class CourseCatalogComponent implements OnInit {
 
   onDialogCancelled(): void {
     this.isDialogVisible.set(false);
+  }
+
+  onViewSubscribedTenants(course: CourseCatalogDto): void {
+    this.selectedCourseForTenants.set(course);
+    this.isTenantsDialogVisible.set(true);
+  }
+
+  onTenantsDialogCancelled(): void {
+    this.isTenantsDialogVisible.set(false);
+    this.selectedCourseForTenants.set(null);
   }
 
   async onDeleteCourse(id: string): Promise<void> {

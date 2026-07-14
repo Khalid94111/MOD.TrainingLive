@@ -7,17 +7,20 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using MOD.Training.Training.Catalog.Dtos;
 using MOD.Training.Training.Permissions;
+using MOD.Training.Training.TenantCourses;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
+using Volo.Saas.Tenants;
 
 namespace MOD.Training.Training.Catalog;
 
 [Authorize(TrainingPermissions.CourseCatalog.Default)]
 public class CourseCatalogAppService(
     IRepository<CourseCatalog, Guid> catalogRepo,
-    IRepository<CatalogEnrollmentCondition, Guid> conditionRepo,
+    IRepository<TenantCourse, Guid> tenantCourseRepo,
+    IRepository<Tenant, Guid> tenantRepo,
     IMapper mapper)
     : ApplicationService, ICourseCatalogAppService
 {
@@ -31,8 +34,7 @@ public class CourseCatalogAppService(
         var entity = await AsyncExecuter.FirstOrDefaultAsync(queryable.Where(x => x.Id == id))
             ?? throw new BusinessException("Training:CourseCatalog:NotFound");
 
-        var count = await conditionRepo.CountAsync(c => c.CatalogCourseId == id);
-        return MapToDto(entity, count);
+        return MapToDto(entity);
     }
 
     public async Task<PagedResultDto<CourseCatalogDto>> GetListAsync(CourseCatalogGetListInput input)
@@ -48,12 +50,9 @@ public class CourseCatalogAppService(
                 .Skip(input.SkipCount)
                 .Take(input.MaxResultCount));
 
-        var catalogIds = items.Select(x => x.Id).ToList();
-        var countMap = await GetConditionsCountMapAsync(catalogIds);
-
         return new PagedResultDto<CourseCatalogDto>(
             totalCount,
-            items.Select(x => MapToDto(x, countMap.GetValueOrDefault(x.Id, 0))).ToList());
+            items.Select(MapToDto).ToList());
     }
 
     [Authorize(TrainingPermissions.CourseCatalog.Create)]
@@ -82,36 +81,39 @@ public class CourseCatalogAppService(
     }
 
     // ═══════════════════════════════════════════
-    // CONDITIONS
+    // SUBSCRIBED TENANTS
     // ═══════════════════════════════════════════
 
-    public async Task<List<CatalogEnrollmentConditionDto>> GetConditionsAsync(Guid catalogCourseId)
-    {
-        var conditions = await conditionRepo.GetListAsync(c => c.CatalogCourseId == catalogCourseId);
-        return conditions.Select(c => mapper.Map<CatalogEnrollmentConditionDto>(c)).ToList();
-    }
-
-    [Authorize(TrainingPermissions.CourseCatalog.Update)]
-    public async Task<CatalogEnrollmentConditionDto> AddConditionAsync(
-        Guid catalogCourseId, CreateUpdateCatalogEnrollmentConditionDto input)
+    [Authorize(TrainingPermissions.CourseCatalog.ViewSubscribedTenants)]
+    public async Task<List<CourseCatalogSubscribedTenantDto>> GetSubscribedTenantsAsync(Guid catalogCourseId)
     {
         await catalogRepo.GetAsync(catalogCourseId);
 
-        var condition = new CatalogEnrollmentCondition
+        using (CurrentTenant.Change(null))
         {
-            CatalogCourseId = catalogCourseId,
-            ConditionType = input.ConditionType,
-            ConditionValue = input.ConditionValue,
-        };
+            var tcQueryable = await tenantCourseRepo.GetQueryableAsync();
+            var tenantIds = await AsyncExecuter.ToListAsync(
+                tcQueryable
+                    .Where(x => x.CatalogCourseId == catalogCourseId && x.TenantId.HasValue)
+                    .Select(x => x.TenantId!.Value)
+                    .Distinct());
 
-        condition = await conditionRepo.InsertAsync(condition, autoSave: true);
-        return mapper.Map<CatalogEnrollmentConditionDto>(condition);
-    }
+            if (tenantIds.Count == 0)
+                return [];
 
-    [Authorize(TrainingPermissions.CourseCatalog.Update)]
-    public async Task RemoveConditionAsync(Guid conditionId)
-    {
-        await conditionRepo.DeleteAsync(conditionId);
+            var tenantQueryable = await tenantRepo.GetQueryableAsync();
+            var tenants = await AsyncExecuter.ToListAsync(
+                tenantQueryable.Where(t => tenantIds.Contains(t.Id)));
+
+            return tenants
+                .Select(t => new CourseCatalogSubscribedTenantDto
+                {
+                    TenantId = t.Id,
+                    TenantName = t.Name,
+                })
+                .OrderBy(t => t.TenantName)
+                .ToList();
+        }
     }
 
     // ═══════════════════════════════════════════
@@ -136,22 +138,11 @@ public class CourseCatalogAppService(
         }
     }
 
-    private async Task<Dictionary<Guid, int>> GetConditionsCountMapAsync(List<Guid> catalogIds)
-    {
-        var queryable = await conditionRepo.GetQueryableAsync();
-        var groups = await AsyncExecuter.ToListAsync(
-            queryable.Where(c => catalogIds.Contains(c.CatalogCourseId))
-                .GroupBy(c => c.CatalogCourseId)
-                .Select(g => new { Id = g.Key, Count = g.Count() }));
-        return groups.ToDictionary(x => x.Id, x => x.Count);
-    }
-
-    private CourseCatalogDto MapToDto(CourseCatalog entity, int conditionsCount)
+    private CourseCatalogDto MapToDto(CourseCatalog entity)
     {
         var dto = mapper.Map<CourseCatalogDto>(entity);
         dto.FieldNameAr = entity.Field?.FieldNameAr;
         dto.FieldNameEn = entity.Field?.FieldNameEn;
-        dto.ConditionsCount = conditionsCount;
         return dto;
     }
 

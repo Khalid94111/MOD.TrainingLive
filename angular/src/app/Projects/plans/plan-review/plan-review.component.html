@@ -89,9 +89,6 @@
     <button class="btn btn-ghost btn-sm" (click)="collapseAll()">📁 إغلاق الكل</button>
   </div>
 
-  @if (batchFilling()) {
-    <div class="alert alert-info"><span class="alert-icon">⏳</span> جاري التعبئة التلقائية... {{ batchProgress() }}</div>
-  }
 
   <!-- UNIT ACCORDIONS -->
   @for (group of unitGroups(); track group.unitId) {
@@ -123,11 +120,7 @@
             </select>
             <span class="unit-page-info">صفحة {{ getUnitPage(group.unitId) + 1 }} من {{ getTotalPages(group.allItems, group.unitId) }}</span>
           </div>
-          @if (group.itemsMissingCost > 0 && !isReadOnly()) {
-            <button class="btn btn-outline btn-sm" [disabled]="batchFilling()" (click)="batchAutoFillUnit(group.unitId, group.allItems); $event.stopPropagation()">
-              🔄 تعبئة تلقائية للوحدة ({{ group.itemsMissingCost }})
-            </button>
-          }
+
         </div>
 
         <table class="gtms-table">
@@ -220,14 +213,7 @@
                             @if (item.fundingSource) { <div class="detail-field"><span class="detail-label">💳 مصدر التمويل</span><span class="detail-value funding-code">{{ item.fundingSource }}</span></div> }
                           </div>
 
-                          @if (getConditionsFor(item.id!).length > 0) {
-                            <div class="conditions-inline">
-                              <span class="conditions-label">🔒 شروط:</span>
-                              @for (c of getConditionsFor(item.id!); track c.id) {
-                                <span class="condition-tag">{{ getConditionTypeName(c.conditionType) }}: {{ c.conditionValue }}</span>
-                              }
-                            </div>
-                          }
+
 
                           @if (plan()?.status === PlanStatus.UnderReview && !item.isReturned) {
                             <div class="card-actions">
@@ -242,14 +228,13 @@
                             <span class="fi-title">💰 البنود المالية</span>
                             @if (!isReadOnly()) {
                               <div class="fi-actions">
-                                <button class="btn btn-outline btn-sm" (click)="onAutoFill(item.id!); $event.stopPropagation()">🔄 تعبئة تلقائية</button>
                                 <button class="btn btn-outline btn-sm" (click)="openAddFiDialog(item.id!); $event.stopPropagation()">➕ إضافة</button>
                               </div>
                             }
                           </div>
 
                           @if (getFinancialItemsFor(item.id!).length === 0) {
-                            <div class="fi-empty">لا توجد بنود مالية — اضغط "تعبئة تلقائية" أو "إضافة"</div>
+                            <div class="fi-empty">لا توجد بنود مالية — اضغط "إضافة"</div>
                           } @else {
                             @for (pifi of getFinancialItemsFor(item.id!); track pifi.id) {
                               <div class="pifi-card">

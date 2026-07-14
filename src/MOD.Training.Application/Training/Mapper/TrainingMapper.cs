@@ -26,9 +26,6 @@ public static partial class TrainingMapper
     public static partial CourseField ToEntity(this CreateUpdateCourseFieldDto source);
     public static partial void MapTo(this CreateUpdateCourseFieldDto source, CourseField target);
 
-    // ── Catalog Enrollment Conditions ──
-    public static partial CatalogEnrollmentConditionDto ToDto(this CatalogEnrollmentCondition source);
-
     // ── Course Proposals ──
     // NOTE: Migrated to AutoMapper (TrainingAutoMapperProfile)
     // public static partial CourseProposalDto ToDto(this CourseProposal source);
@@ -37,8 +34,4 @@ public static partial class TrainingMapper
     // NOTE: Migrated to AutoMapper (TrainingAutoMapperProfile)
     // public static partial TenantCourseDto ToDto(this TenantCourse source);
     // public static partial void MapTo(this UpdateTenantCourseDto source, TenantCourse target);
-
-    // ── Tenant Course Conditions ──
-    // NOTE: Migrated to AutoMapper (TrainingAutoMapperProfile)
-    // public static partial TenantCourseConditionDto ToDto(this TenantCourseCondition source);
 }

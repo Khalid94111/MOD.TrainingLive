@@ -80,10 +80,7 @@
     </div>
 
     <div *dxTemplate="let cell of 'moneyTpl'">
-      <div class="currency-dual">
-        <span class="currency-omr">{{ formatOMR(cell.value) }}</span>
-        <span class="currency-usd">~ {{ toUSD(cell.value) }} USD</span>
-      </div>
+      <span class="currency-omr">{{ formatOMR(cell.value) }}</span>
     </div>
 
     <div *dxTemplate="let cell of 'dateTpl'">
@@ -199,7 +196,7 @@
               format="#,##0.000 'ر.ع'"
               (onValueChanged)="updateInvoiceAmount($event.value)">
             </dx-number-box>
-            <div class="usd-display">~ {{ toUSD(fInvoiceAmountOMR()) }} USD</div>
+
           </div>
           <div class="hint">{{ '::Training.Payments.CoursePayment.Dialog.InvoiceAmountHint' | abpLocalization }}</div>
         </div>

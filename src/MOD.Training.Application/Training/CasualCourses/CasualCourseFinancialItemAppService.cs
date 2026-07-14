@@ -20,10 +20,8 @@ public class CasualCourseFinancialItemAppService(
     IRepository<CasualCourseFinancialItem, Guid> repository,
     IRepository<CasualCourseFinancialItemRank, Guid> rankRepo,
     IRepository<CasualCourse, Guid> casualCourseRepo,
-    IRepository<CourseTypeFinancialItemDefault, Guid> defaultsRepo,
     IRepository<FinancialItem, Guid> financialItemRepo,
     IRepository<Rank, Guid> rankRefRepo,
-    EmployeeResolver employeeResolver,
     FinancialItemDefaultResolver rateResolver,
     FundingScenarioSourceResolver scenarioSourceResolver,
     CasualCourseRankBreakdownManager rankManager,
@@ -38,121 +36,6 @@ public class CasualCourseFinancialItemAppService(
         if (items.Count == 0) return new List<CasualCourseFinancialItemDto>();
 
         return await HydrateAsync(items, casualCourseId);
-    }
-
-    [Authorize(TrainingPermissions.CasualCourses.Review)]
-    public Task<List<CasualCourseFinancialItemDto>> AutoFillFromDefaultsAsync(
-        Guid casualCourseId, bool runAsSystem = false, decimal? courseCostSeed = null)
-        => AutoFillInternalAsync(casualCourseId, runAsSystem, courseCostSeed);
-
-    /// <summary>
-    /// Patch 5 — invoked by <c>CasualCourseAppService.AssignScenarioAsync</c> the first
-    /// time Staff picks a scenario. Scenario is already on the course, so every row's
-    /// Source is correctly derived at insertion time. The course-cost row is seeded from
-    /// <paramref name="courseCostSeed"/> (UTM's form value) when provided.
-    /// </summary>
-    internal async Task<List<CasualCourseFinancialItemDto>> AutoFillInternalAsync(
-        Guid casualCourseId, bool runAsSystem, decimal? courseCostSeed = null)
-    {
-        var cc = await casualCourseRepo.GetAsync(casualCourseId);
-
-        if (cc.Status != CasualCourseStatus.UnderReview)
-            throw new BusinessException("Training:CasualCourse:InvalidStatusTransition");
-
-        if (!cc.FundingScenario.HasValue)
-            throw new BusinessException("Training:CasualCourse:ScenarioRequiredBeforeFinancials");
-
-        var defQ = await defaultsRepo.WithDetailsAsync(x => x.FinancialItem);
-        var defaults = await AsyncExecuter.ToListAsync(
-            defQ.Where(x => x.CourseType == cc.CourseType).OrderBy(x => x.SortOrder));
-
-        var existingQ = await repository.GetQueryableAsync();
-        var existingFiIds = (await AsyncExecuter.ToListAsync(
-            existingQ.Where(x => x.CasualCourseId == casualCourseId)))
-            .Select(x => x.FinancialItemId)
-            .ToHashSet();
-
-        var nomineesByRank = await GetNomineesByRankAsync(casualCourseId);
-
-        foreach (var def in defaults.Where(d => !existingFiIds.Contains(d.FinancialItemId)))
-        {
-            var fi = def.FinancialItem;
-            var src = scenarioSourceResolver.Resolve(cc.FundingScenario!.Value, fi);
-
-            var parent = await repository.InsertAsync(
-                new CasualCourseFinancialItem(
-                    GuidGenerator.Create(),
-                    casualCourseId,
-                    def.FinancialItemId,
-                    estimatedAmount: 0m,
-                    src),
-                autoSave: true);
-
-            decimal parentTotal = 0m;
-
-            if (!fi.IsPerNominee)
-            {
-                decimal rate;
-                string rateSource;
-
-                if (fi.ItemType == FinancialItemType.CourseCost && courseCostSeed.HasValue)
-                {
-                    rate = courseCostSeed.Value;
-                    rateSource = FinancialItemDefaultResolver.RateSourceFromUTMForm;
-                }
-                else
-                {
-                    var resolved = await rateResolver.ResolveRateWithSourceAsync(fi.Id, rankId: null);
-                    rate = resolved.Rate;
-                    rateSource = resolved.Source;
-                }
-
-                var subtotal = rateResolver.ComputeSubtotal(
-                    rate, fi.IsPerDay, fi.IsPerNominee,
-                    cc.DurationDays, fi.ExtraDaysBefore, fi.ExtraDaysAfter, nomineeCount: 1);
-
-                await rankRepo.InsertAsync(
-                    new CasualCourseFinancialItemRank(
-                        GuidGenerator.Create(), parent.Id, Guid.Empty, 1, rate, subtotal, rateSource),
-                    autoSave: true);
-                parentTotal = subtotal;
-            }
-            else
-            {
-                foreach (var grp in nomineesByRank)
-                {
-                    var (rate, rateSource) = await rateResolver.ResolveRateWithSourceAsync(fi.Id, grp.Key);
-                    var subtotal = rateResolver.ComputeSubtotal(
-                        rate, fi.IsPerDay, fi.IsPerNominee,
-                        cc.DurationDays, fi.ExtraDaysBefore, fi.ExtraDaysAfter, grp.Value);
-
-                    await rankRepo.InsertAsync(
-                        new CasualCourseFinancialItemRank(
-                            GuidGenerator.Create(), parent.Id, grp.Key, grp.Value, rate, subtotal, rateSource),
-                        autoSave: true);
-                    parentTotal += subtotal;
-                }
-            }
-
-            parent.EstimatedAmountOMR = parentTotal;
-            await repository.UpdateAsync(parent, autoSave: true);
-        }
-
-        await rankManager.RefreshCourseTotalAsync(casualCourseId);
-
-        return await GetListByCasualCourseAsync(casualCourseId);
-    }
-
-    private async Task<Dictionary<Guid, int>> GetNomineesByRankAsync(Guid casualCourseId)
-    {
-        var withNoms = await casualCourseRepo.WithDetailsAsync(x => x.Nominations!);
-        var course = await AsyncExecuter.FirstOrDefaultAsync(withNoms.Where(x => x.Id == casualCourseId));
-        if (course?.Nominations == null || course.Nominations.Count == 0)
-            return new Dictionary<Guid, int>();
-
-        var employeeIds = course.Nominations.Select(n => n.EmployeeId).ToList();
-        var employees = await employeeResolver.GetEmployeesWithRanksAsync(employeeIds);
-        return employees.GroupBy(e => e.RankId).ToDictionary(g => g.Key, g => g.Count());
     }
 
     [Authorize(TrainingPermissions.CasualCourses.Review)]

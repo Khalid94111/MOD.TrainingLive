@@ -21,7 +21,6 @@ public class CourseCatalogDto : FullAuditedEntityDto<Guid>
     public bool HasCertificate { get; set; }
     public bool EvaluationBlocksCertificate { get; set; }
     public bool IsActive { get; set; }
-    public int ConditionsCount { get; set; }
 }
 
 public class CreateUpdateCourseCatalogDto

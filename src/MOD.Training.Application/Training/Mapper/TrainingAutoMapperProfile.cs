@@ -14,24 +14,12 @@ public class TrainingAutoMapperProfile : Profile
 {
     public TrainingAutoMapperProfile()
     {
-        // CourseTypeFinancialItemDefault
-        CreateMap<CourseTypeFinancialItemDefault, CourseTypeFinancialItemDefaultDto>()
-            .ForMember(dest => dest.FinancialItemNameAr, opt => opt.Ignore())
-            .ForMember(dest => dest.FinancialItemNameEn, opt => opt.Ignore())
-            .ForMember(dest => dest.FinancialItemCode, opt => opt.Ignore());
-
-        CreateMap<CreateCourseTypeFinancialItemDefaultDto, CourseTypeFinancialItemDefault>();
-
         // CourseCatalog
         CreateMap<CourseCatalog, CourseCatalogDto>()
             .ForMember(dest => dest.FieldNameAr, opt => opt.Ignore())
-            .ForMember(dest => dest.FieldNameEn, opt => opt.Ignore())
-            .ForMember(dest => dest.ConditionsCount, opt => opt.Ignore());
+            .ForMember(dest => dest.FieldNameEn, opt => opt.Ignore());
 
         CreateMap<CreateUpdateCourseCatalogDto, CourseCatalog>();
-
-        // CatalogEnrollmentCondition
-        CreateMap<CatalogEnrollmentCondition, CatalogEnrollmentConditionDto>();
 
         // CourseProposal
         CreateMap<CourseProposal, CourseProposalDto>()
@@ -48,13 +36,9 @@ public class TrainingAutoMapperProfile : Profile
             .ForMember(dest => dest.CatalogCourseNameEn, opt => opt.Ignore())
             .ForMember(dest => dest.CatalogCourseFieldNameAr, opt => opt.Ignore())
             .ForMember(dest => dest.CatalogCourseCategory, opt => opt.Ignore())
-            .ForMember(dest => dest.ConditionsCount, opt => opt.Ignore())
             .ForMember(dest => dest.AddedByName, opt => opt.Ignore())
             .ForMember(dest => dest.AddedAtFormatted, opt => opt.Ignore());
 
         CreateMap<UpdateTenantCourseDto, TenantCourse>();
-
-        // TenantCourseCondition
-        CreateMap<TenantCourseCondition, TenantCourseConditionDto>();
     }
 }

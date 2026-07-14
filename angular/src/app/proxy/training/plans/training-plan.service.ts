@@ -1,4 +1,4 @@
-import type { CreateUpdateTrainingPlanDto, ReturnReasonDto, TrainingPlanDto, TrainingPlanGetListInput } from './dtos/models';
+import type { CreateUpdateTrainingPlanDto, ReopenSubmissionWindowDto, ReturnReasonDto, TrainingPlanDto, TrainingPlanGetListInput } from './dtos/models';
 import { RestService, Rest } from '@abp/ng.core';
 import type { PagedResultDto } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
@@ -82,6 +82,15 @@ export class TrainingPlanService {
       method: 'POST',
       url: `/api/app/training-plan/${id}/reject`,
       params: { reason },
+    },
+    { apiName: this.apiName,...config });
+  
+
+  reopenSubmissionWindow = (id: string, input: ReopenSubmissionWindowDto, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, void>({
+      method: 'POST',
+      url: `/api/app/training-plan/${id}/reopen-submission-window`,
+      body: input,
     },
     { apiName: this.apiName,...config });
   

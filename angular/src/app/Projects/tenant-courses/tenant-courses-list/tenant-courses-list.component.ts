@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LocalizationPipe } from '@abp/ng.core';
 import { TenantCourseService, CourseFieldService, TrainingLocalizationHelper } from '../../shared';
-import type { TenantCourseDto, TenantCourseConditionDto, UpdateTenantCourseDto } from '../../shared';
+import type { TenantCourseDto, UpdateTenantCourseDto } from '../../shared';
 import { ResultType } from '../../shared/models/training-enums';
 import { ConfirmationService, ToasterService } from '@abp/ng.theme.shared';
 import { AddFromCatalogDialogComponent } from '../add-from-catalog-dialog/add-from-catalog-dialog.component';
@@ -34,13 +34,11 @@ export class TenantCoursesListComponent implements OnInit {
 
   totalCount = computed(() => this.tenantCourses().length);
   activeCount = computed(() => this.tenantCourses().filter(c => c.isActive).length);
-  withConditionsCount = computed(() => this.tenantCourses().filter(c => (c.conditionsCount ?? 0) > 0).length);
   withCertificateCount = computed(() => this.tenantCourses().filter(c => c.hasCertificate).length);
 
   // Edit modal
   isEditDialogVisible = signal(false);
   editingCourse = signal<TenantCourseDto | null>(null);
-  conditions = signal<TenantCourseConditionDto[]>([]);
   editForm = signal<UpdateTenantCourseDto>({
     defaultCapacity: undefined, defaultDurationWeeks: undefined,
     resultType: ResultType.AttendanceOnly, requiresEvaluation: false,
@@ -109,11 +107,6 @@ export class TenantCoursesListComponent implements OnInit {
       evaluationBlocksCertificate: course.evaluationBlocksCertificate,
       isActive: course.isActive,
     });
-    try {
-      this.conditions.set(await this.tenantCourseService.getConditions(course.id));
-    } catch {
-      this.conditions.set([]);
-    }
     this.isEditDialogVisible.set(true);
   }
 

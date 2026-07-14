@@ -18,8 +18,6 @@ public class PlanItemFinancialItemAppService(
     IRepository<PlanItemFinancialItem, Guid> repository,
     IRepository<TrainingPlanItem, Guid> planItemRepository,
     IRepository<FinancialItem, Guid> financialItemRepository,
-    IRepository<CourseTypeFinancialItemDefault, Guid> defaultsRepository,
-    IRepository<ExchangeRate, Guid> exchangeRate,
     PlanItemRankBreakdownManager rankBreakdownManager,
     FinancialItemDefaultResolver defaultResolver,
     PlanItemUnitScope unitScope,
@@ -87,67 +85,8 @@ public class PlanItemFinancialItemAppService(
         await repository.DeleteAsync(id);
     }
 
-    // MOD-15: Auto-fill financial items from CourseTypeFinancialItemDefaults (non-destructive)
-    public async Task AutoFillFromDefaultsAsync(Guid planItemId)
-    {
-        var planItem = await planItemRepository.GetAsync(planItemId);
-        await unitScope.EnsureCanAccessAsync(planItem);
-
-        var defaultsQueryable = await defaultsRepository.GetQueryableAsync();
-        var defaults = await AsyncExecuter.ToListAsync(
-            defaultsQueryable.Where(x => x.CourseType == planItem.CourseType));
-
-        var existingQueryable = await repository.GetQueryableAsync();
-        var existingFiIds = (await AsyncExecuter.ToListAsync(
-            existingQueryable.Where(x => x.PlanItemId == planItemId)
-                .Select(x => x.FinancialItemId))).ToHashSet();
-
-        // Active USD→OMR rate (same lookup as UpdateAmountAsync); fetched once.
-        var rateQueryable = await exchangeRate.GetQueryableAsync();
-        var activeRate = await AsyncExecuter.FirstOrDefaultAsync(
-            rateQueryable
-                .Where(r => r.FromCurrency == "USD" && r.ToCurrency == "OMR" && r.IsActive)
-                .OrderByDescending(r => r.SetAt));
-
-        foreach (var def in defaults)
-        {
-            if (existingFiIds.Contains(def.FinancialItemId)) continue; // skip if already added
-
-            var fi = await financialItemRepository.GetAsync(def.FinancialItemId);
-
-            // CHG-07 — per-nominee items get 0 here; the rank breakdown (InitializeAsync)
-            // owns the OMR total. Flat and per-day items are computed up-front with the
-            // full formula so the grid reflects a real estimate immediately.
-            decimal initialOmr = fi.IsPerNominee
-                ? 0m
-                : defaultResolver.ComputeSubtotal(
-                    fi.DefaultAmountOMR,
-                    fi.IsPerDay, fi.IsPerNominee,
-                    planItem.DurationDays,
-                    fi.ExtraDaysBefore, fi.ExtraDaysAfter,
-                    nomineeCount: 1);
-
-            var pifi = new PlanItemFinancialItem(
-                GuidGenerator.Create(), planItemId, def.FinancialItemId, initialOmr);
-
-            // Mirror UpdateAmountAsync: compute USD only for non-per-nominee items,
-            // since per-nominee OMR is not finalized until InitializeAsync runs.
-            if (!fi.IsPerNominee && activeRate != null && activeRate.Rate > 0)
-            {
-                pifi.EstimatedAmountUSD = Math.Round(initialOmr / activeRate.Rate, 2);
-            }
-
-            await repository.InsertAsync(pifi, autoSave: true);
-
-            // CHG-03 + CHG-07 — initialize per-rank breakdown if applicable
-            if (fi.IsPerNominee)
-                await rankBreakdownManager.InitializeAsync(pifi.Id);
-        }
-    }
-
     /// <summary>
     /// Updates the estimated OMR amount for a single financial item.
-    /// Auto-calculates USD from the active exchange rate.
     /// Called on input blur from the inline editable table.
     /// </summary>
     [Authorize(TrainingPermissions.TrainingPlanItem.Update)]
@@ -157,18 +96,6 @@ public class PlanItemFinancialItemAppService(
         await unitScope.EnsureCanAccessPlanItemAsync(entity.PlanItemId);
 
         entity.EstimatedAmountOMR = input.EstimatedAmountOMR;
-
-        // Auto-calculate USD from OMR using active exchange rate
-        var rateQueryable = await exchangeRate.GetQueryableAsync();
-        var rate = await AsyncExecuter.FirstOrDefaultAsync(
-            rateQueryable
-                .Where(r => r.FromCurrency == "USD" && r.ToCurrency == "OMR" && r.IsActive)
-                .OrderByDescending(r => r.SetAt));
-
-        if (rate != null && rate.Rate > 0)
-        {
-            entity.EstimatedAmountUSD = Math.Round(input.EstimatedAmountOMR / rate.Rate, 2);
-        }
 
         await repository.UpdateAsync(entity, autoSave: true);
         return toDtoMapper.Map(entity);

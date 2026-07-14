@@ -22,7 +22,6 @@ public class NominationAppService(
     IRepository<CourseSession, Guid> sessionRepository,
     EmployeeResolver employeeResolver,
     CourseNameResolver courseNameResolver,
-    NominationConditionValidator conditionValidator,
     PlanItemRankBreakdownManager rankBreakdownManager,
     PlanItemUnitScope unitScope,
     IPlanNoteAppService planNoteAppService,
@@ -245,16 +244,6 @@ public class NominationAppService(
         await unitScope.EnsureCanAccessPlanItemAsync(oldNom.PlanItemId);
         if (!oldNom.IsReturned)
             throw new Volo.Abp.BusinessException("Training:Nomination:NotReturned");
-
-        // Validate new employee against conditions
-        var results = await conditionValidator.ValidateByPlanItemAsync(oldNom.PlanItemId, input.NewEmployeeId);
-        var failed = results.Where(r => !r.Passed).ToList();
-        if (failed.Any())
-        {
-            var details = string.Join(" | ", failed.Select(f => $"{f.ConditionTypeAr}: {f.Details}"));
-            throw new Volo.Abp.BusinessException("Training:Nomination:ConditionFailed")
-                .WithData("Details", details);
-        }
 
         // Mark old as rejected
         oldNom.Status = NominationStatus.Rejected;

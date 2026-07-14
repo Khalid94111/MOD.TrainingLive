@@ -14,6 +14,7 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
         catalog.AddChild(TrainingPermissions.CourseCatalog.Create, L("Permission:CourseCatalog.Create"));
         catalog.AddChild(TrainingPermissions.CourseCatalog.Update, L("Permission:CourseCatalog.Update"));
         catalog.AddChild(TrainingPermissions.CourseCatalog.Delete, L("Permission:CourseCatalog.Delete"));
+        catalog.AddChild(TrainingPermissions.CourseCatalog.ViewSubscribedTenants, L("Permission:CourseCatalog.ViewSubscribedTenants"));
 
         var fields = group.AddPermission(TrainingPermissions.CourseFields.Default, L("Permission:CourseFields"));
         fields.AddChild(TrainingPermissions.CourseFields.Create, L("Permission:CourseFields.Create"));
@@ -28,7 +29,6 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
         tenantCourses.AddChild(TrainingPermissions.TenantCourses.Create, L("Permission:TenantCourses.Create"));
         tenantCourses.AddChild(TrainingPermissions.TenantCourses.Update, L("Permission:TenantCourses.Update"));
         tenantCourses.AddChild(TrainingPermissions.TenantCourses.Delete, L("Permission:TenantCourses.Delete"));
-        tenantCourses.AddChild(TrainingPermissions.TenantCourses.EditConditions, L("Permission:TenantCourses.EditConditions"));
 
         var plans = group.AddPermission(TrainingPermissions.TrainingPlans.Default, L("Permission:TrainingPlans"));
         plans.AddChild(TrainingPermissions.TrainingPlans.Create, L("Permission:TrainingPlans.Create"));
@@ -57,7 +57,6 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
         var finance = group.AddPermission(TrainingPermissions.Finance.Default, L("Permission:Finance"));
         finance.AddChild(TrainingPermissions.Finance.ManageItems, L("Permission:Finance.ManageItems"));
         finance.AddChild(TrainingPermissions.Finance.ManageBudgets, L("Permission:Finance.ManageBudgets"));
-        finance.AddChild(TrainingPermissions.Finance.ManageExchangeRates, L("Permission:Finance.ManageExchangeRates"));
         finance.AddChild(TrainingPermissions.Finance.ManageDefaults, L("Permission:Finance.ManageDefaults"));
         finance.AddChild(TrainingPermissions.Finance.ManagePayments, L("Permission:Finance.ManagePayments"));
 
@@ -86,26 +85,6 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
         financialItemsGroup.AddChild(
             TrainingPermissions.FinancialItems.Delete,
             L("Permission:FinancialItems.Delete"));
-
-        var defaultsGroup = group.AddPermission(
-            TrainingPermissions.CourseTypeFinancialDefaults.Default,
-            L("Permission:CourseTypeFinancialDefaults"));
-        defaultsGroup.AddChild(
-            TrainingPermissions.CourseTypeFinancialDefaults.Create,
-            L("Permission:CourseTypeFinancialDefaults.Create"));
-        defaultsGroup.AddChild(
-            TrainingPermissions.CourseTypeFinancialDefaults.Delete,
-            L("Permission:CourseTypeFinancialDefaults.Delete"));
-
-        var exchangeRatesGroup = group.AddPermission(
-            TrainingPermissions.ExchangeRates.Default,
-            L("Permission:ExchangeRates"));
-        exchangeRatesGroup.AddChild(
-            TrainingPermissions.ExchangeRates.Create,
-            L("Permission:ExchangeRates.Create"));
-        exchangeRatesGroup.AddChild(
-            TrainingPermissions.ExchangeRates.Delete,
-            L("Permission:ExchangeRates.Delete"));
 
         var budgetsGroup = group.AddPermission(
             TrainingPermissions.TrainingBudgets.Default,

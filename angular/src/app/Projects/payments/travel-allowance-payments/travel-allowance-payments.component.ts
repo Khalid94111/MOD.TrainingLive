@@ -29,8 +29,7 @@ import type {
   CasualCourseNominationDto,
 } from 'src/app/proxy/training/casual-courses/dtos/models';
 import { CasualCourseStatus } from 'src/app/proxy/training/enums/casual-course-status.enum';
-import { ExchangeRateService } from '../../shared/services/finance-proxy.service';
-import type { ExchangeRateDto, PriceQuoteDto } from 'src/app/proxy/training/finance/dtos/models';
+import type { PriceQuoteDto } from 'src/app/proxy/training/finance/dtos/models';
 import { PriceQuoteService } from 'src/app/proxy/training/finance/price-quote.service';
 import { TravelInstructionService } from 'src/app/proxy/training/execution/travel-instruction.service';
 import type { TravelInstructionDto } from 'src/app/proxy/training/execution/dtos/models';
@@ -68,7 +67,6 @@ export class TravelAllowancePaymentsComponent implements OnInit {
   private courseService = inject(CasualCourseService);
   private quoteService = inject(PriceQuoteService);
   private travelInstructionService = inject(TravelInstructionService);
-  private exchangeService = inject(ExchangeRateService);
   private permissions = inject(PermissionService);
   l = inject(TrainingLocalizationHelper);
 
@@ -79,7 +77,6 @@ export class TravelAllowancePaymentsComponent implements OnInit {
   rows = signal<TravelAllowancePaymentDto[]>([]);
   loading = signal(true);
   approvedCourses = signal<CasualCourseDto[]>([]);
-  exchangeRate = signal<number>(2.6);   // OMR → USD; reset on load
 
   filterCourseId = signal<string | null>(null);
   filterStatus = signal<PaymentStatus | null>(null);
@@ -277,7 +274,7 @@ export class TravelAllowancePaymentsComponent implements OnInit {
       { value: PersonnelType.Enlisted, text: this.l.t('::Training.PersonnelType.Enlisted') },
     ];
 
-    await Promise.all([this.loadRows(), this.loadApprovedCourses(), this.loadExchangeRate()]);
+    await Promise.all([this.loadRows(), this.loadApprovedCourses()]);
   }
 
   private async loadRows(): Promise<void> {
@@ -305,15 +302,6 @@ export class TravelAllowancePaymentsComponent implements OnInit {
     }
   }
 
-  private async loadExchangeRate(): Promise<void> {
-    try {
-      const rate = await this.exchangeService.getActive();
-      if (rate?.rate && rate.rate > 0) this.exchangeRate.set(rate.rate);
-    } catch {
-      // keep default 2.6
-    }
-  }
-
   // ── Filter handlers ──
   onCourseFilterChange(value: string | null): void {
     this.filterCourseId.set(value);
@@ -335,11 +323,6 @@ export class TravelAllowancePaymentsComponent implements OnInit {
   }
 
   // ── Display helpers ──
-  toUSD(omr: number | null | undefined): string {
-    const v = (omr ?? 0) * this.exchangeRate();
-    return v.toLocaleString('en-US', { maximumFractionDigits: 0 });
-  }
-
   formatOMR(value: number | null | undefined): string {
     return (value ?? 0).toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
   }

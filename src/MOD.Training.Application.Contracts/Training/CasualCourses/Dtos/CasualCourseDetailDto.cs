@@ -8,7 +8,6 @@ public class CasualCourseDetailDto : CasualCourseDto
     public List<CasualCourseNominationDto> Nominations { get; set; } = new();
     public List<CasualCourseFinancialItemDto> FinancialItems { get; set; } = new();
     public PlanNoteDto? LatestReturnNote { get; set; }
-    public string? ConditionSummary { get; set; }
 
     // Phase 4C-α Patch 1 (v4.10.1) — Course Info Bar fields.
     // Officer/Enlisted split derived from each nominee's Rank.PersonnelType.

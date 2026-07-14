@@ -28,7 +28,6 @@ import { CasualCourseStatus } from 'src/app/proxy/training/enums/casual-course-s
 
 import { FinancialItemService } from 'src/app/proxy/training/finance';
 import type { FinancialItemDto } from 'src/app/proxy/training/finance/dtos/models';
-import { ExchangeRateService } from '../../shared/services/finance-proxy.service';
 
 import { TrainingLocalizationHelper } from '../../shared';
 
@@ -67,7 +66,6 @@ export class BudgetReallocationsComponent implements OnInit {
   private service = inject(BudgetReallocationService);
   private courseService = inject(CasualCourseService);
   private financialItemService = inject(FinancialItemService);
-  private exchangeService = inject(ExchangeRateService);
   private permissions = inject(PermissionService);
   l = inject(TrainingLocalizationHelper);
 
@@ -79,7 +77,6 @@ export class BudgetReallocationsComponent implements OnInit {
   allCourses = signal<CasualCourseDto[]>([]);
   financialItems = signal<FinancialItemDto[]>([]);
   loading = signal(true);
-  exchangeRate = signal<number>(2.6);
 
   // ── Filters ──
   filterStatus = signal<ReallocationStatus | null>(null);
@@ -180,7 +177,6 @@ export class BudgetReallocationsComponent implements OnInit {
       this.loadRows(),
       this.loadCourses(),
       this.loadFinancialItems(),
-      this.loadExchangeRate(),
     ]);
   }
 
@@ -220,13 +216,6 @@ export class BudgetReallocationsComponent implements OnInit {
     }
   }
 
-  private async loadExchangeRate(): Promise<void> {
-    try {
-      const r = await this.exchangeService.getActive();
-      if (r?.rate && r.rate > 0) this.exchangeRate.set(r.rate);
-    } catch { /* noop */ }
-  }
-
   // ── Filter handlers ──
   onStatusFilterChange(v: ReallocationStatus | null): void { this.filterStatus.set(v); }
   onCourseFilterChange(v: string | null): void { this.filterCourseId.set(v); }
@@ -245,10 +234,6 @@ export class BudgetReallocationsComponent implements OnInit {
   }
 
   // ── Display helpers ──
-  toUSD(omr: number | null | undefined): string {
-    return ((omr ?? 0) * this.exchangeRate()).toLocaleString('en-US', { maximumFractionDigits: 0 });
-  }
-
   formatOMR(value: number | null | undefined): string {
     return (value ?? 0).toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
   }

@@ -43,18 +43,6 @@ export enum CompletionStatus {
   Cancelled = 3,
 }
 
-export enum ConditionType {
-  Rank = 0,
-  Age = 1,
-  ServiceYears = 2,
-  Education = 3,
-  MedicalFitness = 4,
-  SecurityClearance = 5,
-  LanguageLevel = 6,
-  PreviousCourse = 7,
-  Custom = 8,
-}
-
 export enum ApprovalStatus {
   Pending = 0,
   Approved = 1,
@@ -113,18 +101,6 @@ export const RESULT_TYPE_OPTIONS = [
   { value: ResultType.PassFail, key: '::Training.ResultType.PassFail' },
   { value: ResultType.CompletedNotCompleted, key: '::Training.ResultType.CompletedNotCompleted' },
   { value: ResultType.GradeScore, key: '::Training.ResultType.GradeScore' },
-];
-
-export const CONDITION_TYPE_OPTIONS = [
-  { value: ConditionType.Rank, key: '::Training.ConditionType.Rank' },
-  { value: ConditionType.Age, key: '::Training.ConditionType.Age' },
-  { value: ConditionType.ServiceYears, key: '::Training.ConditionType.ServiceYears' },
-  { value: ConditionType.Education, key: '::Training.ConditionType.Education' },
-  { value: ConditionType.MedicalFitness, key: '::Training.ConditionType.MedicalFitness' },
-  { value: ConditionType.SecurityClearance, key: '::Training.ConditionType.SecurityClearance' },
-  { value: ConditionType.LanguageLevel, key: '::Training.ConditionType.LanguageLevel' },
-  { value: ConditionType.PreviousCourse, key: '::Training.ConditionType.PreviousCourse' },
-  { value: ConditionType.Custom, key: '::Training.ConditionType.Custom' },
 ];
 
 export const PROPOSAL_STATUS_OPTIONS = [

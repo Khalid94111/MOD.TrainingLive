@@ -13,8 +13,7 @@ import type {
   CourseCatalogDto,
   CreateUpdateCourseCatalogDto,
   CourseCatalogGetListInput,
-  CatalogEnrollmentConditionDto,
-  CreateUpdateCatalogEnrollmentConditionDto,
+  CourseCatalogSubscribedTenantDto,
 } from '../../../proxy/training/catalog/dtos';
 import type {
   CourseFieldDto,
@@ -31,7 +30,6 @@ import type {
   AddFromCatalogDto,
   UpdateTenantCourseDto,
   TenantCourseGetListInput,
-  TenantCourseConditionDto,
 } from '../../../proxy/training/tenant-courses/dtos';
 
 import type { PagedResultDto, PagedAndSortedResultRequestDto } from '@abp/ng.core';
@@ -46,9 +44,7 @@ import type { PagedResultDto, PagedAndSortedResultRequestDto } from '@abp/ng.cor
  *   POST   /api/app/course-catalog
  *   PUT    /api/app/course-catalog/{id}
  *   DELETE /api/app/course-catalog/{id}
- *   GET    /api/app/course-catalog/conditions/{catalogCourseId}
- *   POST   /api/app/course-catalog/condition/{catalogCourseId}
- *   DELETE /api/app/course-catalog/condition/{conditionId}
+ *   GET    /api/app/course-catalog/subscribed-tenants/{catalogCourseId}
  */
 @Injectable({ providedIn: 'root' })
 export class CourseCatalogService {
@@ -74,16 +70,8 @@ export class CourseCatalogService {
     return firstValueFrom(this.proxy.delete(id));
   }
 
-  getConditions(catalogCourseId: string): Promise<CatalogEnrollmentConditionDto[]> {
-    return firstValueFrom(this.proxy.getConditions(catalogCourseId));
-  }
-
-  addCondition(catalogCourseId: string, body: CreateUpdateCatalogEnrollmentConditionDto): Promise<CatalogEnrollmentConditionDto> {
-    return firstValueFrom(this.proxy.addCondition(catalogCourseId, body));
-  }
-
-  removeCondition(conditionId: string): Promise<void> {
-    return firstValueFrom(this.proxy.removeCondition(conditionId));
+  getSubscribedTenants(catalogCourseId: string): Promise<CourseCatalogSubscribedTenantDto[]> {
+    return firstValueFrom(this.proxy.getSubscribedTenants(catalogCourseId));
   }
 }
 
@@ -166,7 +154,6 @@ export class CourseProposalService {
  *   POST   /api/app/tenant-course/from-catalog
  *   PUT    /api/app/tenant-course/{id}
  *   DELETE /api/app/tenant-course/{id}
- *   GET    /api/app/tenant-course/conditions/{tenantCourseId}
  *   GET    /api/app/tenant-course/available-catalog-courses
  */
 @Injectable({ providedIn: 'root' })
@@ -191,10 +178,6 @@ export class TenantCourseService {
 
   delete(id: string): Promise<void> {
     return firstValueFrom(this.proxy.delete(id));
-  }
-
-  getConditions(tenantCourseId: string): Promise<TenantCourseConditionDto[]> {
-    return firstValueFrom(this.proxy.getConditions(tenantCourseId));
   }
 
   getAvailableCatalogCourses(params: PagedAndSortedResultRequestDto): Promise<PagedResultDto<CourseCatalogDto>> {

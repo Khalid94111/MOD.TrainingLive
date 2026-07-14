@@ -70,21 +70,6 @@ builder.ConfigurePaymentsPhase4BBeta();
             b.Property(x => x.FieldNameEn).IsRequired().HasMaxLength(TrainingConsts.MaxFieldNameLength);
         });
 
-        builder.Entity<CatalogEnrollmentCondition>(b =>
-        {
-            b.ToTable(TrainingConsts.DbTablePrefix + "CatalogEnrollmentConditions", TrainingConsts.DbSchema);
-            b.ConfigureByConvention();
-
-            b.Property(x => x.ConditionValue).IsRequired().HasMaxLength(TrainingConsts.MaxConditionValueLength);
-
-            b.HasOne(x => x.CatalogCourse)
-                .WithMany()
-                .HasForeignKey(x => x.CatalogCourseId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            b.HasIndex(x => x.CatalogCourseId);
-        });
-
         builder.Entity<CourseProposal>(b =>
         {
             b.ToTable(TrainingConsts.DbTablePrefix + "CourseProposals", TrainingConsts.DbSchema);
@@ -123,20 +108,6 @@ builder.ConfigurePaymentsPhase4BBeta();
             b.HasIndex(x => x.TenantId);
         });
 
-        builder.Entity<TenantCourseCondition>(b =>
-        {
-            b.ToTable(TrainingConsts.DbTablePrefix + "TenantCourseConditions", TrainingConsts.DbSchema);
-            b.ConfigureByConvention();
-
-            b.Property(x => x.ConditionValue).IsRequired().HasMaxLength(TrainingConsts.MaxConditionValueLength);
-
-            b.HasOne(x => x.TenantCourse)
-                .WithMany()
-                .HasForeignKey(x => x.TenantCourseId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            b.HasIndex(x => x.TenantCourseId);
-        });
     }
 
     private static void ConfigureTrainingSystem(this ModelBuilder builder)
@@ -175,42 +146,6 @@ builder.ConfigurePaymentsPhase4BBeta();
             b.Property(x => x.ItemType).HasConversion<int?>();
 
             b.HasIndex(x => new { x.TenantId, x.NameAr });
-        });
-
-        // ============================================================
-        // TrnCourseTypeFinancialItemDefaults
-        // ============================================================
-        builder.Entity<CourseTypeFinancialItemDefault>(b =>
-        {
-            b.ToTable("TrnCourseTypeFinancialItemDefaults");
-            b.ConfigureByConvention();
-
-            b.Property(x => x.CourseType).IsRequired();
-            b.Property(x => x.SortOrder).IsRequired();
-
-            b.HasOne(x => x.FinancialItem)
-                .WithMany()
-                .HasForeignKey(x => x.FinancialItemId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            b.HasIndex(x => new { x.TenantId, x.CourseType, x.FinancialItemId })
-                .IsUnique();
-        });
-
-        // ============================================================
-        // TrnExchangeRates
-        // ============================================================
-        builder.Entity<ExchangeRate>(b =>
-        {
-            b.ToTable("TrnExchangeRates");
-            b.ConfigureByConvention();
-
-            b.Property(x => x.FromCurrency).IsRequired().HasMaxLength(10);
-            b.Property(x => x.ToCurrency).IsRequired().HasMaxLength(10);
-            b.Property(x => x.Rate).HasPrecision(18, 6);
-            b.Property(x => x.Notes).HasMaxLength(500);
-
-            b.HasIndex(x => x.IsActive);
         });
 
         // ============================================================
@@ -335,20 +270,6 @@ builder.ConfigurePaymentsPhase4BBeta();
             b.HasIndex(x => x.TenantCourseId);
         });
 
-        builder.Entity<PlanItemCondition>(b =>
-        {
-            b.ToTable(TrainingConsts.DbTablePrefix + "PlanItemConditions", TrainingConsts.DbSchema);
-            b.ConfigureByConvention();
-
-            b.Property(x => x.PlanItemId).IsRequired();
-            b.Property(x => x.ConditionType).IsRequired();
-            b.Property(x => x.ConditionValue).IsRequired().HasMaxLength(TrainingConsts.MaxConditionValueLength);
-
-            b.HasOne(x => x.PlanItem).WithMany().HasForeignKey(x => x.PlanItemId).OnDelete(DeleteBehavior.Cascade);
-
-            b.HasIndex(x => x.PlanItemId);
-        });
-
         builder.Entity<Course>(b =>
         {
             b.ToTable(TrainingConsts.DbTablePrefix + "Courses", TrainingConsts.DbSchema);
@@ -427,19 +348,6 @@ builder.ConfigurePaymentsPhase4BBeta();
             b.HasIndex(x => new { x.TenantId, x.SessionId, x.EmployeeId }).IsUnique();
         });
 
-        builder.Entity<SessionCondition>(b =>
-        {
-            b.ToTable(TrainingConsts.DbTablePrefix + "SessionConditions", TrainingConsts.DbSchema);
-            b.ConfigureByConvention();
-
-            b.Property(x => x.SessionId).IsRequired();
-            b.Property(x => x.ConditionType).IsRequired();
-            b.Property(x => x.ConditionValue).IsRequired().HasMaxLength(TrainingConsts.MaxConditionValueLength);
-
-            b.HasOne(x => x.Session).WithMany().HasForeignKey(x => x.SessionId).OnDelete(DeleteBehavior.Cascade);
-
-            b.HasIndex(x => x.SessionId);
-        });
     }
      public static void ConfigureNominations(this ModelBuilder builder)
     {

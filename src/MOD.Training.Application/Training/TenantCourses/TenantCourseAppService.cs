@@ -20,9 +20,7 @@ namespace MOD.Training.Training.TenantCourses;
 [Authorize(TrainingPermissions.TenantCourses.Default)]
 public class TenantCourseAppService(
     IRepository<TenantCourse, Guid> tenantCourseRepo,
-    IRepository<TenantCourseCondition, Guid> conditionRepo,
     IRepository<CourseCatalog, Guid> catalogRepo,
-    IRepository<CatalogEnrollmentCondition, Guid> catalogConditionRepo,
     IMapper mapper)
     : ApplicationService, ITenantCourseAppService
 {
@@ -33,8 +31,7 @@ public class TenantCourseAppService(
         var entity = await AsyncExecuter.FirstOrDefaultAsync(queryable.Where(x => x.Id == id))
             ?? throw new BusinessException("Training:TenantCourse:NotFound");
 
-        var count = await conditionRepo.CountAsync(c => c.TenantCourseId == id);
-        return MapToDto(entity, count);
+        return MapToDto(entity);
     }
 
     public async Task<PagedResultDto<TenantCourseDto>> GetListAsync(TenantCourseGetListInput input)
@@ -51,26 +48,27 @@ public class TenantCourseAppService(
                 .Skip(input.SkipCount)
                 .Take(input.MaxResultCount));
 
-        var tcIds = items.Select(x => x.Id).ToList();
-        var countMap = await GetConditionsCountMapAsync(tcIds);
-
         return new PagedResultDto<TenantCourseDto>(
             totalCount,
-            items.Select(x => MapToDto(x, countMap.GetValueOrDefault(x.Id, 0))).ToList());
+            items.Select(MapToDto).ToList());
     }
 
     /// <summary>
-    /// Add courses from catalog. Auto-copies conditions (locked).
+    /// Add courses from catalog.
     /// POST /api/app/tenant-course
     /// </summary>
     [Authorize(TrainingPermissions.TenantCourses.Create)]
     public async Task<List<TenantCourseDto>> AddFromCatalogAsync(AddFromCatalogDto input)
     {
         var result = new List<TenantCourseDto>();
+        var currentTenantId = CurrentTenant.Id;
 
         foreach (var catalogCourseId in input.CatalogCourseIds)
         {
-            if (await tenantCourseRepo.AnyAsync(x => x.CatalogCourseId == catalogCourseId))
+            // Explicit tenant scoping — mirrors the unique index (TenantId, CatalogCourseId)
+            // instead of relying solely on ABP's implicit multi-tenancy filter.
+            if (await tenantCourseRepo.AnyAsync(x =>
+                    x.TenantId == currentTenantId && x.CatalogCourseId == catalogCourseId))
                 throw new BusinessException("Training:TenantCourse:AlreadyAdded")
                     .WithData("catalogCourseId", catalogCourseId);
 
@@ -92,22 +90,6 @@ public class TenantCourseAppService(
             };
 
             tenantCourse = await tenantCourseRepo.InsertAsync(tenantCourse, autoSave: true);
-
-            // Auto-copy catalog conditions → locked tenant conditions
-            var catalogConditions = await catalogConditionRepo.GetListAsync(
-                c => c.CatalogCourseId == catalogCourseId);
-
-            foreach (var catCond in catalogConditions)
-            {
-                await conditionRepo.InsertAsync(new TenantCourseCondition
-                {
-                    TenantCourseId = tenantCourse.Id,
-                    ConditionType = catCond.ConditionType,
-                    ConditionValue = catCond.ConditionValue,
-                    IsActive = true,
-                }, autoSave: true);
-            }
-
             result.Add(await GetAsync(tenantCourse.Id));
         }
 
@@ -130,23 +112,15 @@ public class TenantCourseAppService(
     }
 
     /// <summary>
-    /// Read-only locked conditions.
-    /// GET /api/app/tenant-course/{tenantCourseId}/conditions
-    /// </summary>
-    public async Task<List<TenantCourseConditionDto>> GetConditionsAsync(Guid tenantCourseId)
-    {
-        var conditions = await conditionRepo.GetListAsync(c => c.TenantCourseId == tenantCourseId);
-        return conditions.Select(c => mapper.Map<TenantCourseConditionDto>(c)).ToList();
-    }
-
-    /// <summary>
     /// Active catalog courses NOT yet added to this tenant.
     /// GET /api/app/tenant-course/available-catalog-courses
     /// </summary>
     public async Task<PagedResultDto<CourseCatalogDto>> GetAvailableCatalogCoursesAsync(
         PagedAndSortedResultRequestDto input)
     {
+        var currentTenantId = CurrentTenant.Id;
         var existingIds = (await tenantCourseRepo.GetQueryableAsync())
+            .Where(x => x.TenantId == currentTenantId)
             .Select(x => x.CatalogCourseId);
 
         var queryable = await catalogRepo.WithDetailsAsync(x => x.Field!);
@@ -175,24 +149,13 @@ public class TenantCourseAppService(
     // PRIVATE
     // ═══════════════════════════════════════════
 
-    private async Task<Dictionary<Guid, int>> GetConditionsCountMapAsync(List<Guid> tcIds)
-    {
-        var queryable = await conditionRepo.GetQueryableAsync();
-        var groups = await AsyncExecuter.ToListAsync(
-            queryable.Where(c => tcIds.Contains(c.TenantCourseId))
-                .GroupBy(c => c.TenantCourseId)
-                .Select(g => new { Id = g.Key, Count = g.Count() }));
-        return groups.ToDictionary(x => x.Id, x => x.Count);
-    }
-
-    private TenantCourseDto MapToDto(TenantCourse entity, int conditionsCount)
+    private TenantCourseDto MapToDto(TenantCourse entity)
     {
         var dto = mapper.Map<TenantCourseDto>(entity);
         dto.CatalogCourseNameAr = entity.CatalogCourse?.CourseNameAr ?? string.Empty;
         dto.CatalogCourseNameEn = entity.CatalogCourse?.CourseNameEn ?? string.Empty;
         dto.CatalogCourseFieldNameAr = entity.CatalogCourse?.Field?.FieldNameAr;
         dto.CatalogCourseCategory = entity.CatalogCourse?.Category;
-        dto.ConditionsCount = conditionsCount;
         dto.AddedAtFormatted = entity.AddedAt.ToString("yyyy-MM-dd HH:mm", global::System.Globalization.CultureInfo.InvariantCulture);
         return dto;
     }

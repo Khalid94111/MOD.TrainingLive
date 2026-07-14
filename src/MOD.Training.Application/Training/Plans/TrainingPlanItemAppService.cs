@@ -20,14 +20,11 @@ namespace MOD.Training.Training.Plans;
 public class TrainingPlanItemAppService(
     IRepository<TrainingPlanItem, Guid> repository,
     IRepository<TrainingPlan, Guid> planRepository,
-    IRepository<TenantCourseCondition, Guid> tenantConditionRepository,
-    IRepository<PlanItemCondition, Guid> planItemConditionRepository,
     IRepository<Nomination, Guid> nominationRepository,
     IOrganizationUnitRepository orgUnitRepository,
     CourseNameResolver courseNameResolver,
     EmployeeResolver employeeResolver,
     PlanItemCostCalculator costCalculator,
-    NominationConditionValidator conditionValidator,
     PlanItemRankBreakdownManager rankBreakdownManager,
     PlanItemUnitScope unitScope,
     IPlanNoteAppService planNoteAppService,
@@ -156,35 +153,14 @@ public class TrainingPlanItemAppService(
 
         await repository.InsertAsync(entity, autoSave: true);
 
-        // Copy conditions BEFORE validating nominees
-        await CopyConditionsAsync(entity.Id, input.TenantCourseId);
+        if (input.NomineeEmployeeIds.Count == 0)
+            throw new Volo.Abp.BusinessException("Training:TrainingPlanItem:AtLeastOneNomineeRequired");
 
-        // CHG-01 — validate every nominee against conditions, then create
-        var failures = new List<string>();
-        //foreach (var employeeId in input.NomineeEmployeeIds.Distinct())
-        //{
-        //    var results = await conditionValidator.ValidateByPlanItemAsync(entity.Id, employeeId);
-        //    var failed = results.Where(r => !r.Passed).ToList();
-        //    if (failed.Any())
-        //    {
-        //        var emp = await employeeResolver.GetByIdAsync(employeeId);
-        //        failures.Add($"{emp?.FullNameAr ?? employeeId.ToString()}: " +
-        //                     string.Join(", ", failed.Select(f => f.Details)));
-        //        continue;
-        //    }
-
-        //    var nomination = new Nomination(
-        //        GuidGenerator.Create(),
-        //        entity.Id,
-        //        employeeId,
-        //        CurrentUser.Id!.Value);
-        //    await nominationRepository.InsertAsync(nomination, autoSave: true);
-        //}
-
-        if (failures.Any())
+        foreach (var employeeId in input.NomineeEmployeeIds.Distinct())
         {
-            throw new Volo.Abp.BusinessException("Training:Nomination:ConditionFailed")
-                .WithData("Failures", string.Join(" | ", failures));
+            await nominationRepository.InsertAsync(
+                new Nomination(GuidGenerator.Create(), entity.Id, employeeId, CurrentUser.Id!.Value),
+                autoSave: true);
         }
 
         var dto = toDtoMapper.Map(entity);
@@ -231,8 +207,6 @@ public class TrainingPlanItemAppService(
         if (oldDays != input.DurationDays)
             await rankBreakdownManager.RefreshForDaysChangeAsync(entity.Id);
 
-        // Diff nominees after item fields are saved so condition validation and
-        // the rank-breakdown cascade see the latest duration/dates.
         var nominationChanged = await DiffNominationsAsync(entity, input.NomineeEmployeeIds);
         if (nominationChanged)
             await rankBreakdownManager.RefreshForNomineeChangeAsync(entity.Id);
@@ -246,8 +220,8 @@ public class TrainingPlanItemAppService(
     /// Diffs the requested nominee list against existing nominations for this plan item.
     /// Preserves untouched rows (keeping their IDs, IsReturned flag, and any post-course
     /// result data), deletes nominees no longer in the list (unless a result has already
-    /// been entered), and creates new nominations for additions after running the same
-    /// condition validation used by CreateAsync. Returns true when any row changed.
+    /// been entered), and creates new nominations for additions.
+    /// Returns true when any row changed.
     /// The whole update runs inside the ABP UoW, so any throw here rolls back the item
     /// field updates too.
     /// </summary>
@@ -279,28 +253,11 @@ public class TrainingPlanItemAppService(
             await nominationRepository.DeleteAsync(nom);
         }
 
-        var failures = new List<string>();
         foreach (var employeeId in toAdd)
         {
-            var results = await conditionValidator.ValidateByPlanItemAsync(entity.Id, employeeId);
-            var failed = results.Where(r => !r.Passed).ToList();
-            if (failed.Any())
-            {
-                var emp = await employeeResolver.GetByIdAsync(employeeId);
-                failures.Add($"{emp?.FullNameAr ?? employeeId.ToString()}: " +
-                             string.Join(", ", failed.Select(f => f.Details)));
-                continue;
-            }
-
             await nominationRepository.InsertAsync(
                 new Nomination(GuidGenerator.Create(), entity.Id, employeeId, CurrentUser.Id!.Value),
                 autoSave: true);
-        }
-
-        if (failures.Any())
-        {
-            throw new Volo.Abp.BusinessException("Training:Nomination:ConditionFailed")
-                .WithData("Failures", string.Join(" | ", failures));
         }
 
         return true;
@@ -338,36 +295,6 @@ public class TrainingPlanItemAppService(
         entity.IsReturned = true;
         entity.LastReturnNoteId = noteDto.Id;
         await repository.UpdateAsync(entity, autoSave: true);
-    }
-
-    public async Task<List<PlanItemConditionDto>> GetConditionsAsync(Guid planItemId)
-    {
-        await unitScope.EnsureCanAccessPlanItemAsync(planItemId);
-        var queryable = await planItemConditionRepository.GetQueryableAsync();
-        var conditions = await AsyncExecuter.ToListAsync(
-            queryable.Where(x => x.PlanItemId == planItemId));
-
-        return conditions.Select(c => new PlanItemConditionDto
-        {
-            Id = c.Id,
-            PlanItemId = c.PlanItemId,
-            ConditionType = c.ConditionType,
-            ConditionValue = c.ConditionValue,
-        }).ToList();
-    }
-
-    private async Task CopyConditionsAsync(Guid planItemId, Guid tenantCourseId)
-    {
-        var condQueryable = await tenantConditionRepository.GetQueryableAsync();
-        var conditions = await AsyncExecuter.ToListAsync(
-            condQueryable.Where(x => x.TenantCourseId == tenantCourseId));
-
-        foreach (var cond in conditions)
-        {
-            await planItemConditionRepository.InsertAsync(
-                new PlanItemCondition(GuidGenerator.Create(), planItemId, cond.ConditionType, cond.ConditionValue),
-                autoSave: true);
-        }
     }
 
     private async Task EnrichSingleDtoAsync(TrainingPlanItemDto dto, TrainingPlanItem entity)

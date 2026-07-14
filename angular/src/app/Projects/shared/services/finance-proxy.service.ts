@@ -4,25 +4,12 @@ import { PagedResultDto } from '@abp/ng.core';
 
 // ABP generated proxies — run: abp generate-proxy -t ng
 import { FinancialItemService as FinancialItemProxy } from '../../../proxy/training/finance/financial-item.service';
-import { CourseTypeFinancialDefaultService as CourseTypeDefaultProxy } from '../../../proxy/training/finance/course-type-financial-default.service';
-import { ExchangeRateService as ExchangeRateProxy } from '../../../proxy/training/finance/exchange-rate.service';
 import { TrainingBudgetService as TrainingBudgetProxy } from '../../../proxy/training/finance/training-budget.service';
 
 import type {
   FinancialItemDto,
   CreateUpdateFinancialItemDto,
   FinancialItemGetListInput,
-} from '../../../proxy/training/finance/dtos';
-
-import type {
-  CourseTypeFinancialItemDefaultDto,
-  CreateCourseTypeFinancialItemDefaultDto,
-} from '../../../proxy/training/finance/dtos';
-
-import type {
-  ExchangeRateDto,
-  CreateExchangeRateDto,
-  ExchangeRateGetListInput,
 } from '../../../proxy/training/finance/dtos';
 
 import type {
@@ -62,47 +49,6 @@ export class FinancialItemService {
 
   getSubItems(): Promise<FinancialItemDto[]> {
     return firstValueFrom(this.proxy.getSubItems());
-  }
-}
-
-// ============================================================
-// Course Type Financial Defaults Service
-// ============================================================
-@Injectable({ providedIn: 'root' })
-export class CourseTypeFinancialDefaultService {
-  private readonly proxy = inject(CourseTypeDefaultProxy);
-
-  
-  create(input: CreateCourseTypeFinancialItemDefaultDto): Promise<CourseTypeFinancialItemDefaultDto> {
-    return firstValueFrom(this.proxy.create(input));
-  }
-
-  delete(id: string): Promise<void> {
-    return firstValueFrom(this.proxy.delete(id));
-  }
-}
-
-// ============================================================
-// Exchange Rate Service
-// ============================================================
-@Injectable({ providedIn: 'root' })
-export class ExchangeRateService {
-  private readonly proxy = inject(ExchangeRateProxy);
-
-  getList(params: ExchangeRateGetListInput): Promise<PagedResultDto<ExchangeRateDto>> {
-    return firstValueFrom(this.proxy.getList(params));
-  }
-
-  getActive(): Promise<ExchangeRateDto> {
-    return firstValueFrom(this.proxy.getActive());
-  }
-
-  create(input: CreateExchangeRateDto): Promise<ExchangeRateDto> {
-    return firstValueFrom(this.proxy.create(input));
-  }
-
-  delete(id: string): Promise<void> {
-    return firstValueFrom(this.proxy.delete(id));
   }
 }
 

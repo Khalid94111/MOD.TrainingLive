@@ -1,5 +1,5 @@
 /* ============================================================
-   Course Catalog — Modern Design (matches exchange-rates)
+   Course Catalog — Modern Design (matches financial-items)
    ============================================================ */
 
 .fi-page {
@@ -191,7 +191,6 @@
 .card-total .stat-card-glow { background: #3b82f6; }
 .card-active .stat-card-glow { background: #22c55e; }
 .card-inactive .stat-card-glow { background: #f59e0b; }
-.card-conditions .stat-card-glow { background: #a855f7; }
 
 .stat-card-icon { font-size: 1.6rem; margin-bottom: 8px; display: block; }
 
@@ -219,7 +218,6 @@
 .card-total .stat-card-bar { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
 .card-active .stat-card-bar { background: linear-gradient(90deg, #22c55e, #4ade80); }
 .card-inactive .stat-card-bar { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
-.card-conditions .stat-card-bar { background: linear-gradient(90deg, #a855f7, #c084fc); }
 
 /* ── Filters Bar ── */
 .filters-bar-modern {
@@ -352,7 +350,6 @@
 .data-table th.th-field { text-align: center; }
 .data-table th.th-category { text-align: center; }
 .data-table th.th-result { text-align: center; }
-.data-table th.th-conditions { text-align: center; }
 .data-table th.th-status { text-align: center; }
 .data-table th.th-actions { text-align: center; }
 
@@ -377,7 +374,6 @@
 .td-field { text-align: center; }
 .td-category { text-align: center; }
 .td-result { text-align: center; }
-.td-conditions { text-align: center; }
 .td-status { text-align: center; }
 .td-actions { text-align: center; }
 
@@ -470,6 +466,7 @@
 }
 
 .action-edit:hover { background: #dbeafe; color: #2563eb; }
+.action-tenants:hover { background: #e0e7ff; color: #4f46e5; }
 .action-activate:hover { background: #dcfce7; color: #16a34a; }
 .action-deactivate:hover { background: #fee2e2; color: #dc2626; }
 .action-delete:hover { background: #fee2e2; color: #dc2626; }

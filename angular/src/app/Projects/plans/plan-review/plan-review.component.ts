@@ -13,7 +13,6 @@ import {
   TrainingPlanItemDto,
   TrainingPlanDto,
   PlanItemFinancialItemDto,
-  PlanItemConditionDto,
   PlanItemFinancialItemRankDto,
 } from 'src/app/proxy/training/plans/dtos';
 import { NominationService } from 'src/app/proxy/training/nominations/nomination.service';
@@ -69,7 +68,6 @@ export class PlanReviewComponent implements OnInit {
   // Expanded item detail
   expandedItemId = signal<string | null>(null);
   financialItemsMap = signal(new Map<string, PlanItemFinancialItemDto[]>());
-  conditionsMap = signal(new Map<string, PlanItemConditionDto[]>());
   ranksMap = signal(new Map<string, PlanItemFinancialItemRankDto[]>());
   nominationsMap = signal(new Map<string, NominationDto[]>());
   loadingItemId = signal<string | null>(null);
@@ -94,10 +92,6 @@ export class PlanReviewComponent implements OnInit {
 
   // Rate update flash
   flashingRankId = signal<string | null>(null);
-
-  // Batch
-  batchFilling = signal(false);
-  batchProgress = signal('');
 
   flatFinancialItems = signal<FinancialItemOption[]>([]);
 
@@ -225,13 +219,11 @@ export class PlanReviewComponent implements OnInit {
     this.loadingItemId.set(itemId);
 
     if (!this.financialItemsMap().has(itemId)) {
-      const [fis, conds, noms] = await Promise.all([
+      const [fis, noms] = await Promise.all([
         firstValueFrom(this.fiService.getListByPlanItem(itemId)),
-        firstValueFrom(this.itemService.getConditions(itemId)),
         firstValueFrom(this.nominationService.getList({ planItemId: itemId, maxResultCount: 500 })),
       ]);
       this.financialItemsMap.update(m => { const n = new Map(m); n.set(itemId, fis); return n; });
-      this.conditionsMap.update(m => { const n = new Map(m); n.set(itemId, conds); return n; });
       this.nominationsMap.update(m => { const n = new Map(m); n.set(itemId, noms.items ?? []); return n; });
 
       await Promise.all(
@@ -249,7 +241,6 @@ export class PlanReviewComponent implements OnInit {
   isItemExpanded(id: string): boolean { return this.expandedItemId() === id; }
   isItemLoading(id: string): boolean { return this.loadingItemId() === id; }
   getFinancialItemsFor(id: string): PlanItemFinancialItemDto[] { return this.financialItemsMap().get(id) ?? []; }
-  getConditionsFor(id: string): PlanItemConditionDto[] { return this.conditionsMap().get(id) ?? []; }
   getRanksFor(pifiId: string): PlanItemFinancialItemRankDto[] { return this.ranksMap().get(pifiId) ?? []; }
   getNominationsFor(id: string): NominationDto[] { return this.nominationsMap().get(id) ?? []; }
 
@@ -317,11 +308,6 @@ export class PlanReviewComponent implements OnInit {
 
   async onNotesChanged(fiId: string, val: string): Promise<void> {
     await firstValueFrom(this.fiService.updateNotes(fiId, { notes: val }));
-  }
-
-  async onAutoFill(itemId: string): Promise<void> {
-    await firstValueFrom(this.fiService.autoFillFromDefaults(itemId));
-    await this.refreshExpandedItem(itemId);
   }
 
   async onDeleteFi(fiId: string, itemId: string): Promise<void> {
@@ -500,27 +486,10 @@ export class PlanReviewComponent implements OnInit {
     setTimeout(() => document.getElementById('item-' + missing.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
   }
 
-  async batchAutoFillUnit(unitId: string, items: TrainingPlanItemDto[]): Promise<void> {
-    const ext = items.filter(i => i.courseType !== 0 && (!i.estimatedCost || i.estimatedCost <= 0));
-    if (ext.length === 0) return;
-    this.batchFilling.set(true);
-    let done = 0;
-    for (const item of ext) {
-      done++;
-      this.batchProgress.set(`${done} / ${ext.length}`);
-      await firstValueFrom(this.fiService.autoFillFromDefaults(item.id!));
-      this.financialItemsMap.update(m => { const n = new Map(m); n.delete(item.id!); return n; });
-    }
-    this.batchFilling.set(false);
-    this.batchProgress.set('');
-    await this.loadItems();
-  }
-
   // ── Helpers ──
   getCourseTypeBadge(t?: number): string { return ({ 0: 'badge-internal', 1: 'badge-ext-local', 2: 'badge-ext-intl' } as Record<number, string>)[t as number] ?? ''; }
   getCourseTypeText(t?: number): string { return ({ 0: 'داخلية', 1: 'خارجية محلية', 2: 'خارجية دولية' } as Record<number, string>)[t as number] ?? ''; }
   getQuarterText(q?: number): string { return ({ 1: 'الربع الأول', 2: 'الربع الثاني', 3: 'الربع الثالث', 4: 'الربع الرابع' } as Record<number, string>)[q as number] ?? ''; }
-  getConditionTypeName(t?: number): string { return ({ 0: 'الرتبة', 1: 'العمر', 2: 'سنوات الخدمة', 3: 'المؤهل', 4: 'لياقة طبية', 5: 'تصريح أمني', 6: 'لغة', 7: 'دورة سابقة', 8: 'مخصص' } as Record<number, string>)[t as number] ?? ''; }
   isMissingCost(i: TrainingPlanItemDto): boolean { return i.courseType !== 0 && (!i.estimatedCost || i.estimatedCost <= 0); }
   formatCost(n?: number): string { if (!n || n <= 0) return ''; return n.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 }); }
   formatDate(d?: string | null): string { if (!d) return '—'; return new Date(d).toLocaleDateString('ar-OM'); }

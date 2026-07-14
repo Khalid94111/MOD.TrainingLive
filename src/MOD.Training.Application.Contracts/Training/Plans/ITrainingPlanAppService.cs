@@ -14,6 +14,7 @@ public interface ITrainingPlanAppService : ICrudAppService<
 {
     Task OpenSubmissionWindowAsync(Guid id);
     Task CloseSubmissionWindowAsync(Guid id);
+    Task ReopenSubmissionWindowAsync(Guid id, ReopenSubmissionWindowDto input);
     Task SubmitForReviewAsync(Guid id);
     Task ApproveAsync(Guid id);
     Task FinalApproveAsync(Guid id);

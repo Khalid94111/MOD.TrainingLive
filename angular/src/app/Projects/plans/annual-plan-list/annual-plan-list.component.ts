@@ -30,6 +30,35 @@ export class AnnualPlanListComponent implements OnInit {
   formOpenDate = signal('');
   formCloseDate = signal('');
 
+  isReopenDialogOpen = signal(false);
+  reopenPlanId = signal<string | null>(null);
+  reopenOpenDate = signal('');
+  reopenCloseDate = signal('');
+
+  // Filters and stats for the modern redesign
+  searchText = signal('');
+  filterStatus = signal<string>('');
+
+  totalPlans = computed(() => this.plans().length);
+  openPlansCount = computed(() => this.plans().filter(p => p.status === PlanStatus.Open).length);
+  submittedPlansCount = computed(() => this.plans().filter(p => p.status === PlanStatus.Submitted || p.status === PlanStatus.UnderReview).length);
+  approvedPlansCount = computed(() => this.plans().filter(p => p.status === PlanStatus.TDApproved || p.status === PlanStatus.THApproved).length);
+  returnedPlansCount = computed(() => this.plans().filter(p => p.status === PlanStatus.ReturnedToCreator).length);
+
+  filteredPlans = computed(() => {
+    const q = this.searchText().trim().toLowerCase();
+    const st = this.filterStatus();
+    return this.plans().filter(p => {
+      if (q) {
+        const yearMatch = (p.year?.toString() ?? '').includes(q);
+        const statusMatch = this.getStatusText(p.status).toLowerCase().includes(q);
+        if (!yearMatch && !statusMatch) return false;
+      }
+      if (st !== '' && p.status !== +st) return false;
+      return true;
+    });
+  });
+
   canCreate = false;
   canReview = false;
   canApprove = false;
@@ -76,7 +105,7 @@ export class AnnualPlanListComponent implements OnInit {
   }
 
   async onDelete(id: string): Promise<void> {
-    if (!confirm('هل أنت متأكد من حذف هذه الخطة؟')) return;
+    if (!confirm('هل أنت متأكد من حذف هذه الخطة؟ لا يمكن التراجع عن هذا الإجراء.')) return;
     await firstValueFrom(this.planService.delete(id));
     await this.loadPlans();
   }
@@ -89,6 +118,36 @@ export class AnnualPlanListComponent implements OnInit {
   async onCloseWindow(id: string): Promise<void> {
     await firstValueFrom(this.planService.closeSubmissionWindow(id));
     await this.loadPlans();
+  }
+
+  openReopenDialog(plan: TrainingPlanDto): void {
+    this.reopenPlanId.set(plan.id);
+    this.reopenOpenDate.set(plan.openDate ?? this.formatDateInput(new Date()));
+    this.reopenCloseDate.set(plan.closeDate ?? '');
+    this.isReopenDialogOpen.set(true);
+  }
+
+  async onReopenWindow(): Promise<void> {
+    const id = this.reopenPlanId();
+    if (!id) return;
+
+    await firstValueFrom(this.planService.reopenSubmissionWindow(id, {
+      openDate: this.reopenOpenDate(),
+      closeDate: this.reopenCloseDate(),
+    }));
+
+    this.isReopenDialogOpen.set(false);
+    this.reopenPlanId.set(null);
+    await this.loadPlans();
+  }
+
+  onReopenCancelled(): void {
+    this.isReopenDialogOpen.set(false);
+    this.reopenPlanId.set(null);
+  }
+
+  formatDateInput(date: Date): string {
+    return date.toISOString().split('T')[0];
   }
 
   navigateToEntry(planId: string): void {
@@ -129,13 +188,16 @@ export class AnnualPlanListComponent implements OnInit {
     } as Record<number, string>)[status] ?? '';
   }
 
+  onSearchInput(event: Event): void { this.searchText.set((event.target as HTMLInputElement).value); }
+
+  clearFilters(): void {
+    this.searchText.set('');
+    this.filterStatus.set('');
+  }
+
   formatDate(date?: string): string {
     if (!date) return '—';
     return new Date(date).toLocaleDateString('ar-OM');
   }
 
-  formatCost(cost: number): string {
-    if (!cost) return '—';
-    return cost.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
-  }
 }

@@ -1,14 +1,85 @@
 # GTMS — Changes Reference Log
 
-> Last updated: 2026-06-08
+> Last updated: 2026-06-04
 >
 > This document tracks all backend & frontend modifications made during the flattening redesign sprint. Use it as a reference before making further updates.
 
 ---
 
-## 1. Financial Items (`training/finance/financial-items`)
+## 1. Annual Plans List (`training/plans`)
 
-### 1.1 Backend
+### 1.1 Frontend
+
+| File | Change | Details |
+|------|--------|---------|
+| `angular/src/app/Projects/plans/annual-plan-list/annual-plan-list.component.html` | **Complete redesign** | Gradient hero header (blue), 6 stat cards (Total / Open / Under Review / Approved / Returned / Total Cost), modern filter bar (search + status), custom data table, refreshed workflow card showing the 6 approval steps, modern modal dialog. |
+| `angular/src/app/Projects/plans/annual-plan-list/annual-plan-list.ts` | **Signals + stats + filters** | Added `searchText`, `filterStatus` signals and `filteredPlans` computed. Added `totalPlans`, `openPlansCount`, `submittedPlansCount`, `approvedPlansCount`, `returnedPlansCount`, `totalEstimatedCost` computed signals. Updated table column label from "عدد البنود" to "عدد الدورات" and tooltip from "إدخال البنود" to "إدخال الدورات". No business logic changed. |
+| `angular/src/app/Projects/plans/annual-plan-list/annual-plan-list.component.scss` | **New design system styles** | Added `.header-banner`, `.stat-cards-row`, `.main-card`, `.filters-bar-modern`, `.data-table`, `.workflow-card`, `.modal-modern`, and responsive rules. Kept existing `.row-returned` highlight. |
+
+### 1.2 Notes
+
+- All UI text on this page is still hard-coded Arabic. A future pass can externalize it into `Training.AnnualPlansList.*` localization keys if needed.
+- Workflow visualization was kept but redesigned as a card with numbered steps.
+
+---
+
+## 2. Plan Entry (`training/plans/entry`)
+
+### 2.1 Terminology Change
+
+Replaced user-facing term **"بند / بنود" (item / items)** with **"دورة / دورات" (course / courses)** across the plan entry page and related localization keys. A plan item in this context is always a `TrainingPlanItem` linked to a `TenantCourse`, so the new term is more accurate for end users.
+
+### 2.2 Frontend
+
+| File | Change | Details |
+|------|--------|---------|
+| `angular/src/app/Projects/plans/plan-entry/plan-entry.component.html` | **Complete redesign** | Gradient hero header (blue), 5 stat cards (Courses / Nominees / Total Cost / Returned / Missing Nominees), info bar with plan window + status, modern filter bar, refreshed accordion/flat table layout, modern modal dialog with clearer section labels. |
+| `angular/src/app/Projects/plans/plan-entry/plan-entry.component.ts` | **Stats signals + terminology** | Added `totalCourses`, `totalNominees`, `totalPlanCost`, `returnedCoursesCount`, `coursesMissingNominees` computed signals. Updated dialog title, delete confirmation, and notes title from "بند" to "دورة". No business logic changed. |
+| `angular/src/app/Projects/plans/plan-entry/plan-entry.component.scss` | **New design system styles** | Added `.header-banner`, `.stat-cards-row`, `.info-bar`, `.filters-bar-modern`, `.data-table`, `.modal-modern`, and responsive rules. Kept existing accordion, return banner, detail card, and dialog styles. |
+
+### 2.3 Localization Keys Updated
+
+```
+Permission:TrainingPlans.SubmitItems        تقديم دورات الخطة / Submit Plan Courses
+Training.PlanItems                          دورات الخطة / Plan Courses
+Training.Menu.PlanEntry                     إدخال دورات الخطة / Plan Course Entry
+Training.TrainingPlanItem                   دورة الخطة / Plan Course
+Training.TrainingPlanItems                  دورات الخطة / Plan Courses
+Training.AddPlanItem                        إضافة دورة / Add Plan Course
+Permission:TrainingPlan.Submit              إرسال دورات الخطة / Submit Plan Courses
+Permission:TrainingPlanItem                 إدارة دورات الخطة / Plan Course Management
+Permission:TrainingPlanItem.Create          Create Plan Courses
+Permission:TrainingPlanItem.Update          Update Plan Courses
+Permission:TrainingPlanItem.Delete          Delete Plan Courses
+Training:CenterPlanItem:PlanNotDraft        لا يمكن تعديل الدورات... / Courses can only be modified...
+Training:TrainingPlanItem:NotFound          دورة الخطة غير موجودة / Plan course not found
+Training:TrainingPlanItem:CannotReturnInThisStatus  ...الدورة... / Plan courses can only be returned...
+Training:TrainingPlanItem:MustHaveAtLeastOneNominee ...الدورة... / ...creating a plan course
+Training.TrainingPlan.SubmittedBannerText   مراجعة الدورات / reviewing courses
+Training.PlanReview.ConsolidatedItems       دورات الخطة الموحدة / Consolidated Plan Courses
+Training.PlanReview.NoItems                 لا توجد دورات في الخطة / No plan courses yet
+Training.PlanReview.SelectItemHint          اختر دورة... / Select a course...
+Training.AnnualPlan.SessionsQueue.Title     دورات الخطة بانتظار إنشاء جلسة / Plan Courses Awaiting Session Creation
+Training.AnnualPlan.SessionsQueue.Subtitle  دورات الخطة السنوية... / TH-approved plan courses...
+Training.AnnualPlan.SessionsQueue.NoItems   No plan courses currently awaiting session creation.
+Training.AnnualPlan.CreateSession.MissingPlanItem   دورة الخطة المطلوبة / Plan course not found.
+Training.AnnualPlan.CreateSession.NoNominees        ...دورة الخطة هذه / ...this plan course.
+Training.AnnualPlan.Substitute.SameRankHint ...في دورة الخطة / ...on this plan course.
+Training.AnnualPlan.Dashboard.Subtitle      تقدّم دورات الخطة... / Approved plan-course progress...
+Training.AnnualPlan.Dashboard.Alert.OverduePlanItem  دورة خطة متأخّرة / Overdue plan course
+Training.Menu.SessionsQueue                 Courses Awaiting Session
+```
+
+### 2.4 Notes
+
+- Financial-item keys (`Training.FinancialItems.*`, `Training.PlanReview.AddFinancialItem`, etc.) intentionally kept as "بند مالي" / "financial item" because they refer to budget line items, not training courses.
+- The `TrainingPlanItem` entity/DTO names remain unchanged in code to preserve API contracts and backend mapping.
+
+---
+
+## 3. Financial Items (`training/finance/financial-items`)
+
+### 3.1 Backend
 
 | File | Change | Details |
 |------|--------|---------|
@@ -19,7 +90,7 @@
 | `src/MOD.Training.Application/Training/Payments/TravelAllowancePaymentAppService.cs` | **No change** | Still relies on `ItemType` to break down travel components. |
 | `src/MOD.Training.EntityFrameworkCore/Training/TrainingDbContextModelCreatingExtensions.cs` | **DB config** | Removed `ParentId` FK constraint & index on `TrnFinancialItems` (flat list). Added `TenantId + NameAr` index. |
 
-### 1.2 Frontend
+### 3.2 Frontend
 
 | File | Change | Details |
 |------|--------|---------|
@@ -27,7 +98,7 @@
 | `angular/.../financial-items.component.ts` | **Signals + Localization** | All hard-coded Arabic text removed. Added `LocalizationPipe` import. `itemTypeLabel()` now uses `l.t()` instead of static Arabic map. Confirm dialogs localized. |
 | `angular/.../financial-items.component.scss` | **New design system** | 1300+ lines matching `gtms-design.scss` patterns. |
 
-### 1.3 Localization Keys Added
+### 3.3 Localization Keys Added
 
 ```
 Training.FinancialItems.HeaderTitle
@@ -55,9 +126,11 @@ Training.FinancialItems.ItemType.{CourseCost,Ticket,Insurance,Visa,Allowance,Clo
 
 ---
 
-## 2. Course Type Financial Defaults (`training/finance/defaults`)
+## 4. Course Type Financial Defaults (`training/finance/defaults`) — REMOVED
 
-### 2.1 Backend
+> **Note:** This feature was completely removed in [Section 13](#13-removal-of-course-type-financial-defaults-trainingfinancedefaults). The information below is retained for historical reference only.
+
+### 4.1 Backend
 
 | File | Change | Details |
 |------|--------|---------|
@@ -65,9 +138,9 @@ Training.FinancialItems.ItemType.{CourseCost,Ticket,Insurance,Visa,Allowance,Clo
 | `src/MOD.Training.Application/Training/Mapper/TrainingAutoMapperProfile.cs` | **NEW — AutoMapper Profile** | Maps `CourseTypeFinancialItemDefault ↔ CourseTypeFinancialItemDefaultDto` (ignores enriched fields `NameAr/NameEn/Code`). Maps `CreateCourseTypeFinancialItemDefaultDto → CourseTypeFinancialItemDefault`. |
 | `src/MOD.Training.Application/TrainingApplicationModule.cs` | **AutoMapper registration** | Added `typeof(AbpAutoMapperModule)` to `[DependsOn]`. `ConfigureServices` registers `AddAutoMapperObjectMapper` + `AddAutoMapper(Assembly)`. |
 | `src/MOD.Training.Application/MOD.Training.Application.csproj` | **Package added** | `Volo.Abp.AutoMapper` v10.1.1 |
-| `src/MOD.Training.Application/Training/Mapper/CourseTypeFinancialItemDefaultMappers.cs` | **Created then obsolete** | Mapperly mappers were created first, then replaced by AutoMapper. Can be deleted if desired. |
+| `src/MOD.Training.Application/Training/Mapper/CourseTypeFinancialItemDefaultMappers.cs` | **Created then deleted** | Mapperly mappers were created first, then replaced by AutoMapper, then deleted when the feature was removed. |
 
-### 2.2 Frontend
+### 4.2 Frontend
 
 | File | Change | Details |
 |------|--------|---------|
@@ -75,7 +148,7 @@ Training.FinancialItems.ItemType.{CourseCost,Ticket,Insurance,Visa,Allowance,Clo
 | `angular/.../financial-item-defaults.component.ts` | **Signals + counts** | Added `externalIntlCount` / `externalLocalCount` signals loaded in parallel. Added `moveUp()` / `moveDown()` with `updateSortOrder` API call. `confirm()` on delete. SelectBox display shows `nameAr (voteCode)`. |
 | `angular/.../financial-item-defaults.component.scss` | **Complete rewrite** | Matches `financial-items` design system. |
 
-### 2.3 Localization Keys Added
+### 4.3 Localization Keys Added
 
 ```
 Training.CourseTypeDefaults.NoItems
@@ -86,7 +159,7 @@ Training.Common.MoveUp
 Training.Common.MoveDown
 ```
 
-### 2.4 Text Updated
+### 4.4 Text Updated
 
 | Key | Old (AR) | New (AR) |
 |-----|----------|----------|
@@ -94,9 +167,9 @@ Training.Common.MoveDown
 
 ---
 
-## 3. Exchange Rates (`training/finance/exchange-rates`)
+## 5. Exchange Rates (`training/finance/exchange-rates`)
 
-### 3.1 Backend
+### 5.1 Backend
 
 | File | Change | Details |
 |------|--------|---------|
@@ -105,7 +178,7 @@ Training.Common.MoveDown
 | `src/MOD.Training.EntityFrameworkCore/Migrations/20260607185526_AddExchangeRateNotes.cs` | **NEW Migration** | Adds `Notes` column (`nvarchar(500)`) to `TrnExchangeRates`. Also applies pending `TrnFinancialItems` schema changes (dropped `ParentId` FK/index — see §1.1). |
 | `src/MOD.Training.EntityFrameworkCore/Migrations/TrainingDbContextModelSnapshot.cs` | **Updated** | Reflects new migration state. |
 
-### 3.2 Frontend
+### 5.2 Frontend
 
 | File | Change | Details |
 |------|--------|---------|
@@ -113,7 +186,7 @@ Training.Common.MoveDown
 | `angular/.../exchange-rates.component.ts` | **Signals + localization** | Added `isLoading`, `totalCount`, `activeCount`, `inactiveCount` signals. `confirm()` on delete. All labels localized. |
 | `angular/.../exchange-rates.component.scss` | **Complete rewrite** | Matches `financial-items` design system with amber/gold accent. |
 
-### 3.3 Localization Keys Added
+### 5.3 Localization Keys Added
 
 ```
 Training.ExchangeRates.AddSubtitle
@@ -125,7 +198,7 @@ Training.ExchangeRates.RateMustBePositive
 Training.ExchangeRates.ConfirmCreate
 ```
 
-### 3.4 Text Updated
+### 5.4 Text Updated
 
 | Key | Old (AR) | New (AR) |
 |-----|----------|----------|
@@ -135,9 +208,9 @@ Training.ExchangeRates.ConfirmCreate
 
 ---
 
-## 4. Training Budgets (`training/finance/budgets`)
+## 6. Training Budgets (`training/finance/budgets`)
 
-### 4.1 Backend
+### 6.1 Backend
 
 | File | Change | Details |
 |------|--------|---------|
@@ -146,7 +219,7 @@ Training.ExchangeRates.ConfirmCreate
 | `src/MOD.Training.Application/Training/Mapper/FinanceMappers.cs` | **Still uses Mapperly** | `TrainingBudgetToDtoMapper` remains a Mapperly mapper. Backend works correctly; migration to AutoMapper is optional for consistency with `CourseTypeFinancialDefaults`. |
 | `src/MOD.Training.Application/Training/Finance/TrainingBudgetAppService.cs` — `GetRecoverableAmountsAsync` | **Batch optimization** | Loads all pending `BudgetReallocation` rows for the requested budgets in a single query, then groups in memory. Sufficient for current data volume. |
 
-### 4.2 Frontend — Complete DevExtreme Removal & Modern Redesign
+### 6.2 Frontend — Complete DevExtreme Removal & Modern Redesign
 
 #### Architecture (TypeScript)
 | File | Change | Details |
@@ -224,7 +297,7 @@ Training.ExchangeRates.ConfirmCreate
   - ≤768px: header padding reduced, title smaller, stat cards → 1 col.
   - ≤576px: everything stacks.
 
-### 4.3 DevExtreme → Custom HTML Migration Matrix
+### 6.3 DevExtreme → Custom HTML Migration Matrix
 
 | Old Control | New Implementation | Notes |
 |-------------|-------------------|-------|
@@ -234,7 +307,7 @@ Training.ExchangeRates.ConfirmCreate
 | `dx-number-box` | `<input type="number">` | Native validation, styled with `.form-input-modern` |
 | `*dxTemplate` cell templates | Inline Angular `@if` / `[class]` / `{{ }}` | No template syntax needed |
 
-### 4.4 Localization Keys
+### 6.4 Localization Keys
 
 **Existing keys reused (no change)**
 ```
@@ -271,9 +344,9 @@ Training.TrainingBudgets.HideCards           → "Hide Cards" / "إخفاء ال
 
 ---
 
-## 5. Course Catalog (`training/catalog`)
+## 7. Course Catalog (`training/catalog`)
 
-### 5.1 Backend — Mapperly → AutoMapper Migration
+### 7.1 Backend — Mapperly → AutoMapper Migration
 
 | File | Change | Details |
 |------|--------|---------|
@@ -284,7 +357,7 @@ Training.TrainingBudgets.HideCards           → "Hide Cards" / "إخفاء ال
 | `src/MOD.Training.Application.Contracts/Training/Catalog/Dtos/CourseCatalogDto.cs` | **No change** | DTO contains all fields needed by new UI including `FieldNameAr`, `ConditionsCount`, `IsActive`. |
 | `src/MOD.Training.Domain/Training/Catalog/CourseCatalog.cs` | **No change** | Entity with navigation to `CourseField`. |
 
-### 5.2 Frontend — Complete DevExtreme Removal & Modern Redesign
+### 7.2 Frontend — Complete DevExtreme Removal & Modern Redesign
 
 #### Main Page (`course-catalog.component`)
 | File | Change | Details |
@@ -300,7 +373,7 @@ Training.TrainingBudgets.HideCards           → "Hide Cards" / "إخفاء ال
 | `angular/.../catalog-form-dialog.component.html` | **Modern modal** | Custom modal backdrop + `.modal-modern.modal-lg`. HTML inputs (text, textarea, select), custom styled switch, custom checkboxes, conditions section with HTML select + text input + SVG action icons. |
 | `angular/.../catalog-form-dialog.component.scss` | **New** | Modal styles (backdrop, header, body, footer), form grid layouts, custom switch, custom checkbox, conditions section, responsive breakpoints. |
 
-### 5.3 DevExtreme → Custom HTML Migration Matrix
+### 7.3 DevExtreme → Custom HTML Migration Matrix
 
 | Old Control | New Implementation | Notes |
 |-------------|-------------------|-------|
@@ -315,7 +388,7 @@ Training.TrainingBudgets.HideCards           → "Hide Cards" / "إخفاء ال
 | `dx-switch` | Custom CSS switch | IsActive toggle |
 | `*dxTemplate` cell templates | Inline Angular `@if` / `[class]` | Table cells |
 
-### 5.4 Localization Keys Added
+### 7.4 Localization Keys Added
 
 ```
 Training.CourseCatalog.NoCourses        → "No courses found" / "لم يتم العثور على دورات"
@@ -325,9 +398,9 @@ Training.CourseCatalog.DeleteConfirm    → "Are you sure you want to delete thi
 
 ---
 
-## 6. Course Proposals (`training/catalog/proposals`)
+## 8. Course Proposals (`training/catalog/proposals`)
 
-### 6.1 Backend — Mapperly → AutoMapper + Validation + Formatted Dates
+### 8.1 Backend — Mapperly → AutoMapper + Validation + Formatted Dates
 
 | File | Change | Details |
 |------|--------|---------|
@@ -338,7 +411,7 @@ Training.CourseCatalog.DeleteConfirm    → "Are you sure you want to delete thi
 | `src/MOD.Training.Application.Contracts/Training/Catalog/Dtos/CourseProposalDto.cs` | **DELETED** | Duplicate file in wrong namespace (`Catalog.Dtos`) causing ambiguous reference build errors. Correct DTOs already exist in `CourseProposals/Dtos/`. |
 | `angular/src/app/proxy/training/course-proposals/dtos/models.ts` | **Updated proxy** | Added `creationTimeFormatted` and `reviewedAtFormatted` to `CourseProposalDto` interface. |
 
-### 6.2 Frontend — Complete DevExtreme Removal & Modern Redesign
+### 8.2 Frontend — Complete DevExtreme Removal & Modern Redesign
 
 #### Architecture (TypeScript)
 | File | Change | Details |
@@ -407,7 +480,7 @@ Training.CourseCatalog.DeleteConfirm    → "Are you sure you want to delete thi
 - Complete rewrite matching `course-fields` / `exchange-rates` design system.
 - Key sections: animations, header banner (teal), stat cards (4-col grid), filter bar, proposal cards, reviewed cards, detail chips, status pills, empty states, skeleton, modals, form inputs, decision cards, validation banner, responsive breakpoints.
 
-### 6.3 DevExtreme → Custom HTML Migration Matrix
+### 8.3 DevExtreme → Custom HTML Migration Matrix
 
 | Old Control | New Implementation | Notes |
 |-------------|-------------------|-------|
@@ -417,7 +490,7 @@ Training.CourseCatalog.DeleteConfirm    → "Are you sure you want to delete thi
 | `dx-text-area` | HTML `<textarea>` | Rejection reason |
 | `dx-data-grid` | Custom card lists | Pending + reviewed proposal cards |
 
-### 6.4 Localization Keys Added
+### 8.4 Localization Keys Added
 
 **Backend validation keys**
 ```
@@ -450,9 +523,9 @@ Training.Common.SaveError
 
 ---
 
-## 7. Tenant Courses (`training/tenant-courses`)
+## 9. Tenant Courses (`training/tenant-courses`)
 
-### 7.1 Backend — Mapperly → AutoMapper + Validation + Formatted Dates
+### 9.1 Backend — Mapperly → AutoMapper + Validation + Formatted Dates
 
 | File | Change | Details |
 |------|--------|---------|
@@ -462,7 +535,7 @@ Training.Common.SaveError
 | `src/MOD.Training.Application.Contracts/Training/TenantCourses/Dtos/TenantCourseDto.cs` | **Validation attributes + formatted date field** | `[Range(1, 9999)]` on `DefaultCapacity`. `[Range(1, 999)]` on `DefaultDurationWeeks`. `[Required]` on `ResultType`. Added `AddedAtFormatted` string property. |
 | `angular/src/app/proxy/training/tenant-courses/dtos/models.ts` | **Updated proxy** | Added `addedAtFormatted` to `TenantCourseDto` interface. |
 
-### 7.2 Frontend — Complete DevExtreme Removal & Modern Redesign
+### 9.2 Frontend — Complete DevExtreme Removal & Modern Redesign
 
 #### Main Page (`tenant-courses-list.component`)
 | File | Change | Details |
@@ -482,7 +555,7 @@ Training.Common.SaveError
 | `angular/.../add-from-catalog-dialog.component.html` | **Custom modal + selectable table** | `.modal-backdrop-modern` + `.modal-modern.modal-lg`. Native HTML table with checkbox in each row + header checkbox with indeterminate state. Info banner. Search input. Selection count footer. |
 | `angular/.../add-from-catalog-dialog.component.scss` | **Complete rewrite** | Modal styles, selectable table with hover + selected row highlight, custom checkbox, skeleton, empty state, responsive footer. |
 
-### 7.3 DevExtreme → Custom HTML Migration Matrix
+### 9.3 DevExtreme → Custom HTML Migration Matrix
 
 | Old Control | New Implementation | Notes |
 |-------------|-------------------|-------|
@@ -496,7 +569,7 @@ Training.Common.SaveError
 | `dx-switch` | Custom CSS switch (`.switch-modern`) | IsActive toggle |
 | `*dxTemplate` cell templates | Inline Angular `@if` / `[class]` | Table cells |
 
-### 7.4 Localization Keys Added
+### 9.4 Localization Keys Added
 
 **Backend validation keys**
 ```
@@ -528,9 +601,9 @@ Training.ConfirmDelete
 
 ---
 
-## 8. Plan Review (`training/plans/plan-review`)
+## 10. Plan Review (`training/plans/plan-review`)
 
-### 8.1 Frontend
+### 10.1 Frontend
 
 | File | Change | Details |
 |------|--------|---------|
@@ -541,16 +614,16 @@ Training.ConfirmDelete
 
 ---
 
-## 9. Backend Architecture Decisions
+## 11. Backend Architecture Decisions
 
-### 9.1 Flattening Strategy
+### 11.1 Flattening Strategy
 - **Parent rows** remain in DB temporarily (`ParentId` column kept but business logic ignores it).
 - Future migration should nullify/delete parent rows and drop `ParentId` column.
 - `IsGeneral` removed from DTOs and business logic.
 
-### 9.2 Mapperly vs AutoMapper
+### 11.2 Mapperly vs AutoMapper
 - Project originally uses **Mapperly** (`Riok.Mapperly`) as the default ABP 10.x mapper.
-- **CourseTypeFinancialDefaults** was migrated to **AutoMapper** per explicit request.
+- ~~**CourseTypeFinancialDefaults** was migrated to **AutoMapper** per explicit request.~~ (Feature removed in section 13.)
 - **CourseCatalog** was migrated to **AutoMapper** (including `CatalogEnrollmentCondition`). `TenantCourseAppService` updated to use `IMapper` for `CourseCatalog` mapping.
 - **CourseProposal** was migrated to **AutoMapper**. `CreateCourseProposalDto → CourseProposal` mapping added. `CourseProposal → CourseProposalDto` mapping added (ignores enriched fields). Old Mapperly `CourseProposal.ToDto()` commented out in `TrainingMapper.cs`.
 - **TenantCourse + TenantCourseCondition** migrated to **AutoMapper**. `TenantCourse → TenantCourseDto` mapping added (ignores 7 enriched fields). `UpdateTenantCourseDto → TenantCourse` and `TenantCourseCondition → TenantCourseConditionDto` mappings added. Old Mapperly mappings commented out.
@@ -562,23 +635,19 @@ Training.ConfirmDelete
   3. Update any dependent services that used the old Mapperly extension methods
   4. Comment out / remove the old Mapperly mappings from `TrainingMapper.cs`
 
-### 9.3 Localization Pattern
+### 11.3 Localization Pattern
 - Backend: JSON files in `src/MOD.Training.Domain.Shared/Localization/Training/{ar,en}.json`
 - Frontend: Use `{{ '::Key' | abpLocalization }}` in templates or `this.l.t('::Key')` in TS.
 - Parameterized keys: `{{ '::Key' | abpLocalization : ('' + value) }}` (pipe expects `string | string[]`).
 
 ---
 
-## 10. Files to Know (Quick Reference)
+## 12. Files to Know (Quick Reference)
 
 ### Backend — Finance Domain
 ```
 src/MOD.Training.Domain/Training/Finance/FinancialItem.cs
-src/MOD.Training.Domain/Training/Finance/ExchangeRate.cs
-src/MOD.Training.Domain/Training/Finance/CourseTypeFinancialItemDefault.cs
 src/MOD.Training.Application/Training/Finance/FinancialItemAppService.cs
-src/MOD.Training.Application/Training/Finance/ExchangeRateAppService.cs
-src/MOD.Training.Application/Training/Finance/CourseTypeFinancialDefaultAppService.cs
 src/MOD.Training.Application/Training/Mapper/TrainingAutoMapperProfile.cs
 src/MOD.Training.EntityFrameworkCore/Training/TrainingDbContextModelCreatingExtensions.cs
 ```
@@ -601,8 +670,6 @@ src/MOD.Training.Application.Contracts/Training/TenantCourses/Dtos/TenantCourseD
 ### Frontend — Finance Pages
 ```
 angular/src/app/Projects/finance/financial-items/
-angular/src/app/Projects/finance/financial-item-defaults/
-angular/src/app/Projects/finance/exchange-rates/
 angular/src/app/Projects/finance/training-budgets/
 angular/src/app/Projects/catalog/course-catalog/
 angular/src/app/Projects/catalog/course-fields/
@@ -619,12 +686,138 @@ src/MOD.Training.Domain.Shared/Localization/Training/en.json
 
 ---
 
-## 11. Pending / Future Work
+## 13. Removal of Course-Type Financial Defaults (`training/finance/defaults`)
+
+### 13.1 What Was Removed
+
+The entire **Course-Type Financial Defaults** feature has been removed. This feature previously linked financial items to `CourseType` (`ExternalLocal` / `ExternalInternational`) and auto-filled those items in plan review and casual course review.
+
+After this change:
+- Financial items are managed only through `/training/finance/financial-items`.
+- There is no auto-fill based on course type.
+- Staff add financial items manually per plan item / casual course.
+- The internal/external distinction no longer affects financial-item defaults.
+
+### 13.2 Backend Changes
+
+| File | Change |
+|------|--------|
+| `src/MOD.Training.Domain/Training/Finance/CourseTypeFinancialItemDefault.cs` | **Deleted** entity |
+| `src/MOD.Training.Application.Contracts/Training/Finance/Dtos/CourseTypeFinancialItemDefaultDtos.cs` | **Deleted** DTOs |
+| `src/MOD.Training.Application/Training/Finance/CourseTypeFinancialDefaultAppService.cs` | **Deleted** app service |
+| `src/MOD.Training.Application.Contracts/Training/Finance/ICourseTypeFinancialDefaultAppService.cs` | **Deleted** contract |
+| `src/MOD.Training.Application/Training/Mapper/TrainingAutoMapperProfile.cs` | Removed `CourseTypeFinancialItemDefault` mappings |
+| `src/MOD.Training.EntityFrameworkCore/EntityFrameworkCore/TrainingDbContext.cs` | Removed `CourseTypeFinancialItemDefaults` DbSet |
+| `src/MOD.Training.EntityFrameworkCore/Training/TrainingDbContextModelCreatingExtensions.cs` | Removed `CourseTypeFinancialItemDefault` EF configuration |
+| `src/MOD.Training.EntityFrameworkCore/Migrations/20260708170406_RemoveCourseTypeFinancialItemDefaults.cs` | **New migration** drops `TrnCourseTypeFinancialItemDefaults` table |
+| `src/MOD.Training.Application.Contracts/Training/Permissions/TrainingPermissions.cs` | Removed `CourseTypeFinancialDefaults` permission group |
+| `src/MOD.Training.Application.Contracts/Training/Permissions/TrainingPermissionDefinitionProvider.cs` | Removed defaults permission registration |
+| `src/MOD.Training.Domain/Training/DataSeeder/TenantDataSeeder.cs` | Removed `SeedFinancialDefaultsAsync`; casual-course seed now uses a hardcoded list of financial item IDs |
+| `src/MOD.Training.Application/Training/Plans/PlanItemFinancialItemAppService.cs` | Removed `AutoFillFromDefaultsAsync` and `defaultsRepository` injection |
+| `src/MOD.Training.Application.Contracts/Training/Plans/IPlanItemFinancialItemAppService.cs` | Removed `AutoFillFromDefaultsAsync` contract method |
+| `src/MOD.Training.Application/Training/CasualCourses/CasualCourseFinancialItemAppService.cs` | Removed `AutoFillFromDefaultsAsync`, `AutoFillInternalAsync`, `GetNomineesByRankAsync`, and `defaultsRepo` injection |
+| `src/MOD.Training.Application.Contracts/Training/CasualCourses/ICasualCourseFinancialItemAppService.cs` | Removed `AutoFillFromDefaultsAsync` contract method |
+| `src/MOD.Training.Application/Training/CasualCourses/CasualCourseAppService.cs` | Removed auto-fill trigger in `AssignScenarioAsync`; `CalculatePreviewAsync` now uses all active financial items; removed `defaultsRepo` injection |
+| `src/MOD.Training.Domain/Training/Managers/FundingScenarioSourceResolver.cs` | Updated XML-doc comment |
+
+### 13.3 Frontend Changes
+
+| File | Change |
+|------|--------|
+| `angular/src/app/Projects/finance/financial-item-defaults/*` | **Deleted** component (TS, HTML, SCSS) |
+| `angular/src/app/Projects/training.routes.ts` | Removed `finance/defaults` route |
+| `angular/src/app/Projects/training-route.provider.ts` | Removed `CourseTypeDefaults` menu item |
+| `angular/src/app/Projects/shared/services/finance-proxy.service.ts` | Removed `CourseTypeFinancialDefaultService` wrapper |
+| `angular/src/app/proxy/training/finance/course-type-financial-default.service.ts` | **Deleted** generated proxy |
+| `angular/src/app/proxy/training/finance/index.ts` | Removed export of deleted proxy |
+| `angular/src/app/proxy/training/finance/dtos/models.ts` | Removed `CourseTypeFinancialItemDefaultDto` and `CreateCourseTypeFinancialItemDefaultDto` |
+| `angular/src/app/proxy/training/plans/plan-item-financial-item.service.ts` | Removed `autoFillFromDefaults` generated method |
+| `angular/src/app/proxy/training/casual-courses/casual-course-financial-item.service.ts` | Removed `autoFillFromDefaults` generated method |
+| `angular/src/app/Projects/plans/plan-review/plan-review.component.ts` | Removed `onAutoFill`, `batchAutoFillUnit`, `batchFilling`, `batchProgress` |
+| `angular/src/app/Projects/plans/plan-review/plan-review.component.html` | Removed auto-fill buttons and batch alert; updated empty-state text |
+| `angular/src/app/Projects/casual-courses/casual-course-review/casual-course-review.component.ts` | Removed `onAutoFill` |
+| `angular/src/app/Projects/casual-courses/casual-course-review/casual-course-review.component.html` | Removed auto-fill button |
+
+### 13.4 Localization
+
+Removed from `ar.json` and `en.json`:
+- `Permission:CourseTypeFinancialDefaults.*`
+- `Training.CourseTypeDefaults.*`
+- `Training.Menu.CourseTypeDefaults`
+
+### 13.5 Generated Proxy Metadata
+
+`angular/src/app/proxy/generate-proxy.json` still contains stale metadata for the deleted endpoints. It should be regenerated with `abp generate-proxy -t ng` the next time the backend is running.
+
+---
+
+## 14. Removal of Exchange Rates (`training/finance/exchange-rates`)
+
+### 14.1 What Was Removed
+
+The entire **Exchange Rates** feature has been removed. The system no longer maintains an admin page for USD→OMR (or other) exchange rates, and no business logic auto-calculates USD amounts from exchange rates.
+
+After this change:
+- The route `/training/finance/exchange-rates` is gone.
+- The `TrnExchangeRates` table is dropped.
+- `PlanItemFinancialItem.UpdateAmountAsync` no longer auto-calculates `EstimatedAmountUSD` from an exchange rate.
+- Payment pages and the casual-course detail no longer display USD conversions.
+- USD columns on `PlanItemFinancialItem` remain as nullable manual-entry fields (historical data is preserved).
+
+### 14.2 Backend Changes
+
+| File | Change |
+|------|--------|
+| `src/MOD.Training.Domain/Training/Finance/ExchangeRate.cs` | **Deleted** entity |
+| `src/MOD.Training.Application.Contracts/Training/Finance/Dtos/ExchangeRateDtos.cs` | **Deleted** DTOs |
+| `src/MOD.Training.Application/Training/Finance/ExchangeRateAppService.cs` | **Deleted** app service |
+| `src/MOD.Training.Application.Contracts/Training/Finance/IExchangeRateAppService.cs` | **Deleted** contract |
+| `src/MOD.Training.Application/Training/Mapper/FinanceMappers.cs` | Removed `ExchangeRateToDtoMapper` |
+| `src/MOD.Training.EntityFrameworkCore/EntityFrameworkCore/TrainingDbContext.cs` | Removed `ExchangeRates` DbSet |
+| `src/MOD.Training.EntityFrameworkCore/Training/TrainingDbContextModelCreatingExtensions.cs` | Removed `ExchangeRate` EF configuration |
+| `src/MOD.Training.EntityFrameworkCore/Migrations/20260708174512_RemoveExchangeRates.cs` | **Migration** drops `TrnExchangeRates` table |
+| `src/MOD.Training.Application.Contracts/Training/Permissions/TrainingPermissions.cs` | Removed `ExchangeRates` permission class and `Finance.ManageExchangeRates` |
+| `src/MOD.Training.Application.Contracts/Training/Permissions/TrainingPermissionDefinitionProvider.cs` | Removed exchange-rates permission definitions |
+| `src/MOD.Training.Domain/Training/DataSeeder/TenantDataSeeder.cs` | Removed `exchangeRateRepo` injection, `SeedExchangeRatesAsync`, and USD assignments in `AssignFinancials` |
+| `src/MOD.Training.Application/Training/Plans/PlanItemFinancialItemAppService.cs` | Removed `IRepository<ExchangeRate>` injection and USD auto-calculation from `UpdateAmountAsync` |
+
+### 14.3 Frontend Changes
+
+| File | Change |
+|------|--------|
+| `angular/src/app/Projects/finance/exchange-rates/*` | **Deleted** component (TS, HTML, SCSS) |
+| `angular/src/app/Projects/training.routes.ts` | Removed `finance/exchange-rates` route |
+| `angular/src/app/Projects/training-route.provider.ts` | Removed `ExchangeRates` menu item |
+| `angular/src/app/Projects/shared/services/finance-proxy.service.ts` | Removed `ExchangeRateService` wrapper |
+| `angular/src/app/proxy/training/finance/exchange-rate.service.ts` | **Deleted** generated proxy |
+| `angular/src/app/proxy/training/finance/index.ts` | Removed export of deleted proxy |
+| `angular/src/app/proxy/training/finance/dtos/models.ts` | Removed `ExchangeRateDto`, `CreateExchangeRateDto`, `ExchangeRateGetListInput` |
+| `angular/src/app/Projects/payments/travel-allowance-payments/travel-allowance-payments.component.{ts,html}` | Removed exchange-rate loading and USD display |
+| `angular/src/app/Projects/payments/course-payments/course-payments.component.{ts,html}` | Removed exchange-rate loading and USD display |
+| `angular/src/app/Projects/payments/budget-reallocations/budget-reallocations.component.{ts,html}` | Removed exchange-rate loading and USD display |
+| `angular/src/app/Projects/casual-courses/casual-course-detail/casual-course-detail.component.{ts,html}` | Removed exchange-rate loading and `[exchangeRate]` binding |
+| `angular/src/app/Projects/casual-courses/casual-course-detail/sections/section-payments/casual-course-section-payments.component.ts` | Removed `exchangeRate` input and `toUSD` helper |
+
+### 14.4 Localization
+
+Removed from `ar.json` and `en.json`:
+- `Permission:Finance.ManageExchangeRates`
+- `Permission:ExchangeRates.*`
+- `Training.Menu.ExchangeRates`
+- `Training.ExchangeRates.*`
+
+### 14.5 Generated Proxy Metadata
+
+`angular/src/app/proxy/generate-proxy.json` still contains stale metadata for the deleted exchange-rate endpoints. It should be regenerated with `abp generate-proxy -t ng` the next time the backend is running.
+
+---
+
+## 15. Pending / Future Work
 
 | # | Item | Priority |
 |---|------|----------|
 | 1 | **Delete legacy parent rows** from `TrnFinancialItems` and drop `ParentId` column | Medium |
-| 2 | **Remove `CourseTypeFinancialItemDefaultMappers.cs`** (Mapperly) if AutoMapper is finalized | Low |
+| 2 | ~~**Remove `CourseTypeFinancialItemDefaultMappers.cs`** (Mapperly) if AutoMapper is finalized~~ | **Done** |
 | 3 | **Data migration** for `FinancialItem` parent rows (nullify or reclassify) | Medium |
 | 4 | **Sass `@import` deprecation** warnings in Angular build (`gtms-design.scss`) | Low |
 | 5 | ~~**Course Fields page redesign**~~ (removed DevExtreme, added card grid + modern modal) | **Done** |

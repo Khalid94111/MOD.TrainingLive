@@ -132,32 +132,5 @@
       <hr class="section-divider" />
     }
 
-    <!-- Course Conditions (MOD-21) -->
-    @if (formData().tenantCourseId) {
-      <div class="form-section">
-        <h3 class="section-heading">📋 {{ '::Training.CourseConditions' | abpLocalization }}</h3>
-        <div class="warning-banner">
-          ⚠️ {{ '::Training.EditConditionsWarning' | abpLocalization }}
-        </div>
-        <div class="conditions-list">
-          @for (condition of conditions(); track condition.id; let idx = $index) {
-            <div class="condition-row">
-              <div class="condition-info">
-                <span class="condition-index">{{ idx + 1 }}</span>
-                <span class="condition-type-badge">{{ condition.conditionTypeName }}</span>
-                <span class="condition-value">{{ condition.displayValue }}</span>
-              </div>
-              <div class="condition-actions">
-                <button class="action-btn action-edit">✏️</button>
-                <button class="action-btn action-delete">🗑️</button>
-              </div>
-            </div>
-          }
-          <button class="btn-add-condition">
-            ➕ {{ '::Training.AddCondition' | abpLocalization }}
-          </button>
-        </div>
-      </div>
-    }
   </div>
 </dx-popup>

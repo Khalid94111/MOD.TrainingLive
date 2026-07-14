@@ -13,7 +13,5 @@ public interface ICourseCatalogAppService : ICrudAppService<
     CourseCatalogGetListInput,
     CreateUpdateCourseCatalogDto>
 {
-    Task<List<CatalogEnrollmentConditionDto>> GetConditionsAsync(Guid catalogCourseId);
-    Task<CatalogEnrollmentConditionDto> AddConditionAsync(Guid catalogCourseId, CreateUpdateCatalogEnrollmentConditionDto input);
-    Task RemoveConditionAsync(Guid conditionId);
+    Task<List<CourseCatalogSubscribedTenantDto>> GetSubscribedTenantsAsync(Guid catalogCourseId);
 }

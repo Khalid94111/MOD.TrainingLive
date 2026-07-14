@@ -1,6 +1,5 @@
 using MOD.Training.Training.Plans.Dtos;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
@@ -13,8 +12,6 @@ public interface ITrainingPlanItemAppService : ICrudAppService<
     TrainingPlanItemGetListInput,
     CreateUpdateTrainingPlanItemDto>
 {
-    Task<List<PlanItemConditionDto>> GetConditionsAsync(Guid planItemId);
-
     // CHG-05
     Task ReturnAsync(Guid id, ReturnReasonDto input);
 }

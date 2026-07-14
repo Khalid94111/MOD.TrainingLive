@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LocalizationPipe } from '@abp/ng.core';
 import { CourseCatalogService, TrainingLocalizationHelper } from '../../../shared';
-import type { CourseCatalogDto, CourseFieldDto, CreateUpdateCourseCatalogDto, CatalogEnrollmentConditionDto } from '../../../shared';
-import { ConditionType, ResultType } from '../../../shared/models/training-enums';
+import type { CourseCatalogDto, CourseFieldDto, CreateUpdateCourseCatalogDto } from '../../../shared';
+import { ResultType } from '../../../shared/models/training-enums';
 
 @Component({
   selector: 'app-catalog-form-dialog',
@@ -29,14 +29,12 @@ export class CatalogFormDialogComponent implements OnInit {
     requiresEvaluation: false, requiresProviderEvaluation: false,
     hasCertificate: false, evaluationBlocksCertificate: false, isActive: true,
   });
-  conditions = signal<(CatalogEnrollmentConditionDto & { _isNew?: boolean })[]>([]);
   isSaving = signal(false);
   validationErrors = signal<string[]>([]);
 
   categoryOptions: { value: string; label: string }[] = [];
   natureOptions: { value: string; label: string }[] = [];
   resultTypeOptions: { value: number; label: string }[] = [];
-  conditionTypeOptions: { value: number; label: string }[] = [];
 
   get isEditMode(): boolean { return !!this.course(); }
   get dialogTitle(): string { return this.isEditMode ? this.l.t('::Training.EditCourse') : this.l.t('::Training.AddNewCourse'); }
@@ -46,7 +44,6 @@ export class CatalogFormDialogComponent implements OnInit {
     this.categoryOptions = this.l.categoryDataSource().map(o => ({ value: o.value, label: o.text }));
     this.natureOptions = this.l.natureDataSource().map(o => ({ value: o.value, label: o.text }));
     this.resultTypeOptions = this.l.resultTypeDataSource().map(o => ({ value: o.value, label: o.text }));
-    this.conditionTypeOptions = this.l.conditionTypeDataSource().map(o => ({ value: o.value, label: o.text }));
 
     const c = this.course();
     if (c) {
@@ -59,12 +56,7 @@ export class CatalogFormDialogComponent implements OnInit {
         hasCertificate: c.hasCertificate, evaluationBlocksCertificate: c.evaluationBlocksCertificate,
         isActive: c.isActive,
       });
-      this.loadConditions(c.id);
     }
-  }
-
-  private async loadConditions(id: string): Promise<void> {
-    this.conditions.set(await this.catalogService.getConditions(id));
   }
 
   updateField<K extends keyof CreateUpdateCourseCatalogDto>(key: K, value: CreateUpdateCourseCatalogDto[K]): void {
@@ -92,38 +84,11 @@ export class CatalogFormDialogComponent implements OnInit {
       if (this.isEditMode) {
         await this.catalogService.update(this.course()!.id, data);
       } else {
-        const created = await this.catalogService.create(data);
-        for (const cond of this.conditions()) {
-          if (cond._isNew) await this.catalogService.addCondition(created.id, { conditionType: cond.conditionType, conditionValue: cond.conditionValue });
-        }
+        await this.catalogService.create(data);
       }
       this.saved.emit();
     } finally { this.isSaving.set(false); }
   }
 
   onCancel(): void { this.cancelled.emit(); }
-
-  onAddCondition(): void {
-    this.conditions.update(list => [...list, {
-      id: crypto.randomUUID(), catalogCourseId: this.course()?.id ?? '',
-      conditionType: ConditionType.Rank, conditionValue: '', _isNew: true,
-    }]);
-  }
-
-  async onRemoveCondition(index: number): Promise<void> {
-    const cond = this.conditions()[index];
-    if (!cond._isNew && cond.id) await this.catalogService.removeCondition(cond.id);
-    this.conditions.update(list => list.filter((_, i) => i !== index));
-  }
-
-  async onSaveCondition(cond: CatalogEnrollmentConditionDto & { _isNew?: boolean }): Promise<void> {
-    if (this.isEditMode && cond._isNew && this.course()?.id) {
-      const saved = await this.catalogService.addCondition(this.course()!.id, { conditionType: cond.conditionType, conditionValue: cond.conditionValue });
-      this.conditions.update(list => list.map(c => (c.id === cond.id ? { ...saved, _isNew: false } : c)));
-    }
-  }
-
-  updateCondition(index: number, field: string, value: any): void {
-    this.conditions.update(list => list.map((c, i) => (i === index ? { ...c, [field]: value } : c)));
-  }
 }

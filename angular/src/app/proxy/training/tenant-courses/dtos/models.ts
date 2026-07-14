@@ -1,16 +1,8 @@
-import type { EntityDto, FullAuditedEntityDto, PagedAndSortedResultRequestDto } from '@abp/ng.core';
-import type { ConditionType } from '../../enums/condition-type.enum';
+import type { FullAuditedEntityDto, PagedAndSortedResultRequestDto } from '@abp/ng.core';
 import type { ResultType } from '../../enums/result-type.enum';
 
 export interface AddFromCatalogDto {
   catalogCourseIds?: string[];
-}
-
-export interface TenantCourseConditionDto extends EntityDto<string> {
-  tenantCourseId?: string;
-  conditionType?: ConditionType;
-  conditionValue?: string;
-  isActive?: boolean;
 }
 
 export interface TenantCourseDto extends FullAuditedEntityDto<string> {
@@ -27,7 +19,6 @@ export interface TenantCourseDto extends FullAuditedEntityDto<string> {
   hasCertificate?: boolean;
   evaluationBlocksCertificate?: boolean;
   isActive?: boolean;
-  conditionsCount?: number;
   addedByName?: string | null;
   addedAt?: string;
   addedAtFormatted?: string | null;
@@ -43,7 +34,7 @@ export interface TenantCourseGetListInput extends PagedAndSortedResultRequestDto
 export interface UpdateTenantCourseDto {
   defaultCapacity?: number | null;
   defaultDurationWeeks?: number | null;
-  resultType?: ResultType;
+  resultType: ResultType;
   requiresEvaluation?: boolean;
   requiresProviderEvaluation?: boolean;
   hasCertificate?: boolean;

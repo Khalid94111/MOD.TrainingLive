@@ -61,7 +61,6 @@ private readonly orgUnitService = inject(OrganizationUnitService);
   tenantCourses = signal<any[]>([]);
   orgUnits = signal<any[]>([]);
   selectedUnitIds = signal<string[]>([]);
-  conditions = signal<any[]>([]);
 
   beneficiaryTypeItems: any[] = [];
   dialogToolbarItems: ToolbarItem[] | undefined;
@@ -165,7 +164,6 @@ private readonly orgUnitService = inject(OrganizationUnitService);
 
   onTenantCourseChanged(courseId: string): void {
     this.formData.update(f => ({ ...f, tenantCourseId: courseId }));
-    this.loadConditions(courseId);
   }
 
   onUnitSelectionChanged(e: any): void {
@@ -189,7 +187,6 @@ private readonly orgUnitService = inject(OrganizationUnitService);
       objective: item.objective || '',
     });
     this.selectedUnitIds.set(item.unitIds || []);
-    this.loadConditions(item.tenantCourseId);
   }
 
 private async loadTenantCourses(): Promise<void> {
@@ -205,8 +202,4 @@ private async loadOrgUnits(): Promise<void> {
   this.orgUnits.set(result.items ?? []);
 }
 
-private async loadConditions(tenantCourseId: string): Promise<void> {
-  var result = await firstValueFrom(this.tenantCourseService.getConditions(tenantCourseId));
-  this.conditions.set(result ?? []);
-}
 }

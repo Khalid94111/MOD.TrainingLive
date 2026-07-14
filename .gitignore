@@ -253,6 +253,7 @@ paket-files/
 
 # ABP Studio
 **/.abpstudio/
+*.lscache
 
 # Training
 src/MOD.Training.Web/Logs/*

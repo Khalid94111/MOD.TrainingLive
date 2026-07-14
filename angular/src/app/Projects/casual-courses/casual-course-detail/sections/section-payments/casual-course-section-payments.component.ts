@@ -63,8 +63,6 @@ export class CasualCourseSectionPaymentsComponent {
   travelAllowancePayments = input<TravelAllowancePaymentDto[]>([]);
   coursePayment = input<CoursePaymentDto | null>(null);
   reallocations = input<BudgetReallocationDto[]>([]);
-  /** Active exchange rate (OMR → USD) for live conversion. */
-  exchangeRate = input<number>(2.6);
   /** Why the section is locked (shown in locked-preview state). */
   lockReason = input<string>('');
 
@@ -201,10 +199,6 @@ export class CasualCourseSectionPaymentsComponent {
   // ── Display helpers ──
   formatOMR(value: number | null | undefined): string {
     return (value ?? 0).toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
-  }
-
-  toUSD(omr: number | null | undefined): string {
-    return ((omr ?? 0) * this.exchangeRate()).toLocaleString('en-US', { maximumFractionDigits: 0 });
   }
 
   paymentStatusText(s: PaymentStatus | undefined): string {

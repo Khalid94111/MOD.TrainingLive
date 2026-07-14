@@ -141,14 +141,7 @@
                         @if (item.fundingSource) { <div class="detail-field"><span class="detail-label">💳 مصدر التمويل</span><span class="detail-value funding-code">{{ item.fundingSource }}</span></div> }
                       </div>
 
-                      @if (getConditionsFor(item.id!).length > 0) {
-                        <div class="conditions-inline">
-                          <span class="conditions-label">🔒 شروط:</span>
-                          @for (c of getConditionsFor(item.id!); track c.id) {
-                            <span class="condition-tag">{{ getConditionTypeName(c.conditionType) }}: {{ c.conditionValue }}</span>
-                          }
-                        </div>
-                      }
+
                     </div>
 
                     <!-- Financial panel (READ-ONLY) -->

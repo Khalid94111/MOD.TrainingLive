@@ -103,13 +103,6 @@
   &.highlight { color: #1d4ed8; }
 }
 
-// Conditions (compact inline)
-.conditions-inline {
-  display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
-  margin-top: 10px; padding-top: 8px; border-top: 1px solid #fde68a;
-}
-.conditions-label { font-size: 0.75rem; font-weight: 700; color: #92400e; }
-
 // ═══ Financial panel (inside inline expand) ═══
 .financial-panel-inline {
   background: #eff6ff;

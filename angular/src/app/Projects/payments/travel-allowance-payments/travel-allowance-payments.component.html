@@ -107,10 +107,7 @@
     </div>
 
     <div *dxTemplate="let cell of 'totalTpl'">
-      <div class="currency-dual">
-        <span class="currency-omr">{{ formatOMR(cell.value) }}</span>
-        <span class="currency-usd">~ {{ toUSD(cell.value) }} USD</span>
-      </div>
+      <span class="currency-omr">{{ formatOMR(cell.value) }}</span>
     </div>
 
     <div *dxTemplate="let cell of 'statusTpl'">
@@ -133,10 +130,7 @@
   <!-- Total row (sum of TotalOMR for visible rows) -->
   <div class="total-row">
     <span class="total-label">{{ '::Training.Payments.TravelAllowance.GridTotalLabel' | abpLocalization }}</span>
-    <div class="currency-dual">
-      <span class="currency-omr total-amount">{{ formatOMR(totalRow()) }} ر.ع</span>
-      <span class="currency-usd">~ {{ toUSD(totalRow()) }} USD</span>
-    </div>
+    <span class="currency-omr total-amount">{{ formatOMR(totalRow()) }} ر.ع</span>
   </div>
 
   <!-- Create / Edit / View Dialog -->
@@ -223,7 +217,7 @@
               format="#,##0.000 'ر.ع'"
               (onValueChanged)="updateTicket($event.value)">
             </dx-number-box>
-            <div class="usd-display">~ {{ toUSD(fTicketAmountOMR()) }} USD</div>
+
           </div>
         </div>
 
@@ -238,13 +232,13 @@
               [placeholder]="'::Training.Payments.TravelAllowance.Dialog.AmountDailyAllowanceRate' | abpLocalization"
               (onValueChanged)="updateDailyAllowanceRate($event.value)">
             </dx-number-box>
-            <div class="usd-display">~ {{ toUSD(fDailyAllowanceRateOMR()) }} USD</div>
+
           </div>
           <!-- Read-only computed total: days × rate = total -->
           <div class="computed-total">
             <span class="formula">⚡ {{ contextEffectiveTravelDays() }} {{ '::Training.Payments.TravelAllowance.Dialog.TIDayUnit' | abpLocalization }} × {{ formatOMR(fDailyAllowanceRateOMR()) }} ر.ع =</span>
             <b class="computed-value">{{ formatOMR(fTravelAllowanceOMR()) }} ر.ع</b>
-            <span class="computed-usd">~ {{ toUSD(fTravelAllowanceOMR()) }} USD</span>
+
           </div>
           <div class="hint">{{ '::Training.Payments.TravelAllowance.Dialog.DailyAllowanceHint' | abpLocalization }}</div>
         </div>
@@ -258,7 +252,7 @@
               format="#,##0.000 'ر.ع'"
               (onValueChanged)="updateClothing($event.value)">
             </dx-number-box>
-            <div class="usd-display">~ {{ toUSD(fClothingAllowanceOMR()) }} USD</div>
+
           </div>
         </div>
 
@@ -271,7 +265,7 @@
               format="#,##0.000 'ر.ع'"
               (onValueChanged)="updateInsurance($event.value)">
             </dx-number-box>
-            <div class="usd-display">~ {{ toUSD(fInsuranceOMR()) }} USD</div>
+
           </div>
         </div>
 
@@ -284,7 +278,7 @@
               format="#,##0.000 'ر.ع'"
               (onValueChanged)="updateVisaFees($event.value)">
             </dx-number-box>
-            <div class="usd-display">~ {{ toUSD(fVisaFeesOMR()) }} USD</div>
+
           </div>
         </div>
 
@@ -292,7 +286,7 @@
         <div class="total-card">
           <div class="total-card-label">{{ '::Training.Payments.TravelAllowance.Dialog.TotalLabel' | abpLocalization }}</div>
           <div class="total-card-omr">{{ formatOMR(formTotalOMR()) }} <span class="omr-sm">ر.ع</span></div>
-          <div class="total-card-usd">~ {{ toUSD(formTotalOMR()) }} USD</div>
+
         </div>
       </div>
 

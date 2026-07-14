@@ -302,9 +302,6 @@ namespace MOD.Training.Migrations
                     b.Property<Guid>("CasualCourseId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("ConditionSnapshotJson")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime>("CreationTime")
                         .HasColumnType("datetime2")
                         .HasColumnName("CreationTime");
@@ -354,29 +351,6 @@ namespace MOD.Training.Migrations
                         .IsUnique();
 
                     b.ToTable("AppCasualCourseNominations", (string)null);
-                });
-
-            modelBuilder.Entity("MOD.Training.Training.Catalog.CatalogEnrollmentCondition", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CatalogCourseId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("ConditionType")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ConditionValue")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CatalogCourseId");
-
-                    b.ToTable("AppCatalogEnrollmentConditions", (string)null);
                 });
 
             modelBuilder.Entity("MOD.Training.Training.Catalog.CourseCatalog", b =>
@@ -1120,74 +1094,6 @@ namespace MOD.Training.Migrations
                         .HasFilter("[SessionId] IS NOT NULL");
 
                     b.ToTable("AppTravelInstructions", (string)null);
-                });
-
-            modelBuilder.Entity("MOD.Training.Training.Finance.CourseTypeFinancialItemDefault", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("CourseType")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("FinancialItemId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("int");
-
-                    b.Property<Guid?>("TenantId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("TenantId");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("FinancialItemId");
-
-                    b.HasIndex("TenantId", "CourseType", "FinancialItemId")
-                        .IsUnique()
-                        .HasFilter("[TenantId] IS NOT NULL");
-
-                    b.ToTable("TrnCourseTypeFinancialItemDefaults", (string)null);
-                });
-
-            modelBuilder.Entity("MOD.Training.Training.Finance.ExchangeRate", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("FromCurrency")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Notes")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<decimal>("Rate")
-                        .HasPrecision(18, 6)
-                        .HasColumnType("decimal(18,6)");
-
-                    b.Property<DateTime>("SetAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("SetById")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ToCurrency")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IsActive");
-
-                    b.ToTable("TrnExchangeRates", (string)null);
                 });
 
             modelBuilder.Entity("MOD.Training.Training.Finance.FinancialItem", b =>
@@ -2515,29 +2421,6 @@ namespace MOD.Training.Migrations
                         });
                 });
 
-            modelBuilder.Entity("MOD.Training.Training.Plans.PlanItemCondition", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("ConditionType")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ConditionValue")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<Guid>("PlanItemId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PlanItemId");
-
-                    b.ToTable("AppPlanItemConditions", (string)null);
-                });
-
             modelBuilder.Entity("MOD.Training.Training.Plans.PlanNote", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2577,29 +2460,6 @@ namespace MOD.Training.Migrations
                     b.HasIndex("TenantId", "EntityType", "EntityId", "CreationTime");
 
                     b.ToTable("AppPlanNotes", (string)null);
-                });
-
-            modelBuilder.Entity("MOD.Training.Training.Plans.SessionCondition", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("ConditionType")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ConditionValue")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<Guid>("SessionId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SessionId");
-
-                    b.ToTable("AppSessionConditions", (string)null);
                 });
 
             modelBuilder.Entity("MOD.Training.Training.Plans.SessionNomination", b =>
@@ -2971,32 +2831,6 @@ namespace MOD.Training.Migrations
                         .HasFilter("[TenantId] IS NOT NULL");
 
                     b.ToTable("AppTenantCourses", (string)null);
-                });
-
-            modelBuilder.Entity("MOD.Training.Training.TenantCourses.TenantCourseCondition", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("ConditionType")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ConditionValue")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("TenantCourseId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TenantCourseId");
-
-                    b.ToTable("AppTenantCourseConditions", (string)null);
                 });
 
             modelBuilder.Entity("Volo.Abp.BackgroundJobs.BackgroundJobRecord", b =>
@@ -5319,17 +5153,6 @@ namespace MOD.Training.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("MOD.Training.Training.Catalog.CatalogEnrollmentCondition", b =>
-                {
-                    b.HasOne("MOD.Training.Training.Catalog.CourseCatalog", "CatalogCourse")
-                        .WithMany()
-                        .HasForeignKey("CatalogCourseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CatalogCourse");
-                });
-
             modelBuilder.Entity("MOD.Training.Training.Catalog.CourseCatalog", b =>
                 {
                     b.HasOne("MOD.Training.Training.Catalog.CourseField", "Field")
@@ -5350,17 +5173,6 @@ namespace MOD.Training.Migrations
                         .IsRequired();
 
                     b.Navigation("Field");
-                });
-
-            modelBuilder.Entity("MOD.Training.Training.Finance.CourseTypeFinancialItemDefault", b =>
-                {
-                    b.HasOne("MOD.Training.Training.Finance.FinancialItem", "FinancialItem")
-                        .WithMany()
-                        .HasForeignKey("FinancialItemId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("FinancialItem");
                 });
 
             modelBuilder.Entity("MOD.Training.Training.Finance.FinancialItemRankAmount", b =>
@@ -5456,28 +5268,6 @@ namespace MOD.Training.Migrations
                     b.Navigation("Nomination");
                 });
 
-            modelBuilder.Entity("MOD.Training.Training.Plans.PlanItemCondition", b =>
-                {
-                    b.HasOne("MOD.Training.Training.Plans.TrainingPlanItem", "PlanItem")
-                        .WithMany()
-                        .HasForeignKey("PlanItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("PlanItem");
-                });
-
-            modelBuilder.Entity("MOD.Training.Training.Plans.SessionCondition", b =>
-                {
-                    b.HasOne("MOD.Training.Training.Plans.CourseSession", "Session")
-                        .WithMany()
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Session");
-                });
-
             modelBuilder.Entity("MOD.Training.Training.Plans.SessionNomination", b =>
                 {
                     b.HasOne("MOD.Training.Training.Plans.CourseSession", null)
@@ -5507,17 +5297,6 @@ namespace MOD.Training.Migrations
                         .IsRequired();
 
                     b.Navigation("CatalogCourse");
-                });
-
-            modelBuilder.Entity("MOD.Training.Training.TenantCourses.TenantCourseCondition", b =>
-                {
-                    b.HasOne("MOD.Training.Training.TenantCourses.TenantCourse", "TenantCourse")
-                        .WithMany()
-                        .HasForeignKey("TenantCourseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("TenantCourse");
                 });
 
             modelBuilder.Entity("Volo.Abp.BlobStoring.Database.DatabaseBlob", b =>

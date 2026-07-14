@@ -24,14 +24,14 @@ export interface CourseProposalGetListInput extends PagedAndSortedResultRequestD
 }
 
 export interface CreateCourseProposalDto {
-  courseNameAr?: string;
-  courseNameEn?: string;
-  category?: string;
-  nature?: string;
-  fieldId?: string;
+  courseNameAr: string;
+  courseNameEn: string;
+  category: string;
+  nature: string;
+  fieldId: string;
 }
 
 export interface ReviewCourseProposalDto {
-  decision?: ProposalStatus;
+  decision: ProposalStatus;
   rejectionReason?: string | null;
 }

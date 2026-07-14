@@ -190,7 +190,6 @@
 
 .card-total        .stat-card-glow { background: #3b82f6; }
 .card-active       .stat-card-glow { background: #22c55e; }
-.card-conditions   .stat-card-glow { background: #f59e0b; }
 .card-certificate  .stat-card-glow { background: #a855f7; }
 
 .stat-card-icon { font-size: 1.6rem; margin-bottom: 8px; display: block; }
@@ -218,7 +217,6 @@
 
 .card-total        .stat-card-bar { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
 .card-active       .stat-card-bar { background: linear-gradient(90deg, #22c55e, #4ade80); }
-.card-conditions   .stat-card-bar { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
 .card-certificate  .stat-card-bar { background: linear-gradient(90deg, #a855f7, #c084fc); }
 
 /* ── Info Banner ── */
@@ -814,66 +812,6 @@
 .checkbox-modern input:checked + .checkbox-mark::after {
   opacity: 1;
 }
-
-/* ── Conditions Section ── */
-.conditions-section {
-  border-top: 1px solid #e2e8f0;
-  padding-top: 16px;
-}
-
-.conditions-section__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.conditions-section__title {
-  font-size: 15px;
-  font-weight: 700;
-  color: #1e293b;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-}
-
-.conditions-section__empty {
-  text-align: center;
-  padding: 16px;
-  color: #94a3b8;
-  font-size: 13px;
-}
-
-.locked-badge {
-  background: #e2e8f0;
-  color: #64748b;
-  padding: 4px 12px;
-  border-radius: 16px;
-  font-size: 11px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.condition-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 12px;
-}
-
-.condition-row--locked {
-  background: #f8fafc;
-  justify-content: space-between;
-}
-
-.condition-row__type { font-size: 13px; font-weight: 500; color: #475569; }
-.condition-row__value { font-size: 12px; color: #64748b; font-family: monospace; direction: ltr; }
 
 /* ── Warning Banner ── */
 .warning-banner-modern {

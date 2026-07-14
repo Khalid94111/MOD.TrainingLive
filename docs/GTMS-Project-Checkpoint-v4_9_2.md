@@ -166,7 +166,7 @@ Current version on `main`: **v4.9.2**.
 ### Backend
 - ABP CrudAppService, no HttpApi controllers (auto-generated)
 - DTO naming: `XxxGetListInput` (not `GetXxxListDto`)
-- Mapperly class-based mappers (no AutoMapper, no static extensions)
+- AutoMapper (`IMapper`) is the approved mapper — the codebase standard. (Earlier phases referenced Mapperly; superseded because the project is being ported to another platform. Do not reintroduce Mapperly.)
 - Trn table prefix, permissions in Application.Contracts
 - Primary constructors (.NET 10)
 - ABP repo methods: WithDetailsAsync, AnyAsync, CountAsync, GetListAsync

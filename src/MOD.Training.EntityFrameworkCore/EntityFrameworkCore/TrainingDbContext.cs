@@ -42,20 +42,16 @@ public class TrainingDbContext : AbpDbContext<TrainingDbContext>, ISaasDbContext
       // ── Training Module: Catalog ──
       public DbSet<CourseCatalog> CourseCatalogs => Set<CourseCatalog>();
       public DbSet<CourseField> CourseFields => Set<CourseField>();
-      public DbSet<CatalogEnrollmentCondition> CatalogEnrollmentConditions => Set<CatalogEnrollmentCondition>();
       public DbSet<CourseProposal> CourseProposals => Set<CourseProposal>();
      
       // ── Training Module: Tenant Courses ──
       public DbSet<TenantCourse> TenantCourses => Set<TenantCourse>();
-      public DbSet<TenantCourseCondition> TenantCourseConditions => Set<TenantCourseCondition>();
      
       // ── Training Module: System ──
      public DbSet<Country> Countries => Set<Country>();
 
     // Phase 2A: Finance
     public DbSet<FinancialItem> FinancialItems { get; set; } = default!;
-    public DbSet<CourseTypeFinancialItemDefault> CourseTypeFinancialItemDefaults { get; set; } = default!;
-    public DbSet<ExchangeRate> ExchangeRates { get; set; } = default!;
     public DbSet<TrainingBudget> TrainingBudgets { get; set; } = default!;
 
     
@@ -70,11 +66,9 @@ public class TrainingDbContext : AbpDbContext<TrainingDbContext>, ISaasDbContext
 // Plans
 public DbSet<TrainingPlan> TrainingPlans { get; set; }
 public DbSet<TrainingPlanItem> TrainingPlanItems { get; set; }
-public DbSet<PlanItemCondition> PlanItemConditions { get; set; }
 public DbSet<Course> Courses { get; set; }
 public DbSet<CourseSession> CourseSessions { get; set; }
 public DbSet<SessionNomination> SessionNominations { get; set; }
-public DbSet<SessionCondition> SessionConditions { get; set; }
 
 // Finance (Phase 3 additions)
 public DbSet<PlanItemFinancialItem> PlanItemFinancialItems { get; set; }

@@ -1,123 +1,228 @@
-<div class="gtms-card">
-  <div class="gtms-card-header">
-    <div>
-      <h2 class="gtms-card-title">📋 الخطط السنوية</h2>
-      <p class="gtms-card-subtitle">إنشاء وإدارة خطط التدريب السنوية لكل جهة</p>
+<div class="plans-page">
+  <!-- Header banner -->
+  <div class="header-banner">
+    <div class="header-banner-content">
+      <div class="header-icon">📋</div>
+      <div class="header-titles">
+        <h1 class="header-title">الخطط السنوية</h1>
+        <p class="header-subtitle">إنشاء وإدارة خطط التدريب السنوية ومتابعة مراحل سير العمل من الفتح حتى الاعتماد النهائي</p>
+      </div>
     </div>
-    @if (canCreate) {
-      <button class="btn btn-primary" (click)="openCreateDialog()">
-        ➕ إنشاء خطة جديدة
-      </button>
-    }
+    <div class="header-actions">
+      @if (canCreate) {
+        <button class="btn btn-primary" (click)="openCreateDialog()">
+          ➕ إنشاء خطة جديدة
+        </button>
+      }
+    </div>
   </div>
 
-  <!-- Table -->
-  <div class="gtms-table-wrap">
-    <table class="gtms-table">
-      <thead>
-        <tr>
-          <th class="center">السنة</th>
-          <th class="center">الحالة</th>
-          <th class="center">تاريخ الفتح</th>
-          <th class="center">تاريخ الإغلاق</th>
-          <th class="center">عدد البنود</th>
-          <th class="center">التكلفة المقدرة (ر.ع.)</th>
-          <th class="center">إجراءات</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (plan of plans(); track plan.id) {
-          <tr [class.row-returned]="plan.status === PlanStatus.ReturnedToCreator">
-            <td class="center cell-bold" style="font-size: 1.1rem; color: #1e40af;">{{ plan.year }}</td>
-            <td class="center">
-              <span class="badge" [class]="getStatusBadgeClass(plan.status)">
-                {{ getStatusText(plan.status) }}
-              </span>
-            </td>
-            <td class="center">{{ formatDate(plan.openDate) }}</td>
-            <td class="center">{{ formatDate(plan.closeDate) }}</td>
-            <td class="center">
-              <span class="badge badge-open">{{ plan.itemCount }}</span>
-            </td>
-            <td class="center cell-money">{{ formatCost(plan.totalEstimatedCost) }}</td>
-            <td class="center">
-              @switch (plan.status) {
-                @case (PlanStatus.Draft) {
-                  <button class="btn-icon" title="فتح نافذة الاستلام" (click)="onOpenWindow(plan.id)">📂</button>
-                  <button class="btn-icon" title="حذف" (click)="onDelete(plan.id)">🗑️</button>
-                }
-                @case (PlanStatus.Open) {
-                  <button class="btn-icon" title="إدخال البنود" (click)="navigateToEntry(plan.id)">📝</button>
-                  @if (canReview) {
-                    <button class="btn-icon" title="إغلاق النافذة" (click)="onCloseWindow(plan.id)">🔒</button>
+  <!-- Stat cards -->
+  <div class="stat-cards-row">
+    <div class="stat-card">
+      <div class="stat-icon total">📋</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ totalPlans() }}</div>
+        <div class="stat-label">إجمالي الخطط</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon open">📂</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ openPlansCount() }}</div>
+        <div class="stat-label">مفتوحة للإدخال</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon submitted">📤</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ submittedPlansCount() }}</div>
+        <div class="stat-label">قيد المراجعة</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon approved">✅</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ approvedPlansCount() }}</div>
+        <div class="stat-label">معتمدة</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon returned">🔙</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ returnedPlansCount() }}</div>
+        <div class="stat-label">مُعادة للتعديل</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content card -->
+  <div class="main-card">
+    <!-- Filter bar -->
+    <div class="filters-bar-modern">
+      <div class="filter-group">
+        <span class="filter-icon">🔍</span>
+        <input type="text" class="form-input" placeholder="ابحث بالسنة أو الحالة..."
+               [value]="searchText()" (input)="onSearchInput($event)">
+      </div>
+      <div class="filter-group">
+        <span class="filter-icon">🏷️</span>
+        <select class="form-input" [value]="filterStatus()"
+                (change)="filterStatus.set($any($event.target).value)">
+          <option value="">جميع الحالات</option>
+          <option value="0">مسودة</option>
+          <option value="1">مفتوحة</option>
+          <option value="2">مُرسلة</option>
+          <option value="3">قيد المراجعة</option>
+          <option value="4">مُعادة للمُنشئ</option>
+          <option value="5">معتمدة TD</option>
+          <option value="6">معتمدة نهائياً</option>
+          <option value="7">مرفوضة</option>
+        </select>
+      </div>
+      @if (searchText() || filterStatus()) {
+        <button class="btn btn-ghost btn-sm" (click)="clearFilters()">🗑️ مسح الفلتر</button>
+      }
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="center">السنة</th>
+            <th class="center">الحالة</th>
+            <th class="center">تاريخ الفتح</th>
+            <th class="center">تاريخ الإغلاق</th>
+            <th class="center">عدد الدورات</th>
+            <th class="center">إجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (plan of filteredPlans(); track plan.id) {
+            <tr [class.row-returned]="plan.status === PlanStatus.ReturnedToCreator">
+              <td class="center cell-bold year-cell">{{ plan.year }}</td>
+              <td class="center">
+                <span class="badge" [class]="getStatusBadgeClass(plan.status)">
+                  {{ getStatusText(plan.status) }}
+                </span>
+              </td>
+              <td class="center">{{ formatDate(plan.openDate) }}</td>
+              <td class="center">{{ formatDate(plan.closeDate) }}</td>
+              <td class="center">
+                <span class="badge badge-open">{{ plan.itemCount ?? 0 }}</span>
+              </td>
+              <td class="center">
+                @switch (plan.status) {
+                  @case (PlanStatus.Draft) {
+                    <button class="btn-icon" title="فتح نافذة الاستلام" (click)="onOpenWindow(plan.id)">📂</button>
+                    <button class="btn-icon" title="حذف" (click)="onDelete(plan.id)">🗑️</button>
                   }
-                }
-                @case (PlanStatus.ReturnedToCreator) {
-                  <button class="btn-icon" title="تعديل الخطة المُعادة" (click)="navigateToEntry(plan.id)">✏️</button>
-                  @if (canReview) {
-                    <button class="btn-icon" title="عرض" (click)="navigateToReview(plan.id)">👁️</button>
+                  @case (PlanStatus.Open) {
+                    <button class="btn-icon" title="إدخال الدورات" (click)="navigateToEntry(plan.id)">📝</button>
+                    @if (canReview) {
+                      <button class="btn-icon" title="إغلاق النافذة" (click)="onCloseWindow(plan.id)">🔒</button>
+                    }
                   }
-                }
-                @case (PlanStatus.Submitted) {
-                  @if (canReview) {
-                    <button class="btn-icon" title="مراجعة" (click)="navigateToReview(plan.id)">🔍</button>
+                  @case (PlanStatus.ReturnedToCreator) {
+                    <button class="btn-icon" title="تعديل الخطة المُعادة" (click)="navigateToEntry(plan.id)">✏️</button>
+                    @if (canReview) {
+                      <button class="btn-icon" title="عرض" (click)="navigateToReview(plan.id)">👁️</button>
+                    }
                   }
-                }
-                @case (PlanStatus.UnderReview) {
-                  @if (canReview) {
-                    <button class="btn-icon" title="مراجعة" (click)="navigateToReview(plan.id)">🔍</button>
+                  @case (PlanStatus.Submitted) {
+                    @if (canReview) {
+                      <button class="btn-icon" title="مراجعة" (click)="navigateToReview(plan.id)">🔍</button>
+                      <button class="btn-icon" title="إعادة فتح النافذة" (click)="openReopenDialog(plan)">📂</button>
+                    }
                   }
-                  @if (canApprove) {
-                    <button class="btn-icon" title="اعتماد" (click)="navigateToApproval(plan.id)">✅</button>
+                  @case (PlanStatus.UnderReview) {
+                    @if (canReview) {
+                      <button class="btn-icon" title="مراجعة" (click)="navigateToReview(plan.id)">🔍</button>
+                    }
+                    @if (canApprove) {
+                      <button class="btn-icon" title="اعتماد" (click)="navigateToApproval(plan.id)">✅</button>
+                    }
                   }
-                }
-                @case (PlanStatus.TDApproved) {
-                  @if (canFinalApprove) {
-                    <button class="btn-icon" title="الاعتماد النهائي" (click)="navigateToApproval(plan.id)">✅</button>
-                  } @else {
+                  @case (PlanStatus.TDApproved) {
+                    @if (canFinalApprove) {
+                      <button class="btn-icon" title="الاعتماد النهائي" (click)="navigateToApproval(plan.id)">✅</button>
+                    } @else {
+                      <button class="btn-icon" title="عرض" (click)="navigateToApproval(plan.id)">👁️</button>
+                    }
+                  }
+                  @default {
                     <button class="btn-icon" title="عرض" (click)="navigateToApproval(plan.id)">👁️</button>
                   }
                 }
-                @default {
-                  <button class="btn-icon" title="عرض" (click)="navigateToApproval(plan.id)">👁️</button>
-                }
-              }
-            </td>
-          </tr>
-        } @empty {
-          <tr>
-            <td colspan="7">
-              <div class="empty-state">
-                <div class="empty-icon">📋</div>
-                لا توجد خطط تدريب بعد
-              </div>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <div class="empty-icon">📋</div>
+                  @if (searchText() || filterStatus()) {
+                    لا توجد خطط مطابقة للفلتر
+                  } @else {
+                    لا توجد خطط تدريب بعد — اضغط "إنشاء خطة جديدة"
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
 
-  <!-- Workflow visualization -->
-  <div class="workflow-inline">
-    <span class="step-label badge badge-draft">1. مسودة (TD)</span>
-    <span class="step-arrow">←</span>
-    <span class="step-label badge badge-open">2. مفتوحة (UTM يدخل)</span>
-    <span class="step-arrow">←</span>
-    <span class="step-label badge badge-submitted">3. مُرسلة</span>
-    <span class="step-arrow">←</span>
-    <span class="step-label badge badge-review">4. مراجعة (Staff)</span>
-    <span class="step-arrow">←</span>
-    <span class="step-label badge badge-td-approved">5. اعتماد TD</span>
-    <span class="step-arrow">←</span>
-    <span class="step-label badge badge-th-approved">6. اعتماد TH</span>
+    <!-- Workflow visualization -->
+    <div class="workflow-card">
+      <div class="workflow-title">سير عمل الخطة</div>
+      <div class="workflow-steps">
+        <div class="workflow-step">
+          <span class="step-num badge-draft">1</span>
+          <span class="step-name">مسودة</span>
+          <span class="step-actor">TD</span>
+        </div>
+        <span class="step-arrow">→</span>
+        <div class="workflow-step">
+          <span class="step-num badge-open">2</span>
+          <span class="step-name">مفتوحة</span>
+          <span class="step-actor">إدخال الدورات</span>
+        </div>
+        <span class="step-arrow">→</span>
+        <div class="workflow-step">
+          <span class="step-num badge-submitted">3</span>
+          <span class="step-name">مُرسلة</span>
+          <span class="step-actor">للمراجعة</span>
+        </div>
+        <span class="step-arrow">→</span>
+        <div class="workflow-step">
+          <span class="step-num badge-review">4</span>
+          <span class="step-name">قيد المراجعة</span>
+          <span class="step-actor">Staff</span>
+        </div>
+        <span class="step-arrow">→</span>
+        <div class="workflow-step">
+          <span class="step-num badge-td-approved">5</span>
+          <span class="step-name">اعتماد TD</span>
+          <span class="step-actor">مدير التدريب</span>
+        </div>
+        <span class="step-arrow">→</span>
+        <div class="workflow-step">
+          <span class="step-num badge-th-approved">6</span>
+          <span class="step-name">اعتماد TH</span>
+          <span class="step-actor">رئيس الجهة</span>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
 <!-- Create Plan Dialog -->
 @if (isDialogOpen()) {
   <div class="modal-backdrop" (click)="isDialogOpen.set(false)">
-    <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-content modal-sm modal-modern" (click)="$event.stopPropagation()">
       <div class="modal-header">
         <h3 class="modal-title">➕ إنشاء خطة جديدة</h3>
         <button class="modal-close" (click)="isDialogOpen.set(false)">✕</button>
@@ -144,8 +249,37 @@
         </div>
       </div>
       <div class="modal-footer">
+        <button class="btn btn-outline" (click)="isDialogOpen.set(false)">إلغاء</button>
         <button class="btn btn-primary" (click)="onSave()">💾 حفظ</button>
-        <button class="btn btn-ghost" (click)="isDialogOpen.set(false)">إلغاء</button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (isReopenDialogOpen()) {
+  <div class="modal-backdrop" (click)="onReopenCancelled()">
+    <div class="modal-content modal-sm modal-modern" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">📂 إعادة فتح نافذة الاستلام</h3>
+        <button class="modal-close" (click)="onReopenCancelled()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">تاريخ الفتح <span class="required">*</span></label>
+          <input type="date" class="form-input"
+            [value]="reopenOpenDate()"
+            (input)="reopenOpenDate.set($any($event.target).value)">
+        </div>
+        <div class="form-group">
+          <label class="form-label">تاريخ الإغلاق <span class="required">*</span></label>
+          <input type="date" class="form-input"
+            [value]="reopenCloseDate()"
+            (input)="reopenCloseDate.set($any($event.target).value)">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="onReopenCancelled()">إلغاء</button>
+        <button class="btn btn-primary" (click)="onReopenWindow()">📂 إعادة الفتح</button>
       </div>
     </div>
   </div>

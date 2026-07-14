@@ -38,14 +38,12 @@
     "SeeAllUsers": "رؤية كافة المستخدمين",
     "TakePhoto": "تصوير",
     "ChoosePhoto": "اختر صورة",
-
-
-
     "Permission:Training": "إدارة التدريب",
     "Permission:CourseCatalog": "كتالوج الدورات",
     "Permission:CourseCatalog.Create": "إضافة دورات",
     "Permission:CourseCatalog.Update": "تعديل دورات",
     "Permission:CourseCatalog.Delete": "حذف دورات",
+    "Permission:CourseCatalog.ViewSubscribedTenants": "عرض المستأجرين المشتركين",
     "Permission:CourseFields": "مجالات الدورات",
     "Permission:CourseFields.Create": "إضافة مجالات",
     "Permission:CourseFields.Update": "تعديل مجالات",
@@ -59,7 +57,7 @@
     "Permission:TenantCourses.Delete": "حذف دورات الجهة",
     "Permission:TrainingPlans": "خطط التدريب",
     "Permission:TrainingPlans.Create": "إنشاء خطط",
-    "Permission:TrainingPlans.SubmitItems": "تقديم بنود الخطة",
+    "Permission:TrainingPlans.SubmitItems": "تقديم دورات الخطة",
     "Permission:TrainingPlans.Review": "مراجعة الخطط",
     "Permission:TrainingPlans.ApproveTD": "اعتماد (مدير التدريب)",
     "Permission:TrainingPlans.ApproveTH": "اعتماد (رئيس الجهة)",
@@ -76,7 +74,6 @@
     "Permission:Finance": "المالية",
     "Permission:Finance.ManageItems": "إدارة البنود المالية",
     "Permission:Finance.ManageBudgets": "إدارة الميزانيات",
-    "Permission:Finance.ManageExchangeRates": "إدارة أسعار الصرف",
     "Permission:Finance.ManageDefaults": "إدارة البنود المالية الافتراضية",
     "Permission:Finance.ManagePayments": "إدارة المدفوعات",
     "Permission:TrainingCenters": "مراكز التدريب",
@@ -87,19 +84,16 @@
     "Permission:Reports.FinancialReport": "تقرير البنود المالية",
     "Permission:Reports.PlanProgress": "تقرير تقدم الخطة",
     "Permission:Reports.Reallocation": "تقرير إعادة التخصيص",
-
     "Training.Menu.Training": "التدريب",
     "Training.Menu.Catalog": "كتالوج الدورات",
     "Training.Menu.Fields": "مجالات الدورات",
     "Training.Menu.Proposals": "اقتراحات الدورات",
     "Training.Menu.TenantCourses": "دورات الجهة",
-
     "Training.CourseCatalog": "كتالوج الدورات",
     "Training.CourseFields": "مجالات الدورات",
     "Training.CourseFieldsDescription": "تصنيف الدورات حسب المجال",
     "Training.CourseProposals": "اقتراحات الدورات",
     "Training.TenantCourses": "دورات الجهة",
-
     "Training.AddCourse": "إضافة دورة",
     "Training.EditCourse": "تعديل دورة",
     "Training.AddNewCourse": "إضافة دورة جديدة",
@@ -124,12 +118,6 @@
     "Training.HasCertificate": "شهادة",
     "Training.EvaluationBlocksCertificate": "التقييم يحجب الشهادة",
     "Training.IsActive": "الحالة",
-    "Training.EnrollmentConditions": "شروط الالتحاق",
-    "Training.AddCondition": "إضافة شرط",
-    "Training.ConditionType": "نوع الشرط",
-    "Training.ConditionValue": "القيمة (JSON)",
-    "Training.NoConditions": "لا توجد شروط التحاق.",
-    "Training.ConditionsLocked": "مقفل",
     "Training.FieldNameAr": "اسم المجال (عربي)",
     "Training.FieldNameEn": "اسم المجال (إنجليزي)",
     "Training.FieldNameArRequired": "اسم المجال (عربي) مطلوب",
@@ -154,13 +142,12 @@
     "Training.Review": "مراجعة",
     "Training.All": "الكل",
     "Training.AddFromCatalog": "إضافة دورة من الكتالوج",
-    "Training.SelectCoursesInfo": "اختر الدورات المراد إضافتها. سيتم نسخ شروط الالتحاق تلقائياً (مقفلة).",
+    "Training.SelectCoursesInfo": "اختر الدورات المراد إضافتها.",
     "Training.SelectedCount": "{0} دورة محددة",
     "Training.AddSelected": "إضافة المحدد",
     "Training.DefaultCapacity": "السعة الافتراضية",
     "Training.DefaultDurationWeeks": "المدة (أسابيع)",
     "Training.EditSettings": "تعديل إعدادات الدورة",
-
     "Training.Category.Military": "عسكري",
     "Training.Category.Civilian": "مدني",
     "Training.Nature.Mandatory": "إلزامي",
@@ -169,15 +156,6 @@
     "Training.ResultType.PassFail": "ناجح / راسب",
     "Training.ResultType.CompletedNotCompleted": "مكتمل / غير مكتمل",
     "Training.ResultType.GradeScore": "درجة (0-100)",
-    "Training.ConditionType.Rank": "الرتبة",
-    "Training.ConditionType.Age": "العمر",
-    "Training.ConditionType.ServiceYears": "سنوات الخدمة",
-    "Training.ConditionType.Education": "المؤهل العلمي",
-    "Training.ConditionType.MedicalFitness": "اللياقة الطبية",
-    "Training.ConditionType.SecurityClearance": "التصريح الأمني",
-    "Training.ConditionType.LanguageLevel": "مستوى اللغة",
-    "Training.ConditionType.PreviousCourse": "دورة سابقة",
-    "Training.ConditionType.Custom": "مخصص",
     "Training.ProposalStatus.Pending": "قيد المراجعة",
     "Training.ProposalStatus.Approved": "مقبول",
     "Training.ProposalStatus.Rejected": "مرفوض",
@@ -191,12 +169,13 @@
     "Training.CannotChangeCourse": "لا يمكن تغيير الدورة — لاستخدام دورة أخرى أضف سجلاً جديداً.",
     "Training.Capacity": "السعة الافتراضية",
     "Training.Certificate": "شهادة",
-    "Training.ConditionValuePlaceholder": "قيمة JSON مثال {\"min\":5}",
-    "Training.Conditions": "الشروط",
     "Training.CourseCatalogDescription": "إدارة الدورات المتاحة لجميع الجهات — أدمن النظام فقط",
     "Training.CourseCatalog.NoCourses": "لم يتم العثور على دورات",
     "Training.CourseCatalog.NoCoursesHint": "أضف أول دورة إلى الكتالوج",
     "Training.CourseCatalog.DeleteConfirm": "هل أنت متأكد من حذف هذه الدورة؟",
+    "Training.CourseCatalog.ViewSubscribedTenants": "عرض المستأجرين المشتركين",
+    "Training.CourseCatalog.SubscribedTenantsTitle": "المستأجرين المشتركين",
+    "Training.CourseCatalog.NoSubscribedTenants": "لم يختر أي مستأجر هذه الدورة بعد.",
     "Training.Validation.CourseNameArRequired": "اسم الدورة بالعربي مطلوب",
     "Training.Validation.CourseNameEnRequired": "اسم الدورة بالإنجليزي مطلوب",
     "Training.Validation.CategoryRequired": "التصنيف مطلوب",
@@ -204,13 +183,13 @@
     "Training.Validation.FieldRequired": "مجال الدورة مطلوب",
     "Training.Validation.ResultTypeRequired": "نوع النتيجة مطلوب",
     "Training.CourseName": "اسم الدورة",
+    "Training.TenantName": "اسم الجهة",
     "Training.Deactivate": "إلغاء التفعيل",
     "Training.Duration": "المدة",
     "Training.DurationWeeks": "المدة (أسابيع)",
     "Training.EditTenantCourse": "تعديل إعدادات الدورة",
     "Training.Evaluation": "تقييم",
     "Training.Locked": "مقفل",
-    "Training.LockedConditionsWarning": "هذه الشروط منسوخة من الكتالوج ولا يمكن تعديلها على مستوى الجهة.",
     "Training.NoPendingProposals": "لا توجد اقتراحات في انتظار المراجعة.",
     "Training.PagerInfo": "عرض {0}-{1} من {2}",
     "Training.Pending": "في الانتظار",
@@ -224,11 +203,10 @@
     "Training.Selected": "محدد",
     "Training.Submit": "إرسال",
     "Training.TenantCoursesDescription": "الدورات المضافة من الكتالوج — مدير التدريب / موظفو المديرية",
-    "Training.TenantCoursesLayerInfo": "هذه الطبقة إلزامية بين الكتالوج والخطط. جميع الخطط والترشيحات تشير إلى TenantCourseId. الشروط تُنسخ تلقائياً من الكتالوج (مقفلة 🔒).",
+    "Training.TenantCoursesLayerInfo": "هذه الطبقة إلزامية بين الكتالوج والخطط. جميع الخطط والترشيحات تشير إلى TenantCourseId.",
     "Training.TenantCoursesLayerTitle": "طبقة دورات الجهة (TenantCourses)",
     "Training.Total": "الإجمالي",
     "Training.Weeks": "أسابيع",
-
     "Training:CourseCatalog:NotFound": "الدورة غير موجودة في الكتالوج.",
     "Training:CourseCatalog:DuplicateNameAr": "يوجد دورة بالاسم العربي '{name}' مسبقاً.",
     "Training:CourseCatalog:DuplicateNameEn": "يوجد دورة بالاسم الإنجليزي '{name}' مسبقاً.",
@@ -238,14 +216,9 @@
     "Training:TenantCourse:NotFound": "دورة الجهة غير موجودة.",
     "Training:TenantCourse:AlreadyAdded": "تمت إضافة هذه الدورة للجهة مسبقاً.",
     "Training:TenantCourse:CatalogCourseInactive": "لا يمكن إضافة دورة غير نشطة من الكتالوج.",
-
-
     "Training.Menu.Finance": "المالية",
     "Training.Menu.FinancialItems": "البنود المالية",
-    "Training.Menu.CourseTypeDefaults": "الربط الافتراضي",
-    "Training.Menu.ExchangeRates": "أسعار الصرف",
     "Training.Menu.TrainingBudgets": "الميزانيات",
-
     "Training.FinancialItems": "البنود المالية",
     "Training.FinancialItems.Title": "البنود المالية",
     "Training.FinancialItems.Description": "إدارة البنود المالية — هيكل شجري من مستويين",
@@ -268,7 +241,6 @@
     "Training.FinancialItems.ActiveOnly": "نشط",
     "Training.FinancialItems.InactiveOnly": "غير نشط",
     "Training.FinancialItems.DeleteConfirm": "هل أنت متأكد من حذف هذا البند المالي؟",
-
     "Training.FinancialItems.HeaderTitle": "البنود المالية",
     "Training.FinancialItems.HeaderDesc": "إدارة البنود المالية مع التصنيفات، مبالغ الرتب، وحسابات التكلفة التلقائية",
     "Training.FinancialItems.AddNew": "إضافة بند جديد",
@@ -356,56 +328,8 @@
     "Training.FinancialItems.ItemType.Allowance": "بدل سفر",
     "Training.FinancialItems.ItemType.Clothing": "بدل ملابس",
     "Training.FinancialItems.ItemType.Other": "أخرى",
-
-    "Training.CourseTypeDefaults": "الربط الافتراضي للبنود المالية",
-    "Training.CourseTypeDefaults.Title": "الربط الافتراضي للبنود المالية",
-    "Training.CourseTypeDefaults.Description": "ربط البنود المالية حسب نوع الدورة — يتم تطبيقها تلقائياً عند إضافة دورة للخطة",
-    "Training.CourseTypeDefaults.CourseType": "نوع الدورة",
-    "Training.CourseTypeDefaults.AddItem": "إضافة بند",
-    "Training.CourseTypeDefaults.SortOrder": "ترتيب",
-    "Training.CourseTypeDefaults.FinancialItem": "البند المالي",
-    "Training.CourseTypeDefaults.DragToReorder": "اسحب لإعادة ترتيب البنود",
-    "Training.CourseTypeDefaults.ExternalInternational": "خارجي دولي",
-    "Training.CourseTypeDefaults.ExternalLocal": "خارجي محلي",
-    "Training.CourseTypeDefaults.ItemCount": "{0} بنود مالية",
-    "Training.CourseTypeDefaults.Info": "اختر نوع الدورة ثم أضف البنود المالية المطلوبة. يمكن ترتيب البنود باستخدام الأسهم.",
-    "Training.CourseTypeDefaults.InternalWarning": "الدورات الداخلية لا تحتاج بنود مالية",
-    "Training.CourseTypeDefaults.SelectFinancialItem": "اختر البند المالي",
-    "Training.CourseTypeDefaults.DeleteConfirm": "هل أنت متأكد من حذف هذا الربط؟",
-
-    "Training.ExchangeRates": "أسعار الصرف",
-    "Training.ExchangeRates.Title": "أسعار الصرف",
-    "Training.ExchangeRates.Description": "إدارة أسعار صرف العملات — حالياً USD → OMR فقط",
-    "Training.ExchangeRates.Add": "إضافة سعر صرف",
-    "Training.ExchangeRates.Currency": "العملة",
-    "Training.ExchangeRates.Rate": "سعر الصرف (OMR)",
-    "Training.ExchangeRates.RateHint": "أقصى 3 أرقام بعد الفاصلة (مثال: 0.385)",
-    "Training.ExchangeRates.EffectiveDate": "تاريخ السريان",
-    "Training.ExchangeRates.Notes": "ملاحظات",
-    "Training.ExchangeRates.Status": "الحالة",
-    "Training.ExchangeRates.Active": "نشط",
-    "Training.ExchangeRates.Inactive": "غير نشط",
-    "Training.ExchangeRates.FromCurrency": "من عملة",
-    "Training.ExchangeRates.ToCurrency": "إلى عملة",
-    "Training.ExchangeRates.Info": "عند إضافة سعر صرف جديد، يتم إلغاء تفعيل السعر السابق تلقائياً. سعر واحد نشط فقط في أي وقت.",
-    "Training.ExchangeRates.DeactivateWarning": "سيتم إلغاء تفعيل السعر الحالي ({0}) تلقائياً",
-    "Training.ExchangeRates.DeleteConfirm": "هل أنت متأكد من حذف سعر الصرف هذا؟",
-    "Training.ExchangeRates.NoActiveRate": "لا يوجد سعر صرف نشط",
-    "Training.ExchangeRates.NotesPlaceholder": "أضف ملاحظة اختيارية...",
-    "Training.ExchangeRates.ActiveBadge": "نشط",
-    "Training.ExchangeRates.RateMustBePositive": "يجب أن يكون السعر أكبر من صفر",
-    "Training.ExchangeRates.AddSubtitle": "إضافة سعر صرف جديد لـ USD → OMR",
-    "Training.ExchangeRates.AddFirstHint": "أضف أول سعر صرف للبدء",
-    "Training.ExchangeRates.ConfirmCreate": "إنشاء سعر صرف جديد سيؤدي إلى تعطيل السعر النشط الحالي. هل أنت متأكد؟",
-
-    "Training.CourseTypeDefaults.AllAssigned": "جميع البنود المالية مخصصة لهذا النوع",
-    "Training.CourseTypeDefaults.NoItems": "لا توجد بنود مالية مخصصة",
-    "Training.CourseTypeDefaults.NoItemsHint": "اختر نوع الدورة وأضف البنود المالية المطلوبة",
-    "Training.CourseTypeDefaults.ReorderHint": "استخدم الأسهم لتغيير الترتيب — يؤثر على ظهور البنود في الخطط",
-
     "Training.Common.MoveUp": "نقل لأعلى",
     "Training.Common.MoveDown": "نقل لأسفل",
-
     "Training.TrainingBudgets": "ميزانيات التدريب",
     "Training.TrainingBudgets.Title": "ميزانيات التدريب",
     "Training.TrainingBudgets.Description": "إدارة ميزانيات التدريب — ميزانية واحدة لكل بند مالي رئيسي لكل سنة",
@@ -429,7 +353,6 @@
     "Training.TrainingBudgets.BudgetCards": "بطاقات الميزانيات",
     "Training.TrainingBudgets.ShowCards": "إظهار البطاقات",
     "Training.TrainingBudgets.HideCards": "إخفاء البطاقات",
-
     "Training.FinancialItemName": "البند المالي",
     "Training.AlertThreshold": "حد التنبيه",
     "Training.EditThreshold": "تعديل حد التنبيه",
@@ -438,7 +361,6 @@
     "Training.AmountToRecover": "مبلغ الاسترداد",
     "Training:TrainingBudget:MustBeParentItem": "يجب ربط الميزانية ببند مالي رئيسي وليس بند فرعي.",
     "Training:TrainingBudget:AlreadyExists": "توجد ميزانية بالفعل لهذا البند المالي في السنة المحددة.",
-
     "Training.Currency.OMR": "ر.ع",
     "Training.Common.Save": "حفظ",
     "Training.Common.Cancel": "إلغاء",
@@ -448,23 +370,14 @@
     "Training.Common.Status": "الحالة",
     "Training.Common.Active": "نشط",
     "Training.Common.Inactive": "غير نشط",
-
     "Permission:FinancialItems": "البنود المالية",
     "Permission:FinancialItems.Create": "إنشاء",
     "Permission:FinancialItems.Edit": "تعديل",
     "Permission:FinancialItems.Delete": "حذف",
-    "Permission:CourseTypeFinancialDefaults": "الربط الافتراضي",
-    "Permission:CourseTypeFinancialDefaults.Create": "إنشاء",
-    "Permission:CourseTypeFinancialDefaults.Delete": "حذف",
-    "Permission:ExchangeRates": "أسعار الصرف",
-    "Permission:ExchangeRates.Create": "إنشاء",
-    "Permission:ExchangeRates.Delete": "حذف",
     "Permission:TrainingBudgets": "الميزانيات",
     "Permission:TrainingBudgets.Create": "إنشاء",
     "Permission:TrainingBudgets.Edit": "تعديل",
     "Permission:TrainingBudgets.Delete": "حذف",
-
-    // --- Centers ---
     "Training.TrainingCenters": "مراكز التدريب",
     "Training.TrainingCenter": "مركز تدريب",
     "Training.OrgUnit": "الوحدة التنظيمية",
@@ -476,8 +389,6 @@
     "Training.BasicInfo": "البيانات الأساسية",
     "Training.OrgUnitAutoFill": "تم التعبئة تلقائياً من الوحدة التنظيمية",
     "Training.SelectOrgUnit": "اختر الوحدة التنظيمية",
-
-    // --- Role Assignments ---
     "Training.RoleAssignments": "تعيين الأدوار",
     "Training.ManageRoles": "إدارة الأدوار",
     "Training.TCM": "مدير المركز",
@@ -496,8 +407,6 @@
     "Training.OrgUnitScopedSearch": "البحث مقيد بالموظفين المنتمين للوحدة التنظيمية المختارة فقط",
     "Training.TcoCount": "عدد TCO",
     "Training.NotAssigned": "لم يتم التعيين",
-
-    // --- Plan Windows ---
     "Training.PlanWindows": "نوافذ رفع الخطط",
     "Training.SubmissionWindow": "نافذة رفع الخطط",
     "Training.OpenWindow": "فتح باب رفع الخطط",
@@ -509,8 +418,6 @@
     "Training.WindowClosed": "مغلق",
     "Training.WindowNotSet": "غير محدد",
     "Training.DaysRemaining": "يوم متبقي",
-
-    // --- Center Plans ---
     "Training.CenterPlans": "خطط المراكز",
     "Training.CenterPlan": "خطة المركز",
     "Training.CreatePlan": "إنشاء خطة جديدة",
@@ -521,9 +428,7 @@
     "Training.Return": "إعادة للمراجعة",
     "Training.NoActions": "لا إجراءات",
     "Training.AllCenters": "جميع المراكز",
-
-    // --- Center Plan Items ---
-    "Training.PlanItems": "بنود الخطة",
+    "Training.PlanItems": "دورات الخطة",
     "Training.AddCourseToPlan": "إضافة دورة للخطة",
     "Training.BeneficiaryType": "نوع المستفيدين",
     "Training.BeneficiaryType.Internal": "داخلي",
@@ -536,25 +441,13 @@
     "Training.SelectBeneficiaryUnits": "اختر الوحدات المستفيدة (شجرة تنظيمية)",
     "Training.UnitsSelected": "وحدات مختارة",
     "Training.InternalOnly": "يظهر فقط للنوع داخلي",
-
-    // --- Course Conditions (MOD-21) ---
-    "Training.CourseConditions": "شروط الدورة",
-    "Training.EditConditionsWarning": "تعديل الشروط يؤثر على جميع الخطط التي تستخدم هذه الدورة",
-
-    // --- Statuses ---
     "Training.CenterPlanStatus.Draft": "مسودة",
     "Training.CenterPlanStatus.Submitted": "مرسل",
     "Training.CenterPlanStatus.Approved": "معتمد",
     "Training.CenterPlanStatus.Rejected": "مرفوض",
-
-    // --- Role Types ---
     "Training.CenterRoleType.TCO": "مسؤول تدريب المركز",
     "Training.CenterRoleType.TCM": "مدير مركز التدريب",
-
-    // --- Workflow Buttons Info ---
     "Training.WorkflowButtonsInfo": "TCO (مسودة) → [إرسال] | TCM (مرسل) → [اعتماد] / [رفض] / [إعادة] | معتمد/مرفوض → لا إجراءات",
-
-    // --- Error Codes ---
     "Training:CenterPlanWindow:YearExists": "نافذة رفع الخطط موجودة بالفعل للسنة {Year}.",
     "Training:CenterPlanWindow:InvalidDates": "تاريخ الفتح يجب أن يكون قبل تاريخ الإغلاق.",
     "Training:CenterPlan:WindowNotOpen": "نافذة رفع الخطط غير مفتوحة للسنة {Year}. لا يمكن إنشاء خطط خارج فترة النافذة.",
@@ -562,12 +455,10 @@
     "Training:CenterPlan:NotDraft": "هذه الخطة ليست في حالة مسودة.",
     "Training:CenterPlan:NotSubmitted": "هذه الخطة لم يتم إرسالها بعد.",
     "Training:CenterPlan:CannotDeleteNonDraft": "يمكن حذف الخطط في حالة المسودة فقط.",
-    "Training:CenterPlanItem:PlanNotDraft": "لا يمكن تعديل البنود إلا عندما تكون الخطة في حالة مسودة.",
+    "Training:CenterPlanItem:PlanNotDraft": "لا يمكن تعديل الدورات إلا عندما تكون الخطة في حالة مسودة.",
     "Training:CenterPlanItem:UnitsOnlyForInternal": "يمكن تعيين الوحدات المستفيدة فقط للبنود من النوع الداخلي.",
     "Training:TrainingCenter:OrgUnitAlreadyAssigned": "الوحدة التنظيمية '{OrgUnitName}' مرتبطة بالفعل بمركز آخر.",
     "Training:CenterRoleAssignment:MultipleTcm": "يسمح بتعيين مدير مركز واحد فقط (TCM) لكل مركز.",
-
-    // --- Permissions ---
     "Permission:Centers": "مراكز التدريب",
     "Permission:Centers.Create": "إنشاء المراكز",
     "Permission:Centers.Edit": "تعديل المراكز",
@@ -585,14 +476,12 @@
     "Permission:CenterPlanItems.Edit": "تعديل بنود الخطط",
     "Permission:CenterPlanItems.Delete": "حذف بنود الخطط",
     "Permission:CenterPlanItems.SetUnits": "تعيين وحدات البنود",
-    "Permission:TenantCourses.EditConditions": "تعديل شروط الدورات (TCO)",
     "Training.Menu.Centers": "مراكز التدريب",
     "Training.Menu.TrainingCenters": "إدارة المراكز",
     "Training.Menu.CenterPlans": "خطط المراكز",
-
     "Training.Menu.Plans": "الخطط السنوية",
     "Training.Menu.AnnualPlansList": "قائمة الخطط",
-    "Training.Menu.PlanEntry": "إدخال بنود الخطة",
+    "Training.Menu.PlanEntry": "إدخال دورات الخطة",
     "Training.Menu.PlanReview": "مراجعة الخطة",
     "Training.Menu.PlanApproval": "اعتماد الخطة",
     "Training.Menu.Nominations": "الترشيحات",
@@ -600,10 +489,8 @@
     "Training.Menu.PriceQuotes": "عروض الأسعار",
     "Training.Menu.Providers": "جهات التدريب",
     "Training.Menu.Sessions": "انعقاد الدورات",
-
     "Training.TrainingPlan": "خطة التدريب",
     "Training.TrainingPlans": "خطط التدريب",
-
     "Training.PlanYear": "سنة الخطة",
     "Training.PlanStatus": "حالة الخطة",
     "Training.OpenDate": "تاريخ الفتح",
@@ -613,10 +500,9 @@
     "Training.CloseSubmissionWindow": "إغلاق نافذة الاستلام",
     "Training.SubmitItems": "إرسال البنود",
     "Training.SubmitForReview": "إحالة للمراجعة",
-
-    "Training.TrainingPlanItem": "بند الخطة",
-    "Training.TrainingPlanItems": "بنود الخطة",
-    "Training.AddPlanItem": "إضافة بند",
+    "Training.TrainingPlanItem": "دورة الخطة",
+    "Training.TrainingPlanItems": "دورات الخطة",
+    "Training.AddPlanItem": "إضافة دورة",
     "Training.CourseType": "نوع الدورة",
     "Training.CourseType.Internal": "داخلية",
     "Training.CourseType.ExternalLocal": "خارجية محلية",
@@ -629,7 +515,6 @@
     "Training.PreferredQuarter.Q4": "الربع الرابع",
     "Training.OfficersCount": "عدد الضباط",
     "Training.EnlistedCount": "عدد الأفراد",
-
     "Training.Justification": "المبرر",
     "Training.Objectives": "الأهداف",
     "Training.DurationYears": "المدة (سنوات)",
@@ -640,7 +525,6 @@
     "Training.EstimatedCost": "التكلفة المقدرة",
     "Training.FundingSource": "مصدر التمويل",
     "Training.TotalEstimatedCost": "إجمالي التكلفة المقدرة",
-
     "Training.PlanStatus.Draft": "مسودة",
     "Training.PlanStatus.Open": "مفتوحة",
     "Training.PlanStatus.Submitted": "مُرسلة",
@@ -650,7 +534,6 @@
     "Training.PlanStatus.THApproved": "معتمدة من رئيس الجهة",
     "Training.PlanStatus.Closed": "مغلقة",
     "Training.PlanStatus.Rejected": "مرفوضة",
-
     "Training.PlanItemFinancialItem": "بند مالي للخطة",
     "Training.PlanItemFinancialItems": "البنود المالية",
     "Training.AssignFinancialItems": "تعيين البنود المالية",
@@ -659,7 +542,6 @@
     "Training.EstimatedAmountUSD": "المبلغ المقدر ($)",
     "Training.ActualAmountOMR": "المبلغ الفعلي (ر.ع.)",
     "Training.ActualAmountUSD": "المبلغ الفعلي ($)",
-
     "Training.Nomination": "ترشيح",
     "Training.Nominations": "الترشيحات",
     "Training.CreateNomination": "إنشاء ترشيح",
@@ -668,33 +550,25 @@
     "Training.Session": "الجلسة",
     "Training.NominatedBy": "مرشح بواسطة",
     "Training.NominatedAt": "تاريخ الترشيح",
-
-
     "Training.NominationStatus.Nominated": "مرشح",
     "Training.NominationStatus.UTMApproved": "معتمد من مدير التدريب بالوحدة",
     "Training.NominationStatus.UGMApproved": "معتمد من المدير العام للوحدة",
     "Training.NominationStatus.TDApproved": "معتمد من مدير التدريب",
     "Training.NominationStatus.Rejected": "مرفوض",
-
     "Training.NominationApproval": "الاعتماد",
     "Training.ApprovalLevel": "مستوى الاعتماد",
     "Training.ApprovalChain": "سلسلة الاعتماد",
     "Training.ApproveNomination": "اعتماد",
     "Training.RejectNomination": "رفض",
-
-    "Training.ConditionCheckFailed": "الموظف لا يستوفي شروط الالتحاق",
-
     "Training.AttendanceStatus.Attended": "حضر",
     "Training.AttendanceStatus.NoShow": "لم يحضر",
     "Training.AttendanceStatus.Withdrew": "انسحب",
-
     "Training.Course": "الدورة",
     "Training.Courses": "الدورات",
     "Training.CourseStatus.Planned": "مخطط لها",
     "Training.CourseStatus.Active": "نشطة",
     "Training.CourseStatus.Completed": "مكتملة",
     "Training.CourseStatus.Cancelled": "ملغاة",
-
     "Training.CourseSession": "انعقاد الدورة",
     "Training.CourseSessions": "انعقاد الدورات",
     "Training.CreateSession": "إنشاء انعقاد",
@@ -705,12 +579,10 @@
     "Training.MaxSeats": "الحد الأقصى للمقاعد",
     "Training.AvailableSeats": "المقاعد المتاحة",
     "Training.SessionCost": "تكلفة الجلسة",
-
     "Training.SessionStatus.Scheduled": "مجدولة",
     "Training.SessionStatus.InProgress": "قيد التنفيذ",
     "Training.SessionStatus.Completed": "مكتملة",
     "Training.SessionStatus.Cancelled": "ملغاة",
-
     "Training.PriceQuote": "عرض سعر",
     "Training.PriceQuotes": "عروض الأسعار",
     "Training.CreatePriceQuote": "إنشاء عرض سعر",
@@ -721,7 +593,6 @@
     "Training.PricePerPerson": "سعر الفرد",
     "Training.TotalPrice": "السعر الإجمالي",
     "Training.ParticipantsCount": "عدد المشاركين",
-
     "Training.TrainingProvider": "جهة التدريب",
     "Training.TrainingProviders": "جهات التدريب",
     "Training.CreateProvider": "إضافة جهة تدريب",
@@ -733,7 +604,6 @@
     "Training.Website": "الموقع الإلكتروني",
     "Training.AverageRating": "متوسط التقييم",
     "Training.IsApproved": "معتمدة",
-
     "Training.ApprovePlan": "اعتماد الخطة",
     "Training.RejectPlan": "رفض الخطة",
     "Training.ReturnPlan": "إعادة للموظف المختص",
@@ -741,37 +611,31 @@
     "Training.SubmissionWindowClosed": "نافذة الاستلام مغلقة",
     "Training.SubmissionWindowNotOpen": "نافذة الاستلام لم تُفتح بعد",
     "Training.PlanAlreadyExists": "توجد خطة لهذه السنة بالفعل",
-
     "Permission:TrainingPlan": "إدارة خطط التدريب",
     "Permission:TrainingPlan.Create": "إنشاء خطط",
     "Permission:TrainingPlan.Update": "تعديل خطط",
     "Permission:TrainingPlan.Delete": "حذف خطط",
-    "Permission:TrainingPlan.Submit": "إرسال بنود الخطة",
+    "Permission:TrainingPlan.Submit": "إرسال دورات الخطة",
     "Permission:TrainingPlan.Review": "مراجعة الخطط",
     "Permission:TrainingPlan.Approve": "اعتماد الخطط (مدير التدريب)",
     "Permission:TrainingPlan.FinalApprove": "الاعتماد النهائي (رئيس الجهة)",
-
-    "Permission:TrainingPlanItem": "إدارة بنود الخطة",
+    "Permission:TrainingPlanItem": "إدارة دورات الخطة",
     "Permission:TrainingPlanItem.Create": "إنشاء بنود",
     "Permission:TrainingPlanItem.Update": "تعديل بنود",
     "Permission:TrainingPlanItem.Delete": "حذف بنود",
     "Permission:TrainingPlanItem.AssignFinancials": "تعيين البنود المالية",
-
     "Permission:Nomination": "إدارة الترشيحات",
     "Permission:Nomination.Create": "إنشاء ترشيحات",
     "Permission:Nomination.ApproveUGM": "اعتماد الترشيحات (المدير العام)",
     "Permission:Nomination.ApproveTD": "اعتماد الترشيحات (مدير التدريب)",
-
     "Permission:PriceQuote": "إدارة عروض الأسعار",
     "Permission:PriceQuote.Create": "إنشاء عروض أسعار",
     "Permission:PriceQuote.Update": "تعديل عروض أسعار",
     "Permission:PriceQuote.Delete": "حذف عروض أسعار",
-
     "Permission:TrainingProvider": "إدارة جهات التدريب",
     "Permission:TrainingProvider.Create": "إضافة جهات تدريب",
     "Permission:TrainingProvider.Update": "تعديل جهات تدريب",
     "Permission:TrainingProvider.Delete": "حذف جهات تدريب",
-
     "Permission:CourseSession": "إدارة انعقاد الدورات",
     "Permission:CourseSession.Create": "إنشاء انعقاد",
     "Permission:CourseSession.Update": "تعديل انعقاد",
@@ -780,13 +644,11 @@
     "Permission:CourseSession.MarkInProgress": "بدء انعقاد",
     "Permission:CourseSession.MarkCompleted": "إنهاء انعقاد",
     "Permission:CourseSession.Cancel": "إلغاء انعقاد",
-
     "Permission:AnnualPlanSessions": "جلسات الخطة السنوية",
     "Permission:AnnualPlanSessions.Default": "عرض الجلسات",
     "Permission:AnnualPlanSessions.Create": "إنشاء جلسة من بند الخطة",
     "Permission:AnnualPlanSessions.Substitute": "استبدال مرشّح",
     "Permission:AnnualPlanSessions.Dashboard": "لوحة تقدّم الخطة",
-
     "Training:Session:PlanNotApproved": "الخطة السنوية لم تُعتمد بعد",
     "Training:Session:AlreadyExists": "يوجد جلسة نشطة لهذا البند مسبقاً",
     "Training:Session:RankMismatch": "البديل يجب أن يكون من نفس الرتبة",
@@ -799,9 +661,8 @@
     "Training:Session:SubstituteNotFound": "الموظف البديل غير موجود",
     "Training:Session:InvalidStatusTransition": "لا يمكن تنفيذ هذا الانتقال من الحالة الحالية للجلسة",
     "Training:PriceQuote:WrongSession": "العرض المختار لا يخص هذه الجلسة",
-
-    "Training.AnnualPlan.SessionsQueue.Title": "بنود الخطة بانتظار إنشاء جلسة",
-    "Training.AnnualPlan.SessionsQueue.Subtitle": "بنود الخطة السنوية المعتمدة من رئيس الجهة، مرتبة حسب الأولوية والربع المفضّل.",
+    "Training.AnnualPlan.SessionsQueue.Title": "دورات الخطة بانتظار إنشاء جلسة",
+    "Training.AnnualPlan.SessionsQueue.Subtitle": "دورات الخطة السنوية المعتمدة من رئيس الجهة، مرتبة حسب الأولوية والربع المفضّل.",
     "Training.AnnualPlan.SessionsQueue.StatTotal": "الإجمالي",
     "Training.AnnualPlan.SessionsQueue.StatOverdue": "متأخرة",
     "Training.AnnualPlan.SessionsQueue.StatHighPriority": "أولوية عالية",
@@ -829,14 +690,13 @@
     "Training.AnnualPlan.SessionsQueue.Type.Internal": "داخلية",
     "Training.AnnualPlan.SessionsQueue.Type.ExternalLocal": "خارجية محلية",
     "Training.AnnualPlan.SessionsQueue.Type.ExternalInternational": "خارجية دولية",
-
     "Training.AnnualPlan.CreateSession.Back": "العودة للقائمة",
     "Training.AnnualPlan.CreateSession.TitleInternal": "إنشاء جلسة داخلية",
     "Training.AnnualPlan.CreateSession.TitleExternal": "إنشاء جلسة خارجية (مخطّطة)",
     "Training.AnnualPlan.CreateSession.SubtitleInternal": "تواريخ التنفيذ تُحدَّد الآن — تنشأ الجلسة في حالة \"مجدولة\".",
     "Training.AnnualPlan.CreateSession.SubtitleExternal": "التواريخ تُحدَّد لاحقاً عند اختيار العرض الفائز — تنشأ الجلسة في حالة \"مخطّطة\".",
     "Training.AnnualPlan.CreateSession.Loading": "جارٍ التحميل…",
-    "Training.AnnualPlan.CreateSession.MissingPlanItem": "تعذّر العثور على بند الخطة المطلوب.",
+    "Training.AnnualPlan.CreateSession.MissingPlanItem": "تعذّر العثور على دورة الخطة المطلوبة.",
     "Training.AnnualPlan.CreateSession.GenericError": "حدث خطأ أثناء إنشاء الجلسة.",
     "Training.AnnualPlan.CreateSession.Course": "الدورة",
     "Training.AnnualPlan.CreateSession.Unit": "الوحدة",
@@ -856,7 +716,7 @@
     "Training.AnnualPlan.CreateSession.Workflow.Payments": "المدفوعات",
     "Training.AnnualPlan.CreateSession.SectionNomineesTitle": "المرشّحون",
     "Training.AnnualPlan.CreateSession.SubstitutedSuffix": "مستبدل",
-    "Training.AnnualPlan.CreateSession.NoNominees": "لا توجد ترشيحات معتمدة لبند الخطة هذا.",
+    "Training.AnnualPlan.CreateSession.NoNominees": "لا توجد ترشيحات معتمدة لدورة الخطة هذه.",
     "Training.AnnualPlan.CreateSession.Column.Nominee": "المرشح الأصلي",
     "Training.AnnualPlan.CreateSession.Column.Substitution": "البديل",
     "Training.AnnualPlan.CreateSession.Column.Reason": "السبب",
@@ -868,12 +728,11 @@
     "Training.AnnualPlan.CreateSession.Cancel": "إلغاء",
     "Training.AnnualPlan.CreateSession.SubmitInternal": "إنشاء (مجدولة)",
     "Training.AnnualPlan.CreateSession.SubmitExternal": "إنشاء (مخطّطة)",
-
     "Training.AnnualPlan.Substitute.Title": "استبدال مرشّح",
     "Training.AnnualPlan.Substitute.OriginalNominee": "المرشّح الأصلي",
     "Training.AnnualPlan.Substitute.ReplacementLabel": "البديل (نفس الرتبة فقط)",
     "Training.AnnualPlan.Substitute.PickPrompt": "اختر بديلاً…",
-    "Training.AnnualPlan.Substitute.SameRankHint": "القائمة تعرض فقط الموظفين النشطين من نفس رتبة المرشّح الأصلي، باستثناء من سُجِّلوا مسبقاً في بند الخطة.",
+    "Training.AnnualPlan.Substitute.SameRankHint": "القائمة تعرض فقط الموظفين النشطين من نفس رتبة المرشّح الأصلي، باستثناء من سُجِّلوا مسبقاً في دورة الخطة.",
     "Training.AnnualPlan.Substitute.RankMatchedPrefix": "تم التحقق من تطابق الرتبة:",
     "Training.AnnualPlan.Substitute.ReasonLabel": "سبب الاستبدال (اختياري)",
     "Training.AnnualPlan.Substitute.ReasonPlaceholder": "اشرح سبب الاستبدال…",
@@ -883,7 +742,6 @@
     "Training.AnnualPlan.Substitute.GenericError": "حدث خطأ أثناء جلب البدلاء.",
     "Training.AnnualPlan.Substitute.Cancel": "إلغاء",
     "Training.AnnualPlan.Substitute.Confirm": "تأكيد الاستبدال",
-
     "Training.Sessions.List.Title": "الجلسات",
     "Training.Sessions.List.Subtitle": "كل الجلسات المُنشأة من الخطط السنوية ومراكز التدريب — مع مرحلة التنفيذ الحالية لكل جلسة.",
     "Training.Sessions.List.StatTotal": "الإجمالي",
@@ -899,14 +757,12 @@
     "Training.Sessions.List.View": "فتح",
     "Training.Sessions.List.NoSessions": "لا توجد جلسات مطابقة للفلاتر الحالية.",
     "Training.Sessions.List.GenericError": "حدث خطأ أثناء جلب الجلسات.",
-
     "Training.Session.Status.Planned": "⏱ مخطّطة",
     "Training.Session.Status.Scheduled": "📅 مجدولة",
     "Training.Session.Status.InProgress": "⚡ جارية",
     "Training.Session.Status.Completed": "✓ مكتملة",
     "Training.Session.Status.Cancelled": "⛔ ملغاة",
     "Training.Session.Status.FinanciallyClosed": "✓ مكتملة مالياً",
-
     "Training.SessionExecutionStage.AwaitingQuoteSelection": "بانتظار اختيار العرض",
     "Training.SessionExecutionStage.AwaitingTravelInstruction": "بانتظار تعليمات السفر",
     "Training.SessionExecutionStage.AwaitingTravelAllowances": "بدلات السفر",
@@ -914,7 +770,6 @@
     "Training.SessionExecutionStage.AwaitingCompletion": "بانتظار الإكمال",
     "Training.SessionExecutionStage.FinanciallyComplete": "✓ مكتملة مالياً",
     "Training.SessionExecutionStage.NoExecutionPending": "—",
-
     "Training.Sessions.Detail.Back": "العودة للقائمة",
     "Training.Sessions.Detail.Loading": "جارٍ التحميل…",
     "Training.Sessions.Detail.NotFound": "تعذّر العثور على الجلسة المطلوبة.",
@@ -937,14 +792,12 @@
     "Training.Sessions.Detail.TravelLockedNoQuote": "متاح بعد اختيار العرض الفائز.",
     "Training.Sessions.Detail.PaymentsLockedPlanned": "متاح بعد اختيار العرض الفائز وتأكيد التواريخ.",
     "Training.Sessions.Detail.PaymentsLockedNoTI": "متاح بعد إصدار تعليمات السفر.",
-
     "Training.Sessions.Detail.Section1.Title": "تفاصيل الجلسة",
     "Training.Sessions.Detail.Section2.Title": "المرشحون",
     "Training.Sessions.Detail.Section2.Rank": "الرتبة",
     "Training.Sessions.Detail.Section2.Substituted": "بديل عن",
     "Training.Sessions.Detail.Section3.Title": "عروض الأسعار",
     "Training.Sessions.Detail.Section4.Title": "تعليمات السفر",
-
     "Training.Sessions.Detail.Section5.Title": "المدفوعات",
     "Training.Sessions.Detail.Section5.TravelTitle": "بدلات السفر",
     "Training.Sessions.Detail.Section5.CourseTitle": "دفع رسوم الدورة",
@@ -958,7 +811,6 @@
     "Training.Sessions.Detail.Section5.OpenCoursePayments": "فتح صفحة دفع الدورات",
     "Training.Sessions.Detail.Section5.LifecycleComplete": "✓ مكتملة",
     "Training.Sessions.Detail.Section5.LifecycleCompleteBanner": "تمت كل المدفوعات المطلوبة لهذه الجلسة.",
-
     "Training.Sessions.Detail.Pipeline.ByPlan": "ضمن الخطة",
     "Training.Sessions.Detail.Pipeline.Created": "إنشاء",
     "Training.Sessions.Detail.Pipeline.Quote": "اختيار العرض",
@@ -967,9 +819,8 @@
     "Training.Sessions.Detail.Pipeline.Payments": "المدفوعات",
     "Training.Sessions.Detail.Pipeline.InProgress": "جارية",
     "Training.Sessions.Detail.Pipeline.Completed": "مكتملة",
-
     "Training.AnnualPlan.Dashboard.Title": "لوحة تقدّم الخطة السنوية",
-    "Training.AnnualPlan.Dashboard.Subtitle": "تقدّم بنود الخطة المعتمدة مقابل الجلسات المُنشأة، مع التنبيهات لكل جلسة عالقة أو بند متأخّر.",
+    "Training.AnnualPlan.Dashboard.Subtitle": "تقدّم دورات الخطة المعتمدة مقابل الجلسات المُنشأة، مع التنبيهات لكل جلسة عالقة أو دورة متأخّرة.",
     "Training.AnnualPlan.Dashboard.OpenQueue": "فتح قائمة الإنشاء",
     "Training.AnnualPlan.Dashboard.OpenSessions": "فتح قائمة الجلسات",
     "Training.AnnualPlan.Dashboard.NoData": "لا توجد خطة سنوية معتمدة لهذا العام.",
@@ -986,30 +837,26 @@
     "Training.AnnualPlan.Dashboard.NoAlerts": "لا توجد تنبيهات نشطة.",
     "Training.AnnualPlan.Dashboard.DaysSuffix": "يوم",
     "Training.AnnualPlan.Dashboard.NoUnit": "(دون وحدة)",
-    "Training.AnnualPlan.Dashboard.Alert.OverduePlanItem": "بند خطة متأخّر",
+    "Training.AnnualPlan.Dashboard.Alert.OverduePlanItem": "دورة خطة متأخّرة",
     "Training.AnnualPlan.Dashboard.Alert.StuckPlanned": "جلسة عالقة في حالة مخطّطة",
-
     "Training.Menu.AnnualPlanSessions": "جلسات الخطة السنوية",
     "Training.Menu.SessionsQueue": "بنود بحاجة إلى جلسة",
     "Training.Menu.SessionsList": "الجلسات",
     "Training.Menu.AnnualPlanDashboard": "لوحة تقدّم الخطة",
-
-
-
-
-
-
-
-
     "Training:TrainingPlan:YearAlreadyExists": "توجد خطة تدريب لسنة {Year} بالفعل",
     "Training:TrainingPlan:NotInDraftStatus": "يجب أن تكون الخطة في حالة مسودة لتنفيذ هذا الإجراء",
     "Training:TrainingPlan:NotInSubmittedStatus": "يجب أن تكون الخطة في حالة مُرسلة لبدء المراجعة",
+    "Training:TrainingPlan:ReopenWindowNotAllowed": "يمكن إعادة فتح نافذة الاستلام فقط للخطط في حالة مُرسلة",
     "Training:TrainingPlan:NotInUnderReviewStatus": "يجب أن تكون الخطة في حالة قيد المراجعة للاعتماد من مدير التدريب",
     "Training:TrainingPlan:WindowNotOpen": "نافذة الاستلام غير مفتوحة",
-
     "Training.TrainingPlan.ReviewStarted": "بدأت مراجعة الخطة",
     "Training.TrainingPlan.NotInSubmittedStatus": "الخطة ليست في حالة مُرسلة — لا يمكن بدء المراجعة",
-    "Training.TrainingPlan.SubmittedBannerText": "الخطة جاهزة للمراجعة. اضغط \"بدء المراجعة\" لتبدأ مراجعة البنود وإدخال التكاليف وتخصيص البنود المالية. بمجرد البدء ستنتقل الخطة إلى حالة \"قيد المراجعة\".",
+    "Training.Plan.ReopenWindow": "إعادة فتح النافذة",
+    "Training.Plan.ReopenWindowTitle": "إعادة فتح نافذة الاستلام",
+    "Training.Plan.OpenDate": "تاريخ الفتح",
+    "Training.Plan.CloseDate": "تاريخ الإغلاق",
+    "Training.Plan.ConfirmReopen": "إعادة الفتح",
+    "Training.TrainingPlan.SubmittedBannerText": "الخطة جاهزة للمراجعة. اضغط \"بدء المراجعة\" لتبدأ مراجعة الدورات وإدخال التكاليف وتخصيص البنود المالية. بمجرد البدء ستنتقل الخطة إلى حالة \"قيد المراجعة\".",
     "Training.TrainingPlan.UnderReviewByStaffBannerText": "الخطة قيد المراجعة من قِبل طاقم مديرية التدريب. يُرجى الانتظار حتى يُكمِلوا المراجعة ويُحيلوها إليك للاعتماد.",
     "Training.Errors.Generic": "حدث خطأ أثناء تنفيذ العملية",
     "Training:TrainingPlan:CostNotEntered": "يجب إدخال التكلفة المقدرة لجميع البنود قبل الاعتماد",
@@ -1019,15 +866,14 @@
     "Training:TrainingPlan:UnresolvedReturnedItems": "لا يمكن إعادة الإرسال — يوجد بنود مُعادة يجب معالجتها أولاً",
     "Training:TrainingPlan:UnresolvedReturnedNominations": "لا يمكن إعادة الإرسال — يوجد ترشيحات مُعادة يجب معالجتها أولاً",
     "Training:TrainingPlan:NotFound": "خطة التدريب غير موجودة",
-    "Training:TrainingPlanItem:NotFound": "بند الخطة غير موجود",
-    "Training:TrainingPlanItem:CannotReturnInThisStatus": "لا يمكن إعادة البند إلا أثناء مراجعة الخطة",
-    "Training:TrainingPlanItem:MustHaveAtLeastOneNominee": "يجب تحديد مرشح واحد على الأقل عند إنشاء البند",
+    "Training:TrainingPlanItem:NotFound": "دورة الخطة غير موجودة",
+    "Training:TrainingPlanItem:CannotReturnInThisStatus": "لا يمكن إعادة الدورة إلا أثناء مراجعة الخطة",
+    "Training:TrainingPlanItem:MustHaveAtLeastOneNominee": "يجب تحديد مرشح واحد على الأقل عند إنشاء الدورة",
     "Training:TrainingPlanItem:AtLeastOneNomineeRequired": "يجب أن يكون هناك مرشح واحد على الأقل",
     "Training:Nomination:NotFound": "الترشيح غير موجود",
     "Training:Nomination:NotReturned": "الترشيح ليس في حالة مُعادة",
     "Training:Nomination:CannotRemoveWithResult": "لا يمكن حذف مرشح تم إدخال نتيجته بالفعل",
     "Training:Nomination:UsePlanItemCreate": "الترشيحات تُدار عبر إنشاء بنود الخطة وليس مباشرةً",
-    "Training:Nomination:ConditionFailed": "الموظف لا يستوفي شروط الالتحاق",
     "Training:Nomination:AlreadyNominated": "الموظف مرشح بالفعل لهذه الجلسة",
     "Training:Nomination:SessionFull": "لا توجد مقاعد متاحة في الجلسة",
     "Training:PlanNote:InvalidEntityType": "نوع الكيان غير صالح للملاحظة",
@@ -1037,26 +883,20 @@
     "Training:PriceQuote:NotFound": "عرض السعر غير موجود",
     "Training:TrainingProvider:NotFound": "جهة التدريب غير موجودة",
     "Training:CourseSession:NotFound": "انعقاد الدورة غير موجود",
-
-
-    "Training.CourseTypeDefaults.ParentGroup": "التصنيف",
-    "Training.CourseTypeDefaults.SelectItem": "اختر بنداً مالياً...",
-
     "Training.PlanReview.Title": "مراجعة الخطة",
     "Training.PlanReview.CloseWindow": "إغلاق نافذة الاستلام",
     "Training.PlanReview.SubmitToTD": "إحالة لمدير التدريب",
     "Training.PlanReview.RoleDescription": "الموظف المختص (Staff) — مراجعة جميع بنود الوحدات + تعيين البنود المالية",
     "Training.PlanReview.ItemsMissingCostWarning": "بند خارجي بدون بنود مالية — يجب التعيين قبل الإحالة",
-    "Training.PlanReview.ConsolidatedItems": "بنود الخطة الموحدة (اضغط على بند لتعيين البنود المالية)",
+    "Training.PlanReview.ConsolidatedItems": "دورات الخطة الموحدة (اضغط على دورة لتعيين البنود المالية)",
     "Training.PlanReview.EnterCost": "أدخل التكلفة",
-    "Training.PlanReview.NoItems": "لا توجد بنود في الخطة",
-    "Training.PlanReview.SelectItemHint": "اختر بنداً من الجدول أعلاه لعرض وتعيين البنود المالية",
+    "Training.PlanReview.NoItems": "لا توجد دورات في الخطة",
+    "Training.PlanReview.SelectItemHint": "اختر دورة من الجدول أعلاه لعرض وتعيين البنود المالية",
     "Training.PlanReview.FinancialItems": "البنود المالية",
     "Training.PlanReview.AutoFill": "تعبئة تلقائية من الإعدادات",
     "Training.PlanReview.AddFinancialItem": "إضافة بند مالي",
     "Training.PlanReview.NoFinancialItems": "لا توجد بنود مالية — اضغط \"تعبئة تلقائية\" أو \"إضافة بند\"",
     "Training.PlanReview.SelectFinancialItem": "اختر بنداً مالياً...",
-
     "Training.PlanItem.Course": "الدورة",
     "Training.PlanItem.CourseType": "النوع",
     "Training.PlanItem.Priority": "الأولوية",
@@ -1064,17 +904,14 @@
     "Training.PlanItem.EstimatedCost": "التكلفة المقدرة",
     "Training.PlanItem.FinancialItemCount": "بنود مالية",
     "Training.PlanItem.Unit": "الوحدة",
-
-
-
     "Training.FinancialItem.Name": "البند المالي",
     "Training.FinancialItem.AmountOMR": "المبلغ (ر.ع.)",
     "Training.FinancialItem.AmountUSD": "المبلغ ($)",
     "Training.FinancialItem.Notes": "ملاحظات",
     "Training.FinancialItem.NotesPlaceholder": "ملاحظات...",
     "Training.FinancialItem.USDAutoCalcHint": "يُحسب تلقائياً من سعر الصرف",
-
     "Training.Common.Total": "الإجمالي",
+    "Training.Common.LoadError": "فشل تحميل البيانات. يرجى المحاولة مرة أخرى.",
     "Training.PlanItem.Officers": "ضباط",
     "Training.PlanItem.Enlisted": "أفراد",
     "Training.PlanItem.SubmittedBy": "مقدم الطلب",
@@ -1085,8 +922,6 @@
     "Training.PlanItem.FundingSource": "مصدر التمويل",
     "Training.PlanItem.Objectives": "الأهداف",
     "Training.PlanItem.Description": "الوصف",
-    "Training.PlanItem.Conditions": "شروط الالتحاق",
-
     "Training:CasualCourse:NotFound": "الدورة العارضة غير موجودة",
     "Training:CasualCourse:InvalidStatusTransition": "لا يمكن تنفيذ هذا الإجراء في الحالة الحالية",
     "Training:CasualCourse:NoNominations": "يجب ترشيح موظف واحد على الأقل قبل الإرسال",
@@ -1096,7 +931,6 @@
     "Training:CasualCourse:CostRequired": "يجب تحديد التكلفة التقديرية وأن تكون أكبر من صفر",
     "Training:CasualCourse:ScenarioRequired": "يجب اختيار سيناريو التمويل قبل الاعتماد",
     "Training:CasualCourse:ScenarioRequiredBeforeAutoFill": "يجب اختيار سيناريو التمويل قبل التعبئة التلقائية",
-    "Training:CasualCourse:ConditionsFailed": "لا يستوفي أحد المرشحين أو أكثر شروط الالتحاق",
     "Training:CasualCourse:UnresolvedReturn": "لا يمكن الاعتماد — يوجد إرجاع مفتوح يجب معالجته أولاً",
     "Training:CasualCourse:UnresolvedReturnedNominations": "لا يمكن الاعتماد — يوجد مرشحون في حالة إرجاع",
     "Training:CasualCourse:CannotDeleteInThisStatus": "لا يمكن حذف الدورة العارضة إلا في حالة المسودة",
@@ -1104,7 +938,6 @@
     "Training:CasualCourse:DuplicateNominee": "هذا الموظف مرشح بالفعل لهذه الدورة",
     "Training:CasualCourse:NoFinancialDetail": "لا يمكن تقديم الطلب — يرجى إدخال تفاصيل التكلفة أولًا",
     "Training:CasualCourse:UnknownFundingScenario": "سيناريو التمويل غير معروف.",
-
     "Training.CasualCourseStatus.Draft": "مسودة",
     "Training.CasualCourseStatus.Submitted": "مُرسلة",
     "Training.CasualCourseStatus.UGMApproved": "معتمدة من UGM",
@@ -1114,7 +947,6 @@
     "Training.CasualCourseStatus.THApproved": "معتمدة من TH",
     "Training.CasualCourseStatus.ReturnedToCreator": "مُعادة للمنشئ",
     "Training.CasualCourseStatus.Rejected": "مرفوضة",
-
     "Training.ExecutionStage.Column": "مرحلة التنفيذ",
     "Training.ExecutionStage.AllStages": "كل المراحل",
     "Training.ExecutionStage.AwaitingQuoteSelection": "بانتظار اختيار العرض",
@@ -1125,14 +957,12 @@
     "Training.ExecutionStage.AwaitingReallocationApproval": "إعادة التخصيص",
     "Training.ExecutionStage.AwaitingReallocationApprovalProgress": "إعادة التخصيص: {0}/{1} معتمدة",
     "Training.ExecutionStage.FinanciallyComplete": "✓ مكتملة مالياً",
-
     "Training.FundingScenario.FundingSourceCoversAll": "مصدر التمويل يغطي الكل",
     "Training.FundingScenario.FundingSourceCoversCourse": "مصدر التمويل يغطي الدورة (السفر عبر إعادة التخصيص)",
     "Training.FundingScenario.FinancialItemsCoverAll": "إعادة تخصيص كاملة من البنود المالية",
     "Training.FundingScenario.NoReallocation": "مصدر التمويل يغطي كل شيء — لا توجد إعادة تخصيص",
     "Training.FundingScenario.PartialReallocation": "مصدر التمويل يغطي تكلفة الدورة — السفر عبر إعادة التخصيص",
     "Training.FundingScenario.FullReallocation": "إعادة تخصيص كاملة من البنود المالية للدورة والسفر",
-
     "Permission:CasualCourses.Edit": "تعديل",
     "Permission:CasualCourses.Delete": "حذف",
     "Permission:CasualCourses.Submit": "إرسال",
@@ -1146,7 +976,6 @@
     "Training.Menu.TravelAllowancePayments": "بدلات السفر",
     "Training.Menu.CoursePayments": "رسوم الدورات",
     "Training.Menu.BudgetReallocations": "إعادة تخصيص الميزانية",
-
     "Training.Payments.Filter": "فلتر",
     "Training.Payments.Clear": "مسح",
     "Training.Payments.SaveDraft": "حفظ كمسودة",
@@ -1161,10 +990,8 @@
     "Training.Payments.NotesPlaceholder": "أي تفاصيل إضافية",
     "Training.Payments.GenericError": "حدث خطأ أثناء العملية",
     "Training.Payments.SaveBeforeAction": "احفظ المسودة أولاً",
-
     "Training.PersonnelType.Officer": "ضابط",
     "Training.PersonnelType.Enlisted": "فرد",
-
     "Training.Payments.TravelAllowance.Title": "💸 صرف بدلات السفر",
     "Training.Payments.TravelAllowance.Subtitle": "PAGE 4.5 — يُدخل المسؤول المالي مبالغ بدلات السفر الفعلية لكل مرشح بعد إصدار تعليمات السفر",
     "Training.Payments.TravelAllowance.NewButton": "+ صرف بدل جديد",
@@ -1244,7 +1071,6 @@
     "Training.Payments.TravelAllowance.Dialog.PickNomineeFirst": "اختر المرشح أولاً",
     "Training.Payments.TravelAllowance.Dialog.DeletePromptPrefix": "حذف صرف بدل السفر للمرشح:",
     "Training.Payments.TravelAllowance.Dialog.SaveDraftSuccess": "تم حفظ المسودة",
-
     "Training.Payments.CoursePayment.Title": "🧾 دفع رسوم الدورات",
     "Training.Payments.CoursePayment.Subtitle": "PAGE 4.6 — يُدخل المسؤول المالي مبلغ الفاتورة ومبلغ نبراس، يرفع PDF، ثم يؤكد لتوليد قيود إعادة التخصيص",
     "Training.Payments.CoursePayment.NewButton": "+ تسجيل دفعة جديدة",
@@ -1306,7 +1132,6 @@
     "Training.Payments.CoursePayment.Forecast.Total": "إجمالي القيود",
     "Training.Payments.CoursePayment.Forecast.TotalSuffix": "قيد",
     "Training.Payments.CoursePayment.Forecast.Hint": "القيود تنشأ بحالة \"معلقة\" وتنتظر اعتماد TD ورقياً + Staff يحدّث الحالة في PAGE 4.7.",
-
     "Training.Payments.Reallocation.Title": "🔄 إعادة تخصيص الميزانية",
     "Training.Payments.Reallocation.Subtitle": "PAGE 4.7 — قيود تُولَّد تلقائياً عند تأكيد دفع رسوم الدورة. مدير التدريب يراجع كل قيد معلق ويعتمده مباشرة في النظام.",
     "Training.Payments.Reallocation.AutoBanner": "<b>القيود تُولَّد تلقائياً</b> عند تأكيد دفعة الدورة في PAGE 4.6 — للدورات العرضية ذات السيناريو 2 أو 3 فقط. <b>لا يمكن إنشاؤها يدوياً.</b> مدير التدريب يراجع كل قيد معلق ثم ينقر \"اعتماد القيد\" لتسجيل القرار.",
@@ -1355,7 +1180,6 @@
     "Training.Payments.Reallocation.Dialog.AlreadyApprovedAt": "في",
     "Training.Payments.Reallocation.Dialog.AlreadyApprovedNote": "ملاحظة:",
     "Training.Payments.Reallocation.Dialog.ConfirmAction": "✓ تأكيد الاعتماد",
-
     "Training.Payments.Section5.Title": "المدفوعات وإعادة التخصيص",
     "Training.Payments.Section5.ActiveHint": "صرف بدلات السفر، دفع رسوم الدورة، ومتابعة قيود إعادة التخصيص.",
     "Training.Payments.Section5.LockReasonNoTH": "متاح بعد اعتماد رئيس التدريب.",
@@ -1399,9 +1223,7 @@
     "Training.Payments.Section5.LifecyclePendingApprovalTitle": "حالة الدورة المالية: في انتظار اعتماد القيود",
     "Training.Payments.Section5.LifecyclePendingApprovalSub": "المدفوعات صُرفت · الفاتورة دُفعت · القيود وُلِّدت — في انتظار اعتماد TD لإغلاق الدورة المالية.",
     "Training.Payments.Section5.LifecycleTotalLabel": "إجمالي الدورة",
-
     "Training.Payments.PipelineNode": "المدفوعات",
-
     "Training:TrainingProvider:CountryRequiredForExternal": "الدولة مطلوبة عندما يكون نطاق المزوّد محلياً أو دولياً",
     "Training:PriceQuote:OnePolymorphicParentRequired": "يجب تحديد إحدى الجهتين فقط: دورة عارضة أو جلسة",
     "Training:PriceQuote:CityNotInCountry": "المدينة المختارة لا تتبع الدولة المختارة",
@@ -1417,10 +1239,8 @@
     "Training.TravelInstruction.DefaultsHint": "تم ملء التواريخ والخيارات تلقائياً بناءً على نوع الدورة وتواريخها الفعلية. يمكنك تعديل أي قيمة قبل الإصدار.",
     "Training:CasualCourse:NotApprovedYet": "لا يمكن اختيار العرض — لم يتم اعتماد الدورة من رئيس التدريب بعد",
     "Training:CasualCourse:InvalidActualDates": "تاريخ النهاية الفعلي يجب أن يكون مساوياً أو لاحقاً لتاريخ البداية الفعلي",
-
     "Training:Reallocation:ScenarioNotSet": "لا يمكن توليد إعادة التخصيص — يجب تحديد سيناريو التمويل على الدورة المعتمدة أولاً",
     "Training:Reallocation:VoteCodeRequired": "لا يمكن توليد إعادة التخصيص — لا يوجد رمز بند مصدر التمويل على الدورة",
-
     "Training:TravelAllowancePayment:OnePolymorphicParentRequired": "يجب تحديد أحد المعرفين بالضبط: المعرف للدورة الاعتيادية أو المعرف للجلسة",
     "Training:TravelAllowancePayment:NegativeAmount": "قيم بدل السفر لا يمكن أن تكون سالبة",
     "Training:TravelAllowancePayment:CourseNotApproved": "لا يمكن إنشاء مدفوعات بدل السفر — يجب أن تكون الدورة معتمدة من رئيس التدريب (أو الجلسة فعّالة)",
@@ -1428,7 +1248,6 @@
     "Training:TravelAllowancePayment:NominationNotInCourse": "المرشّح المحدد ليس ضمن مرشّحي هذه الدورة أو الجلسة",
     "Training:TravelAllowancePayment:DuplicateForNomination": "توجد مدفوعات بدل سفر سابقة لهذا الترشيح",
     "Training:TravelAllowancePayment:InvalidStatusTransition": "يمكن تعديل أو حذف أو اعتماد مدفوعات بدل السفر فقط أثناء كونها في حالة المسودة",
-
     "Training:CoursePayment:OnePolymorphicParentRequired": "يجب تحديد أحد المعرفين بالضبط: المعرف للدورة الاعتيادية أو المعرف للجلسة",
     "Training:CoursePayment:NegativeAmount": "قيم مدفوعات الدورة لا يمكن أن تكون سالبة",
     "Training:CoursePayment:InvalidStatusTransition": "يمكن تعديل أو حذف أو اعتماد مدفوعات الدورة فقط أثناء كونها في حالة المسودة",
@@ -1437,20 +1256,15 @@
     "Training:CoursePayment:CourseNotReady": "لا يمكن إنشاء مدفوعات الدورة — يجب أن تكون الدورة الاعتيادية معتمدة من رئيس التدريب وقد تم اختيار عرض، أو أن تكون الجلسة فعّالة",
     "Training:CoursePayment:InvalidFileType": "يُقبل فقط ملف الفاتورة بصيغة PDF",
     "Training:CoursePayment:FileTooLarge": "حجم ملف الفاتورة يتجاوز الحد المسموح وهو 25 ميغابايت",
-
     "Training:Reallocation:InvalidStatusTransition": "يمكن اعتماد إعادة التخصيص فقط أثناء كونها في حالة الانتظار",
-
     "Setting:Gtms.Files.Path": "المسار الجذر لتخزين ملفات النظام",
     "Setting:Gtms.Files.Path.Description": "مجلد نظام الملفات الذي يتم تخزين ملفات فواتير مدفوعات الدورات (PDF) ضمنه. يُضبط عبر المفتاح Gtms:Files:Path في appsettings.json؛ القيمة هنا تعكس إعداد بدء التشغيل فقط — يلزم إعادة تشغيل الخادم لتطبيق التغييرات.",
-
     "Training.ProviderScope.Internal": "داخلي",
     "Training.ProviderScope.Local": "محلي",
     "Training.ProviderScope.International": "دولي",
-
     "Training.TravelInstructionStatus.Draft": "مسودة",
     "Training.TravelInstructionStatus.Issued": "مُصدَرة",
     "Training.TravelInstructionStatus.Cancelled": "ملغاة",
-
     "Permission:TrainingExecution": "مرحلة ما قبل التنفيذ",
     "Permission:TrainingExecution.PriceQuotes": "عروض الأسعار",
     "Permission:TrainingExecution.PriceQuotes.Create": "إضافة",
@@ -1461,13 +1275,11 @@
     "Permission:TrainingExecution.TravelInstructions.Edit": "تعديل",
     "Permission:TrainingExecution.TravelInstructions.Issue": "إصدار",
     "Permission:TrainingExecution.TravelInstructions.Cancel": "إلغاء",
-
     "Training.PaymentStatus.Draft": "مسودة",
     "Training.PaymentStatus.Confirmed": "مُعتمَدة",
     "Training.PaymentStatus.Cancelled": "ملغاة",
     "Training.ReallocationStatus.Pending": "قيد الانتظار",
     "Training.ReallocationStatus.Approved": "مُعتمَدة",
-
     "Permission:TrainingPayments": "المدفوعات",
     "Permission:TrainingPayments.TravelAllowance": "مدفوعات بدل السفر",
     "Permission:TrainingPayments.TravelAllowance.Create": "إضافة",

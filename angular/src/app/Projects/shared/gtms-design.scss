@@ -556,37 +556,6 @@ select.form-input {
   color: #94a3b8;
 }
 
-/* === Conditions Panel === */
-.conditions-panel {
-  background: #fffbeb;
-  border: 1px solid #fcd34d;
-  border-radius: 12px;
-  padding: 14px 18px;
-  margin-top: 14px;
-}
-
-.conditions-panel .panel-title {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #92400e;
-  margin-bottom: 8px;
-}
-
-.condition-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.condition-tag {
-  background: #fef3c7;
-  color: #92400e;
-  padding: 4px 12px;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
 /* === Financial Panel === */
 .financial-panel {
   background: #eff6ff;

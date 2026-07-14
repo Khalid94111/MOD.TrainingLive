@@ -11,8 +11,6 @@ public partial class CasualCourseNominationToDtoMapper : MapperBase<CasualCourse
     [MapperIgnoreTarget(nameof(CasualCourseNominationDto.EmployeeName))]
     [MapperIgnoreTarget(nameof(CasualCourseNominationDto.RankName))]
     [MapperIgnoreTarget(nameof(CasualCourseNominationDto.UnitName))]
-    [MapperIgnoreTarget(nameof(CasualCourseNominationDto.ConditionPassed))]
-    [MapperIgnoreTarget(nameof(CasualCourseNominationDto.ConditionDetails))]
     [MapperIgnoreTarget(nameof(CasualCourseNominationDto.LastReturnNote))]
     public override partial CasualCourseNominationDto Map(CasualCourseNomination source);
     public override partial void Map(CasualCourseNomination source, CasualCourseNominationDto destination);

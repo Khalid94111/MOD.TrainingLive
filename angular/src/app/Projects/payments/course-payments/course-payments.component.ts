@@ -36,7 +36,6 @@ import { FinancialAmountSource } from 'src/app/proxy/training/enums/financial-am
 import { TrainingProviderService } from 'src/app/proxy/training/finance';
 import type { TrainingProviderDto, PriceQuoteDto } from 'src/app/proxy/training/finance/dtos/models';
 import { PriceQuoteService } from 'src/app/proxy/training/finance/price-quote.service';
-import { ExchangeRateService } from '../../shared/services/finance-proxy.service';
 
 import { TrainingLocalizationHelper } from '../../shared';
 
@@ -93,7 +92,6 @@ export class CoursePaymentsComponent implements OnInit {
   private courseService = inject(CasualCourseService);
   private providerService = inject(TrainingProviderService);
   private quoteService = inject(PriceQuoteService);
-  private exchangeService = inject(ExchangeRateService);
   private permissions = inject(PermissionService);
   l = inject(TrainingLocalizationHelper);
 
@@ -105,7 +103,6 @@ export class CoursePaymentsComponent implements OnInit {
   loading = signal(true);
   approvedCourses = signal<CasualCourseDto[]>([]);
   providers = signal<TrainingProviderDto[]>([]);
-  exchangeRate = signal<number>(2.6);
 
   // ── Filters ──
   filterCourseId = signal<string | null>(null);
@@ -268,7 +265,6 @@ export class CoursePaymentsComponent implements OnInit {
       this.loadRows(),
       this.loadApprovedCourses(),
       this.loadProviders(),
-      this.loadExchangeRate(),
     ]);
   }
 
@@ -306,18 +302,7 @@ export class CoursePaymentsComponent implements OnInit {
     }
   }
 
-  private async loadExchangeRate(): Promise<void> {
-    try {
-      const r = await this.exchangeService.getActive();
-      if (r?.rate && r.rate > 0) this.exchangeRate.set(r.rate);
-    } catch { /* noop */ }
-  }
-
   // ── Display helpers ──
-  toUSD(omr: number | null | undefined): string {
-    return ((omr ?? 0) * this.exchangeRate()).toLocaleString('en-US', { maximumFractionDigits: 0 });
-  }
-
   formatOMR(value: number | null | undefined): string {
     return (value ?? 0).toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
   }

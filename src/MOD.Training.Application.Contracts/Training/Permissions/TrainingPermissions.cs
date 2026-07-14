@@ -10,6 +10,7 @@ public static class TrainingPermissions
         public const string Create = Default + ".Create";
         public const string Update = Default + ".Update";
         public const string Delete = Default + ".Delete";
+        public const string ViewSubscribedTenants = Default + ".ViewSubscribedTenants";
     }
 
     public static class CourseFields
@@ -33,8 +34,6 @@ public static class TrainingPermissions
         public const string Create = Default + ".Create";
         public const string Update = Default + ".Update";
         public const string Delete = Default + ".Delete";
-        public const string EditConditions = Default + ".EditConditions";
-
     }
 
     public static class TrainingPlans
@@ -80,7 +79,6 @@ public static class TrainingPermissions
         public const string Default = GroupName + ".Finance";
         public const string ManageItems = Default + ".ManageItems";
         public const string ManageBudgets = Default + ".ManageBudgets";
-        public const string ManageExchangeRates = Default + ".ManageExchangeRates";
         public const string ManageDefaults = Default + ".ManageDefaults";
         public const string ManagePayments = Default + ".ManagePayments";
     }
@@ -106,20 +104,6 @@ public static class TrainingPermissions
         public const string Default = GroupName + ".FinancialItems";
         public const string Create = Default + ".Create";
         public const string Edit = Default + ".Edit";
-        public const string Delete = Default + ".Delete";
-    }
-
-    public static class CourseTypeFinancialDefaults
-    {
-        public const string Default = GroupName + ".CourseTypeFinancialDefaults";
-        public const string Create = Default + ".Create";
-        public const string Delete = Default + ".Delete";
-    }
-
-    public static class ExchangeRates
-    {
-        public const string Default = GroupName + ".ExchangeRates";
-        public const string Create = Default + ".Create";
         public const string Delete = Default + ".Delete";
     }
 

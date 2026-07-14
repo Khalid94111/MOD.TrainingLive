@@ -5,7 +5,6 @@ export * from './casual-course-status.enum';
 export * from './center-assignment-type.enum';
 export * from './center-plan-status.enum';
 export * from './center-role-type.enum';
-export * from './condition-type.enum';
 export * from './course-type.enum';
 export * from './execution-stage.enum';
 export * from './financial-amount-source.enum';

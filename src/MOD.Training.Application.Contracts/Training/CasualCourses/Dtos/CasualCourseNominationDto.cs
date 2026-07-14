@@ -15,7 +15,4 @@ public class CasualCourseNominationDto : FullAuditedEntityDto<Guid>
 
     public bool IsReturned { get; set; }
     public string? LastReturnNote { get; set; }
-
-    public bool ConditionPassed { get; set; } = true;
-    public string? ConditionDetails { get; set; }
 }

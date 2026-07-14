@@ -1,4 +1,4 @@
-import type { AddFromCatalogDto, TenantCourseConditionDto, TenantCourseDto, TenantCourseGetListInput, UpdateTenantCourseDto } from './dtos/models';
+import type { AddFromCatalogDto, TenantCourseDto, TenantCourseGetListInput, UpdateTenantCourseDto } from './dtos/models';
 import { RestService, Rest } from '@abp/ng.core';
 import type { PagedAndSortedResultRequestDto, PagedResultDto } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
@@ -42,14 +42,6 @@ export class TenantCourseService {
       method: 'GET',
       url: '/api/app/tenant-course/available-catalog-courses',
       params: { sorting: input.sorting, skipCount: input.skipCount, maxResultCount: input.maxResultCount },
-    },
-    { apiName: this.apiName,...config });
-  
-
-  getConditions = (tenantCourseId: string, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, TenantCourseConditionDto[]>({
-      method: 'GET',
-      url: `/api/app/tenant-course/conditions/${tenantCourseId}`,
     },
     { apiName: this.apiName,...config });
   

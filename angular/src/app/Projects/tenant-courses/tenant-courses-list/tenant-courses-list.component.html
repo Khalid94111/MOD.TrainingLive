@@ -44,15 +44,6 @@
       </div>
       <div class="stat-card-bar" [style.width.%]="totalCount() ? (activeCount() / totalCount() * 100) : 0"></div>
     </div>
-    <div class="stat-card-modern card-conditions">
-      <div class="stat-card-glow"></div>
-      <div class="stat-card-body">
-        <div class="stat-card-icon">🔒</div>
-        <div class="stat-card-value">{{ withConditionsCount() }}</div>
-        <div class="stat-card-label">{{ '::Training.Conditions' | abpLocalization }}</div>
-      </div>
-      <div class="stat-card-bar" [style.width.%]="totalCount() ? (withConditionsCount() / totalCount() * 100) : 0"></div>
-    </div>
     <div class="stat-card-modern card-certificate">
       <div class="stat-card-glow"></div>
       <div class="stat-card-body">
@@ -139,7 +130,6 @@
             <th style="width: 130px;">{{ '::Training.ResultType' | abpLocalization }}</th>
             <th style="width: 70px; text-align: center;">{{ '::Training.Evaluation' | abpLocalization }}</th>
             <th style="width: 70px; text-align: center;">{{ '::Training.Certificate' | abpLocalization }}</th>
-            <th style="width: 90px; text-align: center;">{{ '::Training.Conditions' | abpLocalization }}</th>
             <th style="width: 90px;">{{ '::Training.Status' | abpLocalization }}</th>
             <th style="width: 90px;">{{ '::Training.Actions' | abpLocalization }}</th>
           </tr>
@@ -175,11 +165,6 @@
               <td style="text-align: center;">
                 @if (course.hasCertificate) { <span class="check-yes">✓</span> }
                 @else { <span class="check-no">—</span> }
-              </td>
-              <td style="text-align: center;">
-                @if ((course.conditionsCount ?? 0) > 0) {
-                  <span class="pill pill--locked">🔒 {{ course.conditionsCount }}</span>
-                } @else { <span class="cell-sub">—</span> }
               </td>
               <td>
                 @if (course.isActive) {
@@ -316,26 +301,6 @@
           }
         </div>
 
-        <!-- Locked Conditions -->
-        <div class="conditions-section">
-          <div class="conditions-section__header">
-            <h4 class="conditions-section__title">📋 {{ '::Training.EnrollmentConditions' | abpLocalization }}</h4>
-            <span class="locked-badge">🔒 {{ '::Training.Locked' | abpLocalization }}</span>
-          </div>
-          <div class="warning-banner-modern">
-            <span>⚠️</span>
-            <span>{{ '::Training.LockedConditionsWarning' | abpLocalization }}</span>
-          </div>
-          @if (conditions().length === 0) {
-            <div class="conditions-section__empty">{{ '::Training.NoConditions' | abpLocalization }}</div>
-          }
-          @for (cond of conditions(); track cond.id) {
-            <div class="condition-row condition-row--locked">
-              <span class="condition-row__type">{{ l.conditionType(cond.conditionType) }}</span>
-              <span class="condition-row__value">{{ cond.conditionValue }}</span>
-            </div>
-          }
-        </div>
       </div>
 
       <div class="modal-modern-footer">

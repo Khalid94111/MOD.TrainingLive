@@ -1,4 +1,4 @@
-import type { CatalogEnrollmentConditionDto, CourseCatalogDto, CourseCatalogGetListInput, CreateUpdateCatalogEnrollmentConditionDto, CreateUpdateCourseCatalogDto } from './dtos/models';
+import type { CourseCatalogDto, CourseCatalogGetListInput, CourseCatalogSubscribedTenantDto, CreateUpdateCourseCatalogDto } from './dtos/models';
 import { RestService, Rest } from '@abp/ng.core';
 import type { PagedResultDto } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
@@ -9,15 +9,6 @@ import { Injectable, inject } from '@angular/core';
 export class CourseCatalogService {
   private restService = inject(RestService);
   apiName = 'Default';
-  
-
-  addCondition = (catalogCourseId: string, input: CreateUpdateCatalogEnrollmentConditionDto, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, CatalogEnrollmentConditionDto>({
-      method: 'POST',
-      url: `/api/app/course-catalog/condition/${catalogCourseId}`,
-      body: input,
-    },
-    { apiName: this.apiName,...config });
   
 
   create = (input: CreateUpdateCourseCatalogDto, config?: Partial<Rest.Config>) =>
@@ -45,14 +36,6 @@ export class CourseCatalogService {
     { apiName: this.apiName,...config });
   
 
-  getConditions = (catalogCourseId: string, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, CatalogEnrollmentConditionDto[]>({
-      method: 'GET',
-      url: `/api/app/course-catalog/conditions/${catalogCourseId}`,
-    },
-    { apiName: this.apiName,...config });
-  
-
   getList = (input: CourseCatalogGetListInput, config?: Partial<Rest.Config>) =>
     this.restService.request<any, PagedResultDto<CourseCatalogDto>>({
       method: 'GET',
@@ -62,10 +45,10 @@ export class CourseCatalogService {
     { apiName: this.apiName,...config });
   
 
-  removeCondition = (conditionId: string, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, void>({
-      method: 'DELETE',
-      url: `/api/app/course-catalog/condition/${conditionId}`,
+  getSubscribedTenants = (catalogCourseId: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, CourseCatalogSubscribedTenantDto[]>({
+      method: 'GET',
+      url: `/api/app/course-catalog/subscribed-tenants/${catalogCourseId}`,
     },
     { apiName: this.apiName,...config });
   

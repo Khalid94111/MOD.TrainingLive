@@ -41,12 +41,8 @@ public class TenantDataSeeder(
     IRepository<OrganizationUnit, Guid> orgUnitRepository,
     IRepository<Employee, Guid> employeeRepo,
     IRepository<CourseCatalog, Guid> catalogRepo,
-    IRepository<CatalogEnrollmentCondition, Guid> catalogConditionRepo,
     IRepository<TenantCourse, Guid> tenantCourseRepo,
-    IRepository<TenantCourseCondition, Guid> tenantConditionRepo,
     IRepository<FinancialItem, Guid> financialItemRepo,
-    IRepository<CourseTypeFinancialItemDefault, Guid> financialDefaultRepo,
-    IRepository<ExchangeRate, Guid> exchangeRateRepo,
     IRepository<TrainingBudget, Guid> budgetRepo,
     IRepository<TrainingCenter, Guid> centerRepo,
     IRepository<CenterRoleAssignment, Guid> centerRoleRepo,
@@ -56,7 +52,6 @@ public class TenantDataSeeder(
     IRepository<TrainingCenterPlanItemUnit, Guid> centerPlanItemUnitRepo,
     IRepository<TrainingPlan, Guid> planRepo,
     IRepository<TrainingPlanItem, Guid> planItemRepo,
-    IRepository<PlanItemCondition, Guid> planItemConditionRepo,
     IRepository<PlanItemFinancialItem, Guid> planItemFinancialRepo,
     IRepository<Course, Guid> courseRepo,
     IRepository<CourseSession, Guid> sessionRepo,
@@ -104,8 +99,6 @@ public class TenantDataSeeder(
             //await InUow(() => SeedTenantCoursesAsync(tenant.Id));
 
           await InUow(() => SeedFinancialItemsAsync(tenant.Id));
-            //await InUow(() => SeedFinancialDefaultsAsync());
-            //await InUow(() => SeedExchangeRatesAsync());
             //await InUow(() => SeedBudgetsAsync());
             //await InUow(() => SeedCentersAsync(prefix));
             //await InUow(() => SeedCenterPlanWindowsAsync());
@@ -281,15 +274,8 @@ public class TenantDataSeeder(
                 }, autoSave: true);
 
                 _tenantCourses[catId] = tcId;
-
-                // Copy conditions
-                var conds = await catalogConditionRepo.GetListAsync(x => x.CatalogCourseId == catId);
-                foreach (var c in conds)
-                    await tenantConditionRepo.InsertAsync(new TenantCourseCondition(guidGenerator.Create())
-                    { TenantCourseId = tcId, ConditionType = c.ConditionType, ConditionValue = c.ConditionValue, IsActive = true }, autoSave: true);
             }
         }
-        
     }
 
  
@@ -353,31 +339,6 @@ private async Task SeedFinancialItemsAsync(Guid tenantId)
     }
 
 
-    // ── FINANCIAL DEFAULTS (uses _fiIds) ──
-    private async Task SeedFinancialDefaultsAsync()
-    {
-        var extIntlIds = new[] { _fiIds["Tuition"], _fiIds["Materials"], _fiIds["Tickets"], _fiIds["TravelAllowance"],
-        _fiIds["ClothingAllowance"], _fiIds["Insurance"], _fiIds["Visa"], _fiIds["Hotel"], _fiIds["Meals"] };
-
-        foreach (var id in extIntlIds)
-            await financialDefaultRepo.InsertAsync(new CourseTypeFinancialItemDefault(guidGenerator.Create())
-            { CourseType = CourseType.ExternalInternational, FinancialItemId = id }, autoSave: true);
-
-        foreach (var id in new[] { _fiIds["Tuition"], _fiIds["Materials"] })
-            await financialDefaultRepo.InsertAsync(new CourseTypeFinancialItemDefault(guidGenerator.Create())
-            { CourseType = CourseType.ExternalLocal, FinancialItemId = id }, autoSave: true);
-    }
-
-    // ── EXCHANGE RATES ──
-    private async Task SeedExchangeRatesAsync()
-    {
-        await exchangeRateRepo.InsertManyAsync(new List<ExchangeRate>
-        {
-            new(guidGenerator.Create()) { FromCurrency = "USD", ToCurrency = "OMR", Rate = 0.3850m, SetAt  = new(2026,1,1), IsActive = true },
-            new(guidGenerator.Create()) { FromCurrency = "GBP", ToCurrency = "OMR", Rate = 0.4870m, SetAt = new(2026,1,1), IsActive = true },
-            new(guidGenerator.Create()) { FromCurrency = "EUR", ToCurrency = "OMR", Rate = 0.4200m, SetAt = new(2026,1,1), IsActive = true },
-        }, autoSave: true);
-    }
 
     // ── BUDGETS (uses _fiIds for parent items) ──
     private async Task SeedBudgetsAsync()
@@ -467,10 +428,6 @@ private async Task SeedFinancialItemsAsync(Guid tenantId)
             TenantId= tenantId
         }, autoSave: true);
 
-        var conds = await tenantConditionRepo.GetListAsync(x => x.TenantCourseId == _tenantCourses[catId]);
-        foreach (var c in conds)
-            await planItemConditionRepo.InsertAsync(new PlanItemCondition(guidGenerator.Create(), id, c.ConditionType, c.ConditionValue), autoSave: true);
-
         return id;
     }
 
@@ -487,17 +444,14 @@ private async Task SeedFinancialItemsAsync(Guid tenantId)
             };
             foreach (var (key, amt) in items)
                 await planItemFinancialRepo.InsertAsync(new PlanItemFinancialItem(
-                    guidGenerator.Create(), planItemId, _fiIds[key], amt)
-                { EstimatedAmountUSD = Math.Round(amt / 0.385m, 2) }, autoSave: true);
+                    guidGenerator.Create(), planItemId, _fiIds[key], amt), autoSave: true);
         }
         else
         {
             await planItemFinancialRepo.InsertAsync(new PlanItemFinancialItem(
-                guidGenerator.Create(), planItemId, _fiIds["Tuition"], 350m)
-            { EstimatedAmountUSD = 909.09m }, autoSave: true);
+                guidGenerator.Create(), planItemId, _fiIds["Tuition"], 350m), autoSave: true);
             await planItemFinancialRepo.InsertAsync(new PlanItemFinancialItem(
-                guidGenerator.Create(), planItemId, _fiIds["Materials"], 25m)
-            { EstimatedAmountUSD = 64.94m }, autoSave: true);
+                guidGenerator.Create(), planItemId, _fiIds["Materials"], 25m), autoSave: true);
         }
     }
 
@@ -615,21 +569,18 @@ private async Task SeedFinancialItemsAsync(Guid tenantId)
             if (s.status == CasualCourseStatus.THApproved)
             {
                 cc.FundingScenario = FundingScenario.FundingSourceCoversAll;
-                var defaults = await financialDefaultRepo.GetListAsync(x => x.CourseType == s.courseType && x.TenantId == tenantId);
-                if (defaults.Any())
+                var seedFinancialItemIds = new[] { _fiIds["Tuition"], _fiIds["Tickets"], _fiIds["TravelAllowance"], _fiIds["Insurance"], _fiIds["Visa"] };
+                decimal total = 0;
+                foreach (var fiId in seedFinancialItemIds)
                 {
-                    decimal total = 0;
-                    foreach (var def in defaults)
-                    {
-                        var fi = await financialItemRepo.FindAsync(def.FinancialItemId);
-                        if (fi == null) continue;
-                        var amount = financialItemDefaultResolver.ComputeSubtotal(
-                            fi.DefaultAmountOMR, fi.IsPerDay, fi.IsPerNominee,
-                            s.durationDays, fi.ExtraDaysBefore, fi.ExtraDaysAfter, nomineeCount: 3);
-                        total += amount;
-                    }
-                    cc.EstimatedTotalCost = total;
+                    var fi = await financialItemRepo.FindAsync(fiId);
+                    if (fi == null) continue;
+                    var amount = financialItemDefaultResolver.ComputeSubtotal(
+                        fi.DefaultAmountOMR, fi.IsPerDay, fi.IsPerNominee,
+                        s.durationDays, fi.ExtraDaysBefore, fi.ExtraDaysAfter, nomineeCount: 3);
+                    total += amount;
                 }
+                cc.EstimatedTotalCost = total;
             }
 
             await casualCourseRepo.InsertAsync(cc, autoSave: true);
@@ -652,13 +603,13 @@ private async Task SeedFinancialItemsAsync(Guid tenantId)
             // Financial rows for THApproved — parent CasualCourseFinancialItem plus per-rank children.
             if (s.status == CasualCourseStatus.THApproved)
             {
-                var defaults = await financialDefaultRepo.GetListAsync(x => x.CourseType == s.courseType && x.TenantId == tenantId);
+                var seedFinancialItemIds = new[] { _fiIds["Tuition"], _fiIds["Tickets"], _fiIds["TravelAllowance"], _fiIds["Insurance"], _fiIds["Visa"] };
                 var nomineesByRank = selectedNominees.GroupBy(e => e.RankId).ToList();
                 decimal courseTotal = 0m;
 
-                foreach (var def in defaults)
+                foreach (var fiId in seedFinancialItemIds)
                 {
-                    var fi = await financialItemRepo.FindAsync(def.FinancialItemId);
+                    var fi = await financialItemRepo.FindAsync(fiId);
                     if (fi == null) continue;
 
                     var parent = await casualCourseFinancialRepo.InsertAsync(

@@ -141,10 +141,7 @@
     </div>
 
     <div *dxTemplate="let cell of 'moneyTpl'">
-      <div class="currency-dual">
-        <span class="currency-omr">{{ formatOMR(cell.value) }}</span>
-        <span class="currency-usd">~ {{ toUSD(cell.value) }} USD</span>
-      </div>
+      <span class="currency-omr">{{ formatOMR(cell.value) }}</span>
     </div>
 
     <div *dxTemplate="let cell of 'statusTpl'">
@@ -224,7 +221,6 @@
           <div class="amount-callout">
             <div class="amount-label">{{ '::Training.Payments.Reallocation.Dialog.AmountLabel' | abpLocalization }}</div>
             <div class="amount-omr">{{ formatOMR(row.amountOMR) }} <span class="omr-sm">ر.ع</span></div>
-            <div class="amount-usd">~ {{ toUSD(row.amountOMR) }} USD</div>
           </div>
         </div>
 

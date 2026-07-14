@@ -30,7 +30,6 @@ export interface CasualCourseDetailDto extends CasualCourseDto {
   nominations?: CasualCourseNominationDto[];
   financialItems?: CasualCourseFinancialItemDto[];
   latestReturnNote?: PlanNoteDto | null;
-  conditionSummary?: string | null;
   officersCount?: number;
   enlistedCount?: number;
   fundingScenarioLabel?: string | null;
@@ -121,8 +120,6 @@ export interface CasualCourseNominationDto extends FullAuditedEntityDto<string> 
   unitName?: string;
   isReturned?: boolean;
   lastReturnNote?: string | null;
-  conditionPassed?: boolean;
-  conditionDetails?: string | null;
 }
 
 export interface CreateCasualCourseFinancialItemDto {

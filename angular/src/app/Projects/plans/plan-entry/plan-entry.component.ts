@@ -6,7 +6,6 @@ import { TrainingPlanService, TrainingPlanItemService, PlanNoteService } from 's
 import {
   TrainingPlanDto,
   TrainingPlanItemDto,
-  PlanItemConditionDto,
   CreateUpdateTrainingPlanItemDto,
   PlanNoteDto,
 } from 'src/app/proxy/training/plans/dtos';
@@ -59,7 +58,6 @@ export class PlanEntryComponent implements OnInit {
 
   // Inline expand
   expandedItemId = signal<string | null>(null);
-  conditionsMap = signal(new Map<string, PlanItemConditionDto[]>());
   loadingItemId = signal<string | null>(null);
 
   // Dialog
@@ -95,9 +93,6 @@ export class PlanEntryComponent implements OnInit {
   editNominations = signal<NominationDto[]>([]);
   editNominationEmployees = signal<Partial<EmployeeLookupDto>[]>([]);
   loadingEditNominations = signal(false);
-
-  // Conditions preview (for new item dialog — from tenant course)
-  dialogConditions = signal<any[]>([]);
 
   // Accordion state (Staff/TD/TH only; UTM/UGM see a flat list)
   expandedUnits = signal<Set<string>>(new Set());
@@ -141,6 +136,13 @@ export class PlanEntryComponent implements OnInit {
   hasActiveFilter = computed(() =>
     !!this.searchText().trim() || !!this.filterCourseType() || !!this.filterUnit(),
   );
+
+  // Stat cards computed from filtered items for the plan entry page.
+  totalCourses = computed(() => this.filteredItems().length);
+  totalNominees = computed(() => this.filteredItems().reduce((sum, i) => sum + (i.nomineesCount ?? 0), 0));
+  totalPlanCost = computed(() => this.filteredItems().reduce((sum, i) => sum + (i.estimatedCost ?? 0), 0));
+  returnedCoursesCount = computed(() => this.filteredItems().filter(i => i.isReturned).length);
+  coursesMissingNominees = computed(() => this.filteredItems().filter(i => !(i.nomineesCount && i.nomineesCount > 0)).length);
 
   filteredItems = computed(() => {
     const q = this.searchText().trim().toLowerCase();
@@ -202,7 +204,7 @@ export class PlanEntryComponent implements OnInit {
   });
 
   get dialogTitle(): string {
-    return this.isEditMode() ? '✏️ تعديل بند' : '➕ إضافة بند جديد';
+    return this.isEditMode() ? '✏️ تعديل دورة' : '➕ إضافة دورة جديدة';
   }
 
   get statusBadgeClass(): string {
@@ -321,16 +323,11 @@ export class PlanEntryComponent implements OnInit {
     if (this.expandedItemId() === itemId) { this.expandedItemId.set(null); return; }
     this.expandedItemId.set(itemId);
     this.loadingItemId.set(itemId);
-    if (!this.conditionsMap().has(itemId)) {
-      const conds = await firstValueFrom(this.itemService.getConditions(itemId));
-      this.conditionsMap.update(m => { const n = new Map(m); n.set(itemId, conds); return n; });
-    }
     this.loadingItemId.set(null);
   }
 
   isItemExpanded(id: string): boolean { return this.expandedItemId() === id; }
   isItemLoading(id: string): boolean { return this.loadingItemId() === id; }
-  getConditionsFor(id: string): PlanItemConditionDto[] { return this.conditionsMap().get(id) ?? []; }
 
   // ── Accordion ──
   toggleUnit(unitId: string): void {
@@ -439,14 +436,11 @@ export class PlanEntryComponent implements OnInit {
     this.fUnitId.set('');
     this.fNomineeIds.set([]);
     this.editNominations.set([]);
-    this.dialogConditions.set([]);
     this.saveError.set(null);
   }
 
-  async onCourseSelected(): Promise<void> {
-    if (!this.fTenantCourseId()) { this.dialogConditions.set([]); return; }
-    const tc = this.tenantCourses().find((c: any) => c.id === this.fTenantCourseId());
-    this.dialogConditions.set(tc?.conditions ?? []);
+  onCourseSelected(): void {
+    // No-op: previously showed tenant-course conditions preview.
   }
 
   // ── Date auto-fill ──
@@ -545,11 +539,8 @@ export class PlanEntryComponent implements OnInit {
       await this.loadItems();
       await this.loadReturnedNominationsCount();
     } catch (e: any) {
-      // Surface per-nominee failure details when the backend returns them
-      // via ConditionFailed (data.Failures = "Emp1: reason | Emp2: reason").
       const msg = e?.error?.error?.message ?? e?.message ?? 'فشل الحفظ';
-      const failures = e?.error?.error?.data?.Failures;
-      this.saveError.set(failures ? `${msg} — ${failures}` : msg);
+      this.saveError.set(msg);
     } finally {
       this.saving.set(false);
     }
@@ -557,7 +548,7 @@ export class PlanEntryComponent implements OnInit {
 
   async onDelete(id: string, event: Event): Promise<void> {
     event.stopPropagation();
-    if (!confirm('هل أنت متأكد من حذف هذا البند؟')) return;
+    if (!confirm('هل أنت متأكد من حذف هذه الدورة؟')) return;
     await firstValueFrom(this.itemService.delete(id));
     if (this.expandedItemId() === id) this.expandedItemId.set(null);
     await this.loadItems();
@@ -592,7 +583,7 @@ export class PlanEntryComponent implements OnInit {
     event.stopPropagation();
     this.notesEntityType.set(PlanNoteEntityType.PlanItem);
     this.notesEntityId.set(item.id!);
-    this.notesTitle.set('ملاحظات البند — ' + (item.tenantCourseNameAr ?? ''));
+    this.notesTitle.set('ملاحظات الدورة — ' + (item.tenantCourseNameAr ?? ''));
     this.notesOpen.set(true);
   }
 
@@ -602,7 +593,6 @@ export class PlanEntryComponent implements OnInit {
   getCourseTypeBadge(t: number): string { return ({ 0: 'badge-internal', 1: 'badge-ext-local', 2: 'badge-ext-intl' } as Record<number, string>)[t] ?? ''; }
   getCourseTypeText(t: number): string { return ({ 0: 'داخلية', 1: 'خارجية محلية', 2: 'خارجية دولية' } as Record<number, string>)[t] ?? ''; }
   getQuarterText(q: number): string { return ({ 1: 'الربع الأول', 2: 'الربع الثاني', 3: 'الربع الثالث', 4: 'الربع الرابع' } as Record<number, string>)[q] ?? ''; }
-  getConditionTypeName(t: number): string { return ({ 0: 'الرتبة', 1: 'العمر', 2: 'سنوات الخدمة', 3: 'المؤهل', 4: 'لياقة طبية', 5: 'تصريح أمني', 6: 'لغة', 7: 'دورة سابقة', 8: 'مخصص' } as Record<number, string>)[t] ?? ''; }
   formatDate(d?: string | Date | null): string { if (!d) return '—'; return new Date(d).toLocaleDateString('ar-OM'); }
 
   // Convert an ISO date/datetime string from the API into the yyyy-MM-dd slice

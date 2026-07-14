@@ -34,8 +34,7 @@ export type {
   CourseCatalogDto,
   CreateUpdateCourseCatalogDto,
   CourseCatalogGetListInput,
-  CatalogEnrollmentConditionDto,
-  CreateUpdateCatalogEnrollmentConditionDto,
+  CourseCatalogSubscribedTenantDto,
 } from '../../proxy/training/catalog/dtos';
 export type {
   CourseFieldDto,
@@ -52,7 +51,6 @@ export type {
   AddFromCatalogDto,
   UpdateTenantCourseDto,
   TenantCourseGetListInput,
-  TenantCourseConditionDto,
 } from '../../proxy/training/tenant-courses/dtos';
 export type {
   CasualCourseDto,

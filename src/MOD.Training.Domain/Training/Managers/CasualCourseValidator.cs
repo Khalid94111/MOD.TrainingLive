@@ -12,8 +12,7 @@ namespace MOD.Training.Training.Managers;
 
 public class CasualCourseValidator(
     IRepository<CasualCourse, Guid> casualCourseRepo,
-    IRepository<CasualCourseNomination, Guid> nominationRepo,
-    NominationConditionValidator conditionValidator)
+    IRepository<CasualCourseNomination, Guid> nominationRepo)
     : DomainService
 {
     public async Task ValidateForSubmitAsync(Guid casualCourseId)
@@ -48,19 +47,6 @@ public class CasualCourseValidator(
         if (!nominations.Any())
             throw new BusinessException("Training:CasualCourse:NoNominations");
 
-        var failures = new List<string>();
-        foreach (var n in nominations)
-        {
-            var results = await conditionValidator.ValidateByTenantCourseAsync(
-                cc.TenantCourseId, n.EmployeeId);
-            var failed = results.Where(r => !r.Passed).ToList();
-            if (failed.Any())
-                failures.Add($"{n.EmployeeId}: {string.Join(", ", failed.Select(f => f.Details))}");
-        }
-
-        //if (failures.Any())
-        //    throw new BusinessException("Training:CasualCourse:ConditionsFailed")
-        //        .WithData("Failures", string.Join(" | ", failures));
     }
 
     public async Task ValidateForTDApprovalAsync(Guid casualCourseId)

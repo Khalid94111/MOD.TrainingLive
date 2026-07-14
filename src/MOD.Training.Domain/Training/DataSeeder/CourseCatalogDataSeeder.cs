@@ -6,9 +6,7 @@ using System.Threading.Tasks;
 using Volo.Abp.Data;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Repositories;
-using Volo.Abp.Guids;
 using Volo.Abp.MultiTenancy;
-
 
 namespace MOD.Training.Training.DataSeeder;
 
@@ -19,8 +17,6 @@ public interface ICourseCatalogDataSeeder
 
 public class CourseCatalogDataSeeder(
     IRepository<CourseCatalog, Guid> catalogRepo,
-    IRepository<CatalogEnrollmentCondition, Guid> conditionRepo,
-    IGuidGenerator guidGenerator,
     ICurrentTenant currentTenant)
     : ITransientDependency, ICourseCatalogDataSeeder
 {
@@ -32,7 +28,6 @@ public class CourseCatalogDataSeeder(
                 return;
 
             await SeedCatalogAsync();
-            await SeedConditionsAsync();
         }
     }
 
@@ -87,43 +82,6 @@ public class CourseCatalogDataSeeder(
             new(CatalogIds.MilitaryWriting) { CourseNameAr = "الكتابة العسكرية العربية", CourseNameEn = "Arabic Military Writing", FieldId = FieldIds.Leadership,
                 DescriptionAr = "صياغة المراسلات والتقارير العسكرية الرسمية", DescriptionEn = "Drafting official military correspondence",
                 Category = "Military"   , Nature = "Military", ResultType = ResultType.AttendanceOnly, IsActive = true },
-        }, autoSave: true);
-    }
-
-    private async Task SeedConditionsAsync()
-    {
-        var g = guidGenerator;
-        await conditionRepo.InsertManyAsync(new List<CatalogEnrollmentCondition>
-        {
-            // Cybersecurity: Captain-Colonel, 5+ years, English B2+
-            new(g.Create()) { CatalogCourseId = CatalogIds.Cybersecurity, ConditionType = ConditionType.Rank, ConditionValue = "{\"min\":\"Captain\",\"max\":\"Colonel\"}" },
-            new(g.Create()) { CatalogCourseId = CatalogIds.Cybersecurity, ConditionType = ConditionType.ServiceYears, ConditionValue = "{\"min\":5}" },
-            new(g.Create()) { CatalogCourseId = CatalogIds.Cybersecurity, ConditionType = ConditionType.LanguageLevel, ConditionValue = "{\"language\":\"English\",\"level\":\"B2\"}" },
-
-            // Leadership: Lieutenant-Brigadier
-            new(g.Create()) { CatalogCourseId = CatalogIds.Leadership, ConditionType = ConditionType.Rank, ConditionValue = "{\"min\":\"Second Lieutenant\",\"max\":\"Brigadier\"}" },
-
-            // PMP: Bachelor+, 3+ years
-            new(g.Create()) { CatalogCourseId = CatalogIds.ProjectMgmt, ConditionType = ConditionType.Education, ConditionValue = "{\"min\":\"Bachelor\"}" },
-            new(g.Create()) { CatalogCourseId = CatalogIds.ProjectMgmt, ConditionType = ConditionType.ServiceYears, ConditionValue = "{\"min\":3}" },
-
-            // Network Eng: Age <40, English B1+
-            new(g.Create()) { CatalogCourseId = CatalogIds.NetworkEng, ConditionType = ConditionType.Age, ConditionValue = "{\"max\":40}" },
-            new(g.Create()) { CatalogCourseId = CatalogIds.NetworkEng, ConditionType = ConditionType.LanguageLevel, ConditionValue = "{\"language\":\"English\",\"level\":\"B1\"}" },
-
-            // Strategic Planning: Major+, 10+ years
-            new(g.Create()) { CatalogCourseId = CatalogIds.StrategicPlanning, ConditionType = ConditionType.Rank, ConditionValue = "{\"min\":\"Major\"}" },
-            new(g.Create()) { CatalogCourseId = CatalogIds.StrategicPlanning, ConditionType = ConditionType.ServiceYears, ConditionValue = "{\"min\":10}" },
-
-            // Data Analysis: Bachelor+
-            new(g.Create()) { CatalogCourseId = CatalogIds.DataAnalysis, ConditionType = ConditionType.Education, ConditionValue = "{\"min\":\"Bachelor\"}" },
-
-            // Fitness Instructor: Medical fitness, Age <35
-            new(g.Create()) { CatalogCourseId = CatalogIds.FitnessInstructor, ConditionType = ConditionType.MedicalFitness, ConditionValue = "{\"required\":true}" },
-            new(g.Create()) { CatalogCourseId = CatalogIds.FitnessInstructor, ConditionType = ConditionType.Age, ConditionValue = "{\"max\":35}" },
-
-            // Combat Engineering: Corporal-Captain
-            new(g.Create()) { CatalogCourseId = CatalogIds.CombatEngineering, ConditionType = ConditionType.Rank, ConditionValue = "{\"min\":\"Corporal\",\"max\":\"Captain\"}" },
         }, autoSave: true);
     }
 }

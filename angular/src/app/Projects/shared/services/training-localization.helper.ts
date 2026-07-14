@@ -2,7 +2,6 @@ import { inject, Injectable } from '@angular/core';
 import { LocalizationService } from '@abp/ng.core';
 import {
   CATEGORY_OPTIONS,
-  CONDITION_TYPE_OPTIONS,
   NATURE_OPTIONS,
   PROPOSAL_STATUS_OPTIONS,
   RESULT_TYPE_OPTIONS,
@@ -30,11 +29,6 @@ export class TrainingLocalizationHelper {
     return option ? this.localization.instant(option.key) : '';
   }
 
-  conditionType(value: number): string {
-    const option = CONDITION_TYPE_OPTIONS.find(o => o.value === value);
-    return option ? this.localization.instant(option.key) : '';
-  }
-
   proposalStatus(value: number): { label: string; cssClass: string } {
     const option = PROPOSAL_STATUS_OPTIONS.find(o => o.value === value);
     if (!option) return { label: '', cssClass: '' };
@@ -54,13 +48,6 @@ export class TrainingLocalizationHelper {
   /** Build localized dataSource for DevExtreme dropdowns */
   resultTypeDataSource() {
     return RESULT_TYPE_OPTIONS.map(o => ({
-      value: o.value,
-      text: this.localization.instant(o.key),
-    }));
-  }
-
-  conditionTypeDataSource() {
-    return CONDITION_TYPE_OPTIONS.map(o => ({
       value: o.value,
       text: this.localization.instant(o.key),
     }));

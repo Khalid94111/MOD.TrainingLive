@@ -13,8 +13,6 @@ public class CasualCourseNomination : FullAuditedEntity<Guid>, IMultiTenant
     public bool IsReturned { get; set; }
     public Guid? LastReturnNoteId { get; set; }
 
-    public string? ConditionSnapshotJson { get; set; }
-
     protected CasualCourseNomination() { }
 
     public CasualCourseNomination(Guid id, Guid casualCourseId, Guid employeeId) : base(id)

@@ -1,28 +1,8 @@
-import type { EntityDto, FullAuditedEntityDto, PagedAndSortedResultRequestDto } from '@abp/ng.core';
-import type { CourseType } from '../../enums/course-type.enum';
 import type { FinancialItemType } from '../../enums/financial-item-type.enum';
 import type { PricingType } from '../../enums/pricing-type.enum';
 import type { ProviderScope } from '../../enums/provider-scope.enum';
+import type { EntityDto, FullAuditedEntityDto, PagedAndSortedResultRequestDto } from '@abp/ng.core';
 import type { ApprovalStatus } from '../../enums/approval-status.enum';
-
-export interface CourseTypeFinancialItemDefaultDto extends EntityDto<string> {
-  courseType?: CourseType;
-  financialItemId?: string;
-  financialItemNameAr?: string;
-  financialItemNameEn?: string;
-  sortOrder?: number;
-  financialItemCode?: string;
-}
-
-export interface CreateCourseTypeFinancialItemDefaultDto {
-  courseType?: CourseType;
-  financialItemId?: string;
-}
-
-export interface CreateExchangeRateDto {
-  rate?: number;
-  notes?: string | null;
-}
 
 export interface CreateUpdateFinancialItemDto {
   nameAr?: string;
@@ -68,18 +48,6 @@ export interface CreateUpdateTrainingProviderDto {
   isActive?: boolean;
   scope?: ProviderScope;
   countryId?: string | null;
-}
-
-export interface ExchangeRateDto extends EntityDto<string> {
-  fromCurrency?: string;
-  toCurrency?: string;
-  rate?: number;
-  notes?: string | null;
-  isActive?: boolean;
-  setAt?: string;
-}
-
-export interface ExchangeRateGetListInput extends PagedAndSortedResultRequestDto {
 }
 
 export interface FinancialItemDto extends EntityDto<string> {

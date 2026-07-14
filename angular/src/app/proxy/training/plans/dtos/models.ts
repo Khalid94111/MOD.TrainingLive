@@ -4,7 +4,6 @@ import type { SessionStatus } from '../../enums/session-status.enum';
 import type { SessionExecutionStage } from '../../enums/session-execution-stage.enum';
 import type { PlanNoteEntityType } from '../../enums/plan-note-entity-type.enum';
 import type { PreferredQuarter } from '../../enums/preferred-quarter.enum';
-import type { ConditionType } from '../../enums/condition-type.enum';
 import type { PlanNoteAuthorRole } from '../../enums/plan-note-author-role.enum';
 import type { PlanStatus } from '../../enums/plan-status.enum';
 
@@ -115,12 +114,6 @@ export interface CreateUpdateTrainingPlanItemDto {
   nomineeEmployeeIds: string[];
 }
 
-export interface PlanItemConditionDto extends EntityDto<string> {
-  planItemId?: string;
-  conditionType?: ConditionType;
-  conditionValue?: string;
-}
-
 export interface PlanItemFinancialItemDto extends FullAuditedEntityDto<string> {
   planItemId?: string;
   financialItemId?: string;
@@ -154,6 +147,11 @@ export interface PlanNoteDto extends CreationAuditedEntityDto<string> {
 export interface PlanNoteGetListInput extends PagedAndSortedResultRequestDto {
   entityType?: PlanNoteEntityType;
   entityId?: string;
+}
+
+export interface ReopenSubmissionWindowDto {
+  openDate?: string;
+  closeDate?: string;
 }
 
 export interface ReturnReasonDto {

@@ -23,20 +23,20 @@ export const TRAINING_ROUTE_PROVIDER = {
           layout: eLayoutType.application,
         },
         {
-          path: '/training/catalog',
-          name: '::Training.Menu.Catalog',
-          parentName: '::Training.Menu.Training',
-          iconClass: 'fas fa-book',
-          order: 1,
-          requiredPolicy: 'Training.CourseCatalog',
-        },
-        {
           path: '/training/catalog/fields',
           name: '::Training.Menu.Fields',
           parentName: '::Training.Menu.Training',
           iconClass: 'fas fa-tags',
-          order: 2,
+          order: 1,
           requiredPolicy: 'Training.CourseFields',
+        },
+        {
+          path: '/training/catalog',
+          name: '::Training.Menu.Catalog',
+          parentName: '::Training.Menu.Training',
+          iconClass: 'fas fa-book',
+          order: 2,
+          requiredPolicy: 'Training.CourseCatalog',
         },
         {
           path: '/training/catalog/proposals',
@@ -70,24 +70,6 @@ export const TRAINING_ROUTE_PROVIDER = {
   order: 1,
   layout: eLayoutType.application,
   requiredPolicy: 'Training.FinancialItems',
-},
-// Course Type Defaults
-{
-  path: '/training/finance/defaults',
-  name: '::Training.Menu.CourseTypeDefaults',
-  parentName: '::Training.Menu.Finance',
-  order: 2,
-  layout: eLayoutType.application,
-  requiredPolicy: 'Training.CourseTypeFinancialDefaults',
-},
-// Exchange Rates
-{
-  path: '/training/finance/exchange-rates',
-  name: '::Training.Menu.ExchangeRates',
-  parentName: '::Training.Menu.Finance',
-  order: 3,
-  layout: eLayoutType.application,
-  requiredPolicy: 'Training.ExchangeRates',
 },
 // Training Budgets
 {

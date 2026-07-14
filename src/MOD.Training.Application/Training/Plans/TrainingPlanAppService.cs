@@ -142,6 +142,19 @@ public class TrainingPlanAppService(
     }
 
     [Authorize(TrainingPermissions.TrainingPlan.Review)]
+    public async Task ReopenSubmissionWindowAsync(Guid id, ReopenSubmissionWindowDto input)
+    {
+        var entity = await repository.GetAsync(id);
+        if (entity.Status != PlanStatus.Submitted)
+            throw new Volo.Abp.BusinessException("Training:TrainingPlan:ReopenWindowNotAllowed");
+
+        entity.Status = PlanStatus.Open;
+        entity.OpenDate = input.OpenDate;
+        entity.CloseDate = input.CloseDate;
+        await repository.UpdateAsync(entity, autoSave: true);
+    }
+
+    [Authorize(TrainingPermissions.TrainingPlan.Review)]
     public async Task SubmitForReviewAsync(Guid id)
     {
         var entity = await repository.GetAsync(id);
