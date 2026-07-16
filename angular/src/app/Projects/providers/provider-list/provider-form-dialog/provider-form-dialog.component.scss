@@ -1,0 +1,432 @@
+/* ============================================================
+   Provider Form Dialog — Modern Modal
+   ============================================================ */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Modal Backdrop ── */
+.modal-backdrop-modern {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.2s ease;
+}
+
+/* ── Modal ── */
+.modal-modern {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.2);
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: fadeInUp 0.3s ease;
+}
+
+.modal-lg { max-width: 720px; }
+
+.modal-modern-header {
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.modal-modern-header-content {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.modal-header-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  background: #f0fdfa;
+}
+
+.modal-modern-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.modal-modern-subtitle {
+  font-size: 0.82rem;
+  color: #64748b;
+  margin: 2px 0 0;
+}
+
+.modal-modern-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.modal-modern-close:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.modal-modern-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-modern-footer {
+  padding: 14px 24px;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Tajawal', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #0d9488, #14b8a6);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #0f766e, #0d9488);
+  box-shadow: 0 4px 16px rgba(13, 148, 136, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+.btn-ghost:hover {
+  background: #f8fafc;
+  color: #334155;
+}
+
+.btn-glow {
+  box-shadow: 0 4px 16px rgba(13, 148, 136, 0.25);
+}
+
+/* ── Form ── */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.form-label .required { color: #dc2626; }
+
+.hint-inline {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-weight: normal;
+  margin-inline-start: 4px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-family: 'Tajawal', sans-serif;
+  transition: all 0.25s;
+  background: white;
+  color: #1e293b;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1);
+  outline: none;
+}
+
+.form-input:disabled {
+  background: #f8fafc;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.form-input[readonly] {
+  background: #f8fafc;
+  color: #64748b;
+}
+
+/* ═══ Searchable country combobox (typeahead inside the dropdown) ═══ */
+.country-combobox { position: relative; }
+
+.combobox-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  cursor: pointer;
+  text-align: start;
+  background: white;
+}
+.combobox-trigger:disabled { cursor: not-allowed; opacity: 0.6; background: #f8fafc; }
+.combobox-placeholder { color: #94a3b8; }
+.combobox-arrow { color: #64748b; font-size: 0.75rem; transition: transform 0.15s; }
+.combobox-arrow.open { transform: rotate(180deg); }
+
+.combobox-backdrop { position: fixed; inset: 0; z-index: 1000; }
+
+.combobox-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  inset-inline: 0;
+  z-index: 1001;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.combobox-search { width: 100%; font-size: 0.84rem; }
+
+.combobox-list {
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.combobox-option {
+  display: block;
+  width: 100%;
+  text-align: start;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.86rem;
+  color: #0f172a;
+}
+.combobox-option:hover { background: #f1f5f9; }
+.combobox-option.selected { background: #eff6ff; color: #1d4ed8; font-weight: 700; }
+
+.combobox-empty { padding: 10px; text-align: center; color: #94a3b8; font-size: 0.82rem; }
+
+.form-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* ── Switch ── */
+.form-switch-row-modern {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.form-switch-label {
+  font-size: 0.85rem;
+  color: #475569;
+  font-weight: 600;
+}
+
+.switch-modern {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.switch-modern input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: #e2e8f0;
+  border-radius: 24px;
+  transition: 0.3s;
+}
+
+.switch-slider::before {
+  content: '';
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.3s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.switch-modern input:checked + .switch-slider {
+  background: #14b8a6;
+}
+
+.switch-modern input:checked + .switch-slider::before {
+  transform: translateX(20px);
+}
+
+.status-mini {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.status-active { background: #dcfce7; color: #16a34a; }
+.status-inactive { background: #f1f5f9; color: #64748b; }
+
+/* ── Validation Banner ── */
+.validation-banner {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.validation-item {
+  font-size: 12px;
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* ── Nebras banner ── */
+.nebras-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: #ecfeff;
+  border: 1px solid #a5f3fc;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.78rem;
+  color: #155e75;
+
+  .nebras-banner-icon {
+    color: #0891b2;
+    font-size: 1rem;
+  }
+}
+
+.nebras-info {
+  padding: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+
+  h4 {
+    margin: 0 0 10px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #334155;
+  }
+
+  .nebras-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    font-size: 0.75rem;
+  }
+
+  .info-label { color: #64748b; }
+  .info-value-cyan { color: #0e7490; margin-inline-start: 4px; }
+  .info-value-green { color: #166534; margin-inline-start: 4px; }
+  .info-code {
+    background: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid #e2e8f0;
+    margin-inline-start: 4px;
+    font-family: monospace;
+  }
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .modal-lg { max-width: 100%; }
+  .form-row-2 { grid-template-columns: 1fr; }
+  .nebras-info .nebras-info-grid { grid-template-columns: 1fr 1fr; }
+}

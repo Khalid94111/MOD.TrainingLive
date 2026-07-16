@@ -1,306 +1,423 @@
-<div class="page-header">
-  <div class="page-title">
-    <span class="page-icon">🏢</span>
-    <div>
-      <h2>{{ '::Training.TrainingCenters' | abpLocalization }}</h2>
-      <p class="page-subtitle">{{ '::Training.ManageRoles' | abpLocalization }}</p>
+<div class="tc-page">
+  <!-- ════════════════════════════════════════
+       HEADER BANNER — Gradient hero
+       ════════════════════════════════════════ -->
+  <div class="header-banner">
+    <div class="header-banner-bg"></div>
+    <div class="header-banner-pattern"></div>
+    <div class="header-banner-content">
+      <div class="header-banner-left">
+        <div class="header-banner-icon"><span>🏢</span></div>
+        <div class="header-banner-text">
+          <h1 class="header-banner-title">{{ '::Training.TrainingCenters' | abpLocalization }}</h1>
+          <p class="header-banner-desc">{{ '::Training.ManageRoles' | abpLocalization }}</p>
+        </div>
+      </div>
+      <div class="header-banner-right">
+        @if (canCreate()) {
+          <button type="button" class="btn btn-white" (click)="onAdd()">
+            <span class="btn-icon-symbol">+</span>
+            <span>{{ '::Training.AddCenter' | abpLocalization }}</span>
+          </button>
+        }
+      </div>
     </div>
   </div>
-  <dx-button
-    [text]="'::Training.AddCenter' | abpLocalization"
-    type="default"
-    stylingMode="contained"
-    icon="plus"
-    (onClick)="onAdd()"
-  ></dx-button>
+
+  <!-- ════════════════════════════════════════
+       STAT CARDS
+       ════════════════════════════════════════ -->
+  <div class="stat-cards-row">
+    <div class="stat-card-modern card-total">
+      <div class="stat-card-glow"></div>
+      <div class="stat-card-body">
+        <div class="stat-card-icon">🏢</div>
+        <div class="stat-card-value">{{ totalCount() }}</div>
+        <div class="stat-card-label">{{ '::Training.Common.Total' | abpLocalization }}</div>
+      </div>
+      <div class="stat-card-bar" [style.width.%]="100"></div>
+    </div>
+    <div class="stat-card-modern card-approved">
+      <div class="stat-card-glow"></div>
+      <div class="stat-card-body">
+        <div class="stat-card-icon">✅</div>
+        <div class="stat-card-value">{{ activeCount() }}</div>
+        <div class="stat-card-label">{{ '::Active' | abpLocalization }}</div>
+      </div>
+      <div class="stat-card-bar" [style.width.%]="totalCount() ? (activeCount() / totalCount() * 100) : 0"></div>
+    </div>
+    <div class="stat-card-modern card-inactive">
+      <div class="stat-card-glow"></div>
+      <div class="stat-card-body">
+        <div class="stat-card-icon">⏸️</div>
+        <div class="stat-card-value">{{ inactiveCount() }}</div>
+        <div class="stat-card-label">{{ '::Inactive' | abpLocalization }}</div>
+      </div>
+      <div class="stat-card-bar" [style.width.%]="totalCount() ? (inactiveCount() / totalCount() * 100) : 0"></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       FILTERS BAR
+       ════════════════════════════════════════ -->
+  <div class="filters-bar-modern">
+    <div class="filter-group filter-search">
+      <label class="filter-label">{{ '::Training.SearchByName' | abpLocalization }}</label>
+      <div class="filter-input-wrap">
+        <input
+          type="text"
+          class="filter-input"
+          [placeholder]="'::Training.SearchByName' | abpLocalization"
+          [value]="searchText()"
+          (input)="searchText.set($any($event.target).value)"
+          (keyup.enter)="onSearch()"
+        />
+        <button class="filter-search-btn" (click)="onSearch()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </button>
+      </div>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">{{ '::Status' | abpLocalization }}</label>
+      <select class="filter-select" [value]="filterStatus() === null ? '' : (filterStatus() ? 'true' : 'false')" (change)="filterStatus.set($any($event.target).value === '' ? null : $any($event.target).value === 'true')">
+        <option value="">{{ '::Training.AllStatuses' | abpLocalization }}</option>
+        <option value="true">{{ '::Active' | abpLocalization }}</option>
+        <option value="false">{{ '::Inactive' | abpLocalization }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       DATA TABLE
+       ════════════════════════════════════════ -->
+  <div class="table-card">
+    <div class="table-scroll-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="th-index">#</th>
+            <th class="th-org">{{ '::Training.OrgUnit' | abpLocalization }}</th>
+            <th class="th-name">{{ '::Training.CenterNameAr' | abpLocalization }}</th>
+            <th class="th-name">{{ '::Training.CenterNameEn' | abpLocalization }}</th>
+            <th class="th-location">{{ '::Training.Location' | abpLocalization }}</th>
+            <th class="th-count">{{ '::Training.TcoCount' | abpLocalization }}</th>
+            <th class="th-tcm">{{ '::Training.TCM' | abpLocalization }}</th>
+            <th class="th-status">{{ '::Status' | abpLocalization }}</th>
+            <th class="th-actions">{{ '::Training.Actions' | abpLocalization }}</th>
+          </tr>
+        </thead>
+
+        @if (isLoading()) {
+          <tbody>
+            @for (_ of [1,2,3,4,5]; track $index) {
+              <tr class="skel-row"><td colspan="9"><div class="skel-line-long"></div></td></tr>
+            }
+          </tbody>
+        } @else if (filteredCenters().length === 0) {
+          <tbody>
+            <tr>
+              <td colspan="9" class="empty-cell">
+                <div class="empty-hero">
+                  <div class="empty-hero-icon">🏢</div>
+                  <div class="empty-hero-title">{{ '::Training.TrainingCenter' | abpLocalization }}</div>
+                  <div class="empty-hero-desc">{{ '::Training.CourseCatalog.NoCoursesHint' | abpLocalization }}</div>
+                  @if (canCreate()) {
+                    <button class="btn btn-primary" (click)="onAdd()">
+                      <span class="btn-icon-symbol">+</span>
+                      {{ '::Training.AddCenter' | abpLocalization }}
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        } @else {
+          <tbody>
+            @for (center of filteredCenters(); track center.id; let idx = $index) {
+              <tr class="data-row" [style.animation-delay.ms]="idx * 30">
+                <td class="td-index">
+                  <span class="index-badge">{{ idx + 1 }}</span>
+                </td>
+                <td class="td-org">
+                  <span class="pill pill--indigo">🏛️ {{ center.orgUnitName || '—' }}</span>
+                </td>
+                <td class="td-name">
+                  <div class="cell-name">{{ center.centerNameAr || '—' }}</div>
+                </td>
+                <td class="td-name">
+                  <div class="cell-name">{{ center.centerNameEn || '—' }}</div>
+                </td>
+                <td class="td-location">{{ center.location || '—' }}</td>
+                <td class="td-count">
+                  <span class="count-badge">{{ center.tcoCount ?? 0 }}</span>
+                </td>
+                <td class="td-tcm">
+                  @if (center.tcmName) {
+                    <span class="tcm-name">{{ center.tcmName }}</span>
+                  } @else {
+                    <span class="not-assigned">{{ '::Training.NotAssigned' | abpLocalization }}</span>
+                  }
+                </td>
+                <td class="td-status">
+                  @if (statusBadge(center.isActive); as badge) {
+                    <span [class]="badge.css">{{ badge.label }}</span>
+                  }
+                </td>
+                <td class="td-actions">
+                  <div class="actions-group">
+                    @if (canOpenDialog()) {
+                      <button class="action-btn action-edit" (click)="onEdit(center)" [title]="'::Edit' | abpLocalization">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                      </button>
+                    }
+                    @if (canDelete()) {
+                      <button class="action-btn action-delete" (click)="onDelete(center)" [title]="'::Delete' | abpLocalization">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        }
+      </table>
+    </div>
+  </div>
 </div>
 
-<dx-data-grid
-  #centersGrid
-  [dataSource]="dataSource"
-  [showBorders]="true"
-  [columnAutoWidth]="true"
-  [rowAlternationEnabled]="true"
-  [hoverStateEnabled]="true"
-  [remoteOperations]="true"
-  keyExpr="id"
->
-  <dxo-paging [pageSize]="10"></dxo-paging>
-  <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[10, 25, 50]" [showInfo]="true"></dxo-pager>
-  <dxo-search-panel [visible]="true" [placeholder]="'::Search' | abpLocalization"></dxo-search-panel>
-
-  <dxi-column dataField="orgUnitName" [caption]="'::Training.OrgUnit' | abpLocalization" [width]="200" cellTemplate="orgUnitTemplate"></dxi-column>
-  <dxi-column dataField="centerNameAr" [caption]="'::Training.CenterNameAr' | abpLocalization" [width]="200"></dxi-column>
-  <dxi-column dataField="centerNameEn" [caption]="'::Training.CenterNameEn' | abpLocalization" [width]="200"></dxi-column>
-  <dxi-column dataField="location" [caption]="'::Training.Location' | abpLocalization" [width]="150"></dxi-column>
-  <dxi-column dataField="tcoCount" [caption]="'::Training.TcoCount' | abpLocalization" [width]="80" alignment="center" cellTemplate="tcoCountTemplate"></dxi-column>
-  <dxi-column dataField="tcmName" [caption]="'::Training.TCM' | abpLocalization" [width]="150" cellTemplate="tcmTemplate"></dxi-column>
-  <dxi-column dataField="isActive" [caption]="'::Status' | abpLocalization" [width]="80" alignment="center" cellTemplate="statusTemplate"></dxi-column>
-  <dxi-column [caption]="'::Actions' | abpLocalization" [width]="120" alignment="center" cellTemplate="actionsTemplate" [allowSorting]="false" [allowFiltering]="false"></dxi-column>
-
-  <div *dxTemplate="let data of 'orgUnitTemplate'">
-    <span class="org-unit-cell">🏛️ {{ data.value }}</span>
-  </div>
-
-  <div *dxTemplate="let data of 'tcoCountTemplate'">
-    <span class="count-badge">{{ data.value }}</span>
-  </div>
-
-  <div *dxTemplate="let data of 'tcmTemplate'">
-    @if (data.value) {
-      <span class="tcm-name">{{ data.value }}</span>
-    } @else {
-      <span class="not-assigned">{{ '::Training.NotAssigned' | abpLocalization }}</span>
-    }
-  </div>
-
-  <div *dxTemplate="let data of 'statusTemplate'">
-    <span [class]="data.value ? 'status-badge status-active' : 'status-badge status-inactive'">
-      {{ data.value ? ('::Active' | abpLocalization) : ('::Inactive' | abpLocalization) }}
-    </span>
-  </div>
-
-  <div *dxTemplate="let data of 'actionsTemplate'">
-    <div class="action-buttons">
-      <button class="action-btn action-edit" (click)="onEdit(data.data)" [title]="'::Edit' | abpLocalization">✏️</button>
-      <button class="action-btn action-roles" (click)="onEdit(data.data)" [title]="'::Training.ManageRoles' | abpLocalization">👥</button>
-      <button class="action-btn action-delete" (click)="onDelete(data.data)" [title]="'::Delete' | abpLocalization">🗑️</button>
-    </div>
-  </div>
-</dx-data-grid>
-
-<dx-popup
-  [visible]="isDialogVisible()"
-  (visibleChange)="isDialogVisible.set($event)"
-  [title]="dialogTitle"
-  [showCloseButton]="true"
-  [dragEnabled]="true"
-  [width]="700"
-  [height]="'auto'"
-  [maxHeight]="'85vh'"
-  [toolbarItems]="dialogToolbarItems!"
->
-  <div *dxTemplate="let data of 'content'" class="dialog-content">
-    <!-- Section 1: Basic Info -->
-    <div class="form-section">
-      <h3 class="section-heading">
-        <span class="section-number">1</span>
-        {{ '::Training.BasicInfo' | abpLocalization }}
-      </h3>
-
-      <div class="form-field">
-        <label class="field-label">{{ '::Training.OrgUnit' | abpLocalization }} <span class="required-mark">*</span></label>
-     <dx-drop-down-box
-  [value]="formData().orgUnitId"
-  [dataSource]="orgUnits()"
-  [opened]="isOrgUnitDropDownOpen()"
-  (openedChange)="isOrgUnitDropDownOpen.set($event)"
-  [placeholder]="'::Training.SelectOrgUnit' | abpLocalization"
-  displayExpr="displayName"
-  valueExpr="id"
-  [showClearButton]="true"
->
-  <div *dxTemplate="let data of 'content'">
-    <dx-tree-view
-      [dataSource]="orgUnits()"
-      dataStructure="plain"
-      keyExpr="id"
-      parentIdExpr="parentId"
-      displayExpr="displayName"
-      [selectByClick]="true"
-      selectionMode="single"
-      (onItemClick)="onOrgUnitSelected($event)"
-    ></dx-tree-view>
-  </div>
-</dx-drop-down-box>
+<!-- ════════════════════════════════════════
+     CREATE / EDIT DIALOG
+     ════════════════════════════════════════ -->
+@if (isDialogVisible()) {
+  <div class="modal-backdrop" (click)="$event.target === $event.currentTarget && !isSaving() && !isLoadingRoles() ? isDialogVisible.set(false) : null">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3 class="modal-title">{{ dialogTitle() }}</h3>
+        <button type="button" class="modal-close" (click)="isDialogVisible.set(false)" [disabled]="isSaving() || isLoadingRoles()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
       </div>
 
-      <div class="form-row">
-        <div class="form-field">
-          <label class="field-label">{{ '::Training.CenterNameAr' | abpLocalization }} <span class="required-mark">*</span></label>
-          <dx-text-box [value]="formData().centerNameAr" (valueChange)="updateCenterNameAr($event)"></dx-text-box>
-          @if (formData().orgUnitId) {
-            <span class="auto-fill-hint">{{ '::Training.OrgUnitAutoFill' | abpLocalization }}</span>
-          }
-        </div>
-        <div class="form-field">
-          <label class="field-label">{{ '::Training.CenterNameEn' | abpLocalization }} <span class="required-mark">*</span></label>
-          <dx-text-box [value]="formData().centerNameEn" (valueChange)="updateCenterNameEn($event)"></dx-text-box>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-field">
-          <label class="field-label">{{ '::Training.Location' | abpLocalization }}</label>
-          <dx-text-box [value]="formData().location" (valueChange)="updateLocation($event)"></dx-text-box>
-        </div>
-        <div class="form-field">
-          <label class="field-label">{{ '::Status' | abpLocalization }}</label>
-          <dx-switch
-  [value]="formData().isActive"
-  (valueChange)="updateIsActive($event)"
-></dx-switch>
-<span class="switch-label">
-  {{ formData().isActive ? ('::Training.Active' | abpLocalization) : ('::Training.Inactive' | abpLocalization) }}
-</span>
-        </div>
-      </div>
-    </div>
-
-    <hr class="section-divider" />
-
-    <!-- Section 2: TCM -->
-    <div class="form-section">
-      <h3 class="section-heading">
-        <span class="section-number section-purple">2</span>
-        {{ '::Training.TCMSection' | abpLocalization }}
-        <span class="section-hint">— {{ '::Training.SingleAssignment' | abpLocalization }}</span>
-      </h3>
-
-      <div class="role-card">
-        <div class="assignment-type-row">
-          <label class="field-label-sm">{{ '::Training.AssignmentType' | abpLocalization }}:</label>
-          <dx-radio-group
-            [items]="assignmentTypeItems"
-            [value]="tcmAssignment().assignmentType"
-            (valueChange)="onTcmAssignmentTypeChanged($event)"
-            valueExpr="value"
-            displayExpr="text"
-            layout="horizontal"
-          ></dx-radio-group>
-        </div>
-
-        @if (tcmAssignment().assignmentType === 0) {
-          <div class="search-row">
-            <label class="field-label-sm">{{ '::Training.ServiceNumber' | abpLocalization }}</label>
-            <div class="search-input-row">
-              <dx-text-box
-                [value]="tcmAssignment().serviceNumber || ''"
-                (valueChange)="updateTcmServiceNumber($event)"
-                [placeholder]="'::Training.ServiceNumber' | abpLocalization"
-                class="flex-grow"
-              ></dx-text-box>
-              <dx-button
-                [text]="'::Training.Search' | abpLocalization"
-                type="default"
-                icon="search"
-                (onClick)="searchTcmEmployee(tcmAssignment().serviceNumber || '')"
-              ></dx-button>
-            </div>
+      <div class="modal-body">
+        @if (isLoadingRoles()) {
+          <div class="modal-loading">
+            <span class="spinner"></span>
+            <p>{{ '::Training.LoadingRoleAssignments' | abpLocalization }}</p>
           </div>
         }
 
-        @if (tcmAssignment().assignmentType === 1) {
-          <div class="search-row">
-            <label class="field-label-sm">{{ '::Training.PositionName' | abpLocalization }}</label>
-            <div class="search-input-row">
-              <dx-text-box [placeholder]="'::Training.PositionName' | abpLocalization" class="flex-grow"></dx-text-box>
-              <dx-button [text]="'::Training.Search' | abpLocalization" type="default" icon="search"></dx-button>
+        <!-- Section 1: Basic Info -->
+        <div class="form-section">
+          <h3 class="section-heading">
+            <span class="section-number">1</span>
+            {{ '::Training.BasicInfo' | abpLocalization }}
+          </h3>
+
+          <div class="form-field">
+            <label class="field-label">{{ '::Training.OrgUnit' | abpLocalization }} <span class="required-mark">*</span></label>
+            <dx-drop-down-box
+              [value]="formData().orgUnitId"
+              [dataSource]="orgUnits()"
+              [opened]="isOrgUnitDropDownOpen()"
+              (openedChange)="isOrgUnitDropDownOpen.set($event)"
+              [placeholder]="'::Training.SelectOrgUnit' | abpLocalization"
+              displayExpr="displayName"
+              valueExpr="id"
+              [showClearButton]="true"
+              [readOnly]="!canEditBasicInfo()"
+            >
+              <div *dxTemplate="let data of 'content'">
+                <dx-tree-view
+                  [dataSource]="orgUnits()"
+                  dataStructure="plain"
+                  keyExpr="id"
+                  parentIdExpr="parentId"
+                  displayExpr="displayName"
+                  [selectByClick]="true"
+                  selectionMode="single"
+                  (onItemClick)="onOrgUnitSelected($event)"
+                ></dx-tree-view>
+              </div>
+            </dx-drop-down-box>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label">{{ '::Training.CenterNameAr' | abpLocalization }} <span class="required-mark">*</span></label>
+              <input
+                type="text"
+                class="form-input"
+                [value]="formData().centerNameAr"
+                (input)="updateCenterNameAr($any($event.target).value)"
+                [disabled]="!canEditBasicInfo()"
+              />
+              @if (formData().orgUnitId) {
+                <span class="auto-fill-hint">{{ '::Training.OrgUnitAutoFill' | abpLocalization }}</span>
+              }
+            </div>
+            <div class="form-field">
+              <label class="field-label">{{ '::Training.CenterNameEn' | abpLocalization }} <span class="required-mark">*</span></label>
+              <input
+                type="text"
+                class="form-input"
+                [value]="formData().centerNameEn"
+                (input)="updateCenterNameEn($any($event.target).value)"
+                [disabled]="!canEditBasicInfo()"
+              />
             </div>
           </div>
-        }
 
-        @if (tcmSearchResult()) {
-          <div class="search-result success">
-            <div class="result-avatar">{{ tcmSearchResult().fullNameAr?.substring(0, 2) }}</div>
-            <div class="result-info">
-              <div class="result-name">{{ tcmSearchResult().rankName }} / {{ tcmSearchResult().fullNameAr }}</div>
-              <div class="result-detail">{{ '::Training.ServiceNumber' | abpLocalization }}: {{ tcmSearchResult().serviceNumber }}</div>
+          <div class="form-row">
+            <div class="form-field">
+              <label class="field-label">{{ '::Training.Location' | abpLocalization }}</label>
+              <input
+                type="text"
+                class="form-input"
+                [value]="formData().location"
+                (input)="updateLocation($any($event.target).value)"
+                [disabled]="!canEditBasicInfo()"
+              />
             </div>
-            <span class="result-check">✓</span>
+            <div class="form-field form-field-inline">
+              <label class="field-label">{{ '::Status' | abpLocalization }}</label>
+              <label class="toggle-switch">
+                <input
+                  type="checkbox"
+                  [checked]="formData().isActive"
+                  (change)="updateIsActive($any($event.target).checked)"
+                  [disabled]="!canEditBasicInfo()"
+                />
+                <span class="toggle-slider"></span>
+              </label>
+              <span class="switch-label">
+                {{ formData().isActive ? ('::Active' | abpLocalization) : ('::Inactive' | abpLocalization) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        @if (canManageRoles()) {
+          <hr class="section-divider" />
+
+          <!-- Section 2: TCM -->
+          <div class="form-section">
+            <h3 class="section-heading">
+              <span class="section-number section-purple">2</span>
+              {{ '::Training.TCMSection' | abpLocalization }}
+              <span class="section-hint">— {{ '::Training.SingleAssignment' | abpLocalization }}</span>
+            </h3>
+
+            <div class="role-card">
+              <div class="search-row">
+                <label class="field-label-sm">{{ '::Training.ServiceNumber' | abpLocalization }}</label>
+                <div class="search-input-row">
+                  <input
+                    type="text"
+                    class="form-input flex-grow"
+                    [value]="tcmAssignment().serviceNumber || ''"
+                    (input)="updateTcmServiceNumber($any($event.target).value)"
+                    [placeholder]="'::Training.ServiceNumber' | abpLocalization"
+                  />
+                  <button type="button" class="btn btn-primary" (click)="searchTcmEmployee()" [disabled]="!tcmAssignment().serviceNumber?.trim()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    {{ '::Training.Search' | abpLocalization }}
+                  </button>
+                </div>
+              </div>
+
+              @if (tcmSearchResult()) {
+                <div class="search-result success">
+                  <div class="result-avatar">{{ tcmSearchResult().fullNameAr?.substring(0, 2) }}</div>
+                  <div class="result-info">
+                    <div class="result-name">{{ tcmSearchResult().rankNameAr }} / {{ tcmSearchResult().fullNameAr }}</div>
+                    <div class="result-detail">{{ '::Training.ServiceNumber' | abpLocalization }}: {{ tcmSearchResult().serviceNumber }}</div>
+                  </div>
+                  <span class="result-check">✓</span>
+                </div>
+              }
+
+              <div class="info-banner">ℹ️ {{ '::Training.OrgUnitScopedSearch' | abpLocalization }}</div>
+            </div>
+          </div>
+
+          <hr class="section-divider" />
+
+          <!-- Section 3: TCOs -->
+          <div class="form-section">
+            <h3 class="section-heading">
+              <span class="section-number section-green">3</span>
+              {{ '::Training.TCOSection' | abpLocalization }}
+              <span class="section-hint">— {{ '::Training.MultipleAssignments' | abpLocalization }}</span>
+            </h3>
+
+            @for (tco of tcoAssignments(); track $index; let idx = $index) {
+              <div class="role-card tco-card">
+                <div class="tco-card-header">
+                  <span class="tco-index">{{ '::Training.TCO' | abpLocalization }} #{{ idx + 1 }}</span>
+                  <button class="btn-remove" (click)="removeTcoAssignment(idx)">🗑️</button>
+                </div>
+
+                <div class="search-row">
+                  <div class="search-input-row">
+                    <input
+                      type="text"
+                      class="form-input flex-grow"
+                      [value]="tco.serviceNumber || ''"
+                      (input)="updateTcoServiceNumber(idx, $any($event.target).value)"
+                      [placeholder]="'::Training.ServiceNumber' | abpLocalization"
+                    />
+                    <button type="button" class="btn btn-primary" (click)="searchTcoEmployee(idx)" [disabled]="!tco.serviceNumber?.trim()">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                      {{ '::Training.Search' | abpLocalization }}
+                    </button>
+                  </div>
+                </div>
+
+                @if (tcoSearchResults().get(idx)) {
+                  <div class="search-result success">
+                    <div class="result-avatar">{{ tcoSearchResults().get(idx).fullNameAr?.substring(0, 2) }}</div>
+                    <div class="result-info">
+                      <div class="result-name">{{ tcoSearchResults().get(idx).rankNameAr }} / {{ tcoSearchResults().get(idx).fullNameAr }}</div>
+                      <div class="result-detail">{{ '::Training.ServiceNumber' | abpLocalization }}: {{ tcoSearchResults().get(idx).serviceNumber }}</div>
+                    </div>
+                    <span class="result-check">✓</span>
+                  </div>
+                }
+              </div>
+            }
+
+            <button type="button" class="btn-add-tco" (click)="addTcoAssignment()">➕ {{ '::Training.AddOfficer' | abpLocalization }}</button>
           </div>
         }
+      </div>
 
-        <div class="info-banner">ℹ️ {{ '::Training.OrgUnitScopedSearch' | abpLocalization }}</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" (click)="isDialogVisible.set(false)" [disabled]="isSaving()">{{ '::Cancel' | abpLocalization }}</button>
+        @if (canEditBasicInfo() || canManageRoles()) {
+          <button type="button" class="btn btn-primary" (click)="onSave()" [disabled]="isSaving() || isLoadingRoles()">
+            @if (isSaving()) {
+              <span class="spinner"></span>
+            }
+            {{ '::Save' | abpLocalization }}
+          </button>
+        }
       </div>
     </div>
-
-    <hr class="section-divider" />
-
-    <!-- Section 3: TCOs -->
-    <div class="form-section">
-      <h3 class="section-heading">
-        <span class="section-number section-green">3</span>
-        {{ '::Training.TCOSection' | abpLocalization }}
-        <span class="section-hint">— {{ '::Training.MultipleAssignments' | abpLocalization }}</span>
-      </h3>
-
-      @for (tco of tcoAssignments(); track $index; let idx = $index) {
-        <div class="role-card tco-card">
-          <div class="tco-card-header">
-            <span class="tco-index">{{ '::Training.TCO' | abpLocalization }} #{{ idx + 1 }}</span>
-            <button class="btn-remove" (click)="removeTcoAssignment(idx)">🗑️</button>
-          </div>
-
-          <div class="assignment-type-row">
-            <label class="field-label-sm">{{ '::Training.AssignmentType' | abpLocalization }}:</label>
-            <dx-radio-group
-              [items]="assignmentTypeItems"
-              [value]="tco.assignmentType"
-              (valueChange)="onTcoAssignmentTypeChanged(idx, $event)"
-              valueExpr="value"
-              displayExpr="text"
-              layout="horizontal"
-            ></dx-radio-group>
-          </div>
-
-          @if (tco.assignmentType === 0) {
-          <div class="search-row">
-    <div class="search-input-row">
-        <dx-text-box 
-            [(value)]="tco.serviceNumber" 
-            [placeholder]="'::Training.ServiceNumber' | abpLocalization" 
-            class="flex-grow">
-        </dx-text-box>
-        <dx-button 
-            [text]="'::Training.Search' | abpLocalization" 
-            type="default" 
-            icon="search" 
-            (onClick)="searchTcoEmployee(idx, tco.serviceNumber || '')">
-        </dx-button>
-    </div>
-</div>
-          }
-@if (tco.assignmentType === 0) {
-  <!-- <div class="search-row">
-    <div class="search-input-row">
-      <dx-text-box [value]="tco.serviceNumber || ''" [placeholder]="'::Training.ServiceNumber' | abpLocalization" class="flex-grow"></dx-text-box>
-      <dx-button [text]="'::Training.Search' | abpLocalization" type="default" icon="search" (onClick)="searchTcoEmployee(idx, tco.serviceNumber || '')"></dx-button>
-    </div>
-  </div> -->
-  @if (tcoSearchResults().get(idx)) {
-    <div class="search-result success">
-      <div class="result-avatar">{{ tcoSearchResults().get(idx).fullNameAr?.substring(0, 2) }}</div>
-      <div class="result-info">
-        <div class="result-name">{{ tcoSearchResults().get(idx).rankName }} / {{ tcoSearchResults().get(idx).fullNameAr }}</div>
-        <div class="result-detail">{{ '::Training.ServiceNumber' | abpLocalization }}: {{ tcoSearchResults().get(idx).serviceNumber }}</div>
-      </div>
-      <span class="result-check">✓</span>
-    </div>
-  }
+  </div>
 }
 
-@if (tco.assignmentType === 1) {
-  <div class="search-row">
-    <div class="search-input-row">
-      <dx-text-box [placeholder]="'::Training.PositionName' | abpLocalization" class="flex-grow"></dx-text-box>
-      <dx-button [text]="'::Training.Search' | abpLocalization" type="default" icon="search" (onClick)="searchTcoPosition(idx, '')"></dx-button>
-    </div>
-  </div>
-  @if (tcoSearchResults().get(idx)) {
-    <div class="search-result info">
-      <div class="result-avatar">💼</div>
-      <div class="result-info">
-        <div class="result-name">{{ tcoSearchResults().get(idx).positionNameAr }}</div>
-      </div>
-      <span class="result-check">✓</span>
-    </div>
-  }
-}
-        </div>
-      }
-
-      <button class="btn-add-tco" (click)="addTcoAssignment()">➕ {{ '::Training.AddOfficer' | abpLocalization }}</button>
-    </div>
-  </div>
-</dx-popup>
+<!-- ════════════════════════════════════════
+     DELETE CONFIRMATION DIALOG
+     ════════════════════════════════════════ -->
+<gtms-confirm-dialog
+  [isOpen]="isDeleteDialogVisible()"
+  [danger]="true"
+  title="حذف المركز التدريبي"
+  message="هل أنت متأكد من حذف هذا المركز التدريبي؟ لا يمكن التراجع عن هذا الإجراء."
+  [detail]="deleteTargetLabel()"
+  confirmText="نعم، حذف"
+  cancelText="إلغاء"
+  (confirmed)="onConfirmDelete()"
+  (cancelled)="onCancelDelete()">
+</gtms-confirm-dialog>

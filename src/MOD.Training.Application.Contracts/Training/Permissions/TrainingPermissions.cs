@@ -261,6 +261,7 @@ public static class TrainingExecutionPermissions
         public const string Create  = Default + ".Create";
         public const string Edit    = Default + ".Edit";
         public const string Delete  = Default + ".Delete";
+        public const string Approve = Default + ".Approve";
         public const string Select  = Default + ".Select";
     }
 

@@ -128,11 +128,12 @@ export const TRAINING_ROUTE_PROVIDER = {
         requiredPolicy: 'Training.TrainingPlan',
       },
       {
-        path: '/training/nominations',
-        name: '::Training.Menu.NominationsList',
+        // Providers are master data — defined BEFORE price quotes, which reference a provider.
+        path: '/training/providers',
+        name: '::Training.Menu.Providers',
         parentName: '::Training.Menu.Plans',
         order: 2,
-        requiredPolicy: 'Training.Nomination',
+        requiredPolicy: 'Training.TrainingProvider',
       },
       {
         path: '/training/price-quotes',
@@ -140,13 +141,6 @@ export const TRAINING_ROUTE_PROVIDER = {
         parentName: '::Training.Menu.Plans',
         order: 3,
         requiredPolicy: 'Training.PriceQuote',
-      },
-      {
-        path: '/training/providers',
-        name: '::Training.Menu.Providers',
-        parentName: '::Training.Menu.Plans',
-        order: 4,
-        requiredPolicy: 'Training.TrainingProvider',
       },
       // ──────────────────────────────────
       // Phase 4A: Casual Courses

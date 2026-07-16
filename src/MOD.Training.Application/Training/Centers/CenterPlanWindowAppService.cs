@@ -82,6 +82,20 @@ public class CenterPlanWindowAppService(
         return _toDtoMapper.Map(entity);
     }
 
+    public async Task<CenterPlanWindowDto> CloseAsync(Guid id)
+    {
+        var entity = await Repository.GetAsync(id);
+
+        if (!entity.IsOpen)
+        {
+            throw new BusinessException("Training:CenterPlanWindow:AlreadyClosed");
+        }
+
+        entity.CloseDate = DateTime.Now.AddSeconds(-1);
+        await Repository.UpdateAsync(entity, autoSave: true);
+        return _toDtoMapper.Map(entity);
+    }
+
     protected override CenterPlanWindowDto MapToGetOutputDto(CenterPlanWindow entity)
         => _toDtoMapper.Map(entity);
 

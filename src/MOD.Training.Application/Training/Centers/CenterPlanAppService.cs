@@ -127,8 +127,6 @@ public class CenterPlanAppService(
             throw new BusinessException("Training:CenterPlan:NotSubmitted");
         }
 
-        await ValidateCurrentUserIsTcmAsync(entity.CenterId);
-
         entity.Status = CenterPlanStatus.Approved;
         entity.ApprovedAt = DateTime.Now;
         entity.ApprovedById = CurrentUser.Id!.Value;
@@ -138,7 +136,7 @@ public class CenterPlanAppService(
     }
 
     [Authorize(TrainingPermissions.CenterPlans.Approve)]
-    public async Task<TrainingCenterPlanDto> RejectAsync(Guid id)
+    public async Task<TrainingCenterPlanDto> RejectAsync(Guid id, PlanActionReasonDto input)
     {
         var entity = await Repository.GetAsync(id);
 
@@ -147,15 +145,14 @@ public class CenterPlanAppService(
             throw new BusinessException("Training:CenterPlan:NotSubmitted");
         }
 
-        await ValidateCurrentUserIsTcmAsync(entity.CenterId);
-
         entity.Status = CenterPlanStatus.Rejected;
+        entity.RejectionReason = input.Reason;
         await Repository.UpdateAsync(entity, autoSave: true);
         return await BuildPlanDtoAsync(entity);
     }
 
     [Authorize(TrainingPermissions.CenterPlans.Approve)]
-    public async Task<TrainingCenterPlanDto> ReturnAsync(Guid id)
+    public async Task<TrainingCenterPlanDto> ReturnAsync(Guid id, PlanActionReasonDto input)
     {
         var entity = await Repository.GetAsync(id);
 
@@ -164,11 +161,10 @@ public class CenterPlanAppService(
             throw new BusinessException("Training:CenterPlan:NotSubmitted");
         }
 
-        await ValidateCurrentUserIsTcmAsync(entity.CenterId);
-
         entity.Status = CenterPlanStatus.Draft;
         entity.SubmittedAt = null;
         entity.SubmittedById = null;
+        entity.ReturnReason = input.Reason;
 
         await Repository.UpdateAsync(entity, autoSave: true);
         return await BuildPlanDtoAsync(entity);
@@ -241,21 +237,6 @@ public class CenterPlanAppService(
         //{
         //    throw new BusinessException("Training:CenterPlan:NotAuthorized");
         //}
-    }
-
-    private async Task ValidateCurrentUserIsTcmAsync(Guid centerId)
-    {
-        var currentUserId = CurrentUser.Id!.Value;
-        var isTcm = await roleAssignmentRepository.AnyAsync(
-            x => x.CenterId == centerId
-                && x.RoleType == CenterRoleType.TCM
-                && x.AssignmentType == CenterAssignmentType.Employee
-                && x.EmployeeId == currentUserId);
-
-        if (!isTcm)
-        {
-            throw new BusinessException("Training:CenterPlan:NotAuthorized");
-        }
     }
 
     protected override TrainingCenterPlanDto MapToGetOutputDto(TrainingCenterPlan entity)

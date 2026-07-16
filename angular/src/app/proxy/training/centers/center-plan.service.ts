@@ -1,4 +1,4 @@
-import type { CenterPlanGetListInput, CreateUpdateCenterPlanDto, TrainingCenterPlanDto } from './dtos/models';
+import type { CenterPlanGetListInput, CreateUpdateCenterPlanDto, PlanActionReasonDto, TrainingCenterPlanDto } from './dtos/models';
 import { RestService, Rest } from '@abp/ng.core';
 import type { PagedResultDto } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
@@ -53,18 +53,20 @@ export class CenterPlanService {
     { apiName: this.apiName,...config });
   
 
-  reject = (id: string, config?: Partial<Rest.Config>) =>
+  reject = (id: string, input: PlanActionReasonDto, config?: Partial<Rest.Config>) =>
     this.restService.request<any, TrainingCenterPlanDto>({
       method: 'POST',
       url: `/api/app/center-plan/${id}/reject`,
+      body: input,
     },
     { apiName: this.apiName,...config });
   
 
-  return = (id: string, config?: Partial<Rest.Config>) =>
+  return = (id: string, input: PlanActionReasonDto, config?: Partial<Rest.Config>) =>
     this.restService.request<any, TrainingCenterPlanDto>({
       method: 'POST',
       url: `/api/app/center-plan/${id}/return`,
+      body: input,
     },
     { apiName: this.apiName,...config });
   

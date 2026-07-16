@@ -28,5 +28,7 @@ namespace MOD.Training.Training.Centers
         public Guid? OpenedById { get; set; }
         public Guid? SubmittedById { get; set; }
         public Guid? ApprovedById { get; set; }
+        public string? RejectionReason { get; set; }
+        public string? ReturnReason { get; set; }
     }
 }

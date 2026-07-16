@@ -288,6 +288,9 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
             TrainingExecutionPermissions.PriceQuotes.Delete,
             L("Permission:TrainingExecution.PriceQuotes.Delete"));
         priceQuotesPermission.AddChild(
+            TrainingExecutionPermissions.PriceQuotes.Approve,
+            L("Permission:TrainingExecution.PriceQuotes.Approve"));
+        priceQuotesPermission.AddChild(
             TrainingExecutionPermissions.PriceQuotes.Select,
             L("Permission:TrainingExecution.PriceQuotes.Select"));
 

@@ -13,6 +13,7 @@ export { createAbpStore } from './helpers/create-abp-store';
 // Shared components
 export { NotesDrawerComponent } from './components/notes-drawer/notes-drawer.component';
 export { ReturnModalComponent } from './components/return-modal/return-modal.component';
+export { ConfirmDialogComponent } from './components/confirm-dialog/confirm-dialog.component';
 export { NominationPickerComponent } from './components/nomination-picker/nomination-picker.component';
 export {
   CourseInfoBarComponent,

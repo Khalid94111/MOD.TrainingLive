@@ -52,4 +52,12 @@ export class CenterPlanWindowService {
       body: input,
     },
     { apiName: this.apiName,...config });
+
+
+  close = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, CenterPlanWindowDto>({
+      method: 'POST',
+      url: `/api/app/center-plan-window/${id}/close`,
+    },
+    { apiName: this.apiName,...config });
 }

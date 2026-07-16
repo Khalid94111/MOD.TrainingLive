@@ -110,8 +110,14 @@ export interface TrainingCenterPlanDto extends FullAuditedEntityDto<string> {
   openedById?: string | null;
   submittedById?: string | null;
   approvedById?: string | null;
+  rejectionReason?: string | null;
+  returnReason?: string | null;
   itemCount?: number;
   items?: TrainingCenterPlanItemDto[];
+}
+
+export interface PlanActionReasonDto {
+  reason: string;
 }
 
 export interface TrainingCenterPlanItemDto extends FullAuditedEntityDto<string> {

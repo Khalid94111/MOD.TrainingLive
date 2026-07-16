@@ -20,8 +20,8 @@ export class TrainingLocalizationHelper {
   private readonly localization = inject(LocalizationService);
 
   /** Shorthand to resolve any Training:: key */
-  t(key: string): string {
-    return this.localization.instant(key);
+  t(key: string, ...params: any[]): string {
+    return this.localization.instant(key, ...params);
   }
 
   resultType(value: number): string {

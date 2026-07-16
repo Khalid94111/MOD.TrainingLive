@@ -1,136 +1,189 @@
-<dx-popup
-  [visible]="visible()"
-  (visibleChange)="visibleChange.emit($event)"
-  [title]="dialogTitle"
-  [showCloseButton]="true"
-  [dragEnabled]="true"
-  [width]="700"
-  [height]="'auto'"
-  [maxHeight]="'85vh'"
-  [toolbarItems]="dialogToolbarItems!"
->
-  <div *dxTemplate="let data of 'content'" class="dialog-content">
-    <div class="form-field">
-      <label class="field-label"
-        >{{ '::Training.Course' | abpLocalization }} <span class="required-mark">*</span></label
-      >
-      <dx-select-box
-        [value]="formData().tenantCourseId"
-        (valueChange)="onTenantCourseChanged($event)"
-        [items]="tenantCourses()"
-        valueExpr="id"
-        displayExpr="catalogCourseNameAr"
-        [searchEnabled]="true"
-        [placeholder]="'::Training.Course' | abpLocalization"
-      ></dx-select-box>
+@if (visible()) {
+<div class="gtms-modal-backdrop" (click)="close()">
+  <div class="gtms-modal gtms-modal--md" (click)="$event.stopPropagation()">
+    <div class="gtms-modal__header">
+      <div class="gtms-modal__header-title">{{ dialogTitle() | abpLocalization }}</div>
+      <button class="gtms-modal__close" type="button" (click)="close()" [disabled]="isSaving()">
+        <i class="fa fa-times"></i>
+      </button>
     </div>
 
-    <div class="form-row">
-      <div class="form-field">
-        <label class="field-label"
-          >{{ '::Training.BeneficiaryType' | abpLocalization }}
-          <span class="required-mark">*</span></label
-        >
-        <dx-select-box
-          [value]="formData().beneficiaryType"
-          (valueChange)="updateBeneficiaryType($event)"
-          [items]="beneficiaryTypeItems"
-          valueExpr="value"
-          displayExpr="text"
-        ></dx-select-box>
+    <div class="gtms-modal__body">
+      @if (isLoading()) {
+      <div class="gtms-modal__loading">
+        <i class="fa fa-spinner fa-spin"></i>
+        <span>{{ '::Training.Common.Loading' | abpLocalization }}</span>
       </div>
-      <div class="form-field">
-        <label class="field-label"
-          >{{ '::Training.Capacity' | abpLocalization }} <span class="required-mark">*</span></label
-        >
-        <dx-number-box
-          [value]="formData().capacity"
-          (valueChange)="updateCapacity($event)"
-          [min]="1"
-        ></dx-number-box>
-      </div>
-    </div>
+      } @else {
+      <form class="gtms-form" (submit)="$event.preventDefault(); onSave()">
+        <!-- Course -->
+        <div class="gtms-form__group">
+          <label class="gtms-form__label" for="tenantCourseId">
+            {{ '::Training.Course' | abpLocalization }} <span class="text-danger">*</span>
+          </label>
+          <dx-select-box
+            id="tenantCourseId"
+            [dataSource]="courseOptions()"
+            displayExpr="displayName"
+            valueExpr="id"
+            [value]="formData().tenantCourseId"
+            [searchEnabled]="true"
+            [showClearButton]="true"
+            placeholder="{{ '::Training.SelectCourse' | abpLocalization }}"
+            (onValueChanged)="updateTenantCourseId($event.value)"
+            [disabled]="isSaving()"
+            [rtlEnabled]="currentLang() === 'ar'"
+          ></dx-select-box>
+        </div>
 
-    <div class="form-row">
-      <div class="form-field">
-        <label class="field-label"
-          >{{ '::Training.EstimatedStartDate' | abpLocalization }}
-          <span class="required-mark">*</span></label
-        >
-        <dx-date-box
-          [value]="formData().estimatedStartDate"
-          (valueChange)="updateEstimatedStartDate($event)"
-          type="date"
-        ></dx-date-box>
-      </div>
-      <div class="form-field">
-        <label class="field-label"
-          >{{ '::Training.EstimatedEndDate' | abpLocalization }}
-          <span class="required-mark">*</span></label
-        >
-        <dx-date-box
-          [value]="formData().estimatedEndDate"
-          (valueChange)="updateEstimatedEndDate($event)"
-          type="date"
-        ></dx-date-box>
-      </div>
-    </div>
+        <!-- Beneficiary Type -->
+        <div class="gtms-form__group">
+          <label class="gtms-form__label">
+            {{ '::Training.BeneficiaryType' | abpLocalization }} <span class="text-danger">*</span>
+          </label>
+          <div class="gtms-radio-group">
+            @for (item of beneficiaryTypeItems; track item.value) {
+            <label class="gtms-radio">
+              <input
+                type="radio"
+                name="beneficiaryType"
+                [value]="item.value"
+                [checked]="formData().beneficiaryType === item.value"
+                (change)="updateBeneficiaryType(item.value)"
+                [disabled]="isSaving()"
+              />
+              <span>{{ item.text }}</span>
+            </label>
+            }
+          </div>
+        </div>
 
-    <div class="form-row">
-      <div class="form-field">
-        <label class="field-label">{{ '::Training.DurationWeeks' | abpLocalization }}</label>
-        <dx-number-box
-          [value]="formData().durationWeeks"
-          (valueChange)="updateDurationWeeks($event)"
-          [min]="0"
-        ></dx-number-box>
-      </div>
-      <div class="form-field">
-        <label class="field-label">{{ '::Training.Objective' | abpLocalization }}</label>
-        <dx-text-area
-          [value]="formData().objective"
-          (valueChange)="updateObjective($event)"
-          [height]="60"
-        ></dx-text-area>
-      </div>
-    </div>
-
-    <hr class="section-divider" />
-
-    <!-- Beneficiary Units (Internal only) -->
-    @if (isInternal) {
-      <div class="form-section">
-        <h3 class="section-heading">
-          🏛️ {{ '::Training.BeneficiaryUnits' | abpLocalization }}
-          <span class="section-hint">— {{ '::Training.InternalOnly' | abpLocalization }}</span>
-        </h3>
-        <dx-drop-down-box
-          [value]="selectedUnitIds()"
-          [showClearButton]="true"
-          [placeholder]="'::Training.SelectBeneficiaryUnits' | abpLocalization"
-        >
-          <div *dxTemplate="let data of 'content'">
+        @if (isInternal) {
+        <!-- Beneficiary Units -->
+        <div class="gtms-form__group">
+          <label class="gtms-form__label">
+            {{ '::Training.BeneficiaryUnits' | abpLocalization }}
+          </label>
+          <dx-drop-down-box
+            [(opened)]="isOrgUnitDropDownOpen"
+            [dataSource]="orgUnits()"
+            valueExpr="id"
+            displayExpr="displayName"
+            [value]="selectedUnitIds()"
+            placeholder="{{ '::Training.SelectBeneficiaryUnits' | abpLocalization }}"
+            [showClearButton]="true"
+            [disabled]="isSaving()"
+          >
             <dx-tree-view
               [dataSource]="orgUnits()"
-                    dataStructure="plain"
-
+              dataStructure="plain"
               keyExpr="id"
               parentIdExpr="parentId"
               displayExpr="displayName"
-              showCheckBoxesMode="normal"
               selectionMode="multiple"
+              showCheckBoxesMode="normal"
+              [selectNodesRecursive]="false"
+              selectedExpr="selected"
               (onSelectionChanged)="onUnitSelectionChanged($event)"
             ></dx-tree-view>
-          </div>
-        </dx-drop-down-box>
-        @if (selectedUnitIds().length > 0) {
-          <span class="units-count"
-            >{{ selectedUnitIds().length }} {{ '::Training.UnitsSelected' | abpLocalization }}</span
-          >
+          </dx-drop-down-box>
+        </div>
         }
-      </div>
-      <hr class="section-divider" />
-    }
 
+        <div class="gtms-form__row gtms-form__row--2">
+          <!-- Capacity -->
+          <div class="gtms-form__group">
+            <label class="gtms-form__label" for="capacity">
+              {{ '::Training.Capacity' | abpLocalization }} <span class="text-danger">*</span>
+            </label>
+            <input
+              id="capacity"
+              type="number"
+              min="1"
+              class="gtms-form__control"
+              [value]="formData().capacity"
+              (input)="updateCapacity(+$any($event.target).value)"
+              [disabled]="isSaving()"
+            />
+          </div>
+
+          <!-- Duration Weeks -->
+          <div class="gtms-form__group">
+            <label class="gtms-form__label" for="durationWeeks">
+              {{ '::Training.DurationWeeks' | abpLocalization }}
+            </label>
+            <input
+              id="durationWeeks"
+              type="number"
+              min="0"
+              class="gtms-form__control"
+              [value]="formData().durationWeeks"
+              [disabled]="true"
+            />
+          </div>
+        </div>
+
+        <div class="gtms-form__row gtms-form__row--2">
+          <!-- Estimated Start Date -->
+          <div class="gtms-form__group">
+            <label class="gtms-form__label" for="estimatedStartDate">
+              {{ '::Training.EstimatedStartDate' | abpLocalization }} <span class="text-danger">*</span>
+            </label>
+            <input
+              id="estimatedStartDate"
+              type="date"
+              class="gtms-form__control"
+              [value]="formData().estimatedStartDate | date: 'yyyy-MM-dd'"
+              (change)="updateEstimatedStartDate($any($event.target).value)"
+              [disabled]="isSaving()"
+            />
+          </div>
+
+          <!-- Estimated End Date -->
+          <div class="gtms-form__group">
+            <label class="gtms-form__label" for="estimatedEndDate">
+              {{ '::Training.EstimatedEndDate' | abpLocalization }} <span class="text-danger">*</span>
+            </label>
+            <input
+              id="estimatedEndDate"
+              type="date"
+              class="gtms-form__control"
+              [value]="formData().estimatedEndDate | date: 'yyyy-MM-dd'"
+              (change)="updateEstimatedEndDate($any($event.target).value)"
+              [disabled]="isSaving()"
+            />
+          </div>
+        </div>
+
+        <!-- Objective -->
+        <div class="gtms-form__group">
+          <label class="gtms-form__label" for="objective">
+            {{ '::Training.Objective' | abpLocalization }}
+          </label>
+          <textarea
+            id="objective"
+            class="gtms-form__control"
+            rows="3"
+            [value]="formData().objective"
+            (input)="updateObjective($any($event.target).value)"
+            [disabled]="isSaving()"
+          ></textarea>
+        </div>
+      </form>
+      }
+    </div>
+
+    <div class="gtms-modal__footer">
+      <button class="gtms-btn gtms-btn--secondary" type="button" (click)="close()" [disabled]="isSaving()">
+        {{ '::Training.Common.Cancel' | abpLocalization }}
+      </button>
+      <button class="gtms-btn gtms-btn--primary" type="button" (click)="onSave()" [disabled]="isSaving()">
+        @if (isSaving()) {
+        <i class="fa fa-spinner fa-spin"></i>
+        }
+        {{ '::Training.Common.Save' | abpLocalization }}
+      </button>
+    </div>
   </div>
-</dx-popup>
+</div>
+}

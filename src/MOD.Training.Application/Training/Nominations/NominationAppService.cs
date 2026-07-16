@@ -19,9 +19,7 @@ namespace MOD.Training.Training.Nominations;
 public class NominationAppService(
     IRepository<Nomination, Guid> repository,
     IRepository<NominationApproval, Guid> approvalRepository,
-    IRepository<CourseSession, Guid> sessionRepository,
     EmployeeResolver employeeResolver,
-    CourseNameResolver courseNameResolver,
     PlanItemRankBreakdownManager rankBreakdownManager,
     PlanItemUnitScope unitScope,
     IPlanNoteAppService planNoteAppService,
@@ -69,25 +67,9 @@ public class NominationAppService(
         // Batch resolve employee names
         var employeeIds = entities.Select(x => x.EmployeeId).Distinct().ToList();
         var nominatorUserIds = entities.Select(x => x.NominatedById).Distinct().ToList();
-        var sessionIds = entities.Where(x => x.SessionId.HasValue).Select(x => x.SessionId!.Value).Distinct().ToList();
 
         var employees = await employeeResolver.BatchResolveByIdsAsync(employeeIds);
         var nominators = await employeeResolver.BatchResolveByUserIdsAsync(nominatorUserIds);
-
-        // Resolve session → course names.
-        // Phase 4C-α (v4.10.0): CourseSession.CourseId removed, replaced by TenantCourseId.
-        // The Phase 3 CourseNameResolver still expects a Courses.Id, so the SessionCode
-        // and course-name fields are left empty for the new shape — step 5 of 4C-α will
-        // project a session display label via TenantCourse join.
-        var sessionCourseMap = new Dictionary<Guid, (string code, string nameAr)>();
-        foreach (var sid in sessionIds)
-        {
-            var session = await sessionRepository.FindAsync(sid);
-            if (session != null)
-            {
-                sessionCourseMap[sid] = (string.Empty, string.Empty);
-            }
-        }
 
         var dtos = entities.Select(e =>
         {
@@ -101,12 +83,6 @@ public class NominationAppService(
 
             if (nominators.TryGetValue(e.NominatedById, out var nominator))
                 dto.NominatedByName = nominator.FullNameAr;
-
-            if (e.SessionId.HasValue && sessionCourseMap.TryGetValue(e.SessionId.Value, out var sessionInfo))
-            {
-                dto.SessionCode = sessionInfo.code;
-                dto.CourseName = sessionInfo.nameAr;
-            }
 
             return dto;
         }).ToList();
@@ -268,13 +244,5 @@ public class NominationAppService(
 
         var nominator = await employeeResolver.GetByUserIdAsync(entity.NominatedById);
         if (nominator != null) dto.NominatedByName = nominator.FullNameAr;
-
-        // Phase 4C-α (v4.10.0): CourseSession no longer carries a SessionCode column.
-        // Step 5 of 4C-α will project a session display label via TenantCourse join.
-        if (entity.SessionId.HasValue)
-        {
-            var session = await sessionRepository.FindAsync(entity.SessionId.Value);
-            if (session != null) dto.SessionCode = string.Empty;
-        }
     }
 }

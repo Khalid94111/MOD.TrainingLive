@@ -1,167 +1,316 @@
-<div class="page-container">
-  <div class="page-header">
-    <h2>{{ '::Training.PriceQuotes' | abpLocalization }}</h2>
-    @if (canCreate) {
-      <dx-button
-        [text]="'::Training.CreatePriceQuote' | abpLocalization"
-        type="default"
-        icon="plus"
-        (onClick)="onAdd()">
-      </dx-button>
-    }
+<div class="pq-page">
+  <!-- ════════════════════════════════════════
+       HEADER BANNER — Gradient hero
+       ════════════════════════════════════════ -->
+  <div class="header-banner">
+    <div class="header-banner-bg"></div>
+    <div class="header-banner-pattern"></div>
+    <div class="header-banner-content">
+      <div class="header-banner-left">
+        <div class="header-banner-icon"><span>🏷️</span></div>
+        <div class="header-banner-text">
+          <h1 class="header-banner-title">{{ '::Training.PriceQuotes' | abpLocalization }}</h1>
+          <p class="header-banner-desc">{{ '::Training.PriceQuote' | abpLocalization }}</p>
+        </div>
+      </div>
+      <div class="header-banner-right">
+        @if (canCreate()) {
+          <button type="button" class="btn btn-white" (click)="onAdd()">
+            <span class="btn-icon-symbol">+</span>
+            <span>{{ '::Training.CreatePriceQuote' | abpLocalization }}</span>
+          </button>
+        }
+      </div>
+    </div>
   </div>
 
-  <dx-data-grid
-    [dataSource]="quotes()"
-    [showBorders]="true"
-    [columnAutoWidth]="true"
-    [rowAlternationEnabled]="true"
-    keyExpr="id">
-
-    <dxi-column dataField="courseName"
-      [caption]="'::Training.Course' | abpLocalization"
-      [width]="180">
-    </dxi-column>
-
-    <dxi-column dataField="providerName"
-      [caption]="'::Training.TrainingProvider' | abpLocalization"
-      [width]="180">
-    </dxi-column>
-
-    <dxi-column dataField="pricingType"
-      [caption]="'::Training.PricingType' | abpLocalization"
-      [width]="120"
-      cellTemplate="pricingTypeTemplate">
-    </dxi-column>
-
-    <dxi-column dataField="pricePerPerson"
-      [caption]="'::Training.PricePerPerson' | abpLocalization"
-      dataType="number"
-      format="#,##0.000"
-      [width]="120">
-    </dxi-column>
-
-    <dxi-column dataField="totalPrice"
-      [caption]="'::Training.TotalPrice' | abpLocalization"
-      dataType="number"
-      format="#,##0.000"
-      [width]="120">
-    </dxi-column>
-
-    <dxi-column dataField="participantsCount"
-      [caption]="'::Training.ParticipantsCount' | abpLocalization"
-      [width]="80"
-      alignment="center">
-    </dxi-column>
-
-    <dxi-column dataField="status"
-      [caption]="'::Training.PlanStatus' | abpLocalization"
-      [width]="100"
-      cellTemplate="statusTemplate">
-    </dxi-column>
-
-    <dxi-column
-      [caption]="'::Actions' | abpLocalization"
-      [width]="150"
-      cellTemplate="actionsTemplate"
-      [allowSorting]="false">
-    </dxi-column>
-
-    <div *dxTemplate="let cell of 'pricingTypeTemplate'">
-      @if (cell.value === 0) {
-        <span>{{ '::Training.PricingType.PerPerson' | abpLocalization }}</span>
-      } @else {
-        <span>{{ '::Training.PricingType.Total' | abpLocalization }}</span>
-      }
+  <!-- ════════════════════════════════════════
+       STAT CARDS
+       ════════════════════════════════════════ -->
+  <div class="stat-cards-row">
+    <div class="stat-card-modern card-total">
+      <div class="stat-card-glow"></div>
+      <div class="stat-card-body">
+        <div class="stat-card-icon">📊</div>
+        <div class="stat-card-value">{{ totalCount() }}</div>
+        <div class="stat-card-label">{{ '::Training.Common.Total' | abpLocalization }}</div>
+      </div>
+      <div class="stat-card-bar" [style.width.%]="100"></div>
     </div>
-
-    <div *dxTemplate="let cell of 'statusTemplate'">
-      @switch (cell.value) {
-        @case (0) { <span class="status-badge badge-pending">Pending</span> }
-        @case (1) { <span class="status-badge badge-approved">Approved</span> }
-        @case (2) { <span class="status-badge badge-rejected">Rejected</span> }
-      }
+    <div class="stat-card-modern card-pending">
+      <div class="stat-card-glow"></div>
+      <div class="stat-card-body">
+        <div class="stat-card-icon">⏳</div>
+        <div class="stat-card-value">{{ pendingCount() }}</div>
+        <div class="stat-card-label">{{ '::Training.Pending' | abpLocalization }}</div>
+      </div>
+      <div class="stat-card-bar" [style.width.%]="totalCount() ? (pendingCount() / totalCount() * 100) : 0"></div>
     </div>
-
-    <div *dxTemplate="let cell of 'actionsTemplate'">
-      <dx-button icon="edit" stylingMode="text" (onClick)="onEdit(cell.data)"></dx-button>
-      @if (cell.data.status === 0) {
-        <dx-button icon="check" stylingMode="text" hint="Approve" (onClick)="onApprove(cell.data.id)"></dx-button>
-        <dx-button icon="close" stylingMode="text" hint="Reject" (onClick)="onReject(cell.data.id)"></dx-button>
-      }
-      <dx-button icon="trash" stylingMode="text" (onClick)="onDelete(cell.data.id)"></dx-button>
+    <div class="stat-card-modern card-approved">
+      <div class="stat-card-glow"></div>
+      <div class="stat-card-body">
+        <div class="stat-card-icon">✅</div>
+        <div class="stat-card-value">{{ approvedCount() }}</div>
+        <div class="stat-card-label">{{ '::Training.Approved' | abpLocalization }}</div>
+      </div>
+      <div class="stat-card-bar" [style.width.%]="totalCount() ? (approvedCount() / totalCount() * 100) : 0"></div>
     </div>
+    <div class="stat-card-modern card-rejected">
+      <div class="stat-card-glow"></div>
+      <div class="stat-card-body">
+        <div class="stat-card-icon">✕</div>
+        <div class="stat-card-value">{{ rejectedCount() }}</div>
+        <div class="stat-card-label">{{ '::Training.Rejected' | abpLocalization }}</div>
+      </div>
+      <div class="stat-card-bar" [style.width.%]="totalCount() ? (rejectedCount() / totalCount() * 100) : 0"></div>
+    </div>
+  </div>
 
-  </dx-data-grid>
-
-  <!-- Create/Edit Dialog -->
-  <dx-popup
-    [visible]="isDialogVisible()"
-    [title]="dialogTitle"
-    [showCloseButton]="true"
-    [width]="500"
-    [height]="520"
-    [toolbarItems]="dialogToolbarItems"
-    (onHidden)="isDialogVisible.set(false)">
-    <div class="dialog-form">
-      <div class="form-field">
-        <label>{{ '::Training.Session' | abpLocalization }}</label>
-        <dx-select-box
-          [dataSource]="sessions()"
-          displayExpr="tenantCourseNameAr"
-          valueExpr="id"
-          [value]="formData().sessionId"
-          (onValueChanged)="updateSessionId($event.value)"
-          [searchEnabled]="true">
-        </dx-select-box>
-      </div>
-      <div class="form-field">
-        <label>{{ '::Training.TrainingProvider' | abpLocalization }}</label>
-        <dx-select-box
-          [dataSource]="providers()"
-          displayExpr="providerNameAr"
-          valueExpr="id"
-          [value]="formData().providerId"
-          (onValueChanged)="updateProviderId($event.value)"
-          [searchEnabled]="true">
-        </dx-select-box>
-      </div>
-      <div class="form-field">
-        <label>{{ '::Training.PricingType' | abpLocalization }}</label>
-        <dx-radio-group
-          [items]="pricingTypes"
-          displayExpr="text"
-          valueExpr="value"
-          [value]="formData().pricingType"
-          (onValueChanged)="updatePricingType($event.value)"
-          layout="horizontal">
-        </dx-radio-group>
-      </div>
-      <div class="form-field">
-        <label>{{ '::Training.QuotedPrice' | abpLocalization }}</label>
-        <dx-number-box
-          [value]="formData().quotedPrice"
-          (onValueChanged)="updateQuotedPrice($event.value)"
-          format="#,##0.000"
-          [min]="0">
-        </dx-number-box>
-      </div>
-      <div class="form-field">
-        <label>{{ '::Training.ParticipantsCount' | abpLocalization }}</label>
-        <dx-number-box
-          [value]="formData().participantsCount"
-          (onValueChanged)="updateParticipantsCount($event.value)"
-          [min]="1">
-        </dx-number-box>
-      </div>
-      <div class="form-field">
-        <label>{{ '::Training.Notes' | abpLocalization }}</label>
-        <dx-text-area
-          [value]="formData().notes"
-          (onValueChanged)="updateNotes($event.value)"
-          [height]="60">
-        </dx-text-area>
+  <!-- ════════════════════════════════════════
+       FILTERS BAR
+       ════════════════════════════════════════ -->
+  <div class="filters-bar-modern">
+    <div class="filter-group filter-search">
+      <label class="filter-label">{{ '::Training.SearchByName' | abpLocalization }}</label>
+      <div class="filter-input-wrap">
+        <input
+          type="text"
+          class="filter-input"
+          [placeholder]="'::Training.SearchByName' | abpLocalization"
+          [value]="searchText()"
+          (input)="searchText.set($any($event.target).value)"
+          (keyup.enter)="onSearch()"
+        />
+        <button class="filter-search-btn" (click)="onSearch()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </button>
       </div>
     </div>
-  </dx-popup>
+    <div class="filter-group">
+      <label class="filter-label">{{ '::Training.Status' | abpLocalization }}</label>
+      <select class="filter-select" [value]="filterStatus() ?? ''" (change)="filterStatus.set($any($event.target).value === '' ? null : +$any($event.target).value)">
+        <option value="">{{ '::Training.AllStatuses' | abpLocalization }}</option>
+        <option [value]="ApprovalStatus.Pending">{{ '::Training.Pending' | abpLocalization }}</option>
+        <option [value]="ApprovalStatus.Approved">{{ '::Training.Approved' | abpLocalization }}</option>
+        <option [value]="ApprovalStatus.Rejected">{{ '::Training.Rejected' | abpLocalization }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       DATA TABLE
+       ════════════════════════════════════════ -->
+  <div class="table-card">
+    <div class="table-scroll-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="th-index">#</th>
+            <th class="th-course">{{ '::Training.Course' | abpLocalization }}</th>
+            <th class="th-provider">{{ '::Training.TrainingProvider' | abpLocalization }}</th>
+            <th class="th-type">{{ '::Training.PricingType' | abpLocalization }}</th>
+            <th class="th-amount">{{ '::Training.PricePerPerson' | abpLocalization }}</th>
+            <th class="th-amount">{{ '::Training.TotalPrice' | abpLocalization }}</th>
+            <th class="th-count">{{ '::Training.ParticipantsCount' | abpLocalization }}</th>
+            <th class="th-status">{{ '::Training.Status' | abpLocalization }}</th>
+            <th class="th-actions">{{ '::Training.Actions' | abpLocalization }}</th>
+          </tr>
+        </thead>
+
+        @if (isLoading()) {
+          <tbody>
+            @for (_ of [1,2,3,4,5]; track $index) {
+              <tr class="skel-row"><td colspan="9"><div class="skel-line-long"></div></td></tr>
+            }
+          </tbody>
+        } @else if (filteredQuotes().length === 0) {
+          <tbody>
+            <tr>
+              <td colspan="9" class="empty-cell">
+                <div class="empty-hero">
+                  <div class="empty-hero-icon">📭</div>
+                  <div class="empty-hero-title">{{ '::Training.PriceQuote' | abpLocalization }}</div>
+                  <div class="empty-hero-desc">{{ '::Training.CourseCatalog.NoCoursesHint' | abpLocalization }}</div>
+                  @if (canCreate()) {
+                    <button class="btn btn-primary" (click)="onAdd()">
+                      <span class="btn-icon-symbol">+</span>
+                      {{ '::Training.CreatePriceQuote' | abpLocalization }}
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        } @else {
+          <tbody>
+            @for (quote of filteredQuotes(); track quote.id; let idx = $index) {
+              <tr class="data-row" [class.row-selected]="quote.isSelected" [style.animation-delay.ms]="idx * 30">
+                <td class="td-index">
+                  <span class="index-badge">{{ idx + 1 }}</span>
+                </td>
+                <td class="td-course">
+                  <div class="cell-name">{{ quote.courseName || sessionLabel(quote.sessionId) }}</div>
+                  @if (quote.courseName && quote.sessionId) {
+                    <div class="cell-sub">{{ sessionLabel(quote.sessionId) }}</div>
+                  }
+                </td>
+                <td class="td-provider">
+                  <span class="pill" [class.pill--indigo]="!quote.isSelected" [class.pill--faded]="quote.isSelected">
+                    {{ quote.providerName || providerLabel(quote.providerId) }}
+                  </span>
+                </td>
+                <td class="td-type">
+                  <span class="pill pill--gray">{{ pricingTypeLabel(quote.pricingType) }}</span>
+                </td>
+                <td class="td-amount">
+                  <span class="amount-badge">{{ formatMoney(quote.pricePerPerson) }} <small>{{ '::Training.Currency.OMR' | abpLocalization }}</small></span>
+                </td>
+                <td class="td-amount">
+                  <span class="amount-badge">{{ formatMoney(quote.totalPrice) }} <small>{{ '::Training.Currency.OMR' | abpLocalization }}</small></span>
+                </td>
+                <td class="td-count">{{ quote.participantsCount }}</td>
+                <td class="td-status">
+                  @if (statusBadge(quote.status); as badge) {
+                    <span [class]="badge.css">{{ badge.label }}</span>
+                  }
+                  @if (quote.isSelected) {
+                    <div class="selected-hint">★ {{ '::Training.Sessions.Detail.SelectedQuote' | abpLocalization }}</div>
+                  }
+                </td>
+                <td class="td-actions">
+                  <div class="actions-group">
+                    @if (canUpdate() && !quote.isSelected) {
+                      <button class="action-btn action-edit" (click)="onEdit(quote)" [title]="'::Training.Common.Edit' | abpLocalization">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                      </button>
+                    }
+                    @if (canApprove() && quote.status === ApprovalStatus.Pending && !quote.isSelected) {
+                      <button class="action-btn action-approve" (click)="onApprove(quote.id)" [title]="'::Training.Approve' | abpLocalization">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      </button>
+                      <button class="action-btn action-reject" (click)="onReject(quote.id)" [title]="'::Training.Reject' | abpLocalization">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                      </button>
+                    }
+                    @if (canDelete() && !quote.isSelected) {
+                      <button class="action-btn action-delete" (click)="onDelete(quote)" [title]="'::Training.Common.Delete' | abpLocalization">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        }
+      </table>
+    </div>
+  </div>
 </div>
+
+<!-- ════════════════════════════════════════
+     CREATE / EDIT DIALOG
+     ════════════════════════════════════════ -->
+@if (isDialogVisible()) {
+  <div class="modal-backdrop" (click)="$event.target === $event.currentTarget ? isDialogVisible.set(false) : null">
+    <div class="modal-content modal-md">
+      <div class="modal-header">
+        <h3 class="modal-title">{{ dialogTitle }}</h3>
+        <button class="modal-close" (click)="isDialogVisible.set(false)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        @if (validationErrors().length > 0) {
+          <div class="validation-summary">
+            @for (err of validationErrors(); track $index) {
+              <div class="validation-item">• {{ err }}</div>
+            }
+          </div>
+        }
+
+        <div class="form-row">
+          <div class="form-group flex-2">
+            <label class="form-label">{{ '::Training.Session' | abpLocalization }} <span class="required">*</span></label>
+            <select class="form-input" [value]="formData().sessionId ?? ''" (change)="updateSessionId($any($event.target).value)">
+              <option value="">— {{ '::Training.Select' | abpLocalization }} —</option>
+              @for (session of sessions(); track session.id) {
+                <option [value]="session.id">{{ session.tenantCourseNameAr }} (Q{{ session.preferredQuarter }} {{ session.planYear }})</option>
+              }
+            </select>
+          </div>
+          <div class="form-group flex-2">
+            <label class="form-label">{{ '::Training.TrainingProvider' | abpLocalization }} <span class="required">*</span></label>
+            <select class="form-input" [value]="formData().providerId ?? ''" (change)="updateProviderId($any($event.target).value)">
+              <option value="">— {{ '::Training.Select' | abpLocalization }} —</option>
+              @for (provider of providers(); track provider.id) {
+                <option [value]="provider.id">{{ provider.providerNameAr }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">{{ '::Training.PricingType' | abpLocalization }} <span class="required">*</span></label>
+            <div class="radio-group">
+              @for (opt of pricingTypeOptions(); track opt.value) {
+                <label class="radio-wrap">
+                  <input
+                    type="radio"
+                    name="pricingType"
+                    [value]="opt.value"
+                    [checked]="formData().pricingType === opt.value"
+                    (change)="updatePricingType(opt.value)"
+                  />
+                  <span>{{ opt.text }}</span>
+                </label>
+              }
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">{{ '::Training.ParticipantsCount' | abpLocalization }} <span class="required">*</span></label>
+            <input type="number" class="form-input" [value]="formData().participantsCount" (input)="updateParticipantsCount(+$any($event.target).value || 1)" min="1" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">{{ '::Training.QuotedPrice' | abpLocalization }} ({{ '::Training.Currency.OMR' | abpLocalization }}) <span class="required">*</span></label>
+            <input type="number" class="form-input" [value]="formData().quotedPrice" (input)="updateQuotedPrice(+$any($event.target).value || 0)" min="0" step="0.001" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">{{ '::Training.Payments.Notes' | abpLocalization }}</label>
+            <input type="text" class="form-input" [value]="formData().notes ?? ''" (input)="updateNotes($any($event.target).value)" />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-ghost" (click)="isDialogVisible.set(false)">{{ '::Training.Common.Cancel' | abpLocalization }}</button>
+        <button class="btn btn-primary" (click)="onSave()" [disabled]="isSaving()">
+          @if (isSaving()) {
+            <span>⏳</span>
+          }
+          <span>{{ '::Training.Common.Save' | abpLocalization }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ════════════════════════════════════════
+     DELETE CONFIRMATION DIALOG
+     ════════════════════════════════════════ -->
+<gtms-confirm-dialog
+  [isOpen]="isDeleteDialogVisible()"
+  [danger]="true"
+  title="حذف عرض السعر"
+  message="هل أنت متأكد من حذف عرض السعر هذا؟ لا يمكن التراجع عن هذا الإجراء."
+  [detail]="deleteTargetLabel()"
+  confirmText="نعم، حذف"
+  cancelText="إلغاء"
+  (confirmed)="onConfirmDelete()"
+  (cancelled)="onCancelDelete()">
+</gtms-confirm-dialog>

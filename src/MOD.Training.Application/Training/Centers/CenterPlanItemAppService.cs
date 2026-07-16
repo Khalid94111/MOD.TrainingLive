@@ -163,7 +163,7 @@ public class CenterPlanItemAppService(
         var dto = _toDtoMapper.Map(entity);
 
         var course = (await tenantCourseRepository.WithDetailsAsync(c=>c.CatalogCourse)).FirstOrDefault(c=>c.Id== entity.TenantCourseId);
-        dto.TenantCourseName = course.CatalogCourse.CourseNameAr;
+        dto.TenantCourseName = course?.CatalogCourse?.CourseNameAr ?? string.Empty;
 
         var units = await unitRepository.GetListAsync(x => x.PlanItemId == entity.Id);
         dto.UnitIds = units.Select(u => u.UnitId).ToList();

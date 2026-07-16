@@ -120,6 +120,7 @@ public class PriceQuoteAppService(
         await repository.DeleteAsync(id);
     }
 
+    [Authorize(TrainingExecutionPermissions.PriceQuotes.Approve)]
     public async Task ApproveAsync(Guid id)
     {
         var entity = await repository.GetAsync(id);
@@ -127,6 +128,7 @@ public class PriceQuoteAppService(
         await repository.UpdateAsync(entity, autoSave: true);
     }
 
+    [Authorize(TrainingExecutionPermissions.PriceQuotes.Approve)]
     public async Task RejectAsync(Guid id)
     {
         var entity = await repository.GetAsync(id);

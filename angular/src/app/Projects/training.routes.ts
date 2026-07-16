@@ -102,13 +102,6 @@ export const TRAINING_ROUTES: Routes = [
       import('./plans/plan-approval/plan-approval.component').then(m => m.PlanApprovalComponent),
   },
 
-  // ===== Phase 3: Nominations =====
-  {
-    path: 'nominations',
-    loadComponent: () =>
-      import('./nominations/nomination-list/nomination-list.component').then(m => m.NominationListComponent),
-  },
-
   // ===== Phase 3: Price Quotes =====
   {
     path: 'price-quotes',

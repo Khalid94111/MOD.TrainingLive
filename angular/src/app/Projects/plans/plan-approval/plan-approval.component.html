@@ -83,57 +83,57 @@
     </div>
   </div>
 
-  <!-- ITEMS TABLE -->
-  <div class="gtms-table-wrap">
-    <table class="gtms-table">
-      <thead>
-        <tr>
-          <th style="width:30px"></th>
-          <th>الدورة</th>
-          <th class="center">النوع</th>
-          <th class="center">الأولوية</th>
-          <th class="center">👥 مرشحون</th>
-          <th class="center">الوحدة</th>
-          <th class="center">الحالة</th>
-          <th class="center">ملاحظات</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (item of items(); track trackById($index, item)) {
-          <tr class="item-row"
-              [class.item-expanded]="isItemExpanded(item.id!)"
-              [class.warning-row]="isMissingCost(item)"
-              [class.item-returned]="item.isReturned"
-              (click)="toggleItemDetail(item.id!)">
-            <td class="center">
-              @if (isItemLoading(item.id!)) { <span class="spinner"></span> }
-              @else { <span class="expand-arrow" [class.open]="isItemExpanded(item.id!)">▸</span> }
-            </td>
-            <td>
-              <span class="cell-bold" [style.color]="isMissingCost(item) ? '#dc2626' : ''">
-                @if (isMissingCost(item)) { ⚠️ }
-                {{ item.tenantCourseNameAr }}
-              </span>
-              @if (item.tenantCourseNameEn) { <span class="cell-sub">{{ item.tenantCourseNameEn }}</span> }
-              @if (item.isReturned) { <span class="return-inline-badge">🔙 مُعاد</span> }
-            </td>
-            <td class="center"><span class="badge" [class]="getCourseTypeBadge(item.courseType)">{{ getCourseTypeText(item.courseType) }}</span></td>
-            <td class="center"><span class="badge" [class]="'priority-' + item.priority">{{ item.priority }}</span></td>
-            <td class="center"><span class="nominees-pill">👥 {{ item.nomineesCount ?? 0 }}</span></td>
-            <td class="center" style="font-size:0.78rem; color:#64748b;">{{ item.unitName || '—' }}</td>
-            <td class="center">
-              @if (item.isReturned) { <span class="badge badge-submitted">مُعاد</span> }
-              @else { <span class="badge badge-open">عادي</span> }
-            </td>
-            <td class="center" (click)="$event.stopPropagation()">
-              <button class="btn-icon" title="ملاحظات" (click)="openItemNotes(item, $event)">💬</button>
-            </td>
-          </tr>
+  <!-- COURSE CARDS -->
+  <div class="course-cards-grid">
+    @for (item of items(); track trackById($index, item)) {
+      <div class="course-card"
+           [class.card-returned]="item.isReturned"
+           [class.card-warning]="isMissingCost(item)"
+           [class.card-expanded]="isItemExpanded(item.id!)">
 
-          @if (isItemExpanded(item.id!)) {
-            <tr class="detail-row">
-              <td colspan="8">
-                <div class="inline-detail-wrap">
+        <!-- Card head -->
+        <div class="course-card-head">
+          <div class="course-card-title">
+            <span class="course-card-name">
+              @if (isMissingCost(item)) { <span class="warn-dot">⚠️</span> }
+              {{ item.tenantCourseNameAr }}
+            </span>
+            @if (item.tenantCourseNameEn) { <span class="course-card-name-en">{{ item.tenantCourseNameEn }}</span> }
+          </div>
+          <div class="course-card-badges">
+            <span class="badge" [class]="getCourseTypeBadge(item.courseType)">{{ getCourseTypeText(item.courseType) }}</span>
+            @if (item.isReturned) { <span class="badge badge-submitted">🔙 مُعاد</span> }
+          </div>
+        </div>
+
+        <!-- Card quick facts -->
+        <div class="course-card-facts">
+          <div class="fact"><span class="fact-label">🏢 الوحدة</span><span class="fact-value">{{ item.unitName || '—' }}</span></div>
+          <div class="fact"><span class="fact-label">👥 المرشحون</span><span class="fact-value">{{ item.nomineesCount ?? 0 }}</span></div>
+          <div class="fact"><span class="fact-label">🎯 الأولوية</span><span class="fact-value">{{ item.priority }}</span></div>
+          <div class="fact"><span class="fact-label">📅 الربع</span><span class="fact-value">{{ getQuarterText(item.preferredQuarter) }}</span></div>
+          @if (item.courseType !== 0) {
+            <div class="fact fact-cost">
+              <span class="fact-label">💰 التكلفة</span>
+              @if (isMissingCost(item)) { <span class="fact-value cost-missing">⚠️ بدون تكلفة</span> }
+              @else { <span class="fact-value cost-value">{{ formatCost(item.estimatedCost) }} ر.ع</span> }
+            </div>
+          }
+        </div>
+
+        <!-- Card actions -->
+        <div class="course-card-actions">
+          <button class="btn btn-outline btn-sm" (click)="toggleItemDetail(item.id!)">
+            @if (isItemLoading(item.id!)) { <span class="spinner"></span> جارٍ التحميل… }
+            @else if (isItemExpanded(item.id!)) { ▲ إخفاء التفاصيل }
+            @else { ▼ عرض التفاصيل }
+          </button>
+          <button class="btn btn-ghost btn-sm" (click)="openItemNotes(item, $event)">💬 ملاحظات</button>
+        </div>
+
+        <!-- Expanded detail (inside the card) -->
+        @if (isItemExpanded(item.id!)) {
+          <div class="course-card-detail">
                   <div class="detail-grid-v3">
                     <!-- Course detail (read-only) -->
                     <div class="course-detail-card">
@@ -246,15 +246,12 @@
                       </table>
                     </div>
                   }
-                </div>
-              </td>
-            </tr>
-          }
-        } @empty {
-          <tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📋</div>لا توجد دورات</div></td></tr>
+          </div>
         }
-      </tbody>
-    </table>
+      </div>
+    } @empty {
+      <div class="empty-state"><div class="empty-icon">📋</div>لا توجد دورات</div>
+    }
   </div>
 </div>
 

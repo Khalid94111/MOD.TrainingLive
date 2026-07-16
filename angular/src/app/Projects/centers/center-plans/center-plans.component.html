@@ -1,201 +1,467 @@
-<!-- Submission Window Section (TD Only) -->
-<div class="card window-card">
-  <div class="card-header">
-    <span class="card-title">📅 {{ '::Training.SubmissionWindow' | abpLocalization }}</span>
-    <span class="td-badge">TD Only</span>
-  </div>
-  <div class="card-body">
-    <div class="window-form">
-      <div class="form-field">
-        <label class="field-label">{{ '::Training.WindowYear' | abpLocalization }}</label>
-        <dx-number-box [value]="windowYear()" (valueChange)="windowYear.set($event)" [min]="2020" [max]="2050"></dx-number-box>
+<div class="cp-page">
+  <!-- ════════════════════════════════════════
+       HEADER BANNER
+       ════════════════════════════════════════ -->
+  <div class="header-banner">
+    <div class="header-banner-bg"></div>
+    <div class="header-banner-pattern"></div>
+    <div class="header-banner-content">
+      <div class="header-banner-left">
+        <div class="header-banner-icon"><span>📋</span></div>
+        <div class="header-banner-text">
+          <h1 class="header-banner-title">{{ '::Training.CenterPlans' | abpLocalization }}</h1>
+          <p class="header-banner-desc">{{ '::Training.ManageCenterPlans' | abpLocalization }}</p>
+        </div>
       </div>
-      <div class="form-field">
-        <label class="field-label">{{ '::Training.WindowOpenDate' | abpLocalization }}</label>
-        <dx-date-box [value]="windowOpenDate()" (valueChange)="setWindowOpenDate($event)" type="date"></dx-date-box>
-      </div>
-      <div class="form-field">
-        <label class="field-label">{{ '::Training.WindowCloseDate' | abpLocalization }}</label>
-        <dx-date-box [value]="windowCloseDate()" (valueChange)="setWindowCloseDate($event)" type="date"></dx-date-box>
-      </div>
-      <div class="form-field form-field-btn">
-        <dx-button [text]="'::Training.OpenWindow' | abpLocalization" type="success" stylingMode="contained" icon="event" (onClick)="onOpenWindow()"></dx-button>
+      <div class="header-banner-right">
+        @if (canCreatePlan()) {
+          <button type="button" class="btn btn-white" (click)="onAddPlan()">
+            <span class="btn-icon-symbol">+</span>
+            <span>{{ '::Training.CreatePlan' | abpLocalization }}</span>
+          </button>
+        }
       </div>
     </div>
+  </div>
 
-    @if (currentWindow()) {
-      <div [class]="'window-status-banner ' + (currentWindow().isOpen ? 'banner-open' : 'banner-closed')">
-        <span class="banner-icon">{{ currentWindow().isOpen ? '✅' : '🔒' }}</span>
-        <div class="banner-info">
-          <div class="banner-title">{{ windowStatusText }} — {{ currentWindow().year }}</div>
-          <div class="banner-detail">{{ currentWindow().openDate | date:'mediumDate' }} — {{ currentWindow().closeDate | date:'mediumDate' }}</div>
+  <!-- ════════════════════════════════════════
+       SUBMISSION WINDOW CARD
+       ════════════════════════════════════════ -->
+  @if (canManageWindows()) {
+    <div class="window-card">
+      <div class="window-card-header">
+        <div class="window-card-title">
+          <span class="window-icon">📅</span>
+          <span>{{ '::Training.SubmissionWindow' | abpLocalization }}</span>
         </div>
-        <span [class]="'status-badge ' + windowStatusClass">{{ windowStatusText }}</span>
       </div>
-    } @else {
-      <div class="window-status-banner banner-notset">
-        <span class="banner-icon">📅</span>
-        <div class="banner-info"><div class="banner-title">{{ '::Training.WindowNotSet' | abpLocalization }}</div></div>
+      <div class="window-card-body">
+        <div class="window-form">
+          <div class="form-field">
+            <label class="field-label">{{ '::Training.WindowYear' | abpLocalization }}</label>
+            <input
+              type="number"
+              class="form-input"
+              [value]="windowYear()"
+              (input)="windowYear.set(+$any($event.target).value)"
+              min="2020"
+              max="2050"
+            />
+          </div>
+          <div class="form-field">
+            <label class="field-label">{{ '::Training.WindowOpenDate' | abpLocalization }}</label>
+            <input
+              type="date"
+              class="form-input"
+              [value]="windowOpenDate() | date:'yyyy-MM-dd'"
+              (input)="setWindowOpenDate($any($event.target).value)"
+            />
+          </div>
+          <div class="form-field">
+            <label class="field-label">{{ '::Training.WindowCloseDate' | abpLocalization }}</label>
+            <input
+              type="date"
+              class="form-input"
+              [value]="windowCloseDate() | date:'yyyy-MM-dd'"
+              (input)="setWindowCloseDate($any($event.target).value)"
+            />
+          </div>
+          <div class="form-field form-field-btn" style="display: flex; gap: 8px;">
+            <button type="button" class="btn btn-success" (click)="onOpenWindow()" [disabled]="isWindowSaving()">
+              @if (isWindowSaving()) {
+                <span class="spinner"></span>
+              }
+              {{ '::Training.OpenWindow' | abpLocalization }}
+            </button>
+            @if (currentWindow()?.isOpen) {
+              <button type="button" class="btn btn-danger" (click)="onCloseWindow()" [disabled]="isWindowSaving()">
+                {{ '::Training.CloseWindow' | abpLocalization }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="window-status-banner" [class]="windowStatusBannerClass">
+          <span class="banner-icon">{{ currentWindow()?.isOpen ? '✅' : (currentWindow() ? '🔒' : '📅') }}</span>
+          <div class="banner-info">
+            <div class="banner-title">{{ windowStatusText }} — {{ windowYear() }}</div>
+            @if (currentWindow()) {
+              <div class="banner-detail">
+                {{ currentWindow().openDate | date:'mediumDate' }} — {{ currentWindow().closeDate | date:'mediumDate' }}
+              </div>
+            }
+          </div>
+          <span [class]="windowStatusClass">{{ windowStatusText }}</span>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ════════════════════════════════════════
+       STAT CARDS
+       ════════════════════════════════════════ -->
+  <div class="stat-cards-row">
+    <div class="stat-card-modern card-total">
+      <div class="stat-card-glow"></div>
+      <div class="stat-card-body">
+        <div class="stat-card-icon">📋</div>
+        <div class="stat-card-value">{{ totalCount() }}</div>
+        <div class="stat-card-label">{{ '::Training.Common.Total' | abpLocalization }}</div>
+      </div>
+      <div class="stat-card-bar" [style.width.%]="100"></div>
+    </div>
+    <div class="stat-card-modern card-draft">
+      <div class="stat-card-glow"></div>
+      <div class="stat-card-body">
+        <div class="stat-card-icon">📝</div>
+        <div class="stat-card-value">{{ draftCount() }}</div>
+        <div class="stat-card-label">{{ '::Training.CenterPlanStatus.Draft' | abpLocalization }}</div>
+      </div>
+      <div class="stat-card-bar" [style.width.%]="totalCount() ? (draftCount() / totalCount() * 100) : 0"></div>
+    </div>
+    <div class="stat-card-modern card-pending">
+      <div class="stat-card-glow"></div>
+      <div class="stat-card-body">
+        <div class="stat-card-icon">📤</div>
+        <div class="stat-card-value">{{ submittedCount() }}</div>
+        <div class="stat-card-label">{{ '::Training.CenterPlanStatus.Submitted' | abpLocalization }}</div>
+      </div>
+      <div class="stat-card-bar" [style.width.%]="totalCount() ? (submittedCount() / totalCount() * 100) : 0"></div>
+    </div>
+    <div class="stat-card-modern card-approved">
+      <div class="stat-card-glow"></div>
+      <div class="stat-card-body">
+        <div class="stat-card-icon">✅</div>
+        <div class="stat-card-value">{{ approvedCount() }}</div>
+        <div class="stat-card-label">{{ '::Training.CenterPlanStatus.Approved' | abpLocalization }}</div>
+      </div>
+      <div class="stat-card-bar" [style.width.%]="totalCount() ? (approvedCount() / totalCount() * 100) : 0"></div>
+    </div>
+    <div class="stat-card-modern card-rejected">
+      <div class="stat-card-glow"></div>
+      <div class="stat-card-body">
+        <div class="stat-card-icon">❌</div>
+        <div class="stat-card-value">{{ rejectedCount() }}</div>
+        <div class="stat-card-label">{{ '::Training.CenterPlanStatus.Rejected' | abpLocalization }}</div>
+      </div>
+      <div class="stat-card-bar" [style.width.%]="totalCount() ? (rejectedCount() / totalCount() * 100) : 0"></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       FILTERS BAR
+       ════════════════════════════════════════ -->
+  <div class="filters-bar-modern">
+    <div class="filter-group">
+      <label class="filter-label">{{ '::Training.TrainingCenter' | abpLocalization }}</label>
+      <select class="filter-select" [value]="filterCenterId() ?? ''" (change)="filterCenterId.set($any($event.target).value === '' ? null : $any($event.target).value)">
+        <option value="">{{ '::Training.AllCenters' | abpLocalization }}</option>
+        @for (c of centers(); track c.id) {
+          <option [value]="c.id">{{ c.centerNameAr }}</option>
+        }
+      </select>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">{{ '::Training.WindowYear' | abpLocalization }}</label>
+      <input
+        type="number"
+        class="filter-input"
+        [value]="filterYear()"
+        (input)="filterYear.set(+$any($event.target).value)"
+        min="2020"
+        max="2050"
+      />
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">{{ '::Training.Status' | abpLocalization }}</label>
+      <select class="filter-select" [value]="filterStatus() === null ? '' : filterStatus()" (change)="filterStatus.set($any($event.target).value === '' ? null : +$any($event.target).value)">
+        @for (item of statusFilterItems; track item.value) {
+          <option [value]="item.value === null ? '' : item.value">{{ item.text }}</option>
+        }
+      </select>
+    </div>
+    <div class="filter-group filter-actions">
+      <button type="button" class="btn btn-primary" (click)="onSearch()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        {{ '::Training.Search' | abpLocalization }}
+      </button>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       DATA TABLE
+       ════════════════════════════════════════ -->
+  <div class="table-card">
+    <div class="table-scroll-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="th-index">#</th>
+            <th class="th-center">{{ '::Training.TrainingCenter' | abpLocalization }}</th>
+            <th class="th-year">{{ '::Training.WindowYear' | abpLocalization }}</th>
+            <th class="th-status">{{ '::Training.Status' | abpLocalization }}</th>
+            <th class="th-date">{{ '::Training.SubmittedAt' | abpLocalization }}</th>
+            <th class="th-date">{{ '::Training.ApprovedAt' | abpLocalization }}</th>
+            <th class="th-count">{{ '::Training.CourseCount' | abpLocalization }}</th>
+            <th class="th-actions">{{ '::Training.Actions' | abpLocalization }}</th>
+            <th class="th-expand"></th>
+          </tr>
+        </thead>
+
+        @if (isLoading()) {
+          <tbody>
+            @for (_ of [1,2,3,4,5]; track $index) {
+              <tr class="skel-row"><td colspan="9"><div class="skel-line-long"></div></td></tr>
+            }
+          </tbody>
+        } @else if (plans().length === 0) {
+          <tbody>
+            <tr>
+              <td colspan="9" class="empty-cell">
+                <div class="empty-hero">
+                  <div class="empty-hero-icon">📋</div>
+                  <div class="empty-hero-title">{{ '::Training.CenterPlan' | abpLocalization }}</div>
+                  <div class="empty-hero-desc">{{ '::Training.NoPlansHint' | abpLocalization }}</div>
+                  @if (canCreatePlan()) {
+                    <button type="button" class="btn btn-primary" (click)="onAddPlan()">
+                      <span class="btn-icon-symbol">+</span>
+                      {{ '::Training.CreatePlan' | abpLocalization }}
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        } @else {
+          <tbody>
+            @for (plan of plans(); track plan.id; let idx = $index) {
+              <tr class="data-row" [style.animation-delay.ms]="idx * 30">
+                <td class="td-index">
+                  <span class="index-badge">{{ (currentPage() - 1) * pageSize() + idx + 1 }}</span>
+                </td>
+                <td class="td-center">
+                  <span class="pill pill--indigo">🏛️ {{ plan.centerName ?? getCenterName(plan.centerId) }}</span>
+                </td>
+                <td class="td-year">{{ plan.year }}</td>
+                <td class="td-status">
+                  <span [class]="getStatusClass(plan.status)">{{ getStatusText(plan.status) }}</span>
+                </td>
+                <td class="td-date">{{ plan.submittedAt | date:'mediumDate' }}</td>
+                <td class="td-date">{{ plan.approvedAt | date:'mediumDate' }}</td>
+                <td class="td-count">
+                  <span class="count-badge">{{ plan.itemCount ?? 0 }}</span>
+                </td>
+                <td class="td-actions">
+                  <div class="actions-group">
+                    @switch (plan.status) {
+                      @case (CenterPlanStatus.Draft) {
+                        @if (canSubmitPlan()) {
+                          <button type="button" class="action-btn action-submit" (click)="onSubmit(plan.id!)" [title]="'::Training.SubmitForApproval' | abpLocalization">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                          </button>
+                        }
+                        @if (canManagePlanItems()) {
+                          <button type="button" class="action-btn action-add" (click)="onAddItem(plan.id!)" [title]="'::Training.AddCourseToPlan' | abpLocalization">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                          </button>
+                        }
+                        @if (canDeletePlan()) {
+                          <button type="button" class="action-btn action-delete" (click)="onDeletePlan(plan)" [title]="'::Delete' | abpLocalization">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                          </button>
+                        }
+                      }
+                      @case (CenterPlanStatus.Submitted) {
+                        @if (canApprovePlan()) {
+                          <button type="button" class="action-btn action-approve" (click)="onApprove(plan.id!)" [title]="'::Training.Approve' | abpLocalization">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                          </button>
+                          <button type="button" class="action-btn action-return" (click)="onReturn(plan)" [title]="'::Training.Return' | abpLocalization">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                          </button>
+                          <button type="button" class="action-btn action-reject" (click)="onReject(plan)" [title]="'::Training.Reject' | abpLocalization">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                          </button>
+                        }
+                      }
+                      @default {
+                        <span class="not-assigned">{{ '::Training.NoActions' | abpLocalization }}</span>
+                      }
+                    }
+                  </div>
+                </td>
+                <td class="td-expand">
+                  <button type="button" class="expand-btn" (click)="togglePlanItems(plan)">
+                    {{ isPlanExpanded(plan.id) ? '▲' : '▼' }}
+                  </button>
+                </td>
+              </tr>
+
+              @if (isPlanExpanded(plan.id)) {
+                <tr class="detail-row">
+                  <td colspan="9" class="detail-cell">
+                    <div class="detail-container">
+                      <div class="detail-header">
+                        <span class="detail-title">📝 {{ '::Training.PlanItems' | abpLocalization }}</span>
+                        @if (plan.status === CenterPlanStatus.Draft && canManagePlanItems()) {
+                          <button type="button" class="btn btn-primary btn-sm" (click)="onAddItem(plan.id!)">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            {{ '::Training.AddCourseToPlan' | abpLocalization }}
+                          </button>
+                        }
+                      </div>
+
+                      @if (plan.status === CenterPlanStatus.Rejected && plan.rejectionReason) {
+                        <div class="detail-reason reason-reject">
+                          <strong>{{ '::Training.RejectionReason' | abpLocalization }}:</strong> {{ plan.rejectionReason }}
+                        </div>
+                      }
+                      @if (plan.status === CenterPlanStatus.Draft && plan.returnReason) {
+                        <div class="detail-reason reason-return">
+                          <strong>{{ '::Training.ReturnReason' | abpLocalization }}:</strong> {{ plan.returnReason }}
+                        </div>
+                      }
+
+                      @if (isPlanItemsLoading(plan.id)) {
+                        <div class="detail-loading">
+                          <span class="spinner"></span>
+                          <span>{{ '::Training.LoadingPlanItems' | abpLocalization }}</span>
+                        </div>
+                      } @else if (getPlanItems(plan.id).length === 0) {
+                        <div class="detail-empty">{{ '::Training.NoPlanItems' | abpLocalization }}</div>
+                      } @else {
+                        <table class="detail-table">
+                          <thead>
+                            <tr>
+                              <th>{{ '::Training.Course' | abpLocalization }}</th>
+                              <th>{{ '::Training.BeneficiaryType' | abpLocalization }}</th>
+                              <th>{{ '::Training.EstimatedStartDate' | abpLocalization }}</th>
+                              <th>{{ '::Training.EstimatedEndDate' | abpLocalization }}</th>
+                              <th>{{ '::Training.Capacity' | abpLocalization }}</th>
+                              <th>{{ '::Training.BatchNumber' | abpLocalization }}</th>
+                              <th>{{ '::Training.BeneficiaryUnits' | abpLocalization }}</th>
+                              @if (plan.status === CenterPlanStatus.Draft) {
+                                <th>{{ '::Training.Actions' | abpLocalization }}</th>
+                              }
+                            </tr>
+                          </thead>
+                          <tbody>
+                            @for (item of getPlanItems(plan.id); track item.id) {
+                              <tr>
+                                <td>{{ item.tenantCourseName ?? '—' }}</td>
+                                <td>
+                                  <span [class]="item.beneficiaryType === 0 ? 'type-badge type-internal' : 'type-badge type-shared'">
+                                    {{ item.beneficiaryType === 0 ? ('::Training.BeneficiaryType.Internal' | abpLocalization) : ('::Training.BeneficiaryType.Shared' | abpLocalization) }}
+                                  </span>
+                                </td>
+                                <td>{{ item.estimatedStartDate | date:'mediumDate' }}</td>
+                                <td>{{ item.estimatedEndDate | date:'mediumDate' }}</td>
+                                <td>{{ item.capacity ?? 0 }}</td>
+                                <td>{{ item.batchNumber ?? '—' }}</td>
+                                <td>
+                                  @if (item.unitIds?.length > 0) {
+                                    <span class="units-badge">{{ item.unitIds.length }} {{ '::Training.UnitsSelected' | abpLocalization }}</span>
+                                  } @else {
+                                    <span class="no-data">—</span>
+                                  }
+                                </td>
+                                @if (plan.status === CenterPlanStatus.Draft) {
+                                  <td>
+                                    <div class="actions-group">
+                                      <button type="button" class="action-btn action-edit" (click)="onEditItem(plan.id!, item.id)" [title]="'::Edit' | abpLocalization">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                      </button>
+                                      @if (canDeletePlanItems()) {
+                                        <button type="button" class="action-btn action-delete" (click)="onDeleteItem(plan.id!, item.id)" [title]="'::Delete' | abpLocalization">
+                                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                        </button>
+                                      }
+                                    </div>
+                                  </td>
+                                }
+                              </tr>
+                            }
+                          </tbody>
+                        </table>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        }
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages() > 1) {
+      <div class="pagination-bar">
+        <button type="button" class="page-btn" [disabled]="currentPage() === 1" (click)="onPageChange(currentPage() - 1)">‹</button>
+        @for (page of pageNumbers(); track page) {
+          <button type="button" class="page-btn" [class.active]="currentPage() === page" (click)="onPageChange(page)">{{ page }}</button>
+        }
+        <button type="button" class="page-btn" [disabled]="currentPage() === totalPages()" (click)="onPageChange(currentPage() + 1)">›</button>
       </div>
     }
   </div>
+
+  <!-- Info Banner -->
+  <div class="info-banner">
+    ℹ️ {{ '::Training.WorkflowButtonsInfo' | abpLocalization }}
+  </div>
 </div>
 
-<!-- Center Plans Section -->
-<div class="card plans-card">
-  <div class="card-header">
-    <span class="card-title">📋 {{ '::Training.CenterPlans' | abpLocalization }}</span>
-    <dx-button [text]="'::Training.CreatePlan' | abpLocalization" type="default" stylingMode="contained" icon="plus" (onClick)="onAddPlan()"></dx-button>
-  </div>
-  <div class="card-body">
-    <!-- Filters -->
-    <div class="filter-row">
-      <div class="form-field">
-        <label class="field-label">{{ '::Training.TrainingCenter' | abpLocalization }}</label>
-        <dx-select-box [value]="filterCenterId()" (valueChange)="filterCenterId.set($event); onFilterChanged()" [items]="centers()" valueExpr="id" displayExpr="centerNameAr" [showClearButton]="true" [placeholder]="'::Training.AllCenters' | abpLocalization"></dx-select-box>
+<!-- ════════════════════════════════════════
+     CREATE PLAN DIALOG
+     ════════════════════════════════════════ -->
+@if (isPlanDialogVisible()) {
+  <div class="modal-backdrop" (click)="$event.target === $event.currentTarget && !isPlanSaving() ? isPlanDialogVisible.set(false) : null">
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h3 class="modal-title">{{ '::Training.CreatePlan' | abpLocalization }}</h3>
+        <button type="button" class="modal-close" (click)="isPlanDialogVisible.set(false)" [disabled]="isPlanSaving()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
       </div>
-      <div class="form-field">
-        <label class="field-label">{{ '::Training.WindowYear' | abpLocalization }}</label>
-        <dx-number-box [value]="filterYear()" (valueChange)="filterYear.set($event); onFilterChanged()" [min]="2020" [max]="2050"></dx-number-box>
-      </div>
-      <div class="form-field">
-        <label class="field-label">{{ '::Status' | abpLocalization }}</label>
-        <dx-select-box [value]="filterStatus()" (valueChange)="filterStatus.set($event); onFilterChanged()" [items]="statusFilterItems" valueExpr="value" displayExpr="text"></dx-select-box>
-      </div>
-    </div>
-
-    <!-- Plans Master Grid -->
- <dx-data-grid
-  #plansGrid
-  [dataSource]="dataSource"
-  [showBorders]="true"
-  [columnAutoWidth]="true"
-  [rowAlternationEnabled]="true"
-  [hoverStateEnabled]="true"
-  [remoteOperations]="true"
-  keyExpr="id"
-  (onRowExpanding)="onRowExpanding($event)"
->
-      <dxo-paging [pageSize]="10"></dxo-paging>
-      <dxo-pager [showPageSizeSelector]="true" [allowedPageSizes]="[10, 25]" [showInfo]="true"></dxo-pager>
-      <dxo-master-detail [enabled]="true" template="planDetail"></dxo-master-detail>
-
-      <dxi-column dataField="centerName" [caption]="'::Training.TrainingCenter' | abpLocalization" [width]="200"></dxi-column>
-      <dxi-column dataField="year" [caption]="'::Training.WindowYear' | abpLocalization" [width]="80" alignment="center"></dxi-column>
-      <dxi-column dataField="status" [caption]="'::Status' | abpLocalization" [width]="120" alignment="center" cellTemplate="statusTemplate"></dxi-column>
-      <dxi-column dataField="submittedAt" [caption]="'::Training.SubmittedAt' | abpLocalization" [width]="130" dataType="date"></dxi-column>
-      <dxi-column dataField="approvedAt" [caption]="'::Training.ApprovedAt' | abpLocalization" [width]="130" dataType="date"></dxi-column>
-      <dxi-column dataField="itemCount" [caption]="'::Training.CourseCount' | abpLocalization" [width]="80" alignment="center" cellTemplate="itemCountTemplate"></dxi-column>
-      <dxi-column [caption]="'::Actions' | abpLocalization" [width]="250" alignment="center" cellTemplate="planActionsTemplate" [allowSorting]="false" [allowFiltering]="false"></dxi-column>
-
-      <div *dxTemplate="let data of 'statusTemplate'">
-        <span [class]="'status-badge ' + getStatusClass(data.value)">{{ getStatusText(data.value) }}</span>
-      </div>
-
-      <div *dxTemplate="let data of 'itemCountTemplate'">
-        <span class="count-badge">{{ data.value }}</span>
-      </div>
-
-      <div *dxTemplate="let data of 'planActionsTemplate'">
-        <div class="action-buttons">
-          @switch (data.data.status) {
-            @case (CenterPlanStatus.Draft) {
-              <dx-button [text]="'::Training.SubmitForApproval' | abpLocalization" type="default" stylingMode="contained" (onClick)="onSubmit(data.data.id)"></dx-button>
-              <button class="action-btn action-edit" (click)="onAddItem(data.data.id)">✏️</button>
-              <button class="action-btn action-delete" (click)="onDeletePlan(data.data.id)">🗑️</button>
+      <div class="modal-body">
+        <div class="form-field">
+          <label class="field-label">{{ '::Training.TrainingCenter' | abpLocalization }} <span class="required-mark">*</span></label>
+          <select class="form-input" [value]="planFormCenterId()" (change)="planFormCenterId.set($any($event.target).value)">
+            <option value="">{{ '::Training.SelectCenter' | abpLocalization }}</option>
+            @for (c of centers(); track c.id) {
+              <option [value]="c.id">{{ c.centerNameAr }}</option>
             }
-            @case (CenterPlanStatus.Submitted) {
-              <dx-button [text]="'::Training.Approve' | abpLocalization" type="success" stylingMode="contained" (onClick)="onApprove(data.data.id)"></dx-button>
-              <dx-button [text]="'::Training.Reject' | abpLocalization" type="danger" stylingMode="contained" (onClick)="onReject(data.data.id)"></dx-button>
-              <dx-button [text]="'::Training.Return' | abpLocalization" type="normal" stylingMode="contained" (onClick)="onReturn(data.data.id)"></dx-button>
-            }
-            @default {
-              <span class="no-actions">{{ '::Training.NoActions' | abpLocalization }}</span>
-            }
-          }
+          </select>
+        </div>
+        <div class="form-field">
+          <label class="field-label">{{ '::Training.WindowYear' | abpLocalization }} <span class="required-mark">*</span></label>
+          <input
+            type="number"
+            class="form-input"
+            [value]="planFormYear()"
+            (input)="planFormYear.set(+$any($event.target).value)"
+            min="2020"
+            max="2050"
+          />
         </div>
       </div>
-
-      <!-- Master-Detail: Plan Items -->
-   <div *dxTemplate="let detail of 'planDetail'" class="detail-container">
-  <div class="detail-header">
-    <span class="detail-title">📝 {{ '::Training.PlanItems' | abpLocalization }}</span>
-    @if (detail.data.status === CenterPlanStatus.Draft) {
-      <dx-button [text]="'::Training.AddCourse' | abpLocalization" type="default" stylingMode="contained" icon="plus" (onClick)="onAddItem(detail.data.id)"></dx-button>
-    }
-  </div>
-
-  <dx-data-grid
-    [dataSource]="getPlanItems(detail.data.id)"
-    [showBorders]="true"
-    [columnAutoWidth]="true"
-    [hoverStateEnabled]="true"
-    keyExpr="id"
-  >
-          <dxi-column dataField="tenantCourseName" [caption]="'::Training.Course' | abpLocalization" [width]="200"></dxi-column>
-          <dxi-column dataField="beneficiaryType" [caption]="'::Training.BeneficiaryType' | abpLocalization" [width]="130" alignment="center" cellTemplate="beneficiaryTemplate"></dxi-column>
-          <dxi-column dataField="estimatedStartDate" [caption]="'::Training.EstimatedStartDate' | abpLocalization" [width]="130" dataType="date"></dxi-column>
-          <dxi-column dataField="estimatedEndDate" [caption]="'::Training.EstimatedEndDate' | abpLocalization" [width]="130" dataType="date"></dxi-column>
-          <dxi-column dataField="capacity" [caption]="'::Training.Capacity' | abpLocalization" [width]="80" alignment="center"></dxi-column>
-          <dxi-column dataField="batchNumber" [caption]="'::Training.BatchNumber' | abpLocalization" [width]="80" alignment="center"></dxi-column>
-          <dxi-column dataField="unitIds" [caption]="'::Training.BeneficiaryUnits' | abpLocalization" [width]="100" alignment="center" cellTemplate="unitsTemplate"></dxi-column>
-
-          @if (detail.data.status === CenterPlanStatus.Draft) {
-            <dxi-column [caption]="'::Actions' | abpLocalization" [width]="80" alignment="center" cellTemplate="itemActionsTemplate" [allowSorting]="false"></dxi-column>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" (click)="isPlanDialogVisible.set(false)" [disabled]="isPlanSaving()">{{ '::Cancel' | abpLocalization }}</button>
+        <button type="button" class="btn btn-primary" (click)="onCreatePlan()" [disabled]="isPlanSaving()">
+          @if (isPlanSaving()) {
+            <span class="spinner"></span>
           }
-
-          <div *dxTemplate="let item of 'beneficiaryTemplate'">
-            <span [class]="item.value === 0 ? 'type-badge type-internal' : 'type-badge type-shared'">
-              {{ item.value === 0 ? ('::Training.BeneficiaryType.Internal' | abpLocalization) : ('::Training.BeneficiaryType.Shared' | abpLocalization) }}
-            </span>
-          </div>
-
-          <div *dxTemplate="let item of 'unitsTemplate'">
-            @if (item.value && item.value.length > 0) {
-              <span class="units-badge">{{ item.value.length }} {{ '::Training.UnitsSelected' | abpLocalization }}</span>
-            } @else {
-              <span class="no-data">—</span>
-            }
-          </div>
-
-          <div *dxTemplate="let item of 'itemActionsTemplate'">
-            <div class="action-buttons">
-              <button class="action-btn action-edit" (click)="onEditItem(detail.data.id, item.data.id)">✏️</button>
-              <button class="action-btn action-delete">🗑️</button>
-            </div>
-          </div>
-        </dx-data-grid>
+          {{ '::Save' | abpLocalization }}
+        </button>
       </div>
-    </dx-data-grid>
-
-    <div class="info-banner">ℹ️ {{ '::Training.WorkflowButtonsInfo' | abpLocalization }}</div>
-  </div>
-</div>
-
-<!-- Create Plan Dialog -->
-<dx-popup
-  [visible]="isPlanDialogVisible()"
-  (visibleChange)="isPlanDialogVisible.set($event)"
-  [title]="'::Training.CreatePlan' | abpLocalization"
-  [showCloseButton]="true"
-  [dragEnabled]="true"
-  [width]="450"
-  [height]="'auto'"
-  [toolbarItems]="planDialogToolbarItems!"
->
-  <div *dxTemplate="let data of 'content'" class="dialog-content">
-    <div class="form-field">
-      <label class="field-label">{{ '::Training.TrainingCenter' | abpLocalization }} <span class="required-mark">*</span></label>
-      <dx-select-box [value]="planFormCenterId()" (valueChange)="planFormCenterId.set($event)" [items]="centers()" valueExpr="id" displayExpr="centerNameAr"></dx-select-box>
-    </div>
-    <div class="form-field">
-      <label class="field-label">{{ '::Training.WindowYear' | abpLocalization }} <span class="required-mark">*</span></label>
-      <dx-number-box [value]="planFormYear()" (valueChange)="planFormYear.set($event)" [min]="2020" [max]="2050"></dx-number-box>
     </div>
   </div>
-</dx-popup>
+}
 
-<!-- Plan Item Dialog -->
+<!-- ════════════════════════════════════════
+     PLAN ITEM DIALOG
+     ════════════════════════════════════════ -->
 @if (isItemDialogVisible()) {
   <app-center-plan-item-dialog
     [visible]="isItemDialogVisible()"
@@ -204,4 +470,60 @@
     (visibleChange)="isItemDialogVisible.set($event)"
     (saved)="onItemSaved()"
   ></app-center-plan-item-dialog>
+}
+
+<!-- ════════════════════════════════════════
+     DELETE CONFIRMATION DIALOG
+     ════════════════════════════════════════ -->
+<gtms-confirm-dialog
+  [isOpen]="isDeleteDialogVisible()"
+  [danger]="true"
+  [title]="deleteDialogTitle()"
+  [message]="deleteDialogMessage()"
+  [detail]="deleteTargetLabel()"
+  confirmText="{{ '::Yes' | abpLocalization }}"
+  cancelText="{{ '::Cancel' | abpLocalization }}"
+  (confirmed)="planToDelete() ? onConfirmDeletePlan() : onConfirmDeleteItem()"
+  (cancelled)="onCancelDelete()">
+</gtms-confirm-dialog>
+
+<gtms-confirm-dialog
+  [isOpen]="isCloseWindowDialogVisible()"
+  [title]="'::Training.CloseWindowConfirmTitle' | abpLocalization"
+  [message]="'::Training.CloseWindowConfirmMessage' | abpLocalization"
+  [detail]="currentWindow()?.year?.toString() ?? ''"
+  confirmText="{{ '::Training.CloseWindow' | abpLocalization }}"
+  cancelText="{{ '::Cancel' | abpLocalization }}"
+  (confirmed)="onConfirmCloseWindow()"
+  (cancelled)="onCancelCloseWindow()">
+</gtms-confirm-dialog>
+@if (isReasonDialogVisible()) {
+<div class="modal-backdrop" (click)="$event.target === $event.currentTarget ? onCancelReason() : null">
+  <div class="modal-content modal-sm">
+    <div class="modal-header">
+      <h3 class="modal-title">{{ reasonDialogTitle() | abpLocalization }}</h3>
+      <button type="button" class="modal-close" (click)="onCancelReason()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-field">
+        <label class="field-label">{{ '::Training.Reason' | abpLocalization }} <span class="required-mark">*</span></label>
+        <textarea
+          class="form-input"
+          rows="4"
+          [value]="reasonText()"
+          (input)="updateReasonText($any($event.target).value)"
+          placeholder="{{ '::Training.EnterReason' | abpLocalization }}"
+        ></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" (click)="onCancelReason()">{{ '::Cancel' | abpLocalization }}</button>
+      <button type="button" class="btn btn-primary" (click)="onConfirmReason()">
+        {{ '::Confirm' | abpLocalization }}
+      </button>
+    </div>
+  </div>
+</div>
 }

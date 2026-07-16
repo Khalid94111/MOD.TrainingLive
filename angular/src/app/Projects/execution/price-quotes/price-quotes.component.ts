@@ -1,6 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { CasualCourseService } from 'src/app/proxy/training/casual-courses';
@@ -41,7 +41,7 @@ type ParentArm = 'casualCourse' | 'session';
   selector: 'app-price-quotes',
   templateUrl: './price-quotes.component.html',
   styleUrls: ['./price-quotes.component.scss', '../../shared/gtms-design.scss'],
-  imports: [CommonModule, RouterLink, VarianceChipComponent],
+  imports: [CommonModule, VarianceChipComponent],
 })
 export class PriceQuotesComponent implements OnInit {
   private courseService = inject(CasualCourseService);
