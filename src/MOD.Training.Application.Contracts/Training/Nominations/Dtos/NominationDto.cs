@@ -13,6 +13,7 @@ public class NominationDto : FullAuditedEntityDto<Guid>
     public Guid EmployeeId { get; set; }
     public string EmployeeName { get; set; } = string.Empty; // Resolved
     public string RankNameAr { get; set; } = string.Empty;   // Resolved from HR (Employee.Rank)
+    public string ServiceNumber { get; set; } = string.Empty; // Resolved from HR (Employee)
     public Guid NominatedById { get; set; }
     public string NominatedByName { get; set; } = string.Empty; // Resolved
     public NominationStatus Status { get; set; }

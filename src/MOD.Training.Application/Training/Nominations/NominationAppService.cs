@@ -79,6 +79,7 @@ public class NominationAppService(
             {
                 dto.EmployeeName = emp.FullNameAr;
                 dto.RankNameAr = emp.Rank?.NameAr ?? string.Empty;
+                dto.ServiceNumber = emp.ServiceNumber;
             }
 
             if (nominators.TryGetValue(e.NominatedById, out var nominator))
@@ -240,6 +241,7 @@ public class NominationAppService(
         {
             dto.EmployeeName = emp.FullNameAr;
             dto.RankNameAr = emp.Rank?.NameAr ?? string.Empty;
+            dto.ServiceNumber = emp.ServiceNumber;
         }
 
         var nominator = await employeeResolver.GetByUserIdAsync(entity.NominatedById);

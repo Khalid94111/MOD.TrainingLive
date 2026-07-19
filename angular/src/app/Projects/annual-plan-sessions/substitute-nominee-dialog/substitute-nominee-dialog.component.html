@@ -13,7 +13,7 @@
           <div class="original-name">{{ originalEmployeeName() }}</div>
         </div>
 
-        <!-- Replacement picker -->
+        <!-- Replacement lookup by service number -->
         <div class="field">
           <label>{{ '::Training.AnnualPlan.Substitute.ReplacementLabel' | abpLocalization }}</label>
           @if (loading()) {
@@ -21,28 +21,49 @@
           } @else if (candidates().length === 0) {
             <div class="state-line">{{ '::Training.AnnualPlan.Substitute.NoCandidates' | abpLocalization }}</div>
           } @else {
-            <select class="filter-input" (change)="onReplacementChange($event)">
-              <option value="" [selected]="!fReplacementId()">
-                {{ '::Training.AnnualPlan.Substitute.PickPrompt' | abpLocalization }}
-              </option>
-              @for (c of candidates(); track c.employeeId) {
-                <option [value]="c.employeeId" [selected]="fReplacementId() === c.employeeId">
-                  {{ c.fullNameAr || c.fullNameEn }}
-                  @if (c.serviceNumber) { ({{ c.serviceNumber }}) }
-                </option>
-              }
-            </select>
+            <div class="svc-input-row">
+              <input type="text"
+                     class="filter-input svc-input"
+                     dir="ltr"
+                     inputmode="numeric"
+                     [value]="fServiceNumber()"
+                     (input)="onServiceNumberInput($event)"
+                     (keydown)="onServiceNumberKeydown($event)"
+                     [placeholder]="('::Training.AnnualPlan.Substitute.ServiceNumberPlaceholder' | abpLocalization)" />
+              <button type="button" class="btn-resolve"
+                      [disabled]="!fServiceNumber().trim()"
+                      (click)="onResolve()">
+                {{ '::Training.AnnualPlan.Substitute.ResolveButton' | abpLocalization }}
+              </button>
+            </div>
             <div class="hint">
               {{ '::Training.AnnualPlan.Substitute.SameRankHint' | abpLocalization }}
             </div>
           }
         </div>
 
-        @if (selectedCandidate()?.rankNameAr) {
-          <div class="rank-confirmed">
-            ✓ {{ '::Training.AnnualPlan.Substitute.RankMatchedPrefix' | abpLocalization }}
-            <strong>{{ selectedCandidate()!.rankNameAr }}</strong>
+        <!-- Resolved substitute card -->
+        @if (resolved(); as r) {
+          <div class="resolved-card">
+            <div class="resolved-check">✓</div>
+            <div class="resolved-info">
+              <div class="resolved-name">{{ r.fullNameAr || r.fullNameEn }}</div>
+              <div class="resolved-meta">
+                @if (r.rankNameAr) {
+                  <span class="rank-chip">{{ r.rankNameAr }}</span>
+                }
+                @if (r.serviceNumber) {
+                  <span class="svc-chip">{{ r.serviceNumber }}</span>
+                }
+              </div>
+            </div>
           </div>
+          @if (r.rankNameAr) {
+            <div class="rank-confirmed">
+              ✓ {{ '::Training.AnnualPlan.Substitute.RankMatchedPrefix' | abpLocalization }}
+              <strong>{{ r.rankNameAr }}</strong>
+            </div>
+          }
         }
 
         <!-- Reason -->
@@ -66,7 +87,7 @@
           {{ '::Training.AnnualPlan.Substitute.Cancel' | abpLocalization }}
         </button>
         <button type="button" class="btn-primary"
-                [disabled]="!selectedCandidate()"
+                [disabled]="!resolved()"
                 (click)="onConfirm()">
           {{ '::Training.AnnualPlan.Substitute.Confirm' | abpLocalization }}
         </button>

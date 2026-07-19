@@ -1,6 +1,6 @@
 import {
   Component, DestroyRef, EventEmitter, OnChanges, Output,
-  SimpleChanges, computed, inject, input, signal,
+  SimpleChanges, inject, input, signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LocalizationPipe } from '@abp/ng.core';
@@ -22,9 +22,10 @@ export interface SubstitutionConfirmed {
 
 // Phase 4C-α (v4.10.0) — substitution dialog used by PAGE B-1 + B-2.
 //
-// Lists same-rank candidates from GetAvailableSubstitutesAsync (excludes already-nominated
-// employees server-side), forces the user to pick one + optionally enter a reason, then
-// emits to the parent. Locked nominee (original) is displayed read-only as context.
+// The user types the substitute's service number; it is matched against the eligible
+// pool from GetAvailableSubstitutesAsync (same-rank-as-original, active, not already
+// nominated — enforced server-side). A successful match shows a confirmation card;
+// the reason is optional. Emits to the parent on confirm.
 @Component({
   selector: 'app-substitute-nominee-dialog',
   standalone: true,
@@ -51,11 +52,11 @@ export class SubstituteNomineeDialogComponent implements OnChanges {
   readonly candidates = signal<AvailableSubstituteDto[]>([]);
   readonly loading = signal<boolean>(false);
   readonly error = signal<string | null>(null);
-  readonly fReplacementId = signal<string>('');
+  readonly fServiceNumber = signal<string>('');
   readonly fReason = signal<string>('');
 
-  readonly selectedCandidate = computed(() =>
-    this.candidates().find(c => c.employeeId === this.fReplacementId()) ?? null);
+  /** Candidate matched by the typed service number (from the eligible pool). */
+  readonly resolved = signal<AvailableSubstituteDto | null>(null);
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['open'] && this.open()) {
@@ -84,14 +85,33 @@ export class SubstituteNomineeDialogComponent implements OnChanges {
 
   private reset(): void {
     this.candidates.set([]);
-    this.fReplacementId.set('');
+    this.fServiceNumber.set('');
+    this.resolved.set(null);
     this.fReason.set('');
     this.error.set(null);
   }
 
-  onReplacementChange(event: Event): void {
-    const v = (event.target as HTMLSelectElement).value;
-    this.fReplacementId.set(v);
+  onServiceNumberInput(event: Event): void {
+    this.fServiceNumber.set((event.target as HTMLInputElement).value);
+    // Editing the number invalidates the previous match.
+    this.resolved.set(null);
+    this.error.set(null);
+  }
+
+  onServiceNumberKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.onResolve();
+    }
+  }
+
+  // Matches the typed service number against the eligible (same-rank, not-yet-nominated) pool.
+  onResolve(): void {
+    const raw = this.fServiceNumber().trim();
+    if (!raw) return;
+    const match = this.candidates().find(c => (c.serviceNumber ?? '').trim() === raw) ?? null;
+    this.resolved.set(match);
+    this.error.set(match ? null : this.l.t('::Training.AnnualPlan.Substitute.NotEligible'));
   }
 
   onReasonChange(event: Event): void {
@@ -104,7 +124,7 @@ export class SubstituteNomineeDialogComponent implements OnChanges {
   }
 
   onConfirm(): void {
-    const candidate = this.selectedCandidate();
+    const candidate = this.resolved();
     if (!candidate || !candidate.employeeId) {
       this.error.set(this.l.t('::Training.AnnualPlan.Substitute.PickFirst'));
       return;

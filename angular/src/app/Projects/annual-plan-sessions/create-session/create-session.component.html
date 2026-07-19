@@ -1,71 +1,111 @@
 <div class="page-shell">
-  <!-- ── Header ── -->
+  <!-- ── Hero header (family pattern: queue + sessions-list) ── -->
   <div class="page-header">
-    <button type="button" class="btn-back" (click)="goBack()">
-      ← {{ '::Training.AnnualPlan.CreateSession.Back' | abpLocalization }}
-    </button>
-    <div class="header-titles">
-      <h1>
-        @if (isInternal()) {
-          {{ '::Training.AnnualPlan.CreateSession.TitleInternal' | abpLocalization }}
-        } @else {
-          {{ '::Training.AnnualPlan.CreateSession.TitleExternal' | abpLocalization }}
-        }
-      </h1>
-      <p class="page-subtitle">
-        @if (isInternal()) {
-          {{ '::Training.AnnualPlan.CreateSession.SubtitleInternal' | abpLocalization }}
-        } @else {
-          {{ '::Training.AnnualPlan.CreateSession.SubtitleExternal' | abpLocalization }}
-        }
-      </p>
+    <div class="page-title-wrap">
+      <button type="button" class="btn-back" (click)="goBack()"
+              [attr.aria-label]="'::Training.AnnualPlan.CreateSession.Back' | abpLocalization">
+        →
+      </button>
+      <span class="page-icon">➕</span>
+      <div>
+        <h1 class="page-title">
+          @if (isInternal()) {
+            {{ '::Training.AnnualPlan.CreateSession.TitleInternal' | abpLocalization }}
+          } @else {
+            {{ '::Training.AnnualPlan.CreateSession.TitleExternal' | abpLocalization }}
+          }
+        </h1>
+        <p class="page-subtitle">
+          @if (isInternal()) {
+            {{ '::Training.AnnualPlan.CreateSession.SubtitleInternal' | abpLocalization }}
+          } @else {
+            {{ '::Training.AnnualPlan.CreateSession.SubtitleExternal' | abpLocalization }}
+          }
+        </p>
+      </div>
     </div>
+    @if (planItem()) {
+      <div class="header-stats">
+        <div class="stat-chip">
+          <span class="stat-label">{{ '::Training.AnnualPlan.SessionsQueue.Column.Quarter' | abpLocalization }}</span>
+          <span class="stat-value">Q{{ planItem()!.preferredQuarter }}</span>
+        </div>
+        <div class="stat-chip">
+          <span class="stat-label">{{ '::Training.AnnualPlan.SessionsQueue.Column.Nominees' | abpLocalization }}</span>
+          <span class="stat-value">{{ nominees().length }}</span>
+        </div>
+        <div class="stat-chip stat-sub" [class.has-value]="substitutionCount() > 0">
+          <span class="stat-label">{{ '::Training.AnnualPlan.CreateSession.SubstitutedSuffix' | abpLocalization }}</span>
+          <span class="stat-value">{{ substitutionCount() }}</span>
+        </div>
+      </div>
+    }
   </div>
 
   @if (loading()) {
-    <div class="card empty-state">{{ '::Training.AnnualPlan.CreateSession.Loading' | abpLocalization }}</div>
+    <div class="card empty-state">
+      <span class="spinner"></span>
+      {{ '::Training.AnnualPlan.CreateSession.Loading' | abpLocalization }}
+    </div>
   } @else if (!planItem()) {
     <div class="card empty-state error">
       {{ errorMessage() || ('::Training.AnnualPlan.CreateSession.MissingPlanItem' | abpLocalization) }}
     </div>
   } @else {
-    <!-- ── Plan-item context card (read-only) ── -->
-    <div class="card context-card">
-      <div class="context-row context-row-main">
-        <div class="context-course">
-          <div class="context-label">{{ '::Training.AnnualPlan.CreateSession.Course' | abpLocalization }}</div>
-          <div class="context-value">
+    <!-- ── Course hero card (read-only) ── -->
+    <div class="card hero-card">
+      <div class="hero-main">
+        <div class="hero-avatar">🎓</div>
+        <div class="hero-info">
+          <div class="hero-label">{{ '::Training.AnnualPlan.CreateSession.Course' | abpLocalization }}</div>
+          <div class="hero-name">
             {{ planItem()!.tenantCourseNameAr || planItem()!.tenantCourseNameEn }}
           </div>
-        </div>
-        <div class="context-pills">
-          <span [class]="priorityCss(planItem()!.priority)">
-            {{ priorityLabelKey(planItem()!.priority) | abpLocalization }}
-          </span>
-          <span class="type-pill type-{{ planItem()!.courseType }}">
-            {{ courseTypeLabelKey(planItem()!.courseType) | abpLocalization }}
-          </span>
-          <span class="quarter-pill">Q{{ planItem()!.preferredQuarter }}</span>
+          <div class="hero-pills">
+            <span [class]="priorityCss(planItem()!.priority)">
+              {{ priorityLabelKey(planItem()!.priority) | abpLocalization }}
+            </span>
+            <span class="type-pill type-{{ planItem()!.courseType }}">
+              {{ courseTypeLabelKey(planItem()!.courseType) | abpLocalization }}
+            </span>
+            <span class="quarter-pill">Q{{ planItem()!.preferredQuarter }}</span>
+          </div>
         </div>
       </div>
-      <div class="context-row context-row-meta">
-        <div>
-          <span class="meta-label">{{ '::Training.AnnualPlan.CreateSession.Unit' | abpLocalization }}:</span>
-          <span class="meta-value">{{ planItem()!.unitName || '—' }}</span>
+      <div class="hero-meta">
+        <div class="meta-tile">
+          <span class="meta-icon">🏢</span>
+          <div class="meta-text">
+            <span class="meta-label">{{ '::Training.AnnualPlan.CreateSession.Unit' | abpLocalization }}</span>
+            <span class="meta-value">{{ planItem()!.unitName || '—' }}</span>
+          </div>
         </div>
-        <div>
-          <span class="meta-label">{{ '::Training.AnnualPlan.CreateSession.Duration' | abpLocalization }}:</span>
-          <span class="meta-value">
-            {{ planItem()!.durationDays }} {{ '::Training.AnnualPlan.CreateSession.Days' | abpLocalization }}
-          </span>
+        <div class="meta-tile">
+          <span class="meta-icon">⏳</span>
+          <div class="meta-text">
+            <span class="meta-label">{{ '::Training.AnnualPlan.CreateSession.Duration' | abpLocalization }}</span>
+            <span class="meta-value">
+              {{ planItem()!.durationDays }} {{ '::Training.AnnualPlan.CreateSession.Days' | abpLocalization }}
+            </span>
+          </div>
         </div>
-        <div>
-          <span class="meta-label">{{ '::Training.AnnualPlan.CreateSession.PlannedWindow' | abpLocalization }}:</span>
-          <span class="meta-value">
-            {{ (planItem()!.estimatedDateFrom | date:'yyyy-MM-dd') || '—' }}
-            →
-            {{ (planItem()!.estimatedDateTo | date:'yyyy-MM-dd') || '—' }}
-          </span>
+        <div class="meta-tile">
+          <span class="meta-icon">📅</span>
+          <div class="meta-text">
+            <span class="meta-label">{{ '::Training.AnnualPlan.CreateSession.PlannedWindow' | abpLocalization }}</span>
+            <span class="meta-value">
+              {{ (planItem()!.estimatedDateFrom | date:'yyyy-MM-dd') || '—' }}
+              →
+              {{ (planItem()!.estimatedDateTo | date:'yyyy-MM-dd') || '—' }}
+            </span>
+          </div>
+        </div>
+        <div class="meta-tile">
+          <span class="meta-icon">👥</span>
+          <div class="meta-text">
+            <span class="meta-label">{{ '::Training.AnnualPlan.SessionsQueue.Column.Nominees' | abpLocalization }}</span>
+            <span class="meta-value">{{ nominees().length }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -73,19 +113,26 @@
     <!-- ── Section 1: Dates (internal) or "dates come later" banner (external) ── -->
     <div class="card section-card">
       <h2 class="section-title">
+        <span class="section-icon">🗓️</span>
         {{ '::Training.AnnualPlan.CreateSession.SectionDatesTitle' | abpLocalization }}
       </h2>
 
       @if (isInternal()) {
         <div class="dates-row">
           <div class="field">
-            <label>{{ '::Training.AnnualPlan.CreateSession.ActualStartDate' | abpLocalization }} *</label>
+            <label>
+              {{ '::Training.AnnualPlan.CreateSession.ActualStartDate' | abpLocalization }}
+              <span class="req">*</span>
+            </label>
             <input type="date" class="filter-input"
                    [value]="fActualStartDate()"
                    (change)="onStartDateChange($event)" />
           </div>
           <div class="field">
-            <label>{{ '::Training.AnnualPlan.CreateSession.ActualEndDate' | abpLocalization }} *</label>
+            <label>
+              {{ '::Training.AnnualPlan.CreateSession.ActualEndDate' | abpLocalization }}
+              <span class="req">*</span>
+            </label>
             <input type="date" class="filter-input"
                    [value]="fActualEndDate()"
                    (change)="onEndDateChange($event)" />
@@ -93,7 +140,7 @@
         </div>
         @if (fActualStartDate() && fActualEndDate() && !datesValid()) {
           <div class="inline-warning">
-            {{ '::Training.AnnualPlan.CreateSession.DatesOutOfOrder' | abpLocalization }}
+            ⚠ {{ '::Training.AnnualPlan.CreateSession.DatesOutOfOrder' | abpLocalization }}
           </div>
         }
       } @else {
@@ -109,11 +156,11 @@
           </div>
         </div>
         <ol class="workflow-steps">
-          <li><span class="step-num">1</span> {{ '::Training.AnnualPlan.CreateSession.Workflow.Create' | abpLocalization }}</li>
-          <li><span class="step-num">2</span> {{ '::Training.AnnualPlan.CreateSession.Workflow.Quotes' | abpLocalization }}</li>
-          <li><span class="step-num">3</span> {{ '::Training.AnnualPlan.CreateSession.Workflow.SelectWinner' | abpLocalization }}</li>
-          <li><span class="step-num">4</span> {{ '::Training.AnnualPlan.CreateSession.Workflow.Travel' | abpLocalization }}</li>
-          <li><span class="step-num">5</span> {{ '::Training.AnnualPlan.CreateSession.Workflow.Payments' | abpLocalization }}</li>
+          <li><span class="step-num">1</span><span class="step-label">{{ '::Training.AnnualPlan.CreateSession.Workflow.Create' | abpLocalization }}</span></li>
+          <li><span class="step-num">2</span><span class="step-label">{{ '::Training.AnnualPlan.CreateSession.Workflow.Quotes' | abpLocalization }}</span></li>
+          <li><span class="step-num">3</span><span class="step-label">{{ '::Training.AnnualPlan.CreateSession.Workflow.SelectWinner' | abpLocalization }}</span></li>
+          <li><span class="step-num">4</span><span class="step-label">{{ '::Training.AnnualPlan.CreateSession.Workflow.Travel' | abpLocalization }}</span></li>
+          <li><span class="step-num">5</span><span class="step-label">{{ '::Training.AnnualPlan.CreateSession.Workflow.Payments' | abpLocalization }}</span></li>
         </ol>
       }
     </div>
@@ -121,8 +168,9 @@
     <!-- ── Section 2: Nominees ── -->
     <div class="card section-card">
       <h2 class="section-title">
+        <span class="section-icon">👥</span>
         {{ '::Training.AnnualPlan.CreateSession.SectionNomineesTitle' | abpLocalization }}
-        <span class="nominees-count">({{ nominees().length }})</span>
+        <span class="count-chip">{{ nominees().length }}</span>
         @if (substitutionCount() > 0) {
           <span class="sub-count">
             {{ substitutionCount() }}
@@ -133,66 +181,93 @@
 
       @if (nominees().length === 0) {
         <div class="empty-state">
+          <div class="empty-icon">📭</div>
           {{ '::Training.AnnualPlan.CreateSession.NoNominees' | abpLocalization }}
         </div>
       } @else {
-        <table class="data-grid">
-          <thead>
-            <tr>
-              <th>{{ '::Training.AnnualPlan.CreateSession.Column.Nominee' | abpLocalization }}</th>
-              <th>{{ '::Training.AnnualPlan.CreateSession.Column.Substitution' | abpLocalization }}</th>
-              <th>{{ '::Training.AnnualPlan.CreateSession.Column.Reason' | abpLocalization }}</th>
-              <th>{{ '::Training.AnnualPlan.CreateSession.Column.Action' | abpLocalization }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of nominees(); track row.originalEmployeeId) {
-              <tr [class.row-substituted]="row.substitution">
-                <td>
-                  <div class="employee-name" [class.struck]="row.substitution">
-                    {{ row.originalEmployeeName }}
-                  </div>
-                </td>
-                <td>
-                  @if (row.substitution) {
-                    <div class="replacement-name">
-                      → {{ row.substitution.replacementName }}
-                      @if (row.substitution.rankNameAr) {
-                        <span class="rank-chip">{{ row.substitution.rankNameAr }}</span>
-                      }
-                    </div>
-                  } @else {
-                    <span class="muted">—</span>
-                  }
-                </td>
-                <td>
-                  @if (row.substitution?.reason) {
-                    <span class="reason-text">{{ row.substitution!.reason }}</span>
-                  } @else {
-                    <span class="muted">—</span>
-                  }
-                </td>
-                <td>
-                  @if (row.substitution) {
-                    <button type="button" class="btn-ghost btn-sm" (click)="cancelSubstitution(row)">
-                      {{ '::Training.AnnualPlan.CreateSession.RemoveSubstitution' | abpLocalization }}
-                    </button>
-                  } @else {
-                    <button type="button" class="btn-ghost btn-sm" (click)="openSubstitution(row)">
-                      {{ '::Training.AnnualPlan.CreateSession.Substitute' | abpLocalization }}
-                    </button>
-                  }
-                </td>
+        <div class="table-wrap">
+          <table class="data-grid">
+            <thead>
+              <tr>
+                <th>{{ '::Training.AnnualPlan.CreateSession.Column.Nominee' | abpLocalization }}</th>
+                <th class="col-status">{{ '::Training.AnnualPlan.CreateSession.Column.Status' | abpLocalization }}</th>
+                <th>{{ '::Training.AnnualPlan.CreateSession.Column.Substitution' | abpLocalization }}</th>
+                <th>{{ '::Training.AnnualPlan.CreateSession.Column.Reason' | abpLocalization }}</th>
+                <th class="col-action">{{ '::Training.AnnualPlan.CreateSession.Column.Action' | abpLocalization }}</th>
               </tr>
-            }
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              @for (row of nominees(); track row.originalEmployeeId) {
+                <tr [class.row-substituted]="row.substitution">
+                  <td>
+                    <div class="nominee-cell">
+                      <div class="nominee-text">
+                        <div class="employee-name" [class.struck]="row.substitution">
+                          {{ row.originalEmployeeName }}
+                        </div>
+                        <div class="nominee-subline">
+                          @if (row.rankNameAr) {
+                            <span class="rank-chip">{{ row.rankNameAr }}</span>
+                          }
+                          @if (row.serviceNumber) {
+                            <span class="svc-chip">{{ row.serviceNumber }}</span>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="col-status">
+                    @if (nomineeStatusBadge(row.status); as badge) {
+                      @if (badge.key) {
+                        <span [class]="badge.css">{{ badge.key | abpLocalization }}</span>
+                      } @else {
+                        <span class="muted">—</span>
+                      }
+                    }
+                  </td>
+                  <td>
+                    @if (row.substitution) {
+                      <div class="replacement-name">
+                        <span class="swap-arrow">⇄</span>
+                        {{ row.substitution.replacementName }}
+                        @if (row.substitution.rankNameAr) {
+                          <span class="rank-chip rank-chip-sub">{{ row.substitution.rankNameAr }}</span>
+                        }
+                      </div>
+                    } @else {
+                      <span class="muted">—</span>
+                    }
+                  </td>
+                  <td>
+                    @if (row.substitution?.reason) {
+                      <span class="reason-text">{{ row.substitution!.reason }}</span>
+                    } @else {
+                      <span class="muted">—</span>
+                    }
+                  </td>
+                  <td class="col-action">
+                    @if (row.substitution) {
+                      <button type="button" class="btn-ghost btn-sm" (click)="cancelSubstitution(row)">
+                        {{ '::Training.AnnualPlan.CreateSession.RemoveSubstitution' | abpLocalization }}
+                      </button>
+                    } @else {
+                      <button type="button" class="btn-swap btn-sm" (click)="openSubstitution(row)">
+                        ⇄ {{ '::Training.AnnualPlan.CreateSession.Substitute' | abpLocalization }}
+                      </button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       }
     </div>
 
     <!-- ── Notes (optional) ── -->
     <div class="card section-card">
       <h2 class="section-title">
+        <span class="section-icon">📝</span>
         {{ '::Training.AnnualPlan.CreateSession.NotesTitle' | abpLocalization }}
       </h2>
       <textarea class="filter-input notes-area" rows="3"
@@ -203,10 +278,10 @@
 
     <!-- ── Errors / success ── -->
     @if (errorMessage()) {
-      <div class="error-banner">{{ errorMessage() }}</div>
+      <div class="error-banner">⚠ {{ errorMessage() }}</div>
     }
     @if (successMessage()) {
-      <div class="success-banner">{{ successMessage() }}</div>
+      <div class="success-banner">✓ {{ successMessage() }}</div>
     }
 
     <!-- ── Action bar ── -->

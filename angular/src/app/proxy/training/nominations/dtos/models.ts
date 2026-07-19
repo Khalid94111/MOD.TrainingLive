@@ -32,6 +32,7 @@ export interface NominationDto extends FullAuditedEntityDto<string> {
   employeeId?: string;
   employeeName?: string;
   rankNameAr?: string;
+  serviceNumber?: string;
   nominatedById?: string;
   nominatedByName?: string;
   status?: NominationStatus;

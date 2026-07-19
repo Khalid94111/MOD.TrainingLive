@@ -30,6 +30,10 @@ interface NomineeRow {
   readonly originalEmployeeId: string;
   readonly originalEmployeeName: string;
   readonly status?: NominationStatus;
+  /** Nominee rank — display only (already returned by the nominations endpoint). */
+  readonly rankNameAr?: string | null;
+  /** Service number — display only. */
+  readonly serviceNumber?: string | null;
   /** Substitution applied locally (not yet saved). */
   substitution: SubstitutionConfirmed | null;
 }
@@ -125,6 +129,8 @@ export class CreateSessionComponent implements OnInit {
           originalEmployeeId: n.employeeId ?? '',
           originalEmployeeName: n.employeeName ?? '',
           status: n.status,
+          rankNameAr: n.rankNameAr,
+          serviceNumber: n.serviceNumber,
           substitution: null,
         }));
       this.nominees.set(rows);
@@ -247,6 +253,17 @@ export class CreateSessionComponent implements OnInit {
       case CourseType.ExternalLocal:         return '::Training.AnnualPlan.SessionsQueue.Type.ExternalLocal';
       case CourseType.ExternalInternational: return '::Training.AnnualPlan.SessionsQueue.Type.ExternalInternational';
       default: return '';
+    }
+  }
+
+  // Status chip for a nominee row (Rejected/Returned are filtered out at load time).
+  nomineeStatusBadge(s: NominationStatus | undefined): { key: string; css: string } {
+    switch (s) {
+      case NominationStatus.Nominated:   return { key: '::Training.NominationStatus.Nominated',   css: 'status-chip status-nominated' };
+      case NominationStatus.UTMApproved: return { key: '::Training.NominationStatus.UTMApproved', css: 'status-chip status-utm' };
+      case NominationStatus.UGMApproved: return { key: '::Training.NominationStatus.UGMApproved', css: 'status-chip status-ugm' };
+      case NominationStatus.TDApproved:  return { key: '::Training.NominationStatus.TDApproved',  css: 'status-chip status-td' };
+      default: return { key: '', css: 'status-chip' };
     }
   }
 
