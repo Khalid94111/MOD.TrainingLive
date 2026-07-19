@@ -30,6 +30,9 @@ public class TrainingPlanItemDto : FullAuditedEntityDto<Guid>
     public string? SubmittedByRank { get; set; }
     public Guid? UnitId { get; set; }
     public string? UnitName { get; set; }
+    public Guid? TrainingCenterPlanItemId { get; set; }
+    public string? SourceCenterName { get; set; }
+    public string? SourceTenantName { get; set; }
     public int FinancialItemCount { get; set; }
 
     // CHG-01: derived from nominations count

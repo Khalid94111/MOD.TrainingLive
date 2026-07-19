@@ -27,6 +27,9 @@ public class TrainingPlanItem : FullAuditedEntity<Guid>, IMultiTenant
     public Guid SubmittedById { get; set; }
     public Guid? UnitId { get; set; }
 
+    // Link to an approved center plan item (internal courses only).
+    public Guid? TrainingCenterPlanItemId { get; set; }
+
     // CHG-05
     public bool IsReturned { get; set; }
     public Guid? LastReturnNoteId { get; set; }

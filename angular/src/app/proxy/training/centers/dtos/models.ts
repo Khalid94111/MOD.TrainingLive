@@ -1,8 +1,40 @@
 import type { EntityDto, FullAuditedEntityDto, PagedAndSortedResultRequestDto } from '@abp/ng.core';
+import type { BeneficiaryType } from '../../enums/beneficiary-type.enum';
 import type { CenterPlanStatus } from '../../enums/center-plan-status.enum';
 import type { CenterRoleType } from '../../enums/center-role-type.enum';
 import type { CenterAssignmentType } from '../../enums/center-assignment-type.enum';
-import type { BeneficiaryType } from '../../enums/beneficiary-type.enum';
+
+export interface AdjustCenterPlanItemCapacityDto {
+  capacity?: number;
+}
+
+export interface AvailableCenterPlanItemDto extends EntityDto<string> {
+  centerPlanId?: string;
+  centerId?: string;
+  centerName?: string;
+  sourceTenantId?: string | null;
+  sourceTenantName?: string | null;
+  tenantCourseId?: string;
+  catalogCourseId?: string;
+  courseName?: string;
+  estimatedStartDate?: string;
+  estimatedEndDate?: string;
+  durationWeeks?: number;
+  capacity?: number;
+  reservedSeats?: number;
+  remainingSeats?: number;
+  beneficiaryType?: BeneficiaryType;
+  eligibleUnitIds?: string[];
+}
+
+export interface CenterPlanBookingNomineeDto {
+  nominationId?: string;
+  employeeId?: string;
+  serviceNumber?: string;
+  employeeName?: string;
+  rankName?: string | null;
+  unitName?: string | null;
+}
 
 export interface CenterPlanGetListInput extends PagedAndSortedResultRequestDto {
   centerId?: string | null;
@@ -12,6 +44,23 @@ export interface CenterPlanGetListInput extends PagedAndSortedResultRequestDto {
 
 export interface CenterPlanItemGetListInput extends PagedAndSortedResultRequestDto {
   planId?: string;
+}
+
+export interface CenterPlanNominationDto extends EntityDto<string> {
+  centerPlanId?: string;
+  centerName?: string;
+  courseName?: string;
+  estimatedStartDate?: string;
+  estimatedEndDate?: string;
+  capacity?: number;
+  reservedSeats?: number;
+  remainingSeats?: number;
+  bookings?: PlanItemBookingDto[];
+}
+
+export interface CenterPlanNominationGetListInput extends PagedAndSortedResultRequestDto {
+  centerPlanId?: string | null;
+  centerId?: string | null;
 }
 
 export interface CenterPlanWindowDto extends FullAuditedEntityDto<string> {
@@ -79,6 +128,18 @@ export interface CreateUpdateTrainingCenterDto {
   isActive?: boolean;
 }
 
+export interface PlanActionReasonDto {
+  reason?: string;
+}
+
+export interface PlanItemBookingDto {
+  trainingPlanItemId?: string;
+  unitId?: string | null;
+  unitName?: string;
+  nomineeCount?: number;
+  nominees?: CenterPlanBookingNomineeDto[];
+}
+
 export interface SetCenterRoleAssignmentsDto {
   assignments: CenterRoleAssignmentInputDto[];
 }
@@ -114,10 +175,6 @@ export interface TrainingCenterPlanDto extends FullAuditedEntityDto<string> {
   returnReason?: string | null;
   itemCount?: number;
   items?: TrainingCenterPlanItemDto[];
-}
-
-export interface PlanActionReasonDto {
-  reason: string;
 }
 
 export interface TrainingCenterPlanItemDto extends FullAuditedEntityDto<string> {

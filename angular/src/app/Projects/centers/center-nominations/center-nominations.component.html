@@ -1,0 +1,197 @@
+<div class="nominations-page">
+  <div class="page-header">
+    <div class="page-title-wrap">
+      <span class="page-icon">📋</span>
+      <div>
+        <h1 class="page-title">ترشيحات خطط المراكز</h1>
+        <p class="page-subtitle">متابعة الحجز على بنود خطط المراكز والوحدات المستفيدة</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="filters-card">
+    <div class="filter-row">
+      <div class="filter-field">
+        <label>المركز</label>
+        <select class="form-input" [value]="filterCenterId() ?? ''" (change)="filterCenterId.set($any($event.target).value || null)">
+          <option value="">كل المراكز</option>
+          @for (c of centers(); track c.id) {
+            <option [value]="c.id">{{ c.centerNameAr }}</option>
+          }
+        </select>
+      </div>
+      <div class="filter-field">
+        <label>خطة المركز</label>
+        <select class="form-input" [value]="filterCenterPlanId() ?? ''" (change)="filterCenterPlanId.set($any($event.target).value || null)">
+          <option value="">كل الخطط</option>
+          @for (p of centerPlans(); track p.id) {
+            <option [value]="p.id">{{ p.centerName }} — {{ p.year }}</option>
+          }
+        </select>
+      </div>
+      <div class="filter-actions">
+        <button class="btn btn-primary" (click)="applyFilters()" [disabled]="isLoading()">
+          {{ isLoading() ? 'جارٍ التحميل…' : '🔍 تصفية' }}
+        </button>
+        @if (hasActiveFilter()) {
+          <button class="btn btn-outline" (click)="clearFilters()" [disabled]="isLoading()">مسح</button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    @if (isLoading()) {
+      <div class="loading-state"><span class="spinner"></span> جارٍ تحميل الترشيحات…</div>
+    } @else if (nominations().length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <div>لا توجد ترشيحات مسجلة على بنود خطط المراكز.</div>
+      </div>
+    } @else {
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th style="width:40px"></th>
+            <th>المركز</th>
+            <th>الدورة</th>
+            <th class="center">التواريخ</th>
+            <th class="center">السعة</th>
+            <th class="center">المحجوز</th>
+            <th class="center">المتبقي</th>
+            <th class="center">الحجوزات</th>
+            <th class="center">إجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (n of nominations(); track n.id) {
+            <tr class="item-row" (click)="toggleExpand(n.id)">
+              <td class="center">
+                <span class="expand-arrow" [class.open]="isExpanded(n.id)">▸</span>
+              </td>
+              <td>{{ n.centerName }}</td>
+              <td><span class="cell-bold">{{ n.courseName }}</span></td>
+              <td class="center cell-sub-text">{{ formatDate(n.estimatedStartDate) }} — {{ formatDate(n.estimatedEndDate) }}</td>
+              <td class="center">{{ n.capacity }}</td>
+              <td class="center">{{ n.reservedSeats }}</td>
+              <td class="center">
+                <span class="seats-badge" [class.low]="(n.remainingSeats ?? 0) === 0">{{ n.remainingSeats }}</span>
+              </td>
+              <td class="center cell-bold">{{ n.bookings?.length ?? 0 }}</td>
+              <td class="center" (click)="$event.stopPropagation()">
+                @if (canAdjustCapacity()) {
+                  <button class="btn btn-sm btn-outline" (click)="openCapacityDialog(n)">⚙️ تعديل السعة</button>
+                }
+              </td>
+            </tr>
+            @if (isExpanded(n.id)) {
+              <tr class="detail-row">
+                <td colspan="9">
+                  <div class="bookings-wrap">
+                    <div class="bookings-title">الحجوزات الواردة</div>
+                    @if ((n.bookings ?? []).length === 0) {
+                      <div class="bookings-empty">لا توجد حجوزات مسجلة.</div>
+                    } @else {
+                      <div class="bookings-list">
+                        @for (b of n.bookings; track b.trainingPlanItemId) {
+                          <div class="booking-block">
+                            <div class="booking-header">
+                              <div class="booking-meta">
+                                <span class="booking-unit">{{ b.unitName || '—' }}</span>
+                                <span class="booking-count">👥 {{ b.nomineeCount }} مرشح</span>
+                              </div>
+                              <button
+                                type="button"
+                                class="btn btn-sm btn-outline toggle-nominees"
+                                [disabled]="(b.nominees ?? []).length === 0"
+                                (click)="toggleBooking(b.trainingPlanItemId)">
+                                {{ isBookingExpanded(b.trainingPlanItemId) ? '▾ إخفاء المرشحين' : '▸ عرض المرشحين' }}
+                              </button>
+                            </div>
+                            @if (isBookingExpanded(b.trainingPlanItemId) && (b.nominees ?? []).length > 0) {
+                              <div class="nominees-panel">
+                                <table class="nominees-table">
+                                  <thead>
+                                    <tr>
+                                      <th style="width:40px">#</th>
+                                      <th>رقم الوظيفي</th>
+                                      <th>الرتبة</th>
+                                      <th>الاسم</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    @for (nm of b.nominees; track nm.nominationId; let i = $index) {
+                                      <tr>
+                                        <td class="center">{{ i + 1 }}</td>
+                                        <td class="center">{{ nm.serviceNumber || '—' }}</td>
+                                        <td>{{ nm.rankName || '—' }}</td>
+                                        <td>{{ nm.employeeName }}</td>
+                                      </tr>
+                                    }
+                                  </tbody>
+                                </table>
+                              </div>
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+
+      @if (totalPages > 1) {
+        <div class="pagination">
+          <button class="btn btn-sm" (click)="onPageChange(currentPage() - 1)" [disabled]="currentPage() === 1">السابق</button>
+          <span class="page-info">صفحة {{ currentPage() }} من {{ totalPages }}</span>
+          <button class="btn btn-sm" (click)="onPageChange(currentPage() + 1)" [disabled]="currentPage() === totalPages">التالي</button>
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<!-- Adjust Capacity Dialog -->
+@if (isCapacityDialogOpen()) {
+  <div class="modal-backdrop" (click)="$event.target === $event.currentTarget ? closeCapacityDialog() : null">
+    <div class="modal-content modal-sm">
+      <div class="modal-header">
+        <h3 class="modal-title">⚙️ تعديل سعة الدورة</h3>
+        <button class="modal-close" (click)="closeCapacityDialog()">✕</button>
+      </div>
+      <div class="modal-body">
+        @if (editingItem(); as item) {
+          <div class="form-group">
+            <label class="form-label">الدورة</label>
+            <div class="form-static">{{ item.courseName }} — {{ item.centerName }}</div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">المحجوز حاليًا</label>
+              <div class="form-static">{{ item.reservedSeats }} / {{ item.capacity }}</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">السعة الجديدة <span class="required">*</span></label>
+              <input type="number" class="form-input" min="1"
+                     [value]="newCapacity()"
+                     (input)="newCapacity.set(+$any($event.target).value || 0)">
+            </div>
+          </div>
+          @if ((item.reservedSeats ?? 0) > newCapacity()) {
+            <div class="alert alert-danger">السعة الجديدة أقل من المقاعد المحجوزة.</div>
+          }
+        }
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" (click)="closeCapacityDialog()">إلغاء</button>
+        <button class="btn btn-primary" (click)="saveCapacity()" [disabled]="savingCapacity()">
+          @if (savingCapacity()) { جارٍ الحفظ… } @else { 💾 حفظ }
+        </button>
+      </div>
+    </div>
+  </div>
+}

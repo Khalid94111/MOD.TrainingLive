@@ -79,6 +79,13 @@ export const TRAINING_ROUTES: Routes = [
         (m) => m.CenterPlansComponent
       ),
   },
+  {
+    path: 'centers/nominations',
+    loadComponent: () =>
+      import('./centers/center-nominations/center-nominations.component').then(
+        (m) => m.CenterNominationsComponent
+      ),
+  },
 
   // ===== Phase 3: Annual Plans =====
   {

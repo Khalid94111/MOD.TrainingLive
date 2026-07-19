@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using MOD.Training.Training.Centers.Dtos;
+using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 
 namespace MOD.Training.Training.Centers;
@@ -12,4 +13,10 @@ public interface ICenterPlanItemAppService : ICrudAppService<
     CreateUpdateCenterPlanItemDto>
 {
     Task<TrainingCenterPlanItemDto> SetUnitsAsync(Guid id, SetPlanItemUnitsDto input);
+
+    Task<TrainingCenterPlanItemDto> AdjustCapacityAsync(Guid id, AdjustCenterPlanItemCapacityDto input);
+
+    Task<ListResultDto<AvailableCenterPlanItemDto>> GetAvailableForAnnualPlanAsync(Guid annualPlanId);
+
+    Task<PagedResultDto<CenterPlanNominationDto>> GetNominationsAsync(CenterPlanNominationGetListInput input);
 }

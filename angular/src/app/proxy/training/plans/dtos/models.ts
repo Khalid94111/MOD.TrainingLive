@@ -95,7 +95,9 @@ export interface CreateUpdateTrainingPlanDto {
 
 export interface CreateUpdateTrainingPlanItemDto {
   planId: string;
-  tenantCourseId: string;
+  tenantCourseId?: string;
+  trainingCenterPlanItemId?: string | null;
+  catalogCourseId?: string | null;
   courseType: CourseType;
   preferredQuarter: PreferredQuarter;
   priority: number;
@@ -216,6 +218,9 @@ export interface TrainingPlanItemDto extends FullAuditedEntityDto<string> {
   submittedByRank?: string | null;
   unitId?: string | null;
   unitName?: string | null;
+  trainingCenterPlanItemId?: string | null;
+  sourceCenterName?: string | null;
+  sourceTenantName?: string | null;
   financialItemCount?: number;
   nomineesCount?: number;
   isReturned?: boolean;

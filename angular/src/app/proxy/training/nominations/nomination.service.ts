@@ -30,6 +30,14 @@ export class NominationService {
     { apiName: this.apiName,...config });
   
 
+  delete = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, void>({
+      method: 'DELETE',
+      url: `/api/app/nomination/${id}`,
+    },
+    { apiName: this.apiName,...config });
+  
+
   get = (id: string, config?: Partial<Rest.Config>) =>
     this.restService.request<any, NominationDto>({
       method: 'GET',
@@ -60,14 +68,6 @@ export class NominationService {
       method: 'POST',
       url: `/api/app/nomination/${id}/reject`,
       body: input,
-    },
-    { apiName: this.apiName,...config });
-  
-
-  delete = (id: string, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, void>({
-      method: 'DELETE',
-      url: `/api/app/nomination/${id}`,
     },
     { apiName: this.apiName,...config });
   

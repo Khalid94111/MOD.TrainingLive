@@ -89,6 +89,7 @@ public static class TrainingPermissions
         public const string ManagePlans = Default + ".ManagePlans";
         public const string ManageSessions = Default + ".ManageSessions";
         public const string ApprovePlans = Default + ".ApprovePlans";
+        public const string ViewNominations = Default + ".ViewNominations";
     }
 
     public static class Reports
@@ -142,6 +143,7 @@ public static class TrainingPermissions
         public const string Edit = Default + ".Edit";
         public const string Delete = Default + ".Delete";
         public const string SetUnits = Default + ".SetUnits";
+        public const string AdjustCapacity = Default + ".AdjustCapacity";
     }
     // --- Phase 3: Annual Plans ---
     public static class TrainingPlan

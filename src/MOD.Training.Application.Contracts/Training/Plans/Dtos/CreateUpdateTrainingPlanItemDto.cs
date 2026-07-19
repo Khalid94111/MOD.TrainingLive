@@ -11,8 +11,14 @@ public class CreateUpdateTrainingPlanItemDto
     [Required]
     public Guid PlanId { get; set; }
 
-    [Required]
+    // Exactly one of TenantCourseId / TrainingCenterPlanItemId / CatalogCourseId must be supplied.
     public Guid TenantCourseId { get; set; }
+
+    // Internal path: select an approved center plan item.
+    public Guid? TrainingCenterPlanItemId { get; set; }
+
+    // External path: select a catalog course (backend creates/finds local TenantCourse).
+    public Guid? CatalogCourseId { get; set; }
 
     [Required]
     public CourseType CourseType { get; set; }
@@ -49,7 +55,7 @@ public class CreateUpdateTrainingPlanItemDto
     [MaxLength(TrainingConsts.MaxFundingSourceLength)]
     public string? FundingSource { get; set; }
 
-    // Optional: Staff/TD/TH may specify the owning unit when creating an item.
+    // Required when booking from a center plan item; optional otherwise.
     // Unit-scoped users (UTM/UGM) have this ignored — their unit is auto-detected
     // from Employee.MainUnitId in TrainingPlanItemAppService.CreateAsync.
     public Guid? UnitId { get; set; }

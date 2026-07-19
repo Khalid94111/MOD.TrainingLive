@@ -1,34 +1,40 @@
-<div class="page-shell">
+<div class="queue-page">
   <!-- ── Header ── -->
   <div class="page-header">
-    <div>
-      <h1>{{ '::Training.AnnualPlan.SessionsQueue.Title' | abpLocalization }}</h1>
-      <p class="page-subtitle">{{ '::Training.AnnualPlan.SessionsQueue.Subtitle' | abpLocalization }}</p>
+    <div class="page-title-wrap">
+      <span class="page-icon">📋</span>
+      <div>
+        <h1 class="page-title">{{ '::Training.AnnualPlan.SessionsQueue.Title' | abpLocalization }}</h1>
+        <p class="page-subtitle">{{ '::Training.AnnualPlan.SessionsQueue.Subtitle' | abpLocalization }}</p>
+      </div>
     </div>
     <div class="header-stats">
-      <span class="stat-chip stat-total">
-        {{ '::Training.AnnualPlan.SessionsQueue.StatTotal' | abpLocalization }}: <strong>{{ totalCount() }}</strong>
-      </span>
-      <span class="stat-chip stat-overdue" [class.has-value]="overdueCount() > 0">
-        {{ '::Training.AnnualPlan.SessionsQueue.StatOverdue' | abpLocalization }}: <strong>{{ overdueCount() }}</strong>
-      </span>
-      <span class="stat-chip stat-high" [class.has-value]="highPriorityCount() > 0">
-        {{ '::Training.AnnualPlan.SessionsQueue.StatHighPriority' | abpLocalization }}: <strong>{{ highPriorityCount() }}</strong>
-      </span>
+      <div class="stat-chip stat-total">
+        <span class="stat-label">{{ '::Training.AnnualPlan.SessionsQueue.StatTotal' | abpLocalization }}</span>
+        <span class="stat-value">{{ totalCount() }}</span>
+      </div>
+      <div class="stat-chip stat-overdue" [class.has-value]="overdueCount() > 0">
+        <span class="stat-label">{{ '::Training.AnnualPlan.SessionsQueue.StatOverdue' | abpLocalization }}</span>
+        <span class="stat-value">{{ overdueCount() }}</span>
+      </div>
+      <div class="stat-chip stat-high" [class.has-value]="highPriorityCount() > 0">
+        <span class="stat-label">{{ '::Training.AnnualPlan.SessionsQueue.StatHighPriority' | abpLocalization }}</span>
+        <span class="stat-value">{{ highPriorityCount() }}</span>
+      </div>
     </div>
   </div>
 
   <!-- ── Filters ── -->
-  <div class="filter-card">
-    <div class="filter-grid">
+  <div class="filters-card">
+    <div class="filter-row">
       <div class="filter-field">
         <label>{{ '::Training.AnnualPlan.SessionsQueue.Filter.Year' | abpLocalization }}</label>
-        <input type="number" class="filter-input" [value]="fYear()" (change)="onYearChange($event)" />
+        <input type="number" class="form-input" [value]="fYear()" (change)="onYearChange($event)" />
       </div>
 
       <div class="filter-field">
         <label>{{ '::Training.AnnualPlan.SessionsQueue.Filter.Quarter' | abpLocalization }}</label>
-        <select class="filter-input" (change)="onQuarterChange($event)">
+        <select class="form-input" (change)="onQuarterChange($event)">
           <option value="" [selected]="fQuarter() === null">
             {{ '::Training.AnnualPlan.SessionsQueue.Filter.All' | abpLocalization }}
           </option>
@@ -41,7 +47,7 @@
 
       <div class="filter-field">
         <label>{{ '::Training.AnnualPlan.SessionsQueue.Filter.Priority' | abpLocalization }}</label>
-        <select class="filter-input" (change)="onPriorityChange($event)">
+        <select class="form-input" (change)="onPriorityChange($event)">
           <option value="" [selected]="fPriority() === null">
             {{ '::Training.AnnualPlan.SessionsQueue.Filter.All' | abpLocalization }}
           </option>
@@ -59,7 +65,7 @@
 
       <div class="filter-field">
         <label>{{ '::Training.AnnualPlan.SessionsQueue.Filter.Type' | abpLocalization }}</label>
-        <select class="filter-input" (change)="onCourseTypeChange($event)">
+        <select class="form-input" (change)="onCourseTypeChange($event)">
           <option value="" [selected]="fCourseType() === null">
             {{ '::Training.AnnualPlan.SessionsQueue.Filter.All' | abpLocalization }}
           </option>
@@ -77,7 +83,7 @@
 
       <div class="filter-field">
         <label>{{ '::Training.AnnualPlan.SessionsQueue.Filter.Unit' | abpLocalization }}</label>
-        <select class="filter-input" (change)="onUnitChange($event)">
+        <select class="form-input" (change)="onUnitChange($event)">
           <option value="" [selected]="fUnitId() === null">
             {{ '::Training.AnnualPlan.SessionsQueue.Filter.All' | abpLocalization }}
           </option>
@@ -88,7 +94,7 @@
       </div>
 
       <div class="filter-actions">
-        <button class="btn-ghost" type="button" (click)="resetFilters()">
+        <button class="btn btn-outline" type="button" (click)="resetFilters()">
           {{ '::Training.AnnualPlan.SessionsQueue.ResetFilters' | abpLocalization }}
         </button>
       </div>
@@ -97,37 +103,40 @@
 
   <!-- ── Error banner ── -->
   @if (errorMessage()) {
-    <div class="error-banner">{{ errorMessage() }}</div>
+    <div class="alert alert-danger">{{ errorMessage() }}</div>
   }
 
   <!-- ── Grid ── -->
-  <div class="card grid-card">
+  <div class="table-card">
     @if (loading()) {
-      <div class="grid-state">{{ '::Training.AnnualPlan.SessionsQueue.Loading' | abpLocalization }}</div>
+      <div class="loading-state"><span class="spinner"></span> جارٍ التحميل…</div>
     } @else if (items().length === 0) {
-      <div class="grid-state">{{ '::Training.AnnualPlan.SessionsQueue.NoItems' | abpLocalization }}</div>
+      <div class="empty-state">
+        <div class="empty-icon">📭</div>
+        <div>{{ '::Training.AnnualPlan.SessionsQueue.NoItems' | abpLocalization }}</div>
+      </div>
     } @else {
-      <table class="data-grid">
+      <table class="data-table">
         <thead>
           <tr>
-            <th>{{ '::Training.AnnualPlan.SessionsQueue.Column.Priority' | abpLocalization }}</th>
-            <th>{{ '::Training.AnnualPlan.SessionsQueue.Column.Quarter' | abpLocalization }}</th>
+            <th class="center" style="width: 90px">{{ '::Training.AnnualPlan.SessionsQueue.Column.Priority' | abpLocalization }}</th>
+            <th class="center" style="width: 80px">{{ '::Training.AnnualPlan.SessionsQueue.Column.Quarter' | abpLocalization }}</th>
             <th>{{ '::Training.AnnualPlan.SessionsQueue.Column.Course' | abpLocalization }}</th>
-            <th>{{ '::Training.AnnualPlan.SessionsQueue.Column.Type' | abpLocalization }}</th>
+            <th style="width: 140px">{{ '::Training.AnnualPlan.SessionsQueue.Column.Type' | abpLocalization }}</th>
             <th>{{ '::Training.AnnualPlan.SessionsQueue.Column.Unit' | abpLocalization }}</th>
-            <th>{{ '::Training.AnnualPlan.SessionsQueue.Column.Nominees' | abpLocalization }}</th>
-            <th>{{ '::Training.AnnualPlan.SessionsQueue.Column.Action' | abpLocalization }}</th>
+            <th class="center" style="width: 100px">{{ '::Training.AnnualPlan.SessionsQueue.Column.Nominees' | abpLocalization }}</th>
+            <th class="center" style="width: 130px">{{ '::Training.AnnualPlan.SessionsQueue.Column.Action' | abpLocalization }}</th>
           </tr>
         </thead>
         <tbody>
           @for (row of items(); track row.id) {
             <tr [class.row-overdue]="row.isOverdue">
-              <td>
+              <td class="center">
                 <span [class]="priorityCss(row.priority)">
                   {{ priorityLabelKey(row.priority) | abpLocalization }}
                 </span>
               </td>
-              <td>
+              <td class="center">
                 <span class="quarter-pill" [class.quarter-overdue]="row.isOverdue">
                   {{ quarterLabel(row.preferredQuarter) }}
                   @if (row.isOverdue) {
@@ -135,7 +144,7 @@
                   }
                 </span>
               </td>
-              <td class="course-cell">
+              <td>
                 <div class="course-name">{{ row.tenantCourseNameAr || row.tenantCourseNameEn }}</div>
                 <div class="course-year">{{ row.planYear }}</div>
               </td>
@@ -144,10 +153,12 @@
                   {{ courseTypeLabelKey(row.courseType) | abpLocalization }}
                 </span>
               </td>
-              <td>{{ unitName(row.unitId) }}</td>
-              <td>{{ row.nomineesCount ?? 0 }}</td>
-              <td>
-                <button class="btn-create-session" type="button" (click)="onCreateClick(row)">
+              <td>{{ unitName(row.unitId) || '—' }}</td>
+              <td class="center">
+                <span class="nominees-pill">{{ row.nomineesCount ?? 0 }}</span>
+              </td>
+              <td class="center">
+                <button class="btn btn-sm btn-primary" type="button" (click)="onCreateClick(row)">
                   {{ '::Training.AnnualPlan.SessionsQueue.CreateButton' | abpLocalization }}
                 </button>
               </td>

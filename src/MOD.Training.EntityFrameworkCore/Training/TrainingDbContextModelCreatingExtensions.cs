@@ -36,6 +36,7 @@ builder.ConfigureFinancePhase3();
 builder.ConfigureCasualCoursesPhase4A();
 builder.ConfigurePreExecutionPhase4BAlpha();
 builder.ConfigurePaymentsPhase4BBeta();
+        builder.TrainingCenterConfiguration();
     }
 
     private static void ConfigureCatalog(this ModelBuilder builder)
@@ -213,6 +214,8 @@ builder.ConfigurePaymentsPhase4BBeta();
 
             b.Property(x => x.Objective).HasMaxLength(1000);
             b.Property(x => x.BeneficiaryType).HasConversion<string>().HasMaxLength(20);
+            b.Property(x => x.ReservedSeats).IsRequired().HasDefaultValue(0);
+            b.Property(x => x.RowVersion).IsRowVersion();
 
             b.HasOne<TrainingCenterPlan>()
                 .WithMany()
@@ -266,8 +269,19 @@ builder.ConfigurePaymentsPhase4BBeta();
 
             b.HasOne(x => x.Plan).WithMany().HasForeignKey(x => x.PlanId).OnDelete(DeleteBehavior.Cascade);
 
+            b.Property(x => x.TrainingCenterPlanItemId).IsRequired(false);
+            b.HasOne<TrainingCenterPlanItem>()
+                .WithMany()
+                .HasForeignKey(x => x.TrainingCenterPlanItemId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false);
+
             b.HasIndex(x => x.PlanId);
             b.HasIndex(x => x.TenantCourseId);
+            b.HasIndex(x => x.TrainingCenterPlanItemId);
+            b.HasIndex(x => new { x.PlanId, x.TrainingCenterPlanItemId, x.UnitId })
+                .IsUnique()
+                .HasFilter("[TrainingCenterPlanItemId] IS NOT NULL AND [UnitId] IS NOT NULL AND [IsDeleted] = 0");
         });
 
         builder.Entity<Course>(b =>

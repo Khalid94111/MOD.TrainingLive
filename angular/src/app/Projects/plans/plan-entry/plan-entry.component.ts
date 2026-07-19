@@ -10,6 +10,11 @@ import {
   PlanNoteDto,
 } from 'src/app/proxy/training/plans/dtos';
 import { TenantCourseService } from 'src/app/proxy/training/tenant-courses';
+import { CenterPlanItemService } from 'src/app/proxy/training/centers';
+import { CourseCatalogService } from 'src/app/proxy/training/catalog';
+import { AvailableCenterPlanItemDto } from 'src/app/proxy/training/centers/dtos';
+import { CourseCatalogDto } from 'src/app/proxy/training/catalog/dtos';
+import { CourseType } from 'src/app/proxy/training/enums';
 import { HrLookupService } from 'src/app/proxy/training/hr-integration/hr-lookup.service';
 import { NominationService } from 'src/app/proxy/training/nominations/nomination.service';
 import { NominationDto } from 'src/app/proxy/training/nominations/dtos';
@@ -45,6 +50,8 @@ export class PlanEntryComponent implements OnInit {
   private planService = inject(TrainingPlanService);
   private itemService = inject(TrainingPlanItemService);
   private tcService = inject(TenantCourseService);
+  private centerPlanItemService = inject(CenterPlanItemService);
+  private courseCatalogService = inject(CourseCatalogService);
   private hrService = inject(HrLookupService);
   private noteService = inject(PlanNoteService);
   private nominationService = inject(NominationService);
@@ -86,6 +93,15 @@ export class PlanEntryComponent implements OnInit {
   fEstimatedDateFrom = signal('');
   fEstimatedDateTo = signal('');
   fFundingSource = signal('');
+
+  // Source selection: internal = approved center-plan item; external = catalog course.
+  fSourceType = signal<'internal' | 'external'>('internal');
+  fCenterPlanItemId = signal<string>('');
+  fCatalogCourseId = signal<string>('');
+  fExternalCourseType = signal<number>(CourseType.ExternalLocal);
+  availableCenterPlanItems = signal<AvailableCenterPlanItemDto[]>([]);
+  catalogCourses = signal<CourseCatalogDto[]>([]);
+  loadingSources = signal(false);
 
   // Section B: Nominees
   fNomineeIds = signal<string[]>([]);
@@ -185,6 +201,37 @@ export class PlanEntryComponent implements OnInit {
     return this.tenantCourses().find(tc => tc.id === id)?.catalogCourseNameAr ?? '';
   });
 
+  selectedCatalogCourseName = computed<string>(() => {
+    const id = this.fCatalogCourseId();
+    if (!id) return '';
+    return this.catalogCourses().find(c => c.id === id)?.courseNameAr ?? '';
+  });
+
+  selectedCenterPlanItem = computed<AvailableCenterPlanItemDto | undefined>(() =>
+    this.availableCenterPlanItems().find(i => i.id === this.fCenterPlanItemId())
+  );
+
+  // Own-tenant items restrict bookings to their eligible units; shared items are open.
+  filteredCenterPlanItems = computed<AvailableCenterPlanItemDto[]>(() => {
+    const unitId = this.fUnitId();
+    return this.availableCenterPlanItems().filter(i => {
+      if (i.remainingSeats === undefined || i.remainingSeats <= 0) return false;
+      if (!unitId) return true;
+      const eligible = i.eligibleUnitIds ?? [];
+      return eligible.length === 0 || eligible.includes(unitId);
+    });
+  });
+
+  filteredCatalogCourses = computed<CourseCatalogDto[]>(() => {
+    const q = this.courseSearch().trim().toLowerCase();
+    const all = this.catalogCourses();
+    if (!q) return all;
+    return all.filter(c =>
+      (c.courseNameAr ?? '').toLowerCase().includes(q) ||
+      (c.courseNameEn ?? '').toLowerCase().includes(q)
+    );
+  });
+
   // ── Course combobox (typeahead) ──
   openCourseDropdown(): void {
     // Start each open with an empty filter so the full list shows.
@@ -199,6 +246,27 @@ export class PlanEntryComponent implements OnInit {
   }
 
   closeCourseDropdown(): void {
+    this.courseDropdownOpen.set(false);
+    this.courseSearch.set('');
+  }
+
+  selectCenterPlanItem(item: AvailableCenterPlanItemDto): void {
+    this.fCenterPlanItemId.set(item.id!);
+    this.applyCenterPlanItemDates(item);
+    this.courseDropdownOpen.set(false);
+    this.courseSearch.set('');
+  }
+
+  private applyCenterPlanItemDates(item: AvailableCenterPlanItemDto): void {
+    this.fEstimatedDateFrom.set(this.toDateInputValue(item.estimatedStartDate));
+    this.fEstimatedDateTo.set(this.toDateInputValue(item.estimatedEndDate));
+    this.fDurationYears.set(0);
+    this.fDurationMonths.set(0);
+    this.fDurationDays.set((item.durationWeeks ?? 0) * 7);
+  }
+
+  selectCatalogCourse(course: CourseCatalogDto): void {
+    this.fCatalogCourseId.set(course.id!);
     this.courseDropdownOpen.set(false);
     this.courseSearch.set('');
   }
@@ -317,6 +385,24 @@ export class PlanEntryComponent implements OnInit {
     this.tenantCourses.set(r.items ?? []);
   }
 
+  async loadCatalogCourses(): Promise<void> {
+    const r = await firstValueFrom(this.courseCatalogService.getList({ maxResultCount: 500, isActive: true }));
+    this.catalogCourses.set(r.items ?? []);
+  }
+
+  async loadAvailableCenterPlanItems(): Promise<void> {
+    if (!this.planId) return;
+    this.loadingSources.set(true);
+    try {
+      const r = await firstValueFrom(this.centerPlanItemService.getAvailableForAnnualPlan(this.planId));
+      this.availableCenterPlanItems.set(r.items ?? []);
+    } catch {
+      this.availableCenterPlanItems.set([]);
+    } finally {
+      this.loadingSources.set(false);
+    }
+  }
+
   async loadCurrentEmployee(): Promise<void> {
     try {
       const me = await firstValueFrom(this.hrService.getCurrentEmployee());
@@ -426,11 +512,21 @@ export class PlanEntryComponent implements OnInit {
     this.isEditMode.set(false);
     this.editItemId.set(null);
     this.resetForm();
+    this.fSourceType.set('internal');
+    this.fCenterPlanItemId.set('');
+    this.fCatalogCourseId.set('');
+    this.fExternalCourseType.set(CourseType.ExternalLocal);
     // Default the picker to the first unit in the list (Staff/TD/TH only).
     if (this.showAccordions()) {
       const first = this.uniqueUnits()[0];
       if (first) this.fUnitId.set(first.id);
+    } else if (this.myUnitId()) {
+      // Unit-scoped users (UTM/UGM) have their unit resolved from HR.
+      this.fUnitId.set(this.myUnitId());
     }
+    // Load source lists lazily when the dialog opens.
+    this.loadAvailableCenterPlanItems();
+    this.loadCatalogCourses();
     // Default EstimatedDateFrom to Q1 start of the plan year so the user sees a
     // sensible value up front; recomputes as soon as they pick a different quarter.
     const year = this.plan()?.year;
@@ -446,8 +542,19 @@ export class PlanEntryComponent implements OnInit {
     event.stopPropagation();
     this.isEditMode.set(true);
     this.editItemId.set(item.id);
+    const isInternal = !!item.trainingCenterPlanItemId;
+    this.fSourceType.set(isInternal ? 'internal' : 'external');
+    this.fCenterPlanItemId.set(item.trainingCenterPlanItemId ?? '');
+    this.fCatalogCourseId.set('');
     this.fTenantCourseId.set(item.tenantCourseId ?? '');
     this.fCourseType.set(item.courseType ?? 0);
+    if (!isInternal) {
+      this.fExternalCourseType.set(
+        item.courseType === CourseType.ExternalInternational
+          ? CourseType.ExternalInternational
+          : CourseType.ExternalLocal
+      );
+    }
     this.fPreferredQuarter.set(item.preferredQuarter ?? 1);
     this.fPriority.set(item.priority ?? 1);
     this.fJustification.set(item.justification ?? '');
@@ -510,6 +617,10 @@ export class PlanEntryComponent implements OnInit {
     this.fNomineeIds.set([]);
     this.editNominations.set([]);
     this.saveError.set(null);
+    this.fSourceType.set('internal');
+    this.fCenterPlanItemId.set('');
+    this.fCatalogCourseId.set('');
+    this.fExternalCourseType.set(CourseType.ExternalLocal);
   }
 
   onCourseSelected(): void {
@@ -568,13 +679,21 @@ export class PlanEntryComponent implements OnInit {
   onNomineesChange(ids: string[]): void { this.fNomineeIds.set(ids); }
 
   get isFormValid(): boolean {
-    const baseValid = !!this.fTenantCourseId()
+    let sourceValid = false;
+    if (this.fSourceType() === 'internal') {
+      sourceValid = !!this.fCenterPlanItemId();
+    } else {
+      sourceValid = !!this.fCatalogCourseId() || !!this.fTenantCourseId();
+    }
+    const baseValid = sourceValid
       && !!this.fJustification().trim()
       && this.fPriority() >= 1 && this.fPriority() <= 5
       && this.fNomineeIds().length >= 1; // ≥1 nominee required for both create and edit
     if (!baseValid) return false;
     // Non-scoped users (multi-unit view) must pick a unit when creating.
     if (!this.isEditMode() && this.showAccordions() && !this.fUnitId()) return false;
+    // Internal bookings for multi-unit callers always require a unit.
+    if (this.fSourceType() === 'internal' && this.showAccordions() && !this.fUnitId()) return false;
     return true;
   }
 
@@ -582,10 +701,10 @@ export class PlanEntryComponent implements OnInit {
     if (!this.isFormValid || this.saving()) return;
     this.saving.set(true);
     this.saveError.set(null);
+    const isInternal = this.fSourceType() === 'internal';
+    const isExternalCatalog = !isInternal && !!this.fCatalogCourseId();
     const data: CreateUpdateTrainingPlanItemDto = {
       planId: this.planId,
-      tenantCourseId: this.fTenantCourseId(),
-      courseType: this.fCourseType(),
       preferredQuarter: this.fPreferredQuarter(),
       priority: this.fPriority(),
       justification: this.fJustification(),
@@ -599,8 +718,13 @@ export class PlanEntryComponent implements OnInit {
       estimatedDateFrom: this.fEstimatedDateFrom() || undefined,
       estimatedDateTo: this.fEstimatedDateTo() || undefined,
       fundingSource: this.fFundingSource() || undefined,
-      unitId: this.showAccordions() && this.fUnitId() ? this.fUnitId() : undefined,
+      unitId: this.fUnitId() || undefined,
       nomineeEmployeeIds: this.fNomineeIds(),
+      // Source-specific fields — only one side is populated.
+      trainingCenterPlanItemId: isInternal ? this.fCenterPlanItemId() : undefined,
+      catalogCourseId: isExternalCatalog ? this.fCatalogCourseId() : undefined,
+      tenantCourseId: !isInternal && !isExternalCatalog ? this.fTenantCourseId() : undefined,
+      courseType: isInternal ? CourseType.Internal : (this.fExternalCourseType() || this.fCourseType()),
     };
     try {
       if (this.isEditMode() && this.editItemId()) {

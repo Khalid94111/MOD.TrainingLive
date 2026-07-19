@@ -64,6 +64,7 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
         centers.AddChild(TrainingPermissions.TrainingCenters.ManagePlans, L("Permission:TrainingCenters.ManagePlans"));
         centers.AddChild(TrainingPermissions.TrainingCenters.ManageSessions, L("Permission:TrainingCenters.ManageSessions"));
         centers.AddChild(TrainingPermissions.TrainingCenters.ApprovePlans, L("Permission:TrainingCenters.ApprovePlans"));
+        centers.AddChild(TrainingPermissions.TrainingCenters.ViewNominations, L("Permission:TrainingCenters.ViewNominations"));
 
         var reports = group.AddPermission(TrainingPermissions.Reports.Default, L("Permission:Reports"));
         reports.AddChild(TrainingPermissions.Reports.FinancialReport, L("Permission:Reports.FinancialReport"));
@@ -156,6 +157,9 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
         centerPlanItemsPermission.AddChild(
             TrainingPermissions.CenterPlanItems.SetUnits,
             L("Permission:CenterPlanItems.SetUnits"));
+        centerPlanItemsPermission.AddChild(
+            TrainingPermissions.CenterPlanItems.AdjustCapacity,
+            L("Permission:CenterPlanItems.AdjustCapacity"));
         // --- Phase 3: Annual Plans ---
         var trainingPlanGroup = group.AddPermission(
             TrainingPermissions.TrainingPlan.Default,

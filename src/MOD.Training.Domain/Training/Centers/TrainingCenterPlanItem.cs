@@ -25,6 +25,10 @@ namespace MOD.Training.Training.Centers
         public string? Objective { get; set; }
         public BeneficiaryType BeneficiaryType { get; set; }
         public int BatchNumber { get; set; }
+
+        // Seats reserved by linked annual-plan items. Derived counter with optimistic concurrency guard.
+        public int ReservedSeats { get; set; }
+        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
     }
 
 }

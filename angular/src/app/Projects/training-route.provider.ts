@@ -110,6 +110,16 @@ export const TRAINING_ROUTE_PROVIDER = {
   layout: eLayoutType.application,
   requiredPolicy: 'Training.CenterPlans',
 },
+// Center Nominations page
+{
+  path: '/training/centers/nominations',
+  name: '::Training.Menu.CenterNominations',
+  parentName: '::Training.Menu.Centers',
+  iconClass: 'bi bi-person-check',
+  order: 3,
+  layout: eLayoutType.application,
+  requiredPolicy: 'Training.TrainingCenters.ViewNominations',
+},
 
   // ──────────────────────────────────
       // Phase 3: Annual Plans Group

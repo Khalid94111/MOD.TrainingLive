@@ -301,6 +301,15 @@
                 @if (item.fundingSource) {
                   <div class="detail-field"><span class="detail-label">💳 مصدر التمويل</span><span class="detail-value funding-code">{{ item.fundingSource }}</span></div>
                 }
+                @if (item.sourceCenterName || item.sourceTenantName) {
+                  <div class="detail-field">
+                    <span class="detail-label">📋 مصدر الدورة</span>
+                    <span class="detail-value">
+                      {{ item.sourceCenterName }}
+                      @if (item.sourceTenantName) { <span class="cell-sub">({{ item.sourceTenantName }})</span> }
+                    </span>
+                  </div>
+                }
               </div>
 
               <div class="detail-section">
@@ -376,6 +385,27 @@
         <div class="dialog-section">
           <div class="section-label"><span class="section-num">A</span> بيانات الدورة</div>
 
+          <!-- Source type toggle -->
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">مصدر الدورة <span class="required">*</span></label>
+              <div class="source-toggle">
+                <button type="button"
+                        [class.active]="fSourceType() === 'internal'"
+                        [disabled]="isEditMode()"
+                        (click)="fSourceType.set('internal')">
+                  📋 بند خطة مركز
+                </button>
+                <button type="button"
+                        [class.active]="fSourceType() === 'external'"
+                        [disabled]="isEditMode()"
+                        (click)="fSourceType.set('external')">
+                  🌐 خارجية (كتالوج)
+                </button>
+              </div>
+            </div>
+          </div>
+
           <!-- Unit picker (Staff/TD/TH only; UTM/UGM are auto-scoped by backend) -->
           @if (showAccordions() && !isEditMode()) {
             <div class="form-group">
@@ -390,52 +420,171 @@
             </div>
           }
 
-          <div class="form-row">
-            <div class="form-group flex-2">
-              <label class="form-label">الدورة <span class="required">*</span></label>
-              <div class="course-combobox">
-                <button type="button" class="form-input combobox-trigger"
-                        (click)="courseDropdownOpen() ? closeCourseDropdown() : openCourseDropdown()">
-                  <span [class.combobox-placeholder]="!selectedCourseName()">
-                    {{ selectedCourseName() || 'اختر دورة...' }}
-                  </span>
-                  <span class="combobox-arrow" [class.open]="courseDropdownOpen()">▾</span>
-                </button>
-
-                @if (courseDropdownOpen()) {
-                  <!-- Click-away backdrop -->
-                  <div class="combobox-backdrop" (click)="closeCourseDropdown()"></div>
-                  <div class="combobox-panel">
-                    <input type="text" class="form-input combobox-search"
-                           placeholder="🔍 اكتب للبحث عن دورة..."
-                           [value]="courseSearch()"
-                           (input)="courseSearch.set($any($event.target).value)"
-                           (keydown.escape)="closeCourseDropdown()"
-                           autofocus>
-                    <div class="combobox-list">
-                      @for (tc of filteredTenantCourses(); track tc.id) {
-                        <button type="button" class="combobox-option"
-                                [class.selected]="tc.id === fTenantCourseId()"
-                                (click)="selectCourse(tc)">
-                          {{ tc.catalogCourseNameAr }}
-                        </button>
-                      } @empty {
-                        <div class="combobox-empty">لا توجد دورات مطابقة للبحث.</div>
+          @if (fSourceType() === 'internal') {
+            @if (isEditMode()) {
+              <div class="form-group">
+                <label class="form-label">بند خطة المركز</label>
+                <div class="source-readonly">
+                  <span class="source-tag">📋 داخلية</span>
+                  @if (selectedCenterPlanItem(); as item) {
+                    <span>{{ item.courseName }} — {{ item.centerName }}</span>
+                    <span class="source-seats">👥 {{ item.remainingSeats }} / {{ item.capacity }} مقعد</span>
+                  } @else {
+                    <span>{{ editItemId() ? 'بند مركز محدد' : '—' }}</span>
+                  }
+                </div>
+              </div>
+            } @else {
+              <div class="form-group">
+                <label class="form-label">بند خطة المركز <span class="required">*</span></label>
+                <div class="course-combobox">
+                  <button type="button" class="form-input combobox-trigger"
+                          (click)="courseDropdownOpen() ? closeCourseDropdown() : openCourseDropdown()">
+                    <span [class.combobox-placeholder]="!selectedCenterPlanItem()">
+                      @if (selectedCenterPlanItem(); as item) {
+                        {{ item.courseName }} — {{ item.centerName }} ({{ item.remainingSeats }} / {{ item.capacity }})
+                      } @else {
+                        اختر بند خطة مركز…
                       }
+                    </span>
+                    <span class="combobox-arrow" [class.open]="courseDropdownOpen()">▾</span>
+                  </button>
+
+                  @if (courseDropdownOpen()) {
+                    <div class="combobox-backdrop" (click)="closeCourseDropdown()"></div>
+                    <div class="combobox-panel">
+                      <input type="text" class="form-input combobox-search"
+                             placeholder="🔍 البحث بالدورة أو المركز…"
+                             [value]="courseSearch()"
+                             (input)="courseSearch.set($any($event.target).value)"
+                             (keydown.escape)="closeCourseDropdown()"
+                             autofocus>
+                      <div class="combobox-list">
+                        @if (loadingSources()) {
+                          <div class="combobox-empty">⏳ جارٍ التحميل…</div>
+                        } @else {
+                          @for (item of filteredCenterPlanItems(); track item.id) {
+                            <button type="button" class="combobox-option"
+                                    [class.selected]="item.id === fCenterPlanItemId()"
+                                    (click)="selectCenterPlanItem(item)">
+                              <span class="option-title">{{ item.courseName }}</span>
+                              <span class="option-sub">
+                                {{ item.centerName }}
+                                · {{ formatDate(item.estimatedStartDate) }} — {{ formatDate(item.estimatedEndDate) }}
+                                · 👥 {{ item.remainingSeats }} / {{ item.capacity }}
+                                @if (item.sourceTenantName) { · {{ item.sourceTenantName }} }
+                              </span>
+                            </button>
+                          } @empty {
+                            <div class="combobox-empty">لا توجد بنود متاحة للوحدة/السنة المحددة.</div>
+                          }
+                        }
+                      </div>
                     </div>
-                  </div>
+                  }
+                </div>
+                @if (fUnitId() && filteredCenterPlanItems().length === 0 && !loadingSources()) {
+                  <span class="form-hint warn">لا توجد بنود مركز متاحة لهذه الوحدة.</span>
                 }
               </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">نوع الدورة <span class="required">*</span></label>
-              <select class="form-input" [value]="fCourseType()" (change)="fCourseType.set(+$any($event.target).value)">
-                <option [value]="0" [selected]="fCourseType() === 0">داخلية</option>
-                <option [value]="1" [selected]="fCourseType() === 1">خارجية محلية</option>
-                <option [value]="2" [selected]="fCourseType() === 2">خارجية دولية</option>
-              </select>
-            </div>
-          </div>
+            }
+          }
+
+          @if (fSourceType() === 'external') {
+            @if (isEditMode()) {
+              <!-- External edit: keep the existing tenant-course selector so course can be swapped locally. -->
+              <div class="form-row">
+                <div class="form-group flex-2">
+                  <label class="form-label">الدورة <span class="required">*</span></label>
+                  <div class="course-combobox">
+                    <button type="button" class="form-input combobox-trigger"
+                            (click)="courseDropdownOpen() ? closeCourseDropdown() : openCourseDropdown()">
+                      <span [class.combobox-placeholder]="!selectedCourseName()">
+                        {{ selectedCourseName() || 'اختر دورة...' }}
+                      </span>
+                      <span class="combobox-arrow" [class.open]="courseDropdownOpen()">▾</span>
+                    </button>
+
+                    @if (courseDropdownOpen()) {
+                      <div class="combobox-backdrop" (click)="closeCourseDropdown()"></div>
+                      <div class="combobox-panel">
+                        <input type="text" class="form-input combobox-search"
+                               placeholder="🔍 اكتب للبحث عن دورة..."
+                               [value]="courseSearch()"
+                               (input)="courseSearch.set($any($event.target).value)"
+                               (keydown.escape)="closeCourseDropdown()"
+                               autofocus>
+                        <div class="combobox-list">
+                          @for (tc of filteredTenantCourses(); track tc.id) {
+                            <button type="button" class="combobox-option"
+                                    [class.selected]="tc.id === fTenantCourseId()"
+                                    (click)="selectCourse(tc)">
+                              {{ tc.catalogCourseNameAr }}
+                            </button>
+                          } @empty {
+                            <div class="combobox-empty">لا توجد دورات مطابقة للبحث.</div>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">نوع الدورة <span class="required">*</span></label>
+                  <select class="form-input" [value]="fCourseType()" (change)="fCourseType.set(+$any($event.target).value)">
+                    <option [value]="1" [selected]="fCourseType() === 1">خارجية محلية</option>
+                    <option [value]="2" [selected]="fCourseType() === 2">خارجية دولية</option>
+                  </select>
+                </div>
+              </div>
+            } @else {
+              <!-- External create: pick from the shared catalog. -->
+              <div class="form-row">
+                <div class="form-group flex-2">
+                  <label class="form-label">الدورة من الكتالوج <span class="required">*</span></label>
+                  <div class="course-combobox">
+                    <button type="button" class="form-input combobox-trigger"
+                            (click)="courseDropdownOpen() ? closeCourseDropdown() : openCourseDropdown()">
+                      <span [class.combobox-placeholder]="!selectedCatalogCourseName()">
+                        {{ selectedCatalogCourseName() || 'اختر دورة من الكتالوج...' }}
+                      </span>
+                      <span class="combobox-arrow" [class.open]="courseDropdownOpen()">▾</span>
+                    </button>
+
+                    @if (courseDropdownOpen()) {
+                      <div class="combobox-backdrop" (click)="closeCourseDropdown()"></div>
+                      <div class="combobox-panel">
+                        <input type="text" class="form-input combobox-search"
+                               placeholder="🔍 اكتب للبحث عن دورة..."
+                               [value]="courseSearch()"
+                               (input)="courseSearch.set($any($event.target).value)"
+                               (keydown.escape)="closeCourseDropdown()"
+                               autofocus>
+                        <div class="combobox-list">
+                          @for (c of filteredCatalogCourses(); track c.id) {
+                            <button type="button" class="combobox-option"
+                                    [class.selected]="c.id === fCatalogCourseId()"
+                                    (click)="selectCatalogCourse(c)">
+                              {{ c.courseNameAr }}
+                            </button>
+                          } @empty {
+                            <div class="combobox-empty">لا توجد دورات مطابقة للبحث.</div>
+                          }
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">نوع الدورة <span class="required">*</span></label>
+                  <select class="form-input" [value]="fExternalCourseType()" (change)="fExternalCourseType.set(+$any($event.target).value)">
+                    <option [value]="1" [selected]="fExternalCourseType() === 1">خارجية محلية</option>
+                    <option [value]="2" [selected]="fExternalCourseType() === 2">خارجية دولية</option>
+                  </select>
+                </div>
+              </div>
+            }
+          }
 
           <div class="form-row">
             <div class="form-group">

@@ -11,6 +11,14 @@ export class CenterPlanWindowService {
   apiName = 'Default';
   
 
+  close = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, CenterPlanWindowDto>({
+      method: 'POST',
+      url: `/api/app/center-plan-window/${id}/close`,
+    },
+    { apiName: this.apiName,...config });
+  
+
   create = (input: CreateUpdateCenterPlanWindowDto, config?: Partial<Rest.Config>) =>
     this.restService.request<any, CenterPlanWindowDto>({
       method: 'POST',
@@ -50,14 +58,6 @@ export class CenterPlanWindowService {
       method: 'PUT',
       url: `/api/app/center-plan-window/${id}`,
       body: input,
-    },
-    { apiName: this.apiName,...config });
-
-
-  close = (id: string, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, CenterPlanWindowDto>({
-      method: 'POST',
-      url: `/api/app/center-plan-window/${id}/close`,
     },
     { apiName: this.apiName,...config });
 }
