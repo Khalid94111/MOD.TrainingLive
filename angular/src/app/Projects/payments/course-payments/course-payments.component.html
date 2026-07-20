@@ -1,128 +1,231 @@
-<div class="page-container">
-  <div class="page-header">
-    <div>
-      <h2>{{ '::Training.Payments.CoursePayment.Title' | abpLocalization }}</h2>
-      <p class="subtitle">{{ '::Training.Payments.CoursePayment.CentralSubtitle' | abpLocalization }}</p>
+<div class="payments-page">
+  <header class="payments-hero">
+    <div class="hero-copy">
+      <span class="hero-icon"><i class="bi bi-wallet2"></i></span>
+      <div>
+        <span class="hero-eyebrow">{{ '::Training.Payments.CoursePayment.DashboardEyebrow' | abpLocalization }}</span>
+        <h1>{{ '::Training.Payments.CoursePayment.Title' | abpLocalization }}</h1>
+        <p>{{ '::Training.Payments.CoursePayment.CentralSubtitle' | abpLocalization }}</p>
+      </div>
     </div>
-    @if (canCreate()) {
-      <dx-button [text]="'::Training.Payments.CoursePayment.NewCasualButton' | abpLocalization" type="default" (onClick)="onAdd()"></dx-button>
+    <div class="hero-actions">
+      <button type="button" class="icon-action" [disabled]="loading()" (click)="reload()"
+              [attr.title]="'::Training.Payments.CoursePayment.Refresh' | abpLocalization">
+        <i class="bi bi-arrow-clockwise" [class.spin]="loading()"></i>
+      </button>
+      @if (canCreate()) {
+        <button type="button" class="primary-action" (click)="onAdd()">
+          <i class="bi bi-plus-lg"></i>
+          {{ '::Training.Payments.CoursePayment.NewCasualButton' | abpLocalization }}
+        </button>
+      }
+    </div>
+  </header>
+
+  <section class="metrics-grid" [attr.aria-label]="'::Training.Payments.CoursePayment.Summary' | abpLocalization">
+    <article class="metric-card metric-total">
+      <span class="metric-icon"><i class="bi bi-receipt"></i></span>
+      <div>
+        <span>{{ '::Training.Payments.CoursePayment.Metric.Total' | abpLocalization }}</span>
+        <strong>{{ totalPayments() }}</strong>
+        <small>{{ '::Training.Payments.CoursePayment.Metric.TotalHint' | abpLocalization }}</small>
+      </div>
+    </article>
+    <article class="metric-card metric-draft">
+      <span class="metric-icon"><i class="bi bi-hourglass-split"></i></span>
+      <div>
+        <span>{{ '::Training.Payments.CoursePayment.Metric.Draft' | abpLocalization }}</span>
+        <strong>{{ draftPayments() }}</strong>
+        <small>{{ '::Training.Payments.CoursePayment.Metric.DraftHint' | abpLocalization }}</small>
+      </div>
+    </article>
+    <article class="metric-card metric-confirmed">
+      <span class="metric-icon"><i class="bi bi-check2-circle"></i></span>
+      <div>
+        <span>{{ '::Training.Payments.CoursePayment.Metric.Confirmed' | abpLocalization }}</span>
+        <strong>{{ confirmedPayments() }}</strong>
+        <small>{{ formatOMR(confirmedTotalOMR()) }} ر.ع</small>
+      </div>
+    </article>
+    <article class="metric-card metric-invoice">
+      <span class="metric-icon"><i class="bi bi-file-earmark-check"></i></span>
+      <div>
+        <span>{{ '::Training.Payments.CoursePayment.Metric.Invoices' | abpLocalization }}</span>
+        <strong>{{ attachedInvoices() }}/{{ totalPayments() }}</strong>
+        <small>{{ '::Training.Payments.CoursePayment.Metric.InvoicesHint' | abpLocalization }}</small>
+      </div>
+    </article>
+  </section>
+
+  <section class="payments-workspace">
+    <div class="filters-panel">
+      <label class="search-field">
+        <i class="bi bi-search"></i>
+        <input type="search" [value]="searchTerm()" (input)="onSearchChange($event)"
+               [placeholder]="'::Training.Payments.CoursePayment.SearchPlaceholder' | abpLocalization" />
+      </label>
+
+      <div class="source-segmented" role="group" [attr.aria-label]="'::Training.Payments.CoursePayment.SourceFilter' | abpLocalization">
+        <button type="button" [class.active]="filterSource() === 'all'" (click)="onSourceFilterChange('all')">
+          {{ '::Training.Payments.CoursePayment.SourceAll' | abpLocalization }}
+        </button>
+        <button type="button" [class.active]="filterSource() === 'session'" (click)="onSourceFilterChange('session')">
+          {{ '::Training.Payments.CoursePayment.SourceSession' | abpLocalization }}
+        </button>
+        <button type="button" [class.active]="filterSource() === 'casual'" (click)="onSourceFilterChange('casual')">
+          {{ '::Training.Payments.CoursePayment.SourceCasual' | abpLocalization }}
+        </button>
+      </div>
+
+      <div class="select-filter">
+        <dx-select-box
+          [items]="courseFilterOptions()"
+          displayExpr="label"
+          valueExpr="id"
+          [value]="filterCourseId()"
+          [searchEnabled]="true"
+          [showClearButton]="true"
+          [placeholder]="'::Training.Payments.AllCourses' | abpLocalization"
+          (onValueChanged)="onCourseFilterChange($event.value)">
+        </dx-select-box>
+      </div>
+
+      <div class="select-filter">
+        <dx-select-box
+          [items]="providers()"
+          displayExpr="providerNameAr"
+          valueExpr="id"
+          [value]="filterProviderId()"
+          [searchEnabled]="true"
+          [showClearButton]="true"
+          [placeholder]="'::Training.Payments.AllProviders' | abpLocalization"
+          (onValueChanged)="onProviderFilterChange($event.value)">
+        </dx-select-box>
+      </div>
+
+      <button type="button" class="clear-filters" (click)="clearFilters()">
+        <i class="bi bi-x-circle"></i>
+        {{ '::Training.Payments.Clear' | abpLocalization }}
+      </button>
+    </div>
+
+    @if (hasActiveFilters()) {
+      <div class="filtered-results" aria-live="polite">
+        <i class="bi bi-funnel"></i>
+        {{ filteredRows().length }} {{ '::Training.Payments.CoursePayment.Results' | abpLocalization }}
+      </div>
     }
-  </div>
 
-  <!-- Filter bar -->
-  <div class="filter-bar">
-    <span class="filter-label">{{ '::Training.Payments.Filter' | abpLocalization }}:</span>
-    <dx-select-box
-      [items]="courseFilterOptions()"
-      displayExpr="label"
-      valueExpr="id"
-      [value]="filterCourseId()"
-      [searchEnabled]="true"
-      [showClearButton]="true"
-      [placeholder]="'::Training.Payments.AllCourses' | abpLocalization"
-      width="240"
-      (onValueChanged)="onCourseFilterChange($event.value)">
-    </dx-select-box>
-    <dx-select-box
-      [items]="statusOptions"
-      displayExpr="text"
-      valueExpr="value"
-      [value]="filterStatus()"
-      [showClearButton]="true"
-      [placeholder]="'::Training.Payments.AllStatuses' | abpLocalization"
-      width="140"
-      (onValueChanged)="onStatusFilterChange($event.value)">
-    </dx-select-box>
-    <dx-select-box
-      [items]="providers()"
-      displayExpr="providerNameAr"
-      valueExpr="id"
-      [value]="filterProviderId()"
-      [searchEnabled]="true"
-      [showClearButton]="true"
-      [placeholder]="'::Training.Payments.AllProviders' | abpLocalization"
-      width="220"
-      (onValueChanged)="onProviderFilterChange($event.value)">
-    </dx-select-box>
-    <dx-button [text]="'::Training.Payments.Clear' | abpLocalization" stylingMode="text" (onClick)="clearFilters()"></dx-button>
-    <span class="row-count">{{ '::Training.Payments.CoursePayment.RowCount' | abpLocalization }}: {{ filteredRows().length }}</span>
-  </div>
-
-  <!-- Grid (9 columns) -->
-  <dx-data-grid
-    [dataSource]="filteredRows()"
-    [showBorders]="true"
-    [columnAutoWidth]="false"
-    [rowAlternationEnabled]="true"
-    keyExpr="id">
-
-    <dxi-column dataField="courseNameAr"          [caption]="'::Training.Payments.CoursePayment.Grid.Course'        | abpLocalization" [width]="220" cellTemplate="courseTpl"></dxi-column>
-    <dxi-column dataField="trainingProviderName"  [caption]="'::Training.Payments.CoursePayment.Grid.Provider'      | abpLocalization" [width]="180" cellTemplate="providerTpl"></dxi-column>
-    <dxi-column dataField="invoiceAmountOMR"      [caption]="'::Training.Payments.CoursePayment.Grid.InvoiceAmount' | abpLocalization" [width]="130" alignment="end" cellTemplate="moneyTpl"></dxi-column>
-    <dxi-column dataField="invoiceDate"           [caption]="'::Training.Payments.CoursePayment.Grid.InvoiceDate'   | abpLocalization" [width]="120" cellTemplate="dateTpl"></dxi-column>
-    <dxi-column                                   [caption]="'::Training.Payments.CoursePayment.Grid.Invoice'       | abpLocalization" [width]="160" cellTemplate="fileTpl" [allowSorting]="false"></dxi-column>
-    <dxi-column dataField="status"                [caption]="'::Training.Payments.CoursePayment.Grid.Status'        | abpLocalization" [width]="120" alignment="center" cellTemplate="statusTpl"></dxi-column>
-    <dxi-column                                   caption=""                  [width]="120" cellTemplate="actionsTpl" [allowSorting]="false"></dxi-column>
-
-    <div *dxTemplate="let cell of 'courseTpl'">
-      <div class="course-name">{{ cell.data.courseNameAr || '—' }}</div>
-      <span [class]="cell.data.sessionId ? 'source-pill source-session' : 'source-pill source-casual'">
-        {{ (cell.data.sessionId
-          ? '::Training.Payments.CoursePayment.SourceSession'
-          : '::Training.Payments.CoursePayment.SourceCasual') | abpLocalization }}
-      </span>
-      @if (cell.data.fundingScenario !== null && cell.data.fundingScenario !== undefined) {
-        @switch (cell.data.fundingScenario) {
-          @case (FundingScenario.FundingSourceCoversAll)    { <span class="scenario-pill scenario-1">{{ '::Training.Payments.CoursePayment.Scenario1' | abpLocalization }}</span> }
-          @case (FundingScenario.FundingSourceCoversCourse) { <span class="scenario-pill scenario-2">{{ '::Training.Payments.CoursePayment.Scenario2' | abpLocalization }}</span> }
-          @case (FundingScenario.FinancialItemsCoverAll)    { <span class="scenario-pill scenario-3">{{ '::Training.Payments.CoursePayment.Scenario3' | abpLocalization }}</span> }
+    @if (loading()) {
+      <div class="loading-list" aria-live="polite">
+        @for (item of [1, 2, 3, 4]; track item) {
+          <div class="loading-row"></div>
         }
-      }
-    </div>
-
-    <div *dxTemplate="let cell of 'providerTpl'">
-      <div class="provider-name">{{ cell.data.trainingProviderName || '—' }}</div>
-    </div>
-
-    <div *dxTemplate="let cell of 'moneyTpl'">
-      <span class="currency-omr">{{ formatOMR(cell.value) }}</span>
-    </div>
-
-    <div *dxTemplate="let cell of 'dateTpl'">
-      <span>{{ (cell.value || '').substring(0, 10) || '—' }}</span>
-    </div>
-
-    <div *dxTemplate="let cell of 'fileTpl'">
-      @if (cell.data.invoiceBlobName) {
-        <span class="file-chip file-chip-uploaded" [title]="cell.data.invoiceOriginalFileName || ''">
-          📎 {{ cell.data.invoiceOriginalFileName || 'invoice.pdf' }}
-        </span>
-        @if (canDownload()) {
-          <dx-button icon="download" stylingMode="text" [hint]="'::Download' | abpLocalization" (onClick)="onDownloadInvoice(cell.data)"></dx-button>
-        }
-      } @else {
-        <span class="file-chip file-chip-empty">{{ '::Training.Payments.CoursePayment.Grid.InvoiceMissing' | abpLocalization }}</span>
-      }
-    </div>
-
-    <div *dxTemplate="let cell of 'statusTpl'">
-      <span [class]="statusBadgeCss(cell.data.status)">{{ statusBadgeText(cell.data.status) }}</span>
-    </div>
-
-    <div *dxTemplate="let cell of 'actionsTpl'">
-      @if (cell.data.sessionId) {
-        <dx-button icon="arrowleft" stylingMode="text"
-          [hint]="'::Training.Payments.CoursePayment.OpenSession' | abpLocalization"
-          (onClick)="openSessionPayment(cell.data)"></dx-button>
-      } @else {
-        @if (cell.data.status === PaymentStatus.Draft) {
-          @if (canUpdate()) { <dx-button icon="edit" stylingMode="text" [hint]="'::Training.Payments.Edit' | abpLocalization" (onClick)="onEdit(cell.data)"></dx-button> }
-          @if (canDelete()) { <dx-button icon="trash" stylingMode="text" [hint]="'::Training.Payments.Delete' | abpLocalization" (onClick)="onDelete(cell.data)"></dx-button> }
-        }
-        <dx-button icon="eyeopen" stylingMode="text" [hint]="'::Training.Payments.View' | abpLocalization" (onClick)="onView(cell.data)"></dx-button>
-      }
-    </div>
-  </dx-data-grid>
+      </div>
+    } @else if (filteredRows().length === 0) {
+      <div class="empty-state">
+        <span><i class="bi bi-inbox"></i></span>
+        <h3>{{ '::Training.Payments.CoursePayment.EmptyTitle' | abpLocalization }}</h3>
+        <p>{{ '::Training.Payments.CoursePayment.EmptyHint' | abpLocalization }}</p>
+        <button type="button" (click)="clearFilters()">{{ '::Training.Payments.CoursePayment.ResetFilters' | abpLocalization }}</button>
+      </div>
+    } @else {
+      <div class="payments-table-wrap">
+        <table class="payments-table">
+          <thead>
+            <tr>
+              <th>{{ '::Training.Payments.CoursePayment.Grid.Course' | abpLocalization }}</th>
+              <th>{{ '::Training.Payments.CoursePayment.Grid.Provider' | abpLocalization }}</th>
+              <th>{{ '::Training.Payments.CoursePayment.Grid.InvoiceAmount' | abpLocalization }}</th>
+              <th>{{ '::Training.Payments.CoursePayment.Grid.InvoiceDate' | abpLocalization }}</th>
+              <th>{{ '::Training.Payments.CoursePayment.Grid.Invoice' | abpLocalization }}</th>
+              <th>{{ '::Training.Payments.CoursePayment.Grid.Status' | abpLocalization }}</th>
+              <th><span class="visually-hidden">{{ '::Training.Payments.CoursePayment.Actions' | abpLocalization }}</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of filteredRows(); track row.id) {
+              <tr [class.row-needs-action]="row.status === PaymentStatus.Draft">
+                <td>
+                  <div class="course-cell">
+                    <span class="course-avatar"><i [class]="row.sessionId ? 'bi bi-calendar2-week' : 'bi bi-mortarboard'"></i></span>
+                    <div>
+                      <strong>{{ row.courseNameAr || '—' }}</strong>
+                      <div class="row-tags">
+                        <span [class]="row.sessionId ? 'source-pill source-session' : 'source-pill source-casual'">
+                          {{ (row.sessionId
+                            ? '::Training.Payments.CoursePayment.SourceSession'
+                            : '::Training.Payments.CoursePayment.SourceCasual') | abpLocalization }}
+                        </span>
+                        @if (row.fundingScenario !== null && row.fundingScenario !== undefined) {
+                          <span [class]="'scenario-pill scenario-' + row.fundingScenario">{{ scenarioLabelFor(row.fundingScenario) }}</span>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="provider-cell">
+                    <i class="bi bi-building"></i>
+                    <span>{{ row.trainingProviderName || '—' }}</span>
+                  </div>
+                </td>
+                <td><strong class="amount-cell">{{ formatOMR(row.invoiceAmountOMR) }} <small>ر.ع</small></strong></td>
+                <td><span class="date-cell"><i class="bi bi-calendar3"></i>{{ (row.invoiceDate || '').substring(0, 10) || '—' }}</span></td>
+                <td>
+                  @if (row.hasInvoice) {
+                    @if (canDownload()) {
+                      <button type="button" class="invoice-chip attached" (click)="onDownloadInvoice(row)"
+                              [attr.title]="row.invoiceOriginalFileName || ''">
+                        <i class="bi bi-file-earmark-check"></i>
+                        <span>{{ row.invoiceOriginalFileName || 'invoice.pdf' }}</span>
+                        <i class="bi bi-download"></i>
+                      </button>
+                    } @else {
+                      <span class="invoice-chip attached"><i class="bi bi-file-earmark-check"></i>{{ row.invoiceOriginalFileName || 'invoice.pdf' }}</span>
+                    }
+                  } @else {
+                    <span class="invoice-chip missing"><i class="bi bi-exclamation-circle"></i>{{ '::Training.Payments.CoursePayment.Grid.InvoiceMissing' | abpLocalization }}</span>
+                  }
+                </td>
+                <td>
+                  <div class="status-cell">
+                    <span [class]="statusBadgeCss(row.status)">{{ statusBadgeText(row.status) }}</span>
+                    @if (row.status === PaymentStatus.Draft) {
+                      <small>{{ (row.hasInvoice
+                        ? '::Training.Payments.CoursePayment.ReadyToConfirm'
+                        : '::Training.Payments.CoursePayment.WaitingInvoice') | abpLocalization }}</small>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <div class="row-actions">
+                    @if (row.sessionId) {
+                      <button type="button" class="open-action" (click)="openSessionPayment(row)">
+                        {{ '::Training.Payments.CoursePayment.OpenSessionShort' | abpLocalization }}
+                        <i class="bi bi-arrow-left"></i>
+                      </button>
+                    } @else {
+                      @if (row.status === PaymentStatus.Draft && canUpdate()) {
+                        <button type="button" class="icon-row-action edit" (click)="onEdit(row)"
+                                [attr.title]="'::Training.Payments.Edit' | abpLocalization"><i class="bi bi-pencil"></i></button>
+                      }
+                      <button type="button" class="icon-row-action" (click)="onView(row)"
+                              [attr.title]="'::Training.Payments.View' | abpLocalization"><i class="bi bi-eye"></i></button>
+                      @if (row.status === PaymentStatus.Draft && canDelete()) {
+                        <button type="button" class="icon-row-action delete" (click)="onDelete(row)"
+                                [attr.title]="'::Training.Payments.Delete' | abpLocalization"><i class="bi bi-trash3"></i></button>
+                      }
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
 
   <!-- Toast -->
   @if (toast().visible) {
@@ -137,12 +240,29 @@
     [visible]="dialog().visible"
     [title]="dialog().isEdit ? ('::Training.Payments.CoursePayment.Dialog.TitleEdit' | abpLocalization) : ('::Training.Payments.CoursePayment.Dialog.TitleNew' | abpLocalization)"
     [showCloseButton]="true"
-    [width]="980"
-    [height]="820"
+    [width]="860"
+    [height]="'auto'"
     [toolbarItems]="dialogToolbarItems()"
     (onHidden)="closeDialog()">
 
     <div class="dialog-form">
+      <div class="dialog-progress">
+        <div [class.done]="!!fCourseId()">
+          <span><i class="bi bi-1-circle"></i></span>
+          <div><strong>{{ '::Training.Payments.CoursePayment.Dialog.StepDetails' | abpLocalization }}</strong><small>{{ '::Training.Payments.CoursePayment.Dialog.StepDetailsHint' | abpLocalization }}</small></div>
+        </div>
+        <i class="bi bi-chevron-left"></i>
+        <div [class.done]="hasInvoice()">
+          <span><i class="bi bi-2-circle"></i></span>
+          <div><strong>{{ '::Training.Payments.CoursePayment.Dialog.StepInvoice' | abpLocalization }}</strong><small>{{ '::Training.Payments.CoursePayment.Dialog.StepInvoiceHint' | abpLocalization }}</small></div>
+        </div>
+        <i class="bi bi-chevron-left"></i>
+        <div [class.done]="dialog().current?.status === PaymentStatus.Confirmed">
+          <span><i class="bi bi-3-circle"></i></span>
+          <div><strong>{{ '::Training.Payments.CoursePayment.Dialog.StepConfirm' | abpLocalization }}</strong><small>{{ '::Training.Payments.CoursePayment.Dialog.StepConfirmHint' | abpLocalization }}</small></div>
+        </div>
+      </div>
+
       <!-- Context -->
       @if (dialogCourse(); as c) {
         <div class="context-grid">
@@ -158,6 +278,13 @@
       }
 
       <!-- Form fields -->
+      <div class="dialog-section-heading">
+        <span><i class="bi bi-receipt-cutoff"></i></span>
+        <div>
+          <h3>{{ '::Training.Payments.CoursePayment.Dialog.InvoiceSectionTitle' | abpLocalization }}</h3>
+          <p>{{ '::Training.Payments.CoursePayment.Dialog.InvoiceSectionHint' | abpLocalization }}</p>
+        </div>
+      </div>
       <div class="form-row">
         <div class="form-field flex-1">
           <label>{{ '::Training.Payments.CoursePayment.Dialog.PickCourse' | abpLocalization }} <span class="required">*</span></label>
@@ -204,6 +331,7 @@
             <dx-number-box
               [value]="fInvoiceAmountOMR()"
               [min]="0.001"
+              [disabled]="dialogLocked()"
               format="#,##0.000 'ر.ع'"
               (onValueChanged)="updateInvoiceAmount($event.value)">
             </dx-number-box>
@@ -211,23 +339,25 @@
           </div>
           <div class="hint">{{ '::Training.Payments.CoursePayment.Dialog.InvoiceAmountHint' | abpLocalization }}</div>
         </div>
-      </div>
-
-      <div class="form-row">
         <div class="form-field flex-1">
           <label>{{ '::Training.Payments.CoursePayment.Dialog.InvoiceDate' | abpLocalization }} <span class="required">*</span></label>
           <dx-date-box
             [value]="fInvoiceDate()"
+            [disabled]="dialogLocked()"
             displayFormat="yyyy-MM-dd"
             type="date"
             (onValueChanged)="updateInvoiceDate($event.value)">
           </dx-date-box>
         </div>
+      </div>
+
+      <div class="form-row">
         <div class="form-field flex-1">
           <label>📝 {{ '::Training.Payments.Notes' | abpLocalization }}</label>
           <dx-text-area
             [value]="fNotes()"
-            [height]="60"
+            [height]="72"
+            [disabled]="dialogLocked()"
             [placeholder]="'::Training.Payments.CoursePayment.Dialog.NotesPlaceholder' | abpLocalization"
             (onValueChanged)="updateNotes($event.value)">
           </dx-text-area>
@@ -235,6 +365,13 @@
       </div>
 
       <!-- Upload zone -->
+      <div class="dialog-section-heading upload-heading">
+        <span><i class="bi bi-file-earmark-pdf"></i></span>
+        <div>
+          <h3>{{ '::Training.Payments.CoursePayment.Dialog.UploadSectionTitle' | abpLocalization }}</h3>
+          <p>{{ '::Training.Payments.CoursePayment.Dialog.UploadSectionHint' | abpLocalization }}</p>
+        </div>
+      </div>
       <div class="form-field">
         <label>{{ '::Training.Payments.CoursePayment.Dialog.UploadLabel' | abpLocalization }} <span class="required">*</span></label>
 

@@ -4,7 +4,6 @@ import { LocalizationPipe, PermissionService } from '@abp/ng.core';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import {
-  DxDataGridModule,
   DxPopupModule,
   DxSelectBoxModule,
   DxNumberBoxModule,
@@ -83,7 +82,6 @@ interface PaymentCourseOption {
   imports: [
     CommonModule,
     LocalizationPipe,
-    DxDataGridModule,
     DxPopupModule,
     DxSelectBoxModule,
     DxNumberBoxModule,
@@ -113,8 +111,9 @@ export class CoursePaymentsComponent implements OnInit {
 
   // ── Filters ──
   filterCourseId = signal<string | null>(null);
-  filterStatus = signal<PaymentStatus | null>(null);
   filterProviderId = signal<string | null>(null);
+  filterSource = signal<'all' | 'session' | 'casual'>('all');
+  searchTerm = signal('');
 
   // ── Permissions ──
   canCreate = computed(() => this.permissions.getGrantedPolicy('TrainingPayments.CoursePayments.Create'));
@@ -144,6 +143,28 @@ export class CoursePaymentsComponent implements OnInit {
   statusOptions: { value: PaymentStatus; text: string }[] = [];
 
   // ── Derived ──
+  totalPayments = computed(() => this.rows().length);
+  draftPayments = computed(() =>
+    this.rows().filter(row => row.status === PaymentStatus.Draft).length,
+  );
+  confirmedPayments = computed(() =>
+    this.rows().filter(row => row.status === PaymentStatus.Confirmed).length,
+  );
+  attachedInvoices = computed(() =>
+    this.rows().filter(row => row.hasInvoice).length,
+  );
+  confirmedTotalOMR = computed(() =>
+    this.rows()
+      .filter(row => row.status === PaymentStatus.Confirmed)
+      .reduce((sum, row) => sum + (row.invoiceAmountOMR ?? 0), 0),
+  );
+  hasActiveFilters = computed(() =>
+    this.filterSource() !== 'all'
+    || !!this.filterCourseId()
+    || !!this.filterProviderId()
+    || !!this.searchTerm().trim(),
+  );
+
   courseFilterOptions = computed<PaymentCourseOption[]>(() => {
     const options = new Map<string, string>();
     for (const row of this.rows()) {
@@ -156,13 +177,30 @@ export class CoursePaymentsComponent implements OnInit {
 
   filteredRows = computed(() => {
     const courseId = this.filterCourseId();
-    const status = this.filterStatus();
     const providerId = this.filterProviderId();
+    const source = this.filterSource();
+    const search = this.searchTerm().trim().toLocaleLowerCase('ar');
     return this.rows().filter(r => {
       if (courseId && (r.casualCourseId ?? r.sessionId) !== courseId) return false;
-      if (status !== null && r.status !== status) return false;
       if (providerId && r.trainingProviderId !== providerId) return false;
+      if (source === 'session' && !r.sessionId) return false;
+      if (source === 'casual' && !r.casualCourseId) return false;
+      if (search) {
+        const haystack = [
+          r.courseNameAr,
+          r.trainingProviderName,
+          r.invoiceOriginalFileName,
+          r.notes,
+        ].filter(Boolean).join(' ').toLocaleLowerCase('ar');
+        if (!haystack.includes(search)) return false;
+      }
       return true;
+    }).sort((a, b) => {
+      const statusOrder = (row: CoursePaymentDto): number =>
+        row.status === PaymentStatus.Draft ? 0 : row.status === PaymentStatus.Confirmed ? 1 : 2;
+      const byStatus = statusOrder(a) - statusOrder(b);
+      if (byStatus !== 0) return byStatus;
+      return (b.creationTime ?? '').localeCompare(a.creationTime ?? '');
     });
   });
 
@@ -222,17 +260,26 @@ export class CoursePaymentsComponent implements OnInit {
   });
 
   scenarioLabel = computed(() => {
-    switch (this.dialogCourse()?.fundingScenario) {
+    return this.scenarioLabelFor(this.dialogCourse()?.fundingScenario);
+  });
+
+  scenarioLabelFor(scenario: FundingScenario | null | undefined): string {
+    switch (scenario) {
       case FundingScenario.FundingSourceCoversAll:    return this.l.t('::Training.Payments.CoursePayment.Scenario1');
       case FundingScenario.FundingSourceCoversCourse: return this.l.t('::Training.Payments.CoursePayment.Scenario2');
       case FundingScenario.FinancialItemsCoverAll:    return this.l.t('::Training.Payments.CoursePayment.Scenario3');
       default: return this.l.t('::Training.Payments.CoursePayment.ScenarioUnknown');
     }
-  });
+  }
 
   hasInvoice = computed(() => {
     if (this.upload().status === 'uploaded') return true;
     return !!this.dialog().current?.invoiceBlobName;
+  });
+
+  dialogLocked = computed(() => {
+    const current = this.dialog().current;
+    return !!current && current.status !== PaymentStatus.Draft;
   });
 
   confirmDisabled = computed(() => {
@@ -259,11 +306,17 @@ export class CoursePaymentsComponent implements OnInit {
       { widget: 'dxButton', location: 'after', toolbar: 'bottom',
         options: { text: this.l.t('::Cancel'), onClick: () => this.closeDialog() } },
       { widget: 'dxButton', location: 'after', toolbar: 'bottom',
-        options: { text: this.l.t('::Training.Payments.SaveDraft'), onClick: () => this.onSaveDraft() } },
+        options: {
+          text: this.l.t('::Training.Payments.SaveDraft'),
+          disabled: this.dialogSaving()
+            || (this.dialog().isEdit ? !this.canUpdate() : !this.canCreate()),
+          onClick: () => this.onSaveDraft(),
+        } },
       { widget: 'dxButton', location: 'after', toolbar: 'bottom',
         options: {
           text: this.l.t('::Training.Payments.CoursePayment.Dialog.ConfirmActionLabel'),
           type: 'success',
+          disabled: this.confirmDisabled() || !this.canConfirm(),
           onClick: () => this.onConfirm(),
         },
       },
@@ -274,7 +327,7 @@ export class CoursePaymentsComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     this.statusOptions = [
       { value: PaymentStatus.Draft,     text: this.l.t('::Training.PaymentStatus.Draft') },
-      { value: PaymentStatus.Confirmed, text: this.l.t('::Training.PaymentStatus.Confirmed') },
+      { value: PaymentStatus.Confirmed, text: this.l.t('::Training.Payments.CoursePayment.StatusConfirmed') },
       { value: PaymentStatus.Cancelled, text: this.l.t('::Training.PaymentStatus.Cancelled') },
     ];
 
@@ -369,12 +422,20 @@ export class CoursePaymentsComponent implements OnInit {
 
   // ── Filter handlers ──
   onCourseFilterChange(v: string | null): void { this.filterCourseId.set(v); }
-  onStatusFilterChange(v: PaymentStatus | null): void { this.filterStatus.set(v); }
   onProviderFilterChange(v: string | null): void { this.filterProviderId.set(v); }
+  onSourceFilterChange(v: 'all' | 'session' | 'casual'): void { this.filterSource.set(v); }
+  onSearchChange(event: Event): void {
+    this.searchTerm.set((event.target as HTMLInputElement).value ?? '');
+  }
   clearFilters(): void {
     this.filterCourseId.set(null);
-    this.filterStatus.set(null);
     this.filterProviderId.set(null);
+    this.filterSource.set('all');
+    this.searchTerm.set('');
+  }
+
+  async reload(): Promise<void> {
+    await this.loadRows();
   }
 
   // ── Dialog flow ──
