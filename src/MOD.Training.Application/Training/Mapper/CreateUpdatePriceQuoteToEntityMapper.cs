@@ -14,11 +14,10 @@ public partial class CreateUpdatePriceQuoteToEntityMapper : MapperBase<CreateUpd
     {
         var entity = new PriceQuote(Guid.NewGuid());
         Map(source, entity);
-        // QuotedPriceOMR fallback: legacy session arm only sets QuotedPrice; mirror it.
+        // Casual-course inputs use QuotedPriceOMR directly. Session pricing is normalized
+        // against the authoritative nomination count by PriceQuoteAppService.
         if (entity.QuotedPriceOMR <= 0 && entity.QuotedPrice > 0)
             entity.QuotedPriceOMR = entity.QuotedPrice;
-        if (entity.SessionId.HasValue)
-            entity.CalculatePrices();
         return entity;
     }
 

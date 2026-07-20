@@ -91,7 +91,11 @@ public class CoursePaymentAppService(
         ValidatePolymorphicParent(input);
         ValidateAmounts(input);
         await ValidateParentReadyAsync(input.CasualCourseId, input.SessionId);
-        await ValidateProviderMatchAsync(input);
+        await ValidateNoDuplicateAsync(input.CasualCourseId, input.SessionId);
+        await ValidateProviderMatchAsync(
+            input.CasualCourseId,
+            input.SessionId,
+            input.TrainingProviderId);
 
         var entity = toEntityMapper.Map(input);
         entity.Status = PaymentStatus.Draft;
@@ -106,7 +110,11 @@ public class CoursePaymentAppService(
         var entity = await repository.GetAsync(id);
         EnsureDraft(entity);
         ValidateAmounts(input);
-        await ValidateProviderMatchAsync(input, allowProviderChange: true);
+        await ValidateParentReadyAsync(entity.CasualCourseId, entity.SessionId);
+        await ValidateProviderMatchAsync(
+            entity.CasualCourseId,
+            entity.SessionId,
+            input.TrainingProviderId);
 
         // Polymorphic parent + lifecycle + invoice refs are immutable on Update.
         var sessionOriginal = entity.SessionId;
@@ -200,6 +208,12 @@ public class CoursePaymentAppService(
         if (string.IsNullOrEmpty(entity.InvoiceBlobName))
             throw new BusinessException("Training:CoursePayment:InvoiceRequired");
 
+        await ValidateParentReadyAsync(entity.CasualCourseId, entity.SessionId);
+        await ValidateProviderMatchAsync(
+            entity.CasualCourseId,
+            entity.SessionId,
+            entity.TrainingProviderId);
+
         entity.Status = PaymentStatus.Confirmed;
         entity.ConfirmedAt = Clock.Now;
         entity.ConfirmedById = CurrentUser.Id;
@@ -232,8 +246,18 @@ public class CoursePaymentAppService(
 
     private static void ValidateAmounts(CreateUpdateCoursePaymentDto input)
     {
-        if (input.InvoiceAmountOMR < 0)
+        if (input.InvoiceAmountOMR <= 0)
             throw new BusinessException("Training:CoursePayment:NegativeAmount");
+    }
+
+    private async Task ValidateNoDuplicateAsync(Guid? casualCourseId, Guid? sessionId)
+    {
+        var exists = casualCourseId.HasValue
+            ? await repository.AnyAsync(x => x.CasualCourseId == casualCourseId.Value)
+            : await repository.AnyAsync(x => x.SessionId == sessionId!.Value);
+
+        if (exists)
+            throw new BusinessException("Training:CoursePayment:DuplicateForParent");
     }
 
     private async Task ValidateParentReadyAsync(Guid? casualCourseId, Guid? sessionId)
@@ -253,30 +277,40 @@ public class CoursePaymentAppService(
                 ?? throw new EntityNotFoundException(typeof(CourseSession), sessionId.Value);
             if (session.CourseType == CourseType.Internal)
                 throw new BusinessException("Training:CoursePayment:InternalSessionNotAllowed");
-            if (session.Status == SessionStatus.Cancelled)
+            if (session.Status == SessionStatus.Planned || session.Status == SessionStatus.Cancelled)
+                throw new BusinessException("Training:CoursePayment:CourseNotReady");
+            if (!session.SelectedPriceQuoteId.HasValue)
                 throw new BusinessException("Training:CoursePayment:CourseNotReady");
         }
     }
 
     /// <summary>
-    /// Casual arm: TrainingProviderId must equal the SelectedPriceQuote.ProviderId.
-    /// Session arm: no constraint in 4B-β (sessions don't carry a SelectedPriceQuoteId).
+    /// The payment provider must always equal the provider of the selected quote.
     /// </summary>
-    private async Task ValidateProviderMatchAsync(CreateUpdateCoursePaymentDto input, bool allowProviderChange = false)
+    private async Task ValidateProviderMatchAsync(
+        Guid? casualCourseId,
+        Guid? sessionId,
+        Guid trainingProviderId)
     {
-        if (!input.CasualCourseId.HasValue) return;
+        Guid selectedQuoteId;
+        if (casualCourseId.HasValue)
+        {
+            var course = await casualCourseRepo.GetAsync(casualCourseId.Value);
+            selectedQuoteId = course.SelectedPriceQuoteId
+                ?? throw new BusinessException("Training:CoursePayment:CourseNotReady");
+        }
+        else
+        {
+            var session = await sessionRepo.GetAsync(sessionId!.Value);
+            selectedQuoteId = session.SelectedPriceQuoteId
+                ?? throw new BusinessException("Training:CoursePayment:CourseNotReady");
+        }
 
-        var course = await casualCourseRepo.GetAsync(input.CasualCourseId.Value);
-        if (!course.SelectedPriceQuoteId.HasValue)
-            throw new BusinessException("Training:CoursePayment:CourseNotReady");
-
-        var quote = await priceQuoteRepo.FindAsync(course.SelectedPriceQuoteId.Value)
+        var quote = await priceQuoteRepo.FindAsync(selectedQuoteId)
             ?? throw new BusinessException("Training:CoursePayment:CourseNotReady");
 
-        if (input.TrainingProviderId != quote.ProviderId)
+        if (trainingProviderId != quote.ProviderId)
             throw new BusinessException("Training:CoursePayment:ProviderMismatch");
-
-        _ = allowProviderChange;  // signature kept for symmetry; provider rule is the same on Update
     }
 
     private static void EnsureDraft(CoursePayment entity)

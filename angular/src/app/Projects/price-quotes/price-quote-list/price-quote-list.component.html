@@ -170,9 +170,17 @@
                   </span>
                 </td>
                 <td>
-                  <span class="quote-count" [class.has-quotes]="row.quoteCount > 0">
-                    {{ row.quoteCount }}
-                  </span>
+                  <button type="button" class="quote-count"
+                    [class.has-quotes]="row.quoteCount > 0"
+                    [class.is-expanded]="isQuoteDetailsExpanded(row)"
+                    [disabled]="row.quoteCount === 0"
+                    (click)="toggleQuoteDetails(row)"
+                    [title]="'::Training.PriceQuotes.Dashboard.ToggleQuoteDetails' | abpLocalization">
+                    <span>{{ row.quoteCount }}</span>
+                    @if (row.quoteCount > 0) {
+                      <i [class]="isQuoteDetailsExpanded(row) ? 'bi bi-chevron-up' : 'bi bi-chevron-down'" aria-hidden="true"></i>
+                    }
+                  </button>
                 </td>
                 <td>
                   @if (stateMeta(row.state); as state) {
@@ -186,7 +194,7 @@
                   @if (row.selectedQuote) {
                     <div class="winner-cell">
                       <strong>{{ row.selectedQuote.providerName || '—' }}</strong>
-                      <small>{{ formatOMR(row.selectedQuote.quotedPriceOMR) }} {{ '::Training.Currency.OMR' | abpLocalization }}</small>
+                      <small>{{ formatOMR(quoteTotalPrice(row.selectedQuote)) }} {{ '::Training.Currency.OMR' | abpLocalization }}</small>
                     </div>
                   } @else {
                     <span class="muted-value">—</span>
@@ -212,6 +220,73 @@
                   </button>
                 </td>
               </tr>
+              @if (isQuoteDetailsExpanded(row)) {
+                <tr class="quote-details-row">
+                  <td colspan="7">
+                    <div class="quote-details-panel">
+                      <div class="quote-details-header">
+                        <div>
+                          <span>{{ '::Training.PriceQuotes.Dashboard.QuoteDetails' | abpLocalization }}</span>
+                          <strong>{{ row.session.tenantCourseNameAr || row.session.tenantCourseNameEn || '—' }}</strong>
+                        </div>
+                        <button type="button" (click)="openQuotes(row)">
+                          {{ actionKey(row.state) | abpLocalization }}
+                          <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                        </button>
+                      </div>
+
+                      <div class="quote-detail-grid">
+                        @for (quote of row.quotes; track quote.id) {
+                          <article class="quote-detail-card" [class.is-winner]="quote.isSelected">
+                            <div class="quote-detail-title">
+                              <div>
+                                @if (quote.isSelected) {
+                                  <i class="bi bi-trophy-fill" aria-hidden="true"></i>
+                                }
+                                <strong>{{ quote.providerName || '—' }}</strong>
+                              </div>
+                              @if (quote.isSelected) {
+                                <span>{{ '::Training.PriceQuotes.Dashboard.WinningQuote' | abpLocalization }}</span>
+                              }
+                            </div>
+
+                            <dl>
+                              <div>
+                                <dt>{{ '::Training.PricingType' | abpLocalization }}</dt>
+                                <dd>{{ quotePricingTypeKey(quote) | abpLocalization }}</dd>
+                              </div>
+                              <div>
+                                <dt>{{ '::Training.ParticipantsCount' | abpLocalization }}</dt>
+                                <dd>{{ hasStructuredPricing(quote) ? quote.participantsCount : '—' }}</dd>
+                              </div>
+                              <div>
+                                <dt>{{ '::Training.PricePerPerson' | abpLocalization }}</dt>
+                                <dd>
+                                  @if (quotePricePerPerson(quote) !== null) {
+                                    {{ formatOMR(quotePricePerPerson(quote)) }} <small>{{ '::Training.Currency.OMR' | abpLocalization }}</small>
+                                  } @else { — }
+                                </dd>
+                              </div>
+                              <div class="total-price-detail">
+                                <dt>{{ '::Training.TotalPrice' | abpLocalization }}</dt>
+                                <dd>{{ formatOMR(quoteTotalPrice(quote)) }} <small>{{ '::Training.Currency.OMR' | abpLocalization }}</small></dd>
+                              </div>
+                            </dl>
+
+                            @if (quote.cityNameAr || quote.countryNameAr) {
+                              <div class="quote-location">
+                                <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                                {{ quote.cityNameAr || quote.cityNameEn || '—' }}،
+                                {{ quote.countryNameAr || quote.countryNameEn || '—' }}
+                              </div>
+                            }
+                          </article>
+                        }
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              }
             }
           </tbody>
         </table>

@@ -30,6 +30,18 @@
 .provider-name { font-weight: 600; color: #1e293b; font-size: 0.85rem; }
 .muted         { color: #94a3b8; font-size: 0.72rem; }
 
+.source-pill {
+  display: inline-flex;
+  margin-inline-end: 5px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 750;
+}
+
+.source-session { background: #e8f0ff; color: #2859bd; }
+.source-casual { background: #f1f5f9; color: #526074; }
+
 .currency-dual {
   display: flex; flex-direction: column; align-items: flex-end; gap: 1px; line-height: 1.15;
 }

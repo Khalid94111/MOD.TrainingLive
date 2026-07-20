@@ -138,6 +138,10 @@ public class CourseSessionAppService(
 
         var newQuote = await priceQuoteRepo.GetAsync(input.PriceQuoteId);
         newQuote.IsSelected = true;
+        // Legacy session quotes may have QuotedPriceOMR equal to the entered unit price.
+        // Once selected, persist the calculated total as the canonical downstream amount.
+        if (newQuote.TotalPrice.HasValue && newQuote.TotalPrice.Value > 0)
+            newQuote.QuotedPriceOMR = newQuote.TotalPrice.Value;
         await priceQuoteRepo.UpdateAsync(newQuote);
 
         // Three writes on the session at once: winner pointer, dates, status.
@@ -374,7 +378,9 @@ public class CourseSessionAppService(
             var quote = await priceQuoteRepo.FindAsync(s.SelectedPriceQuoteId.Value);
             if (quote != null)
             {
-                dto.SelectedPriceQuoteAmountOMR = quote.QuotedPriceOMR;
+                dto.SelectedPriceQuoteAmountOMR = quote.TotalPrice.HasValue && quote.TotalPrice.Value > 0
+                    ? quote.TotalPrice.Value
+                    : quote.QuotedPriceOMR;
                 dto.SelectedPriceQuoteProviderId = quote.ProviderId;
                 var provider = await providerRepo.FindAsync(quote.ProviderId);
                 if (provider != null) dto.SelectedPriceQuoteProviderNameAr = provider.ProviderNameAr;

@@ -7,6 +7,7 @@ using MOD.Training.Training;
 using MOD.Training.Training.Enums;
 using MOD.Training.Training.Finance.Dtos;
 using MOD.Training.Training.Hr;
+using MOD.Training.Training.Nominations;
 using MOD.Training.Training.Permissions;
 using MOD.Training.Training.Plans;
 using Volo.Abp;
@@ -21,6 +22,7 @@ public class PriceQuoteAppService(
     IRepository<PriceQuote, Guid> repository,
     IRepository<TrainingProvider, Guid> providerRepository,
     IRepository<CourseSession, Guid> sessionRepository,
+    IRepository<Nomination, Guid> nominationRepository,
     IRepository<GeographicalLocation, Guid> geoRepository,
     PriceQuoteToDtoMapper toDtoMapper,
     CreateUpdatePriceQuoteToEntityMapper toEntityMapper)
@@ -67,6 +69,7 @@ public class PriceQuoteAppService(
         await ValidateCityInCountryAsync(input.CountryId, input.CityId);
 
         var entity = toEntityMapper.Map(input);
+        await NormalizeSessionPricingAsync(entity);
 
         await repository.InsertAsync(entity, autoSave: true);
 
@@ -99,10 +102,9 @@ public class PriceQuoteAppService(
         entity.IsSelected = isSelectedOriginal;
         entity.Status = statusOriginal;
 
-        if (entity.QuotedPriceOMR <= 0 && entity.QuotedPrice > 0)
+        if (entity.CasualCourseId.HasValue && entity.QuotedPriceOMR <= 0 && entity.QuotedPrice > 0)
             entity.QuotedPriceOMR = entity.QuotedPrice;
-        if (entity.SessionId.HasValue)
-            entity.CalculatePrices();
+        await NormalizeSessionPricingAsync(entity);
 
         await repository.UpdateAsync(entity, autoSave: true);
 
@@ -157,6 +159,22 @@ public class PriceQuoteAppService(
         var session = await sessionRepository.GetAsync(sessionId.Value);
         if (session.SelectedPriceQuoteId.HasValue)
             throw new BusinessException("Training:PriceQuote:SessionQuotesLocked");
+    }
+
+    private async Task NormalizeSessionPricingAsync(PriceQuote entity)
+    {
+        if (!entity.SessionId.HasValue) return;
+        if (entity.QuotedPrice <= 0)
+            throw new BusinessException("Training:PriceQuote:InvalidQuotedPrice");
+
+        var nominations = await nominationRepository.GetQueryableAsync();
+        entity.ParticipantsCount = await AsyncExecuter.CountAsync(
+            nominations.Where(nomination => nomination.SessionId == entity.SessionId.Value));
+
+        if (entity.PricingType == PricingType.PerPerson && entity.ParticipantsCount == 0)
+            throw new BusinessException("Training:PriceQuote:PerPersonRequiresNominees");
+
+        entity.CalculatePrices();
     }
 
     private async Task ValidateCityInCountryAsync(Guid? countryId, Guid? cityId)

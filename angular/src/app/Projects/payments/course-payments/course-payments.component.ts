@@ -1,6 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LocalizationPipe, PermissionService } from '@abp/ng.core';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import {
   DxDataGridModule,
@@ -34,7 +35,7 @@ import { FundingScenario } from 'src/app/proxy/training/enums/funding-scenario.e
 import { FinancialAmountSource } from 'src/app/proxy/training/enums/financial-amount-source.enum';
 
 import { TrainingProviderService } from 'src/app/proxy/training/finance';
-import type { TrainingProviderDto, PriceQuoteDto } from 'src/app/proxy/training/finance/dtos/models';
+import type { TrainingProviderDto } from 'src/app/proxy/training/finance/dtos/models';
 import { PriceQuoteService } from 'src/app/proxy/training/finance/price-quote.service';
 
 import { TrainingLocalizationHelper } from '../../shared';
@@ -66,6 +67,11 @@ interface ToastState {
   kind: 'success' | 'error';
 }
 
+interface PaymentCourseOption {
+  id: string;
+  label: string;
+}
+
 @Component({
   standalone: true,
   selector: 'app-course-payments',
@@ -93,6 +99,7 @@ export class CoursePaymentsComponent implements OnInit {
   private providerService = inject(TrainingProviderService);
   private quoteService = inject(PriceQuoteService);
   private permissions = inject(PermissionService);
+  private router = inject(Router);
   l = inject(TrainingLocalizationHelper);
 
   PaymentStatus = PaymentStatus;
@@ -137,12 +144,22 @@ export class CoursePaymentsComponent implements OnInit {
   statusOptions: { value: PaymentStatus; text: string }[] = [];
 
   // ── Derived ──
+  courseFilterOptions = computed<PaymentCourseOption[]>(() => {
+    const options = new Map<string, string>();
+    for (const row of this.rows()) {
+      const id = row.casualCourseId ?? row.sessionId;
+      if (id) options.set(id, row.courseNameAr || '—');
+    }
+    return Array.from(options, ([id, label]) => ({ id, label }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'ar'));
+  });
+
   filteredRows = computed(() => {
     const courseId = this.filterCourseId();
     const status = this.filterStatus();
     const providerId = this.filterProviderId();
     return this.rows().filter(r => {
-      if (courseId && r.casualCourseId !== courseId) return false;
+      if (courseId && (r.casualCourseId ?? r.sessionId) !== courseId) return false;
       if (status !== null && r.status !== status) return false;
       if (providerId && r.trainingProviderId !== providerId) return false;
       return true;
@@ -369,19 +386,34 @@ export class CoursePaymentsComponent implements OnInit {
     this.dialogQuoteProviderId.set(null);
     this.upload.set({ status: 'idle', fileName: null, fileSize: null, progress: 0, errorMessage: null });
     const courseId = this.filterCourseId();
-    if (courseId) {
+    if (courseId && this.approvedCourses().some(course => course.id === courseId)) {
       this.fCourseId.set(courseId);
       await this.loadCourseContext(courseId);
     }
   }
 
   async onEdit(row: CoursePaymentDto): Promise<void> {
+    if (row.sessionId) {
+      this.openSessionPayment(row);
+      return;
+    }
     if (!this.canUpdate() || row.status !== PaymentStatus.Draft) return;
     await this.openExistingPayment(row);
   }
 
   async onView(row: CoursePaymentDto): Promise<void> {
+    if (row.sessionId) {
+      this.openSessionPayment(row);
+      return;
+    }
     await this.openExistingPayment(row);
+  }
+
+  openSessionPayment(row: CoursePaymentDto): void {
+    if (!row.sessionId) return;
+    void this.router.navigate(['/training/sessions', row.sessionId], {
+      queryParams: { stage: 'payments' },
+    });
   }
 
   private async openExistingPayment(row: CoursePaymentDto): Promise<void> {
@@ -460,6 +492,10 @@ export class CoursePaymentsComponent implements OnInit {
       this.dialogError.set(this.l.t('::Training.Payments.CoursePayment.Dialog.ProviderRequired'));
       return;
     }
+    if (this.fInvoiceAmountOMR() <= 0) {
+      this.dialogError.set(this.l.t('::Training.Payments.CoursePayment.Dialog.InvoiceAmountRequired'));
+      return;
+    }
     if (!this.fInvoiceDate()) {
       this.dialogError.set(this.l.t('::Training.Payments.CoursePayment.Dialog.InvoiceDateRequired'));
       return;
@@ -493,6 +529,10 @@ export class CoursePaymentsComponent implements OnInit {
     }
     if (!this.hasInvoice()) {
       this.dialogError.set(this.l.t('::Training.Payments.CoursePayment.Dialog.UploadRequired'));
+      return;
+    }
+    if (this.fInvoiceAmountOMR() <= 0) {
+      this.dialogError.set(this.l.t('::Training.Payments.CoursePayment.Dialog.InvoiceAmountRequired'));
       return;
     }
     if (this.dialog().current?.status !== PaymentStatus.Draft) {

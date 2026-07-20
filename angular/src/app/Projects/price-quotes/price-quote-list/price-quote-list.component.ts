@@ -7,6 +7,7 @@ import { firstValueFrom } from 'rxjs';
 import { PriceQuoteService } from 'src/app/proxy/training/finance';
 import type { PriceQuoteDto } from 'src/app/proxy/training/finance/dtos/models';
 import { CourseType } from 'src/app/proxy/training/enums/course-type.enum';
+import { PricingType } from 'src/app/proxy/training/enums/pricing-type.enum';
 import { SessionStatus } from 'src/app/proxy/training/enums/session-status.enum';
 import { CourseSessionService } from 'src/app/proxy/training/plans';
 import type { CourseSessionDto } from 'src/app/proxy/training/plans/dtos/models';
@@ -18,6 +19,7 @@ type QuoteWorkflowFilter = 'all' | QuoteWorkflowState;
 
 interface QuoteSessionRow {
   session: CourseSessionDto;
+  quotes: PriceQuoteDto[];
   quoteCount: number;
   selectedQuote: PriceQuoteDto | null;
   state: QuoteWorkflowState;
@@ -37,6 +39,7 @@ export class PriceQuoteListComponent implements OnInit {
   private readonly l = inject(TrainingLocalizationHelper);
 
   readonly CourseType = CourseType;
+  readonly PricingType = PricingType;
 
   readonly sessions = signal<CourseSessionDto[]>([]);
   readonly quotes = signal<PriceQuoteDto[]>([]);
@@ -47,6 +50,7 @@ export class PriceQuoteListComponent implements OnInit {
   readonly workflowFilter = signal<QuoteWorkflowFilter>('all');
   readonly courseTypeFilter = signal<CourseType | null>(null);
   readonly yearFilter = signal<number | null>(null);
+  readonly expandedSessionId = signal<string | null>(null);
 
   readonly rows = computed<QuoteSessionRow[]>(() => {
     const quotesBySession = new Map<string, PriceQuoteDto[]>();
@@ -61,7 +65,9 @@ export class PriceQuoteListComponent implements OnInit {
       .filter(session => session.courseType === CourseType.ExternalLocal
         || session.courseType === CourseType.ExternalInternational)
       .map(session => {
-        const sessionQuotes = quotesBySession.get(session.id) ?? [];
+        const sessionQuotes = [...(quotesBySession.get(session.id) ?? [])]
+          .sort((a, b) => Number(!!b.isSelected) - Number(!!a.isSelected)
+            || new Date(a.creationTime ?? 0).getTime() - new Date(b.creationTime ?? 0).getTime());
         const selectedQuote = sessionQuotes.find(quote =>
           quote.id === session.selectedPriceQuoteId || quote.isSelected) ?? null;
         const state: QuoteWorkflowState = session.status === SessionStatus.Cancelled
@@ -74,6 +80,7 @@ export class PriceQuoteListComponent implements OnInit {
 
         return {
           session,
+          quotes: sessionQuotes,
           quoteCount: sessionQuotes.length,
           selectedQuote,
           state,
@@ -107,7 +114,7 @@ export class PriceQuoteListComponent implements OnInit {
       return [
         row.session.tenantCourseNameAr,
         row.session.tenantCourseNameEn,
-        row.selectedQuote?.providerName,
+        ...row.quotes.map(quote => quote.providerName),
       ].some(value => value?.toLocaleLowerCase().includes(term));
     });
   });
@@ -179,6 +186,15 @@ export class PriceQuoteListComponent implements OnInit {
     });
   }
 
+  toggleQuoteDetails(row: QuoteSessionRow): void {
+    if (row.quoteCount === 0) return;
+    this.expandedSessionId.update(current => current === row.session.id ? null : row.session.id);
+  }
+
+  isQuoteDetailsExpanded(row: QuoteSessionRow): boolean {
+    return this.expandedSessionId() === row.session.id;
+  }
+
   stateMeta(state: QuoteWorkflowState): { key: string; css: string; icon: string } {
     switch (state) {
       case 'noQuotes':
@@ -220,6 +236,31 @@ export class PriceQuoteListComponent implements OnInit {
       minimumFractionDigits: 3,
       maximumFractionDigits: 3,
     });
+  }
+
+  hasStructuredPricing(quote: PriceQuoteDto): boolean {
+    return (quote.participantsCount ?? 0) > 0
+      && (quote.quotedPrice ?? 0) > 0
+      && (quote.totalPrice ?? 0) > 0;
+  }
+
+  quoteTotalPrice(quote: PriceQuoteDto): number {
+    return this.hasStructuredPricing(quote)
+      ? quote.totalPrice ?? quote.quotedPriceOMR ?? 0
+      : quote.quotedPriceOMR ?? quote.quotedPrice ?? 0;
+  }
+
+  quotePricePerPerson(quote: PriceQuoteDto): number | null {
+    return this.hasStructuredPricing(quote) ? quote.pricePerPerson ?? null : null;
+  }
+
+  quotePricingTypeKey(quote: PriceQuoteDto): string {
+    if (!this.hasStructuredPricing(quote)) {
+      return '::Training.PriceQuotes.Pricing.HistoricalTotal';
+    }
+    return quote.pricingType === PricingType.PerPerson
+      ? '::Training.PricingType.PerPerson'
+      : '::Training.PricingType.Total';
   }
 
   quarterLabel(session: CourseSessionDto): string {

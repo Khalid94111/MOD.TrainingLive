@@ -30,7 +30,7 @@ public class PriceQuote : FullAuditedEntity<Guid>, IMultiTenant
     public string? Notes { get; set; }
 
     // Phase 4B-α additions
-    public decimal QuotedPriceOMR { get; set; }   // Casual-course arm canonical price; mirrors QuotedPrice for legacy rows.
+    public decimal QuotedPriceOMR { get; set; }   // Canonical total in OMR for session quotes; direct amount for casual quotes.
     public bool IsSelected { get; set; }          // Server-controlled; only flipped by SelectPriceQuoteAsync.
     public Guid? CountryId { get; set; }          // Soft FK to HrGeographicalLocations
     public Guid? CityId { get; set; }             // Soft FK to HrGeographicalLocations (child of CountryId)
@@ -76,7 +76,12 @@ public class PriceQuote : FullAuditedEntity<Guid>, IMultiTenant
         else
         {
             TotalPrice = QuotedPrice;
-            PricePerPerson = ParticipantsCount > 0 ? QuotedPrice / ParticipantsCount : 0;
+            PricePerPerson = ParticipantsCount > 0
+                ? Math.Round(QuotedPrice / ParticipantsCount, 3, MidpointRounding.AwayFromZero)
+                : 0;
         }
+
+        // All downstream session workflows compare and pay the complete course amount.
+        QuotedPriceOMR = TotalPrice ?? QuotedPrice;
     }
 }

@@ -119,14 +119,21 @@
                       <b>{{ quote.cityNameAr || cityNameOf(quote.countryId, quote.cityId) || '—' }}</b>
                     </div>
                     <div>
-                      <span class="muted-xs">السعر:</span>
-                      <b class="price">{{ formatCurrency(quote.quotedPriceOMR) }} ر.ع</b>
+                      <span class="muted-xs">{{ '::Training.TotalPrice' | abpLocalization }}:</span>
+                      <b class="price">{{ formatCurrency(quoteTotalPrice(quote)) }} ر.ع</b>
+                      <small class="pricing-summary">
+                        {{ quotePricingTypeKey(quote) | abpLocalization }}
+                        @if (hasStructuredPricing(quote)) {
+                          · {{ quote.participantsCount }} {{ '::Training.PriceQuotes.Dashboard.Nominees' | abpLocalization }}
+                          · {{ formatCurrency(quotePricePerPerson(quote)) }} ر.ع / {{ '::Training.PriceQuotes.Pricing.Person' | abpLocalization }}
+                        }
+                      </small>
                     </div>
                     <div>
                       <span class="muted-xs">الفرق عن المعتمد:</span>
                       @if (approvedCost() > 0) {
                         <app-variance-chip
-                          [quotedPrice]="quote.quotedPriceOMR ?? 0"
+                          [quotedPrice]="quoteTotalPrice(quote)"
                           [approvedCost]="approvedCost()" />
                       } @else {
                         <span class="muted">—</span>
@@ -199,23 +206,119 @@
               <div class="form-hint">جهات نشطة فقط</div>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">السعر المعروض (ر.ع) <span class="required">*</span></label>
-              <input type="number" min="0" step="0.001" class="form-input"
-                [value]="fQuotedPriceOMR()"
-                (input)="fQuotedPriceOMR.set(+$any($event.target).value)" />
-              @if (fQuotedPriceOMR() > 0 && approvedCost() > 0) {
-                <div class="variance-inline">
+            @if (parentArm() !== 'session') {
+              <div class="form-group">
+                <label class="form-label">السعر المعروض (ر.ع) <span class="required">*</span></label>
+                <input type="number" min="0" step="0.001" class="form-input"
+                  [value]="fQuotedPrice()"
+                  (input)="fQuotedPrice.set(+$any($event.target).value)" />
+                @if (fQuotedPrice() > 0 && approvedCost() > 0) {
+                  <div class="variance-inline">
+                    <app-variance-chip
+                      [quotedPrice]="totalPricePreview()"
+                      [approvedCost]="approvedCost()" />
+                    <span class="approved-cost-hint">
+                      المعتمد: {{ formatCurrency(approvedCost()) }} ر.ع
+                    </span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          @if (parentArm() === 'session') {
+            <section class="pricing-builder">
+              <div class="pricing-builder-header">
+                <div>
+                  <span>{{ '::Training.PricingType' | abpLocalization }}</span>
+                  <strong>{{ '::Training.PriceQuotes.Pricing.ConfigureHint' | abpLocalization }}</strong>
+                </div>
+                <div class="participant-chip">
+                  <i class="bi bi-people" aria-hidden="true"></i>
+                  <span>{{ '::Training.ParticipantsCount' | abpLocalization }}</span>
+                  <b>{{ sessionParticipantsCount() }}</b>
+                </div>
+              </div>
+
+              <div class="pricing-type-options">
+                <label [class.is-selected]="fPricingType() === PricingType.PerPerson">
+                  <input type="radio" name="sessionPricingType"
+                    [value]="PricingType.PerPerson"
+                    [checked]="fPricingType() === PricingType.PerPerson"
+                    (change)="onPricingTypeChange(PricingType.PerPerson)" />
+                  <span>
+                    <i class="bi bi-person" aria-hidden="true"></i>
+                    <b>{{ '::Training.PricingType.PerPerson' | abpLocalization }}</b>
+                    <small>{{ '::Training.PriceQuotes.Pricing.PerPersonHint' | abpLocalization }}</small>
+                  </span>
+                </label>
+                <label [class.is-selected]="fPricingType() === PricingType.Total">
+                  <input type="radio" name="sessionPricingType"
+                    [value]="PricingType.Total"
+                    [checked]="fPricingType() === PricingType.Total"
+                    (change)="onPricingTypeChange(PricingType.Total)" />
+                  <span>
+                    <i class="bi bi-calculator" aria-hidden="true"></i>
+                    <b>{{ '::Training.PricingType.Total' | abpLocalization }}</b>
+                    <small>{{ '::Training.PriceQuotes.Pricing.TotalHint' | abpLocalization }}</small>
+                  </span>
+                </label>
+              </div>
+
+              <div class="pricing-value-row">
+                <div class="form-group pricing-input-group">
+                  <label class="form-label">
+                    {{ (fPricingType() === PricingType.PerPerson
+                      ? '::Training.PricePerPerson'
+                      : '::Training.TotalPrice') | abpLocalization }}
+                    (ر.ع) <span class="required">*</span>
+                  </label>
+                  <input type="number" min="0" step="0.001" class="form-input"
+                    [value]="fQuotedPrice()"
+                    (input)="fQuotedPrice.set(+$any($event.target).value)" />
+                  <small class="nominees-source">
+                    <i class="bi bi-shield-check" aria-hidden="true"></i>
+                    {{ '::Training.PriceQuotes.Pricing.ParticipantsFromNominees' | abpLocalization }}
+                  </small>
+                </div>
+
+                <div class="calculation-preview">
+                  <div>
+                    <span>{{ '::Training.PricePerPerson' | abpLocalization }}</span>
+                    <strong>{{ formatCurrency(pricePerPersonPreview()) }} <small>ر.ع</small></strong>
+                  </div>
+                  <i class="bi bi-x-lg" aria-hidden="true"></i>
+                  <div>
+                    <span>{{ '::Training.ParticipantsCount' | abpLocalization }}</span>
+                    <strong>{{ sessionParticipantsCount() }}</strong>
+                  </div>
+                  <i class="bi bi-equals" aria-hidden="true"></i>
+                  <div class="calculation-total">
+                    <span>{{ '::Training.TotalPrice' | abpLocalization }}</span>
+                    <strong>{{ formatCurrency(totalPricePreview()) }} <small>ر.ع</small></strong>
+                  </div>
+                </div>
+              </div>
+
+              @if (fPricingType() === PricingType.PerPerson && sessionParticipantsCount() === 0) {
+                <div class="pricing-warning">
+                  <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                  {{ '::Training:PriceQuote:PerPersonRequiresNominees' | abpLocalization }}
+                </div>
+              }
+
+              @if (fQuotedPrice() > 0 && approvedCost() > 0) {
+                <div class="variance-inline pricing-variance">
                   <app-variance-chip
-                    [quotedPrice]="fQuotedPriceOMR()"
+                    [quotedPrice]="totalPricePreview()"
                     [approvedCost]="approvedCost()" />
                   <span class="approved-cost-hint">
                     المعتمد: {{ formatCurrency(approvedCost()) }} ر.ع
                   </span>
                 </div>
               }
-            </div>
-          </div>
+            </section>
+          }
 
           <div class="form-row">
             <div class="form-group">
@@ -308,14 +411,20 @@
                 </b>
               </div>
               <div>
-                <span class="muted-xs">السعر:</span>
-                <b class="price">{{ formatCurrency(pickQuote()!.quotedPriceOMR) }} ر.ع</b>
+                <span class="muted-xs">{{ '::Training.TotalPrice' | abpLocalization }}:</span>
+                <b class="price">{{ formatCurrency(quoteTotalPrice(pickQuote()!)) }} ر.ع</b>
+                <small class="pricing-summary">
+                  {{ quotePricingTypeKey(pickQuote()!) | abpLocalization }}
+                  @if (hasStructuredPricing(pickQuote()!)) {
+                    · {{ pickQuote()!.participantsCount }} {{ '::Training.PriceQuotes.Dashboard.Nominees' | abpLocalization }}
+                  }
+                </small>
               </div>
               <div>
                 <span class="muted-xs">الفرق عن المعتمد:</span>
                 @if (approvedCost() > 0) {
                   <app-variance-chip
-                    [quotedPrice]="pickQuote()!.quotedPriceOMR ?? 0"
+                    [quotedPrice]="quoteTotalPrice(pickQuote()!)"
                     [approvedCost]="approvedCost()" />
                 } @else {
                   <span class="muted">—</span>

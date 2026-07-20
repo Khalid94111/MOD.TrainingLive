@@ -55,20 +55,24 @@
       </section>
     }
 
-    <section class="payment-panel">
+    <section class="payment-panel course-payment-panel">
       <header class="payment-panel-header">
         <span class="payment-icon"><i class="bi bi-receipt"></i></span>
         <div>
           <h3>{{ '::Training.Sessions.Detail.Section5.CourseTitle' | abpLocalization }}</h3>
           @if (coursePaymentBadge(); as badge) {
             <span [class]="'payment-state ' + badge.css">
-              @if (badge.textKey) {
-                {{ badge.textKey | abpLocalization }}
-              }
+              {{ badge.textKey | abpLocalization }}
             </span>
           }
         </div>
       </header>
+
+      <div class="winning-quote-context">
+        <span>{{ '::Training.Sessions.Detail.Section5.WinningQuote' | abpLocalization }}</span>
+        <strong>{{ session()?.selectedPriceQuoteProviderNameAr || '—' }}</strong>
+        <b>{{ formatOMR(agreedAmountOMR()) }} ر.ع</b>
+      </div>
 
       @if (coursePayment(); as payment) {
         <dl class="payment-facts">
@@ -77,21 +81,223 @@
             <dd>{{ formatOMR(payment.invoiceAmountOMR) }} ر.ع</dd>
           </div>
           <div>
-            <dt>{{ '::Training.Sessions.Detail.Section5.ProviderLabel' | abpLocalization }}</dt>
-            <dd>{{ payment.trainingProviderName || '—' }}</dd>
+            <dt>{{ '::Training.Sessions.Detail.Section5.InvoiceDate' | abpLocalization }}</dt>
+            <dd>{{ formatDate(payment.invoiceDate) }}</dd>
+          </div>
+          <div>
+            <dt>{{ '::Training.Sessions.Detail.Section5.InvoiceFile' | abpLocalization }}</dt>
+            <dd>{{ payment.invoiceOriginalFileName || '—' }}</dd>
           </div>
         </dl>
+        @if (payment.notes) {
+          <div class="payment-note">
+            <span><i class="bi bi-chat-left-text"></i> {{ '::Training.Sessions.Detail.Section5.NotesLabel' | abpLocalization }}</span>
+            <p>{{ payment.notes }}</p>
+          </div>
+        }
       } @else {
         <div class="empty-payment">
           <i class="bi bi-clock-history"></i>
-          {{ '::Training.Sessions.Detail.Section5.NoCoursePayment' | abpLocalization }}
+          <div>
+            <strong>{{ '::Training.Sessions.Detail.Section5.NoCoursePayment' | abpLocalization }}</strong>
+            <span>{{ '::Training.Sessions.Detail.Section5.StartPaymentHint' | abpLocalization }}</span>
+          </div>
         </div>
       }
 
-      <button type="button" class="payment-link" (click)="goCoursePayments($event)">
-        {{ '::Training.Sessions.Detail.Section5.OpenCoursePayments' | abpLocalization }}
-        <i class="bi bi-arrow-up-left"></i>
-      </button>
+      <div class="payment-actions">
+        @if (coursePayment() || canCreate()) {
+          <button type="button" class="payment-primary" (click)="openPaymentDialog()">
+            <i [class]="coursePaymentConfirmed() ? 'bi bi-eye' : 'bi bi-receipt-cutoff'"></i>
+            {{ (coursePaymentConfirmed()
+              ? '::Training.Sessions.Detail.Section5.ViewPayment'
+              : coursePayment()
+                ? '::Training.Sessions.Detail.Section5.ContinuePayment'
+                : '::Training.Sessions.Detail.Section5.RegisterPayment') | abpLocalization }}
+          </button>
+        }
+        <button type="button" class="payment-link secondary-link" (click)="goCoursePayments($event)">
+          {{ '::Training.Sessions.Detail.Section5.OpenPaymentsDashboard' | abpLocalization }}
+          <i class="bi bi-arrow-up-left"></i>
+        </button>
+      </div>
     </section>
   </div>
 </div>
+
+@if (dialogOpen()) {
+  <div class="payment-modal-backdrop" (click)="closeFromBackdrop($event)">
+    <section class="payment-modal" role="dialog" aria-modal="true"
+             [attr.aria-label]="'::Training.Sessions.Detail.Section5.PaymentDialogTitle' | abpLocalization">
+      <header class="payment-modal-header">
+        <div>
+          <span class="modal-eyebrow">{{ '::Training.Sessions.Detail.Section5.PaymentDialogEyebrow' | abpLocalization }}</span>
+          <h2>{{ '::Training.Sessions.Detail.Section5.PaymentDialogTitle' | abpLocalization }}</h2>
+          <p>{{ '::Training.Sessions.Detail.Section5.PaymentDialogSubtitle' | abpLocalization }}</p>
+        </div>
+        <button type="button" class="modal-close" [disabled]="saving() || uploading()"
+                (click)="closePaymentDialog()" [attr.aria-label]="'::Close' | abpLocalization">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </header>
+
+      <div class="payment-modal-body">
+        <div class="payment-context-grid">
+          <div>
+            <span>{{ '::Training.Sessions.Detail.Section5.CourseLabel' | abpLocalization }}</span>
+            <strong>{{ session()?.tenantCourseNameAr || '—' }}</strong>
+          </div>
+          <div>
+            <span>{{ '::Training.Sessions.Detail.Section5.ProviderLabel' | abpLocalization }}</span>
+            <strong>{{ session()?.selectedPriceQuoteProviderNameAr || '—' }} <i class="bi bi-lock-fill"></i></strong>
+          </div>
+          <div>
+            <span>{{ '::Training.Sessions.Detail.Section5.AgreedAmount' | abpLocalization }}</span>
+            <strong class="agreed-amount">{{ formatOMR(agreedAmountOMR()) }} ر.ع</strong>
+          </div>
+        </div>
+
+        @if (dialogLocked()) {
+          <div class="confirmed-notice">
+            <i class="bi bi-check2-circle"></i>
+            <div>
+              <strong>{{ '::Training.Sessions.Detail.Section5.ConfirmedTitle' | abpLocalization }}</strong>
+              <span>{{ '::Training.Sessions.Detail.Section5.ConfirmedHint' | abpLocalization }}</span>
+            </div>
+          </div>
+        }
+
+        <div class="payment-form-grid">
+          <label class="payment-field">
+            <span>{{ '::Training.Sessions.Detail.Section5.InvoiceAmount' | abpLocalization }} <b>*</b></span>
+            <div class="amount-input-wrap">
+              <input type="number" min="0.001" step="0.001" [value]="invoiceAmountOMR()"
+                     [disabled]="!dialogEditable()" (input)="updateInvoiceAmount($event)" />
+              <small>ر.ع</small>
+            </div>
+            @if (agreedAmountOMR() > 0 && amountDifferenceOMR() !== 0) {
+              <em [class.difference-over]="amountDifferenceOMR() > 0"
+                  [class.difference-under]="amountDifferenceOMR() < 0">
+                {{ (amountDifferenceOMR() > 0
+                  ? '::Training.Sessions.Detail.Section5.AboveQuote'
+                  : '::Training.Sessions.Detail.Section5.BelowQuote') | abpLocalization }}
+                {{ formatOMR(amountDifferenceOMR() < 0 ? -amountDifferenceOMR() : amountDifferenceOMR()) }} ر.ع
+              </em>
+            } @else if (agreedAmountOMR() > 0) {
+              <em class="difference-match">
+                <i class="bi bi-check2"></i>
+                {{ '::Training.Sessions.Detail.Section5.MatchesQuote' | abpLocalization }}
+              </em>
+            }
+          </label>
+
+          <label class="payment-field">
+            <span>{{ '::Training.Sessions.Detail.Section5.InvoiceDate' | abpLocalization }} <b>*</b></span>
+            <input type="date" [value]="invoiceDate()" [disabled]="!dialogEditable()"
+                   (input)="updateInvoiceDate($event)" />
+          </label>
+
+          <label class="payment-field full-width">
+            <span>{{ '::Training.Payments.Notes' | abpLocalization }}</span>
+            <textarea rows="3" [value]="notes()" [disabled]="!dialogEditable()"
+                      [placeholder]="'::Training.Payments.CoursePayment.Dialog.NotesPlaceholder' | abpLocalization"
+                      (input)="updateNotes($event)"></textarea>
+          </label>
+        </div>
+
+        <div class="invoice-upload-card" [class.has-file]="hasInvoice()">
+          <div class="upload-icon"><i [class]="hasInvoice() ? 'bi bi-file-earmark-check' : 'bi bi-file-earmark-pdf'"></i></div>
+          <div class="upload-copy">
+            <strong>
+              {{ (hasInvoice()
+                ? '::Training.Sessions.Detail.Section5.InvoiceReady'
+                : '::Training.Sessions.Detail.Section5.UploadInvoiceTitle') | abpLocalization }}
+            </strong>
+            <span>
+              {{ dialogPayment()?.invoiceOriginalFileName
+                || ('::Training.Payments.CoursePayment.Dialog.UploadConstraints' | abpLocalization) }}
+            </span>
+          </div>
+          <div class="upload-actions">
+            @if (hasInvoice() && canDownload()) {
+              <button type="button" class="btn-quiet" (click)="downloadInvoice()">
+                <i class="bi bi-download"></i>
+                {{ '::Download' | abpLocalization }}
+              </button>
+            }
+            @if (dialogEditable() && canUpload()) {
+              <label class="upload-button" [class.disabled]="saving() || uploading()">
+                @if (uploading()) {
+                  <span class="button-spinner"></span>
+                  {{ '::Training.Payments.CoursePayment.Dialog.UploadInProgress' | abpLocalization }}
+                } @else {
+                  <i class="bi bi-upload"></i>
+                  {{ (hasInvoice()
+                    ? '::Training.Payments.CoursePayment.Dialog.Replace'
+                    : '::Training.Sessions.Detail.Section5.ChooseInvoice') | abpLocalization }}
+                }
+                <input type="file" accept="application/pdf" [disabled]="saving() || uploading()"
+                       (change)="onFileSelected($event)" />
+              </label>
+            }
+          </div>
+        </div>
+
+        @if (dialogError()) {
+          <div class="payment-message error" role="alert">
+            <i class="bi bi-exclamation-triangle"></i>{{ dialogError() }}
+          </div>
+        }
+        @if (dialogSuccess()) {
+          <div class="payment-message success" role="status">
+            <i class="bi bi-check2-circle"></i>{{ dialogSuccess() }}
+          </div>
+        }
+        @if (confirmRequested()) {
+          <div class="final-confirmation" role="alert">
+            <i class="bi bi-shield-exclamation"></i>
+            <div>
+              <strong>{{ '::Training.Sessions.Detail.Section5.ConfirmReviewTitle' | abpLocalization }}</strong>
+              <span>{{ '::Training.Sessions.Detail.Section5.ConfirmPrompt' | abpLocalization }}</span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <footer class="payment-modal-footer">
+        <button type="button" class="btn-quiet" [disabled]="saving() || uploading()"
+                (click)="closePaymentDialog()">
+          {{ '::Close' | abpLocalization }}
+        </button>
+        @if (dialogEditable()) {
+          <div>
+            @if (confirmRequested()) {
+              <button type="button" class="btn-secondary" [disabled]="saving() || uploading()"
+                      (click)="cancelConfirm()">
+                {{ '::Cancel' | abpLocalization }}
+              </button>
+              <button type="button" class="btn-confirm" [disabled]="saving() || uploading()"
+                      (click)="confirmPayment()">
+                @if (saving()) { <span class="button-spinner"></span> }
+                <i class="bi bi-shield-check"></i>
+                {{ '::Training.Sessions.Detail.Section5.FinalConfirm' | abpLocalization }}
+              </button>
+            } @else {
+              <button type="button" class="btn-secondary" [disabled]="saving() || uploading()"
+                      (click)="saveDraft()">
+                {{ '::Training.Payments.SaveDraft' | abpLocalization }}
+              </button>
+              @if (canConfirm()) {
+                <button type="button" class="btn-confirm" [disabled]="saving() || uploading() || !hasInvoice()"
+                        (click)="requestConfirm()">
+                  <i class="bi bi-shield-check"></i>
+                  {{ '::Training.Sessions.Detail.Section5.ConfirmPayment' | abpLocalization }}
+                </button>
+              }
+            }
+          </div>
+        }
+      </footer>
+    </section>
+  </div>
+}

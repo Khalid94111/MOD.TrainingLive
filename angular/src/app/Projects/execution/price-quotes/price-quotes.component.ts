@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { LocalizationPipe } from '@abp/ng.core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
@@ -22,6 +23,7 @@ import type {
 import { GeographicalLocationService } from 'src/app/proxy/training/hr-integration/geographical-location.service';
 import type { GeographicalLocationDto } from 'src/app/proxy/training/hr-integration/dtos/models';
 import { ProviderScope } from 'src/app/proxy/training/enums/provider-scope.enum';
+import { PricingType } from 'src/app/proxy/training/enums/pricing-type.enum';
 
 import {
   CasualCourseStatus,
@@ -41,7 +43,7 @@ type ParentArm = 'casualCourse' | 'session';
   selector: 'app-price-quotes',
   templateUrl: './price-quotes.component.html',
   styleUrls: ['./price-quotes.component.scss', '../../shared/gtms-design.scss'],
-  imports: [CommonModule, VarianceChipComponent],
+  imports: [CommonModule, LocalizationPipe, VarianceChipComponent],
 })
 export class PriceQuotesComponent implements OnInit {
   private courseService = inject(CasualCourseService);
@@ -56,6 +58,7 @@ export class PriceQuotesComponent implements OnInit {
   l = inject(TrainingLocalizationHelper);
 
   ProviderScope = ProviderScope;
+  PricingType = PricingType;
   CasualCourseStatus = CasualCourseStatus;
 
   parentArm = signal<ParentArm>('casualCourse');
@@ -79,7 +82,8 @@ export class PriceQuotesComponent implements OnInit {
   isEditMode = signal(false);
   editingQuoteId = signal<string | null>(null);
   fProviderId = signal<string>('');
-  fQuotedPriceOMR = signal<number>(0);
+  fPricingType = signal<PricingType>(PricingType.Total);
+  fQuotedPrice = signal<number>(0);
   fCountryId = signal<string | null>(null);
   fCityId = signal<string | null>(null);
   fNotes = signal<string>('');
@@ -116,6 +120,23 @@ export class PriceQuotesComponent implements OnInit {
   actualEndDate = computed(() => this.parentArm() === 'session'
     ? this.session()?.actualEndDate
     : this.course()?.actualEndDate);
+  sessionParticipantsCount = computed(() => this.parentArm() === 'session'
+    ? this.session()?.nomineesCount ?? this.session()?.nominations?.length ?? 0
+    : 0);
+  pricePerPersonPreview = computed(() => {
+    const entered = this.fQuotedPrice() ?? 0;
+    if (this.parentArm() !== 'session') return entered;
+    if (this.fPricingType() === PricingType.PerPerson) return entered;
+    const participants = this.sessionParticipantsCount();
+    return participants > 0 ? this.roundOMR(entered / participants) : 0;
+  });
+  totalPricePreview = computed(() => {
+    const entered = this.fQuotedPrice() ?? 0;
+    if (this.parentArm() !== 'session') return entered;
+    return this.fPricingType() === PricingType.PerPerson
+      ? this.roundOMR(entered * this.sessionParticipantsCount())
+      : entered;
+  });
 
   // sorted: winner first, then by creation
   sortedQuotes = computed(() => {
@@ -264,7 +285,8 @@ export class PriceQuotesComponent implements OnInit {
     this.isEditMode.set(false);
     this.editingQuoteId.set(null);
     this.fProviderId.set('');
-    this.fQuotedPriceOMR.set(0);
+    this.fPricingType.set(PricingType.Total);
+    this.fQuotedPrice.set(0);
     this.fCountryId.set(null);
     this.fCityId.set(null);
     this.fNotes.set('');
@@ -281,7 +303,13 @@ export class PriceQuotesComponent implements OnInit {
     this.isEditMode.set(true);
     this.editingQuoteId.set(quote.id);
     this.fProviderId.set(quote.providerId ?? '');
-    this.fQuotedPriceOMR.set(quote.quotedPriceOMR ?? 0);
+    const hasStructuredPricing = this.hasStructuredPricing(quote);
+    this.fPricingType.set(hasStructuredPricing
+      ? quote.pricingType ?? PricingType.Total
+      : PricingType.Total);
+    this.fQuotedPrice.set(hasStructuredPricing
+      ? quote.quotedPrice ?? quote.quotedPriceOMR ?? 0
+      : quote.quotedPriceOMR ?? 0);
     this.fCountryId.set(quote.countryId ?? null);
     this.fCityId.set(quote.cityId ?? null);
     this.fNotes.set(quote.notes ?? '');
@@ -308,6 +336,10 @@ export class PriceQuotesComponent implements OnInit {
     this.fProviderId.set(providerId);
   }
 
+  onPricingTypeChange(pricingType: PricingType): void {
+    this.fPricingType.set(pricingType);
+  }
+
   closeQuoteDialog(): void {
     this.quoteDialogOpen.set(false);
     this.saveError.set(null);
@@ -319,22 +351,30 @@ export class PriceQuotesComponent implements OnInit {
       this.saveError.set('يرجى اختيار جهة التدريب');
       return;
     }
-    if ((this.fQuotedPriceOMR() ?? 0) <= 0) {
+    if ((this.fQuotedPrice() ?? 0) <= 0) {
       this.saveError.set('يرجى إدخال سعر معروض صحيح');
       return;
     }
+    if (this.parentArm() === 'session'
+      && this.fPricingType() === PricingType.PerPerson
+      && this.sessionParticipantsCount() === 0) {
+      this.saveError.set(this.l.t('::Training:PriceQuote:PerPersonRequiresNominees'));
+      return;
+    }
+
+    const isSession = this.parentArm() === 'session';
 
     const dto: CreateUpdatePriceQuoteDto = {
       casualCourseId: this.parentArm() === 'casualCourse' ? this.parentId() : null,
-      sessionId: this.parentArm() === 'session' ? this.parentId() : null,
+      sessionId: isSession ? this.parentId() : null,
       providerId: this.fProviderId(),
-      quotedPriceOMR: this.fQuotedPriceOMR(),
+      pricingType: isSession ? this.fPricingType() : PricingType.Total,
+      quotedPrice: isSession ? this.fQuotedPrice() : 0,
+      participantsCount: isSession ? this.sessionParticipantsCount() : 0,
+      quotedPriceOMR: isSession ? this.totalPricePreview() : this.fQuotedPrice(),
       countryId: this.fCountryId(),
       cityId: this.fCityId(),
       notes: this.fNotes() || null,
-      // Legacy fields kept for session arm; default to 0/0 for casual
-      quotedPrice: 0,
-      participantsCount: 0,
     };
 
     try {
@@ -433,6 +473,35 @@ export class PriceQuotesComponent implements OnInit {
     this.pickDialogOpen.set(false);
     this.saveError.set(this.l.t('::Training:PriceQuote:SessionQuotesLocked'));
     return false;
+  }
+
+  hasStructuredPricing(quote: PriceQuoteDto): boolean {
+    return (quote.participantsCount ?? 0) > 0
+      && (quote.quotedPrice ?? 0) > 0
+      && (quote.totalPrice ?? 0) > 0;
+  }
+
+  quoteTotalPrice(quote: PriceQuoteDto): number {
+    return this.hasStructuredPricing(quote)
+      ? quote.totalPrice ?? quote.quotedPriceOMR ?? 0
+      : quote.quotedPriceOMR ?? quote.quotedPrice ?? 0;
+  }
+
+  quotePricePerPerson(quote: PriceQuoteDto): number | null {
+    return this.hasStructuredPricing(quote) ? quote.pricePerPerson ?? null : null;
+  }
+
+  quotePricingTypeKey(quote: PriceQuoteDto): string {
+    if (!this.hasStructuredPricing(quote)) {
+      return '::Training.PriceQuotes.Pricing.HistoricalTotal';
+    }
+    return quote.pricingType === PricingType.PerPerson
+      ? '::Training.PricingType.PerPerson'
+      : '::Training.PricingType.Total';
+  }
+
+  private roundOMR(value: number): number {
+    return Math.round((value + Number.EPSILON) * 1000) / 1000;
   }
 
   goBack(): void {

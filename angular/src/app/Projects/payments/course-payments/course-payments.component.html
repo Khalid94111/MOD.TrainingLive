@@ -2,10 +2,10 @@
   <div class="page-header">
     <div>
       <h2>{{ '::Training.Payments.CoursePayment.Title' | abpLocalization }}</h2>
-      <p class="subtitle">{{ '::Training.Payments.CoursePayment.Subtitle' | abpLocalization }}</p>
+      <p class="subtitle">{{ '::Training.Payments.CoursePayment.CentralSubtitle' | abpLocalization }}</p>
     </div>
     @if (canCreate()) {
-      <dx-button [text]="'::Training.Payments.CoursePayment.NewButton' | abpLocalization" type="default" (onClick)="onAdd()"></dx-button>
+      <dx-button [text]="'::Training.Payments.CoursePayment.NewCasualButton' | abpLocalization" type="default" (onClick)="onAdd()"></dx-button>
     }
   </div>
 
@@ -13,8 +13,8 @@
   <div class="filter-bar">
     <span class="filter-label">{{ '::Training.Payments.Filter' | abpLocalization }}:</span>
     <dx-select-box
-      [items]="approvedCourses()"
-      displayExpr="courseNameAr"
+      [items]="courseFilterOptions()"
+      displayExpr="label"
       valueExpr="id"
       [value]="filterCourseId()"
       [searchEnabled]="true"
@@ -66,6 +66,11 @@
 
     <div *dxTemplate="let cell of 'courseTpl'">
       <div class="course-name">{{ cell.data.courseNameAr || '—' }}</div>
+      <span [class]="cell.data.sessionId ? 'source-pill source-session' : 'source-pill source-casual'">
+        {{ (cell.data.sessionId
+          ? '::Training.Payments.CoursePayment.SourceSession'
+          : '::Training.Payments.CoursePayment.SourceCasual') | abpLocalization }}
+      </span>
       @if (cell.data.fundingScenario !== null && cell.data.fundingScenario !== undefined) {
         @switch (cell.data.fundingScenario) {
           @case (FundingScenario.FundingSourceCoversAll)    { <span class="scenario-pill scenario-1">{{ '::Training.Payments.CoursePayment.Scenario1' | abpLocalization }}</span> }
@@ -105,11 +110,17 @@
     </div>
 
     <div *dxTemplate="let cell of 'actionsTpl'">
-      @if (cell.data.status === PaymentStatus.Draft) {
-        @if (canUpdate()) { <dx-button icon="edit" stylingMode="text" [hint]="'::Training.Payments.Edit' | abpLocalization" (onClick)="onEdit(cell.data)"></dx-button> }
-        @if (canDelete()) { <dx-button icon="trash" stylingMode="text" [hint]="'::Training.Payments.Delete' | abpLocalization" (onClick)="onDelete(cell.data)"></dx-button> }
+      @if (cell.data.sessionId) {
+        <dx-button icon="arrowleft" stylingMode="text"
+          [hint]="'::Training.Payments.CoursePayment.OpenSession' | abpLocalization"
+          (onClick)="openSessionPayment(cell.data)"></dx-button>
+      } @else {
+        @if (cell.data.status === PaymentStatus.Draft) {
+          @if (canUpdate()) { <dx-button icon="edit" stylingMode="text" [hint]="'::Training.Payments.Edit' | abpLocalization" (onClick)="onEdit(cell.data)"></dx-button> }
+          @if (canDelete()) { <dx-button icon="trash" stylingMode="text" [hint]="'::Training.Payments.Delete' | abpLocalization" (onClick)="onDelete(cell.data)"></dx-button> }
+        }
+        <dx-button icon="eyeopen" stylingMode="text" [hint]="'::Training.Payments.View' | abpLocalization" (onClick)="onView(cell.data)"></dx-button>
       }
-      <dx-button icon="eyeopen" stylingMode="text" [hint]="'::Training.Payments.View' | abpLocalization" (onClick)="onView(cell.data)"></dx-button>
     </div>
   </dx-data-grid>
 
@@ -192,7 +203,7 @@
           <div class="dual-input">
             <dx-number-box
               [value]="fInvoiceAmountOMR()"
-              [min]="0"
+              [min]="0.001"
               format="#,##0.000 'ر.ع'"
               (onValueChanged)="updateInvoiceAmount($event.value)">
             </dx-number-box>

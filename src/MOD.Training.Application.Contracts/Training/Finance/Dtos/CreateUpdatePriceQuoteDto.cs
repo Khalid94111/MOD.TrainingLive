@@ -19,7 +19,7 @@ public class CreateUpdatePriceQuoteDto
     [Required]
     public Guid ProviderId { get; set; }
 
-    // ── Legacy session-arm pricing (optional in casual arm) ──
+    // ── Session-arm pricing (ParticipantsCount is recalculated server-side) ──
     public PricingType PricingType { get; set; }
 
     [Range(0, double.MaxValue)]
@@ -28,7 +28,7 @@ public class CreateUpdatePriceQuoteDto
     [Range(0, int.MaxValue)]
     public int ParticipantsCount { get; set; }
 
-    // ── Phase 4B-α canonical price + location (casual arm) ──
+    // ── Canonical total price + location (casual arm uses the entered amount directly) ──
     [Range(0, double.MaxValue)]
     public decimal QuotedPriceOMR { get; set; }
 
