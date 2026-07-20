@@ -1,336 +1,239 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { LocalizationPipe } from '@abp/ng.core';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { LocalizationPipe, PermissionService } from '@abp/ng.core';
-import { ToasterService } from '@abp/ng.theme.shared';
-import { PriceQuoteService, TrainingProviderService } from 'src/app/proxy/training/finance';
-import { PriceQuoteDto, TrainingProviderDto, CreateUpdatePriceQuoteDto } from 'src/app/proxy/training/finance/dtos';
+
+import { PriceQuoteService } from 'src/app/proxy/training/finance';
+import type { PriceQuoteDto } from 'src/app/proxy/training/finance/dtos/models';
+import { CourseType } from 'src/app/proxy/training/enums/course-type.enum';
+import { SessionStatus } from 'src/app/proxy/training/enums/session-status.enum';
 import { CourseSessionService } from 'src/app/proxy/training/plans';
-import { CourseSessionDto } from 'src/app/proxy/training/plans/dtos';
-import { TrainingLocalizationHelper, ConfirmDialogComponent } from '../../shared';
-import { ApprovalStatus, PricingType } from '../../shared/models/training-enums';
+import type { CourseSessionDto } from 'src/app/proxy/training/plans/dtos/models';
+
+import { TrainingLocalizationHelper } from '../../shared';
+
+type QuoteWorkflowState = 'noQuotes' | 'awaitingWinner' | 'selected' | 'cancelled';
+type QuoteWorkflowFilter = 'all' | QuoteWorkflowState;
+
+interface QuoteSessionRow {
+  session: CourseSessionDto;
+  quoteCount: number;
+  selectedQuote: PriceQuoteDto | null;
+  state: QuoteWorkflowState;
+}
 
 @Component({
   standalone: true,
   selector: 'app-price-quote-list',
   templateUrl: './price-quote-list.component.html',
   styleUrl: './price-quote-list.component.scss',
-  imports: [CommonModule, LocalizationPipe, ConfirmDialogComponent],
+  imports: [CommonModule, LocalizationPipe],
 })
 export class PriceQuoteListComponent implements OnInit {
   private readonly quoteService = inject(PriceQuoteService);
-  private readonly providerService = inject(TrainingProviderService);
   private readonly sessionService = inject(CourseSessionService);
-  private readonly permissionService = inject(PermissionService);
-  private readonly toaster = inject(ToasterService);
+  private readonly router = inject(Router);
   private readonly l = inject(TrainingLocalizationHelper);
 
-  readonly ApprovalStatus = ApprovalStatus;
-  readonly PricingType = PricingType;
+  readonly CourseType = CourseType;
 
-  // ── Data ──
-  quotes = signal<PriceQuoteDto[]>([]);
-  providers = signal<TrainingProviderDto[]>([]);
-  sessions = signal<CourseSessionDto[]>([]);
-  isLoading = signal(false);
+  readonly sessions = signal<CourseSessionDto[]>([]);
+  readonly quotes = signal<PriceQuoteDto[]>([]);
+  readonly isLoading = signal(false);
+  readonly loadError = signal<string | null>(null);
 
-  // ── Filters ──
-  searchText = signal('');
-  filterStatus = signal<ApprovalStatus | null>(null);
+  readonly searchText = signal('');
+  readonly workflowFilter = signal<QuoteWorkflowFilter>('all');
+  readonly courseTypeFilter = signal<CourseType | null>(null);
+  readonly yearFilter = signal<number | null>(null);
 
-  // ── Dialog ──
-  isDialogVisible = signal(false);
-  isEditMode = signal(false);
-  selectedQuoteId = signal<string | null>(null);
-  isDeleteDialogVisible = signal(false);
-  quoteToDelete = signal<PriceQuoteDto | null>(null);
-  formData = signal<CreateUpdatePriceQuoteDto>({
-    sessionId: undefined,
-    providerId: '',
-    pricingType: PricingType.PerPerson,
-    quotedPrice: 0,
-    participantsCount: 1,
-    notes: undefined,
-  });
-  isSaving = signal(false);
-  validationErrors = signal<string[]>([]);
-
-  // ── Permissions ──
-  canCreate = computed(() => this.permissionService.getGrantedPolicy('TrainingExecution.PriceQuotes.Create'));
-  canUpdate = computed(() => this.permissionService.getGrantedPolicy('TrainingExecution.PriceQuotes.Edit'));
-  canDelete = computed(() => this.permissionService.getGrantedPolicy('TrainingExecution.PriceQuotes.Delete'));
-  canApprove = computed(() => this.permissionService.getGrantedPolicy('TrainingExecution.PriceQuotes.Approve'));
-
-  // ── Computed stats / filtered list ──
-  filteredQuotes = computed(() => {
-    let list = this.quotes();
-    const term = this.searchText().trim().toLowerCase();
-    if (term) {
-      list = list.filter(q =>
-        (q.courseName?.toLowerCase().includes(term) ?? false) ||
-        (q.providerName?.toLowerCase().includes(term) ?? false)
-      );
+  readonly rows = computed<QuoteSessionRow[]>(() => {
+    const quotesBySession = new Map<string, PriceQuoteDto[]>();
+    for (const quote of this.quotes()) {
+      if (!quote.sessionId) continue;
+      const current = quotesBySession.get(quote.sessionId) ?? [];
+      current.push(quote);
+      quotesBySession.set(quote.sessionId, current);
     }
-    if (this.filterStatus() !== null) {
-      list = list.filter(q => q.status === this.filterStatus());
-    }
-    return list;
+
+    return this.sessions()
+      .filter(session => session.courseType === CourseType.ExternalLocal
+        || session.courseType === CourseType.ExternalInternational)
+      .map(session => {
+        const sessionQuotes = quotesBySession.get(session.id) ?? [];
+        const selectedQuote = sessionQuotes.find(quote =>
+          quote.id === session.selectedPriceQuoteId || quote.isSelected) ?? null;
+        const state: QuoteWorkflowState = session.status === SessionStatus.Cancelled
+          ? 'cancelled'
+          : session.selectedPriceQuoteId || selectedQuote
+            ? 'selected'
+            : sessionQuotes.length > 0
+              ? 'awaitingWinner'
+              : 'noQuotes';
+
+        return {
+          session,
+          quoteCount: sessionQuotes.length,
+          selectedQuote,
+          state,
+        };
+      })
+      .sort((a, b) => {
+        const priority: Record<QuoteWorkflowState, number> = {
+          awaitingWinner: 0,
+          noQuotes: 1,
+          selected: 2,
+          cancelled: 3,
+        };
+        return priority[a.state] - priority[b.state]
+          || (b.session.planYear ?? 0) - (a.session.planYear ?? 0)
+          || (a.session.tenantCourseNameAr ?? '').localeCompare(b.session.tenantCourseNameAr ?? '', 'ar');
+      });
   });
 
-  totalCount = computed(() => this.filteredQuotes().length);
-  pendingCount = computed(() => this.filteredQuotes().filter(q => q.status === ApprovalStatus.Pending).length);
-  approvedCount = computed(() => this.filteredQuotes().filter(q => q.status === ApprovalStatus.Approved).length);
-  rejectedCount = computed(() => this.filteredQuotes().filter(q => q.status === ApprovalStatus.Rejected).length);
+  readonly filteredRows = computed(() => {
+    const term = this.searchText().trim().toLocaleLowerCase();
+    const workflow = this.workflowFilter();
+    const courseType = this.courseTypeFilter();
+    const year = this.yearFilter();
 
-  pricingTypeOptions = computed(() => [
-    { value: PricingType.PerPerson, text: this.l.t('::Training.PricingType.PerPerson') },
-    { value: PricingType.Total, text: this.l.t('::Training.PricingType.Total') },
-  ]);
+    return this.rows().filter(row => {
+      if (workflow !== 'all' && row.state !== workflow) return false;
+      if (courseType !== null && row.session.courseType !== courseType) return false;
+      if (year !== null && row.session.planYear !== year) return false;
+      if (!term) return true;
 
-  get dialogTitle(): string {
-    return this.isEditMode()
-      ? this.l.t('::Training.PriceQuote')
-      : this.l.t('::Training.CreatePriceQuote');
-  }
+      return [
+        row.session.tenantCourseNameAr,
+        row.session.tenantCourseNameEn,
+        row.selectedQuote?.providerName,
+      ].some(value => value?.toLocaleLowerCase().includes(term));
+    });
+  });
+
+  readonly yearOptions = computed(() => [...new Set(
+    this.rows()
+      .map(row => row.session.planYear)
+      .filter((year): year is number => year !== undefined && year !== null),
+  )].sort((a, b) => b - a));
+
+  readonly noQuotesCount = computed(() => this.rows().filter(row => row.state === 'noQuotes').length);
+  readonly awaitingWinnerCount = computed(() =>
+    this.rows().filter(row => row.state === 'awaitingWinner').length);
+  readonly selectedCount = computed(() => this.rows().filter(row => row.state === 'selected').length);
+  readonly hasFilters = computed(() => !!this.searchText().trim()
+    || this.workflowFilter() !== 'all'
+    || this.courseTypeFilter() !== null
+    || this.yearFilter() !== null);
 
   async ngOnInit(): Promise<void> {
-    await this.loadProviders();
-    await this.loadSessions();
-    await this.loadQuotes();
+    await this.reload();
   }
 
-  async loadQuotes(): Promise<void> {
+  async reload(): Promise<void> {
     this.isLoading.set(true);
+    this.loadError.set(null);
     try {
-      const result = await firstValueFrom(this.quoteService.getList({
-        maxResultCount: 1000,
-        skipCount: 0,
-      }));
-      this.quotes.set(result.items ?? []);
-    } catch {
-      this.toaster.error(this.l.t('::Training.Common.LoadError'));
+      const [sessionsResult, quotesResult] = await Promise.all([
+        firstValueFrom(this.sessionService.getList({ maxResultCount: 1000, skipCount: 0 })),
+        firstValueFrom(this.quoteService.getList({ maxResultCount: 1000, skipCount: 0 })),
+      ]);
+      this.sessions.set(sessionsResult.items ?? []);
+      this.quotes.set(quotesResult.items ?? []);
+    } catch (error: unknown) {
+      this.sessions.set([]);
+      this.quotes.set([]);
+      this.loadError.set(this.extractError(error));
     } finally {
       this.isLoading.set(false);
     }
   }
 
-  async loadProviders(): Promise<void> {
-    try {
-      const result = await firstValueFrom(this.providerService.getAllActive());
-      this.providers.set(result);
-    } catch {
-      this.toaster.error(this.l.t('::Training.Common.LoadError'));
-    }
+  setWorkflowFilter(value: QuoteWorkflowFilter): void {
+    this.workflowFilter.set(value);
   }
 
-  async loadSessions(): Promise<void> {
-    try {
-      const result = await firstValueFrom(this.sessionService.getList({ maxResultCount: 1000, skipCount: 0 }));
-      this.sessions.set(result.items ?? []);
-    } catch {
-      this.toaster.error(this.l.t('::Training.Common.LoadError'));
-    }
+  onWorkflowChange(value: string): void {
+    this.workflowFilter.set(value as QuoteWorkflowFilter);
   }
 
-  // ── Actions ──
-  onAdd(): void {
-    this.isEditMode.set(false);
-    this.selectedQuoteId.set(null);
-    this.validationErrors.set([]);
-    this.formData.set({
-      sessionId: undefined,
-      providerId: '',
-      pricingType: PricingType.PerPerson,
-      quotedPrice: 0,
-      participantsCount: 1,
-      notes: undefined,
+  onCourseTypeChange(value: string): void {
+    this.courseTypeFilter.set(value === '' ? null : Number(value) as CourseType);
+  }
+
+  onYearChange(value: string): void {
+    this.yearFilter.set(value === '' ? null : Number(value));
+  }
+
+  clearFilters(): void {
+    this.searchText.set('');
+    this.workflowFilter.set('all');
+    this.courseTypeFilter.set(null);
+    this.yearFilter.set(null);
+  }
+
+  openQuotes(row: QuoteSessionRow): void {
+    void this.router.navigate(['/training/sessions', row.session.id], {
+      queryParams: { stage: 'quotes' },
     });
-    this.isDialogVisible.set(true);
   }
 
-  onEdit(quote: PriceQuoteDto): void {
-    if (quote.isSelected) {
-      this.toaster.warn(this.l.t('::Training:PriceQuote:CannotEditSelected'));
-      return;
+  stateMeta(state: QuoteWorkflowState): { key: string; css: string; icon: string } {
+    switch (state) {
+      case 'noQuotes':
+        return { key: '::Training.PriceQuotes.Dashboard.NoQuotes', css: 'state-empty', icon: 'bi bi-inbox' };
+      case 'awaitingWinner':
+        return { key: '::Training.PriceQuotes.Dashboard.AwaitingWinner', css: 'state-action', icon: 'bi bi-hourglass-split' };
+      case 'selected':
+        return { key: '::Training.PriceQuotes.Dashboard.WinnerSelected', css: 'state-selected', icon: 'bi bi-check-circle-fill' };
+      case 'cancelled':
+        return { key: '::Training.PriceQuotes.Dashboard.Cancelled', css: 'state-cancelled', icon: 'bi bi-x-circle' };
     }
-    this.isEditMode.set(true);
-    this.selectedQuoteId.set(quote.id);
-    this.validationErrors.set([]);
-    this.formData.set({
-      sessionId: quote.sessionId,
-      providerId: quote.providerId,
-      pricingType: quote.pricingType,
-      quotedPrice: quote.quotedPrice,
-      participantsCount: quote.participantsCount,
-      notes: quote.notes,
+  }
+
+  actionKey(state: QuoteWorkflowState): string {
+    switch (state) {
+      case 'noQuotes': return '::Training.PriceQuotes.Dashboard.AddQuotes';
+      case 'awaitingWinner': return '::Training.PriceQuotes.Dashboard.ReviewAndSelect';
+      case 'selected': return '::Training.PriceQuotes.Dashboard.ViewDecision';
+      case 'cancelled': return '::Training.PriceQuotes.Dashboard.ViewRecord';
+    }
+  }
+
+  courseTypeKey(courseType: CourseType | undefined): string {
+    return courseType === CourseType.ExternalInternational
+      ? '::Training.CourseType.ExternalInternational'
+      : '::Training.CourseType.ExternalLocal';
+  }
+
+  courseTypeCss(courseType: CourseType | undefined): string {
+    return courseType === CourseType.ExternalInternational ? 'type-international' : 'type-local';
+  }
+
+  formatDate(value: string | null | undefined): string {
+    return value?.substring(0, 10) ?? '—';
+  }
+
+  formatOMR(value: number | null | undefined): string {
+    return (value ?? 0).toLocaleString('en-US', {
+      minimumFractionDigits: 3,
+      maximumFractionDigits: 3,
     });
-    this.isDialogVisible.set(true);
   }
 
-  async onSave(): Promise<void> {
-    if (!this.validateForm()) return;
+  quarterLabel(session: CourseSessionDto): string {
+    const quarter = session.preferredQuarter ? `Q${session.preferredQuarter}` : '—';
+    return session.planYear ? `${quarter} · ${session.planYear}` : quarter;
+  }
 
-    this.isSaving.set(true);
-    try {
-      const data = this.formData();
-      if (this.isEditMode() && this.selectedQuoteId()) {
-        await firstValueFrom(this.quoteService.update(this.selectedQuoteId()!, data));
-        this.toaster.success(this.l.t('::Training.Common.Save'));
-      } else {
-        await firstValueFrom(this.quoteService.create(data));
-        this.toaster.success(this.l.t('::Training.Common.Save'));
-      }
-      this.isDialogVisible.set(false);
-      await this.loadQuotes();
-    } catch {
-      this.toaster.error(this.l.t('::Training.Errors.Generic'));
-    } finally {
-      this.isSaving.set(false);
+  private extractError(error: unknown): string {
+    if (error && typeof error === 'object') {
+      const apiError = error as { error?: { error?: { message?: string } }; message?: string };
+      return apiError.error?.error?.message
+        ?? apiError.message
+        ?? this.l.t('::Training.PriceQuotes.Dashboard.LoadError');
     }
-  }
-
-  onDelete(quote: PriceQuoteDto): void {
-    if (quote.isSelected) {
-      this.toaster.warn(this.l.t('::Training:PriceQuote:CannotEditSelected'));
-      return;
-    }
-    this.quoteToDelete.set(quote);
-    this.isDeleteDialogVisible.set(true);
-  }
-
-  async onConfirmDelete(): Promise<void> {
-    const quote = this.quoteToDelete();
-    if (!quote) return;
-    try {
-      await firstValueFrom(this.quoteService.delete(quote.id));
-      this.toaster.success(this.l.t('::Training.Common.Delete'));
-      this.isDeleteDialogVisible.set(false);
-      this.quoteToDelete.set(null);
-      await this.loadQuotes();
-    } catch {
-      this.toaster.error(this.l.t('::Training.Errors.Generic'));
-    }
-  }
-
-  onCancelDelete(): void {
-    this.isDeleteDialogVisible.set(false);
-    this.quoteToDelete.set(null);
-  }
-
-  deleteTargetLabel(): string {
-    const q = this.quoteToDelete();
-    if (!q) return '';
-    const provider = q.providerName || this.providerLabel(q.providerId);
-    const course = q.courseName || this.sessionLabel(q.sessionId);
-    return [provider, course].filter(Boolean).join(' — ');
-  }
-
-  async onApprove(id: string): Promise<void> {
-    try {
-      await firstValueFrom(this.quoteService.approve(id));
-      this.toaster.success(this.l.t('::Training.Approved'));
-      await this.loadQuotes();
-    } catch {
-      this.toaster.error(this.l.t('::Training.Errors.Generic'));
-    }
-  }
-
-  async onReject(id: string): Promise<void> {
-    try {
-      await firstValueFrom(this.quoteService.reject(id));
-      this.toaster.success(this.l.t('::Training.Rejected'));
-      await this.loadQuotes();
-    } catch {
-      this.toaster.error(this.l.t('::Training.Errors.Generic'));
-    }
-  }
-
-  // ── Form helpers ──
-  private validateForm(): boolean {
-    const errors: string[] = [];
-    const data = this.formData();
-    if (!data.sessionId) {
-      errors.push(`${this.l.t('::Training.Session')} ${this.l.t('::Training.Common.Required')}`);
-    }
-    if (!data.providerId) {
-      errors.push(`${this.l.t('::Training.TrainingProvider')} ${this.l.t('::Training.Common.Required')}`);
-    }
-    if (data.quotedPrice < 0) {
-      errors.push(this.l.t('::Training.Payments.GenericError'));
-    }
-    if (data.participantsCount < 1) {
-      errors.push(this.l.t('::Training.Payments.GenericError'));
-    }
-    this.validationErrors.set(errors);
-    return errors.length === 0;
-  }
-
-  updateSessionId(value: string): void {
-    this.formData.update(f => ({ ...f, sessionId: value || undefined }));
-  }
-
-  updateProviderId(value: string): void {
-    this.formData.update(f => ({ ...f, providerId: value }));
-  }
-
-  updatePricingType(value: number): void {
-    this.formData.update(f => ({ ...f, pricingType: value }));
-  }
-
-  updateQuotedPrice(value: number): void {
-    this.formData.update(f => ({ ...f, quotedPrice: value ?? 0 }));
-  }
-
-  updateParticipantsCount(value: number): void {
-    this.formData.update(f => ({ ...f, participantsCount: value ?? 1 }));
-  }
-
-  updateNotes(value: string): void {
-    this.formData.update(f => ({ ...f, notes: value || undefined }));
-  }
-
-  setFilterStatus(status: ApprovalStatus | null): void {
-    this.filterStatus.set(status);
-  }
-
-  onSearch(): void {
-    // filteredQuotes is computed — searchText already bound via input event.
-  }
-
-  // ── Display helpers ──
-  formatMoney(value?: number | null): string {
-    if (value === undefined || value === null) return '0.000';
-    return value.toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
-  }
-
-  pricingTypeLabel(type: PricingType): string {
-    return type === PricingType.PerPerson
-      ? this.l.t('::Training.PricingType.PerPerson')
-      : this.l.t('::Training.PricingType.Total');
-  }
-
-  statusBadge(status: ApprovalStatus): { css: string; label: string } {
-    switch (status) {
-      case ApprovalStatus.Approved:
-        return { css: 'status-pill status-approved', label: this.l.t('::Training.Approved') };
-      case ApprovalStatus.Rejected:
-        return { css: 'status-pill status-rejected', label: this.l.t('::Training.Rejected') };
-      case ApprovalStatus.Returned:
-        return { css: 'status-pill status-returned', label: this.l.t('::Training.Return') };
-      default:
-        return { css: 'status-pill status-pending', label: this.l.t('::Training.Pending') };
-    }
-  }
-
-  sessionLabel(sessionId?: string | null): string {
-    if (!sessionId) return '—';
-    const session = this.sessions().find(s => s.id === sessionId);
-    return session?.tenantCourseNameAr ?? sessionId;
-  }
-
-  providerLabel(providerId?: string | null): string {
-    if (!providerId) return '—';
-    const provider = this.providers().find(p => p.id === providerId);
-    return provider?.providerNameAr ?? providerId;
+    return this.l.t('::Training.PriceQuotes.Dashboard.LoadError');
   }
 }

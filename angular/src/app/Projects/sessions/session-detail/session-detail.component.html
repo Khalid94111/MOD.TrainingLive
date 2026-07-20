@@ -1,275 +1,465 @@
 <div class="page-shell">
-  <!-- ── Sticky header ── -->
-  <div class="page-header">
-    <button type="button" class="btn-back" (click)="goBack()">
-      ← {{ '::Training.Sessions.Detail.Back' | abpLocalization }}
-    </button>
-    @if (session(); as s) {
-      <div class="header-titles">
-        <h1>{{ s.tenantCourseNameAr || s.tenantCourseNameEn }}</h1>
-        <div class="header-meta">
-          <span [class]="statusBadgeCss()">{{ statusBadgeKey() | abpLocalization }}</span>
-          <span class="meta-sep">·</span>
-          <span class="meta-bit">Q{{ s.preferredQuarter }} {{ s.planYear }}</span>
-          @if (s.actualStartDate && s.actualEndDate) {
-            <span class="meta-sep">·</span>
-            <span class="meta-bit">{{ fmt(s.actualStartDate) }} → {{ fmt(s.actualEndDate) }}</span>
-          }
-        </div>
-      </div>
-
-      <!-- Action bar -->
-      <div class="action-bar">
-        @if (showMarkInProgressButton()) {
-          <button type="button" class="btn-primary" (click)="onMarkInProgress()">
-            {{ '::Training.Sessions.Detail.MarkInProgress' | abpLocalization }}
-          </button>
-        }
-        @if (showMarkCompletedButton()) {
-          <button type="button" class="btn-success" (click)="onMarkCompleted()">
-            {{ '::Training.Sessions.Detail.MarkCompleted' | abpLocalization }}
-          </button>
-        }
-        @if (showCancelButton()) {
-          <button type="button" class="btn-danger" (click)="openCancelDialog()">
-            {{ '::Training.Sessions.Detail.Cancel' | abpLocalization }}
-          </button>
-        }
-      </div>
-    }
-  </div>
-
-  <!-- ── Sticky 8-node pipeline ── -->
-  @if (session()) {
-    <div class="pipeline">
-      @for (n of pipelineNodes(); track n.key; let last = $last) {
-        <div class="pipeline-node"
-             [class.node-clickable]="!!n.anchor && !n.skipped"
-             [class.node-skipped]="n.skipped"
-             (click)="onPipelineNodeClick(n)">
-          <div [class]="'pipeline-dot dot-' + n.state">
-            @if (n.state === 'completed') { ✓ }
-            @else if (n.skipped) { — }
-          </div>
-          <div class="pipeline-label">{{ n.labelKey | abpLocalization }}</div>
-        </div>
-        @if (!last) {
-          <div class="pipeline-line"></div>
-        }
-      }
-    </div>
-  }
-
-  <!-- Phase 4C-α Patch 1 (v4.10.1) — sticky course info bar -->
-  @if (infoBarData(); as bar) {
-    <app-course-info-bar
-      class="session-info-bar"
-      [data]="bar"
-      variant="session" />
-  }
-
-  @if (actionError()) {
-    <div class="error-banner">{{ actionError() }}</div>
-  }
+  <button type="button" class="back-link" (click)="goBack()">
+    <i class="bi bi-arrow-right" aria-hidden="true"></i>
+    {{ '::Training.Sessions.Detail.Back' | abpLocalization }}
+  </button>
 
   @if (loading() && !session()) {
-    <div class="card empty-state">{{ '::Training.Sessions.Detail.Loading' | abpLocalization }}</div>
+    <div class="loading-state" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      {{ '::Training.Sessions.Detail.Loading' | abpLocalization }}
+    </div>
   } @else if (!session()) {
-    <div class="card empty-state error">{{ '::Training.Sessions.Detail.NotFound' | abpLocalization }}</div>
-  } @else {
-    <!-- ── Section 1: Details ── -->
-    <div id="section-details" class="section-card">
-      <header class="section-header clickable" (click)="onSectionToggle('details')">
-        <div class="section-title">
-          <span class="section-num">1</span>
-          <h3>{{ '::Training.Sessions.Detail.Section1.Title' | abpLocalization }}</h3>
-        </div>
-        @if (detailsState() === 'collapsed') {
-          <div class="section-summary">
-            {{ session()!.tenantCourseNameAr || session()!.tenantCourseNameEn }}
-            ·
-            Q{{ session()!.preferredQuarter }} {{ session()!.planYear }}
+    <div class="empty-state error" role="status">
+      <i class="bi bi-calendar-x" aria-hidden="true"></i>
+      {{ '::Training.Sessions.Detail.NotFound' | abpLocalization }}
+    </div>
+  } @else if (session(); as currentSession) {
+    <header class="page-header">
+      <div class="page-title-wrap">
+        <span class="page-icon"><i class="bi bi-mortarboard" aria-hidden="true"></i></span>
+        <div class="page-title-copy">
+          <span class="page-eyebrow">{{ '::Training.Sessions.Detail.Workspace.PageEyebrow' | abpLocalization }}</span>
+          <h1>{{ currentSession.tenantCourseNameAr || currentSession.tenantCourseNameEn }}</h1>
+          <div class="title-pills">
+            <span [class]="statusBadgeCss()">{{ statusBadgeKey() | abpLocalization }}</span>
+            <span [class]="courseTypeCss()">{{ courseTypeKey() | abpLocalization }}</span>
           </div>
-        }
-      </header>
-      @if (detailsState() === 'active') {
-        <div class="section-body">
-          <div class="detail-grid">
-            <div class="detail-field">
-              <label>{{ '::Training.AnnualPlan.CreateSession.Course' | abpLocalization }}</label>
-              <div class="detail-value">
-                {{ session()!.tenantCourseNameAr || session()!.tenantCourseNameEn }}
-              </div>
+        </div>
+      </div>
+
+      <div class="header-stats">
+        <div class="stat-chip">
+          <span>{{ '::Training.AnnualPlan.SessionsQueue.Column.Quarter' | abpLocalization }}</span>
+          <strong>Q{{ currentSession.preferredQuarter }}</strong>
+        </div>
+        <div class="stat-chip">
+          <span>{{ '::Training.InfoBar.Duration' | abpLocalization }}</span>
+          <strong>{{ currentSession.durationDays ?? 0 }}</strong>
+        </div>
+        <div class="stat-chip">
+          <span>{{ '::Training.InfoBar.Nominees' | abpLocalization }}</span>
+          <strong>{{ currentSession.nomineesCount ?? 0 }}</strong>
+        </div>
+      </div>
+    </header>
+
+    <div class="context-strip">
+      <div class="context-item">
+        <i class="bi bi-building" aria-hidden="true"></i>
+        <span>
+          <small>{{ '::Training.InfoBar.Unit' | abpLocalization }}</small>
+          <strong>{{ currentSession.unitName || '—' }}</strong>
+        </span>
+      </div>
+      <div class="context-divider" aria-hidden="true"></div>
+      <div class="context-item">
+        <i class="bi bi-calendar3" aria-hidden="true"></i>
+        <span>
+          <small>{{ '::Training.Sessions.Detail.Workspace.ExecutionWindow' | abpLocalization }}</small>
+          <strong>
+            @if (currentSession.actualStartDate && currentSession.actualEndDate) {
+              {{ fmt(currentSession.actualStartDate) }} — {{ fmt(currentSession.actualEndDate) }}
+            } @else {
+              {{ '::Training.Sessions.Detail.Workspace.DatePending' | abpLocalization }}
+            }
+          </strong>
+        </span>
+      </div>
+      <div class="context-divider" aria-hidden="true"></div>
+      <div class="context-item">
+        <i class="bi bi-cash-stack" aria-hidden="true"></i>
+        <span>
+          <small>{{ '::Training.InfoBar.ApprovedCost' | abpLocalization }}</small>
+          <strong>{{ (currentSession.approvedCostOMR ?? 0) | number:'1.0-3' }} {{ '::Training.OMR' | abpLocalization }}</strong>
+        </span>
+      </div>
+
+      @if (activeStage() !== recommendedStageKey()) {
+        <button type="button" class="recommended-shortcut" (click)="goRecommendedStage()">
+          <span class="pulse-dot" aria-hidden="true"></span>
+          {{ '::Training.Sessions.Detail.Workspace.GoRecommended' | abpLocalization }}
+          <i class="bi bi-arrow-left" aria-hidden="true"></i>
+        </button>
+      }
+    </div>
+
+    <div class="guided-layout">
+      <aside class="stage-navigation"
+             [attr.aria-label]="'::Training.Sessions.Detail.Workspace.NavigatorTitle' | abpLocalization">
+        <div class="stage-nav-heading">
+          <span>{{ '::Training.Sessions.Detail.Workspace.NavigatorEyebrow' | abpLocalization }}</span>
+          <h2>{{ '::Training.Sessions.Detail.Workspace.NavigatorTitle' | abpLocalization }}</h2>
+          <p>{{ '::Training.Sessions.Detail.Workspace.NavigatorHint' | abpLocalization }}</p>
+        </div>
+
+        <ol class="stage-list">
+          @for (stage of visibleStages(); track stage.key; let stageIndex = $index) {
+            <li [class.stage-selected]="activeStage() === stage.key"
+                [class.stage-complete]="stage.state === 'complete'"
+                [class.stage-attention]="stage.state === 'attention'"
+                [class.stage-locked]="stage.state === 'locked'"
+                [class.stage-blocked]="!canAccessStage(stage.key)">
+              <button type="button" (click)="selectStage(stage.key)"
+                      [disabled]="!canAccessStage(stage.key)"
+                      [attr.title]="!canAccessStage(stage.key)
+                        ? ('::Training.Sessions.Detail.Workspace.CompleteCurrentStage' | abpLocalization)
+                        : null"
+                      [attr.aria-current]="activeStage() === stage.key ? 'step' : null">
+                <span class="stage-marker">
+                  @if (stage.state === 'complete') {
+                    <i class="bi bi-check-lg" aria-hidden="true"></i>
+                  } @else if (stage.state === 'locked') {
+                    <i class="bi bi-lock" aria-hidden="true"></i>
+                  } @else {
+                    <span>{{ stageIndex + 1 }}</span>
+                  }
+                </span>
+                <span class="stage-copy">
+                  <strong>{{ stage.titleKey | abpLocalization }}</strong>
+                  <small>{{ stage.descriptionKey | abpLocalization }}</small>
+                </span>
+                <span [class]="'stage-state state-' + stage.state">
+                  {{ stageStateKey(stage.state) | abpLocalization }}
+                </span>
+                @if (recommendedStageKey() === stage.key && stage.state !== 'complete') {
+                  <span class="recommended-mark" [attr.title]="'::Training.Sessions.Detail.Workspace.Recommended' | abpLocalization"></span>
+                }
+              </button>
+            </li>
+          }
+        </ol>
+      </aside>
+
+      <section id="session-workspace" class="workbench">
+        @if (activeStageMeta(); as stage) {
+          <header class="workbench-header">
+            <span class="workbench-icon"><i [class]="stage.iconClass" aria-hidden="true"></i></span>
+            <div class="workbench-title">
+              <span>
+                {{ '::Training.Sessions.Detail.Workspace.Step' | abpLocalization }}
+                {{ activeStageIndex() + 1 }} / {{ visibleStages().length }}
+              </span>
+              <h2>{{ stage.titleKey | abpLocalization }}</h2>
+              <p>{{ stage.descriptionKey | abpLocalization }}</p>
             </div>
-            <div class="detail-field">
-              <label>{{ '::Training.Sessions.Detail.PlannedWindow' | abpLocalization }}</label>
-              <div class="detail-value">Q{{ session()!.preferredQuarter }} {{ session()!.planYear }}</div>
-            </div>
-            <div class="detail-field">
-              <label>{{ '::Training.AnnualPlan.CreateSession.ActualStartDate' | abpLocalization }}</label>
-              <div class="detail-value">{{ fmt(session()!.actualStartDate) || '—' }}</div>
-            </div>
-            <div class="detail-field">
-              <label>{{ '::Training.AnnualPlan.CreateSession.ActualEndDate' | abpLocalization }}</label>
-              <div class="detail-value">{{ fmt(session()!.actualEndDate) || '—' }}</div>
-            </div>
-            @if (session()!.selectedPriceQuoteId) {
-              <div class="detail-field">
-                <label>{{ '::Training.Sessions.Detail.SelectedQuote' | abpLocalization }}</label>
-                <div class="detail-value">
-                  {{ session()!.selectedPriceQuoteProviderNameAr || '—' }}
-                  @if (session()!.selectedPriceQuoteAmountOMR) {
-                    <span class="amount">· {{ session()!.selectedPriceQuoteAmountOMR }} ر.ع</span>
+            <span [class]="'workbench-state state-' + stage.state">
+              {{ stageStateKey(stage.state) | abpLocalization }}
+            </span>
+          </header>
+
+          <div class="workbench-body">
+            @switch (activeStage()) {
+              @case ('overview') {
+                <dl class="details-list">
+                  <div class="detail-row detail-row-wide">
+                    <dt><i class="bi bi-journal-bookmark" aria-hidden="true"></i>{{ '::Training.AnnualPlan.CreateSession.Course' | abpLocalization }}</dt>
+                    <dd>{{ currentSession.tenantCourseNameAr || currentSession.tenantCourseNameEn }}</dd>
+                  </div>
+                  <div class="detail-row">
+                    <dt><i class="bi bi-building" aria-hidden="true"></i>{{ '::Training.InfoBar.Unit' | abpLocalization }}</dt>
+                    <dd>{{ currentSession.unitName || '—' }}</dd>
+                  </div>
+                  <div class="detail-row">
+                    <dt><i class="bi bi-bookmark" aria-hidden="true"></i>{{ '::Training.CourseType' | abpLocalization }}</dt>
+                    <dd>{{ courseTypeKey() | abpLocalization }}</dd>
+                  </div>
+                  <div class="detail-row">
+                    <dt><i class="bi bi-calendar4-range" aria-hidden="true"></i>{{ '::Training.Sessions.Detail.PlannedWindow' | abpLocalization }}</dt>
+                    <dd>Q{{ currentSession.preferredQuarter }} · {{ currentSession.planYear }}</dd>
+                  </div>
+                  <div class="detail-row">
+                    <dt><i class="bi bi-calendar-check" aria-hidden="true"></i>{{ '::Training.AnnualPlan.CreateSession.ActualStartDate' | abpLocalization }}</dt>
+                    <dd>{{ fmt(currentSession.actualStartDate) || '—' }}</dd>
+                  </div>
+                  <div class="detail-row">
+                    <dt><i class="bi bi-calendar-check-fill" aria-hidden="true"></i>{{ '::Training.AnnualPlan.CreateSession.ActualEndDate' | abpLocalization }}</dt>
+                    <dd>{{ fmt(currentSession.actualEndDate) || '—' }}</dd>
+                  </div>
+                  <div class="detail-row">
+                    <dt><i class="bi bi-hourglass-split" aria-hidden="true"></i>{{ '::Training.InfoBar.Duration' | abpLocalization }}</dt>
+                    <dd>{{ currentSession.durationDays ?? 0 }} {{ '::Training.Days' | abpLocalization }}</dd>
+                  </div>
+                  <div class="detail-row">
+                    <dt><i class="bi bi-cash-stack" aria-hidden="true"></i>{{ '::Training.InfoBar.ApprovedCost' | abpLocalization }}</dt>
+                    <dd>{{ (currentSession.approvedCostOMR ?? 0) | number:'1.0-3' }} {{ '::Training.OMR' | abpLocalization }}</dd>
+                  </div>
+                  @if (currentSession.selectedPriceQuoteId) {
+                    <div class="detail-row detail-row-wide detail-highlight">
+                      <dt><i class="bi bi-award" aria-hidden="true"></i>{{ '::Training.Sessions.Detail.SelectedQuote' | abpLocalization }}</dt>
+                      <dd>
+                        {{ currentSession.selectedPriceQuoteProviderNameAr || '—' }}
+                        · {{ (currentSession.selectedPriceQuoteAmountOMR ?? 0) | number:'1.0-3' }} {{ '::Training.OMR' | abpLocalization }}
+                      </dd>
+                    </div>
+                  }
+                  @if (currentSession.cancellationReason) {
+                    <div class="detail-row detail-row-wide detail-cancelled">
+                      <dt><i class="bi bi-x-octagon" aria-hidden="true"></i>{{ '::Training.Sessions.Detail.CancellationReason' | abpLocalization }}</dt>
+                      <dd>{{ currentSession.cancellationReason }}</dd>
+                    </div>
+                  }
+                </dl>
+              }
+
+              @case ('nominees') {
+                @if ((currentSession.nominations?.length ?? 0) === 0) {
+                  <div class="inline-empty">
+                    <i class="bi bi-person-x" aria-hidden="true"></i>
+                    {{ '::Training.AnnualPlan.CreateSession.NoNominees' | abpLocalization }}
+                  </div>
+                } @else {
+                  <div class="table-wrap">
+                    <table class="nominees-table">
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>{{ '::Training.AnnualPlan.CreateSession.Column.Nominee' | abpLocalization }}</th>
+                          <th>{{ '::Training.Sessions.Detail.Section2.Rank' | abpLocalization }}</th>
+                          <th>{{ '::Training.Sessions.Detail.Section2.Substituted' | abpLocalization }}</th>
+                          <th>{{ '::Training.AnnualPlan.CreateSession.Column.Reason' | abpLocalization }}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @for (nominee of currentSession.nominations ?? []; track nominee.id; let nomineeIndex = $index) {
+                          <tr [class.substituted-row]="nominee.wasSubstituted">
+                            <td class="row-number">{{ nomineeIndex + 1 }}</td>
+                            <td>
+                              <span class="person-cell">
+                                <span class="person-avatar"><i class="bi bi-person" aria-hidden="true"></i></span>
+                                <strong>{{ nominee.employeeNameAr || nominee.employeeNameEn }}</strong>
+                              </span>
+                            </td>
+                            <td>{{ nominee.rankNameAr || '—' }}</td>
+                            <td>
+                              @if (nominee.wasSubstituted) {
+                                <span class="substitution-chip">
+                                  <i class="bi bi-arrow-repeat" aria-hidden="true"></i>
+                                  {{ nominee.originalEmployeeNameAr }}
+                                </span>
+                              } @else { — }
+                            </td>
+                            <td class="substitution-reason-cell">
+                              @if (nominee.wasSubstituted) {
+                                @if (nominee.substitutionReason) {
+                                  <span class="saved-reason">{{ nominee.substitutionReason }}</span>
+                                } @else {
+                                  <span class="missing-reason">
+                                    <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+                                    {{ '::Training.Sessions.Detail.Section2.ReasonNotSaved' | abpLocalization }}
+                                  </span>
+                                }
+                              } @else { — }
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                }
+              }
+
+              @case ('quotes') {
+                <app-price-quotes />
+              }
+
+              @case ('travel') {
+                @if (stage.state === 'locked') {
+                  <div class="locked-preview">
+                    <span class="locked-icon"><i class="bi bi-lock" aria-hidden="true"></i></span>
+                    <h3>{{ '::Training.Sessions.Detail.Workspace.LockedTitle' | abpLocalization }}</h3>
+                    <p>{{ stage.lockReason }}</p>
+                    <small>{{ '::Training.Sessions.Detail.Workspace.LockedHint' | abpLocalization }}</small>
+                  </div>
+                } @else {
+                  <app-travel-instructions />
+                }
+              }
+
+              @case ('payments') {
+                @if (stage.state === 'locked') {
+                  <div class="locked-preview">
+                    <span class="locked-icon"><i class="bi bi-lock" aria-hidden="true"></i></span>
+                    <h3>{{ '::Training.Sessions.Detail.Workspace.LockedTitle' | abpLocalization }}</h3>
+                    <p>{{ stage.lockReason }}</p>
+                    <small>{{ '::Training.Sessions.Detail.Workspace.LockedHint' | abpLocalization }}</small>
+                  </div>
+                } @else {
+                  <app-session-section-payments
+                    [session]="session()"
+                    [travelAllowancePayments]="travelAllowancePayments()"
+                    [coursePayment]="coursePayment()" />
+                }
+              }
+
+              @case ('execution') {
+                <div class="execution-panel">
+                  <div class="execution-status">
+                    <span [class]="'execution-status-icon status-icon-' + currentSession.status">
+                      @if (currentSession.status === SessionStatus.Completed || currentSession.status === SessionStatus.FinanciallyClosed) {
+                        <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                      } @else if (currentSession.status === SessionStatus.Cancelled) {
+                        <i class="bi bi-x-octagon" aria-hidden="true"></i>
+                      } @else if (currentSession.status === SessionStatus.InProgress) {
+                        <i class="bi bi-play-circle" aria-hidden="true"></i>
+                      } @else {
+                        <i class="bi bi-calendar2-check" aria-hidden="true"></i>
+                      }
+                    </span>
+                    <div>
+                      <span>{{ '::Training.Sessions.Detail.Workspace.CurrentStatus' | abpLocalization }}</span>
+                      <h3>{{ statusBadgeKey() | abpLocalization }}</h3>
+                      <p>{{ executionMessageKey() | abpLocalization }}</p>
+                    </div>
+                  </div>
+
+                  <div class="execution-checks">
+                    <div [class.check-done]="!!currentSession.actualStartDate">
+                      <i [class]="currentSession.actualStartDate ? 'bi bi-check-circle-fill' : 'bi bi-circle'" aria-hidden="true"></i>
+                      <span>{{ '::Training.Sessions.Detail.Pipeline.Dates' | abpLocalization }}</span>
+                    </div>
+                    @if (isInternational()) {
+                      <div [class.check-done]="travelIssued()">
+                        <i [class]="travelIssued() ? 'bi bi-check-circle-fill' : 'bi bi-circle'" aria-hidden="true"></i>
+                        <span>{{ '::Training.Sessions.Detail.Pipeline.Travel' | abpLocalization }}</span>
+                      </div>
+                    }
+                    @if (!isInternal()) {
+                      <div [class.check-done]="paymentsComplete()">
+                        <i [class]="paymentsComplete() ? 'bi bi-check-circle-fill' : 'bi bi-circle'" aria-hidden="true"></i>
+                        <span>{{ '::Training.Sessions.Detail.Pipeline.Payments' | abpLocalization }}</span>
+                      </div>
+                    }
+                  </div>
+
+                  @if (actionError()) {
+                    <div class="error-banner" role="alert">{{ actionError() }}</div>
+                  }
+
+                  @if (transitionAction(); as transition) {
+                    <div class="inline-confirmation">
+                      <div>
+                        <strong>
+                          {{ (transition === 'completed'
+                            ? '::Training.Sessions.Detail.MarkCompleted'
+                            : '::Training.Sessions.Detail.MarkInProgress') | abpLocalization }}
+                        </strong>
+                        <p>
+                          {{ (transition === 'completed'
+                            ? '::Training.Sessions.Detail.ConfirmMarkCompleted'
+                            : '::Training.Sessions.Detail.ConfirmMarkInProgress') | abpLocalization }}
+                        </p>
+                      </div>
+                      <div class="confirmation-actions">
+                        <button type="button" class="btn-secondary" [disabled]="actionRunning()" (click)="cancelTransition()">
+                          {{ '::Training.Sessions.Detail.CancelDialogClose' | abpLocalization }}
+                        </button>
+                        <button type="button" class="btn-primary" [disabled]="actionRunning()" (click)="confirmTransition()">
+                          @if (actionRunning()) { <span class="button-spinner" aria-hidden="true"></span> }
+                          {{ (transition === 'completed'
+                            ? '::Training.Sessions.Detail.MarkCompleted'
+                            : '::Training.Sessions.Detail.MarkInProgress') | abpLocalization }}
+                        </button>
+                      </div>
+                    </div>
+                  } @else {
+                    <div class="execution-actions">
+                      @if (showMarkInProgressButton()) {
+                        <button type="button" class="btn-primary" (click)="requestTransition('inProgress')">
+                          <i class="bi bi-play-fill" aria-hidden="true"></i>
+                          {{ '::Training.Sessions.Detail.MarkInProgress' | abpLocalization }}
+                        </button>
+                      }
+                      @if (showMarkCompletedButton()) {
+                        <button type="button" class="btn-success" (click)="requestTransition('completed')">
+                          <i class="bi bi-check2" aria-hidden="true"></i>
+                          {{ '::Training.Sessions.Detail.MarkCompleted' | abpLocalization }}
+                        </button>
+                      }
+                      @if (showCancelButton()) {
+                        <button type="button" class="btn-danger-outline" (click)="openCancelDialog()">
+                          <i class="bi bi-x-circle" aria-hidden="true"></i>
+                          {{ '::Training.Sessions.Detail.Cancel' | abpLocalization }}
+                        </button>
+                      }
+                    </div>
+                  }
+
+                  @if (currentSession.cancellationReason) {
+                    <div class="cancelled-note">
+                      <strong>{{ '::Training.Sessions.Detail.CancellationReason' | abpLocalization }}</strong>
+                      <p>{{ currentSession.cancellationReason }}</p>
+                    </div>
                   }
                 </div>
-              </div>
-            }
-            @if (session()!.cancellationReason) {
-              <div class="detail-field detail-cancel">
-                <label>{{ '::Training.Sessions.Detail.CancellationReason' | abpLocalization }}</label>
-                <div class="detail-value">{{ session()!.cancellationReason }}</div>
-              </div>
+              }
             }
           </div>
-        </div>
-      }
-    </div>
 
-    <!-- ── Section 2: Nominees ── -->
-    <div id="section-nominees" class="section-card">
-      <header class="section-header clickable" (click)="onSectionToggle('nominees')">
-        <div class="section-title">
-          <span class="section-num">2</span>
-          <h3>{{ '::Training.Sessions.Detail.Section2.Title' | abpLocalization }}</h3>
-          <span class="section-count">({{ session()!.nominations?.length ?? 0 }})</span>
-        </div>
-      </header>
-      @if (nomineesState() === 'active') {
-        <div class="section-body">
-          @if ((session()!.nominations?.length ?? 0) === 0) {
-            <div class="empty-mini">
-              {{ '::Training.AnnualPlan.CreateSession.NoNominees' | abpLocalization }}
+          <footer class="workbench-footer">
+            <div>
+              @if (hasPreviousStage()) {
+                <button type="button" class="stage-nav-button previous" (click)="goPreviousStage()">
+                  <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                  <span>
+                    <small>{{ '::Training.Sessions.Detail.Workspace.Previous' | abpLocalization }}</small>
+                    <strong>{{ visibleStages()[activeStageIndex() - 1].titleKey | abpLocalization }}</strong>
+                  </span>
+                </button>
+              }
             </div>
-          } @else {
-            <table class="data-grid">
-              <thead>
-                <tr>
-                  <th>{{ '::Training.AnnualPlan.CreateSession.Column.Nominee' | abpLocalization }}</th>
-                  <th>{{ '::Training.Sessions.Detail.Section2.Rank' | abpLocalization }}</th>
-                  <th>{{ '::Training.Sessions.Detail.Section2.Substituted' | abpLocalization }}</th>
-                  <th>{{ '::Training.AnnualPlan.CreateSession.Column.Reason' | abpLocalization }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (n of session()!.nominations ?? []; track n.id) {
-                  <tr [class.row-substituted]="n.wasSubstituted">
-                    <td>{{ n.employeeNameAr || n.employeeNameEn }}</td>
-                    <td>{{ n.rankNameAr || '—' }}</td>
-                    <td>
-                      @if (n.wasSubstituted) {
-                        <span class="sub-marker">↺ {{ n.originalEmployeeNameAr }}</span>
-                      } @else {
-                        <span class="muted">—</span>
-                      }
-                    </td>
-                    <td>
-                      @if (n.substitutionReason) {
-                        <span class="reason-text">{{ n.substitutionReason }}</span>
-                      } @else {
-                        <span class="muted">—</span>
-                      }
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          }
-        </div>
-      }
-    </div>
-
-    <!-- ── Section 3: Quotes (hidden for Internal) ── -->
-    @if (!quotesHidden()) {
-      <div id="section-quotes" class="section-card">
-        <header class="section-header clickable" (click)="onSectionToggle('quotes')"
-                [class.section-locked-header]="quotesState() === 'locked'">
-          <div class="section-title">
-            <span class="section-num">3</span>
-            <h3>{{ '::Training.Sessions.Detail.Section3.Title' | abpLocalization }}</h3>
-          </div>
-          @if (quotesState() === 'locked') {
-            <div class="section-locked-msg">🔒 {{ quotesLockReason() }}</div>
-          }
-        </header>
-        @if (quotesState() === 'active') {
-          <div class="section-body">
-            <app-price-quotes></app-price-quotes>
-          </div>
+            <span class="step-position">{{ activeStageIndex() + 1 }} / {{ visibleStages().length }}</span>
+            <div>
+              @if (hasNextStage()) {
+                <button type="button" class="stage-nav-button next"
+                        [disabled]="!canGoNextStage()"
+                        [attr.title]="!canGoNextStage()
+                          ? ('::Training.Sessions.Detail.Workspace.CompleteCurrentStage' | abpLocalization)
+                          : null"
+                        (click)="goNextStage()">
+                  <span>
+                    <small>{{ '::Training.Sessions.Detail.Workspace.Next' | abpLocalization }}</small>
+                    <strong>{{ visibleStages()[activeStageIndex() + 1].titleKey | abpLocalization }}</strong>
+                  </span>
+                  <i [class]="canGoNextStage() ? 'bi bi-arrow-left' : 'bi bi-lock'" aria-hidden="true"></i>
+                </button>
+              }
+            </div>
+          </footer>
         }
-      </div>
-    }
-
-    <!-- ── Section 4: Travel (hidden for Internal) ── -->
-    @if (!travelHidden()) {
-      <div id="section-travel" class="section-card">
-        <header class="section-header clickable" (click)="onSectionToggle('travel')"
-                [class.section-locked-header]="travelState() === 'locked'">
-          <div class="section-title">
-            <span class="section-num">4</span>
-            <h3>{{ '::Training.Sessions.Detail.Section4.Title' | abpLocalization }}</h3>
-          </div>
-          @if (travelState() === 'locked') {
-            <div class="section-locked-msg">🔒 {{ travelLockReason() }}</div>
-          }
-        </header>
-        @if (travelState() === 'active') {
-          <div class="section-body">
-            <app-travel-instructions></app-travel-instructions>
-          </div>
-        }
-      </div>
-    }
-
-    <!-- ── Section 5: Payments ── -->
-    <div id="section-payments">
-      <app-session-section-payments
-        [state]="paymentsState()"
-        [session]="session()"
-        [travelAllowancePayments]="travelAllowancePayments()"
-        [coursePayment]="coursePayment()"
-        [lockReason]="paymentsLockReason()"
-        (toggle)="onSectionToggle('payments')"></app-session-section-payments>
+      </section>
     </div>
   }
 
-  <!-- ── Cancel dialog ── -->
   @if (cancelDialogOpen()) {
     <div class="modal-backdrop" (click)="closeCancelDialog()">
-      <div class="modal-shell" (click)="$event.stopPropagation()">
+      <div class="modal-shell" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
         <header class="modal-header">
-          <h3>{{ '::Training.Sessions.Detail.CancelDialogTitle' | abpLocalization }}</h3>
-          <button type="button" class="modal-close" (click)="closeCancelDialog()">×</button>
+          <div>
+            <h2>{{ '::Training.Sessions.Detail.CancelDialogTitle' | abpLocalization }}</h2>
+            <p>{{ '::Training.Sessions.Detail.CancelDialogWarning' | abpLocalization }}</p>
+          </div>
+          <button type="button" class="modal-close" [disabled]="actionRunning()" (click)="closeCancelDialog()">×</button>
         </header>
         <section class="modal-body">
-          <p class="modal-warning">
-            ⚠ {{ '::Training.Sessions.Detail.CancelDialogWarning' | abpLocalization }}
-          </p>
-          <label class="modal-label">
+          <label for="session-cancel-reason">
             {{ '::Training.Sessions.Detail.CancelReasonLabel' | abpLocalization }} *
           </label>
-          <textarea class="modal-textarea" rows="4"
+          <textarea id="session-cancel-reason" rows="5"
                     [value]="cancelReason()"
+                    [disabled]="actionRunning()"
                     (input)="onCancelReasonChange($event)"
-                    [placeholder]="('::Training.Sessions.Detail.CancelReasonPlaceholder' | abpLocalization)"></textarea>
+                    [placeholder]="'::Training.Sessions.Detail.CancelReasonPlaceholder' | abpLocalization"></textarea>
           @if (actionError()) {
-            <div class="error-banner">{{ actionError() }}</div>
+            <div class="error-banner" role="alert">{{ actionError() }}</div>
           }
         </section>
         <footer class="modal-footer">
-          <button type="button" class="btn-ghost" (click)="closeCancelDialog()">
+          <button type="button" class="btn-secondary" [disabled]="actionRunning()" (click)="closeCancelDialog()">
             {{ '::Training.Sessions.Detail.CancelDialogClose' | abpLocalization }}
           </button>
-          <button type="button" class="btn-danger" (click)="confirmCancel()">
+          <button type="button" class="btn-danger" [disabled]="actionRunning() || !cancelReason().trim()" (click)="confirmCancel()">
+            @if (actionRunning()) { <span class="button-spinner" aria-hidden="true"></span> }
             {{ '::Training.Sessions.Detail.CancelDialogConfirm' | abpLocalization }}
           </button>
         </footer>

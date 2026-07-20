@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, output } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LocalizationPipe } from '@abp/ng.core';
 import { Router } from '@angular/router';
@@ -13,8 +13,6 @@ import { PaymentStatus } from 'src/app/proxy/training/enums/payment-status.enum'
 
 import { TrainingLocalizationHelper } from '../../../../shared';
 
-export type SectionState = 'collapsed' | 'active' | 'locked';
-
 // Phase 4C-α (v4.10.0) — Section 5 (Payments) for session detail.
 //
 // Mirrors the casual-course Section 5 layout but **without the reallocation card**:
@@ -25,7 +23,7 @@ export type SectionState = 'collapsed' | 'active' | 'locked';
   selector: 'app-session-section-payments',
   standalone: true,
   templateUrl: './session-section-payments.component.html',
-  styleUrls: ['./session-section-payments.component.scss', '../../../../shared/gtms-design.scss'],
+  styleUrls: ['../../../../shared/gtms-design.scss', './session-section-payments.component.scss'],
   imports: [CommonModule, LocalizationPipe],
 })
 export class SessionSectionPaymentsComponent {
@@ -35,15 +33,9 @@ export class SessionSectionPaymentsComponent {
   CourseType = CourseType;
   PaymentStatus = PaymentStatus;
 
-  // ── Inputs ──
-  state = input.required<SectionState>();
   session = input<CourseSessionDetailDto | null>(null);
   travelAllowancePayments = input<TravelAllowancePaymentDto[]>([]);
   coursePayment = input<CoursePaymentDto | null>(null);
-  lockReason = input<string>('');
-
-  // ── Outputs ──
-  toggle = output<void>();
 
   // ── Course-type guards ──
   isInternal = computed(() => this.session()?.courseType === CourseType.Internal);
@@ -106,43 +98,8 @@ export class SessionSectionPaymentsComponent {
     this.travelTotalOMR() + (this.coursePayment()?.invoiceAmountOMR ?? 0),
   );
 
-  // ── Summary line for collapsed state ──
-  summaryLine = computed(() => {
-    const parts: string[] = [];
-    const cp = this.coursePayment();
-    if (cp) {
-      if (cp.status === PaymentStatus.Confirmed) {
-        parts.push(this.l.t('::Training.Payments.Section5.SummaryCourseConfirmed'));
-      } else {
-        const badge = this.coursePaymentBadge();
-        const label = badge.textKey ? this.l.t(badge.textKey) : '';
-        parts.push(`${this.l.t('::Training.Payments.Section5.SummaryCoursePrefix')} ${label}`);
-      }
-    }
-    if (this.showTravelCard()) {
-      const c = this.travelConfirmedCount();
-      const e = this.expectedNomineeCount();
-      if (e > 0) {
-        parts.push(
-          `${this.l.t('::Training.Payments.Section5.SummaryTravelPrefix')} ${c}/${e} ${this.l.t('::Training.Payments.Section5.SummaryConfirmedSuffix')}`,
-        );
-      }
-    }
-    parts.push(
-      `${this.l.t('::Training.Payments.Section5.SummaryTotalPrefix')} ${this.formatOMR(this.totalLifecycleOMR())} ر.ع`,
-    );
-    return parts.join(' · ');
-  });
-
-  isExpandable = computed(() => this.state() !== 'locked');
-
   formatOMR(value: number | null | undefined): string {
     return (value ?? 0).toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
-  }
-
-  onHeaderClick(): void {
-    if (this.state() === 'locked') return;
-    this.toggle.emit();
   }
 
   goTravelAllowances(event: Event): void {

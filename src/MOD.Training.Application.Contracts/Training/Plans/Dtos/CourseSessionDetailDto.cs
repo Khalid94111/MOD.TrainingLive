@@ -23,6 +23,8 @@ public class CourseSessionDetailDto : FullAuditedEntityDto<Guid>
 
     public DateTime? ActualStartDate { get; set; }
     public DateTime? ActualEndDate { get; set; }
+    public DateTime? EstimatedDateFrom { get; set; }
+    public DateTime? EstimatedDateTo { get; set; }
 
     public SessionStatus Status { get; set; }
     public SessionExecutionStage ExecutionStage { get; set; }

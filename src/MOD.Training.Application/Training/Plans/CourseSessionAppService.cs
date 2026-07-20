@@ -355,6 +355,8 @@ public class CourseSessionAppService(
             if (planItem != null)
             {
                 dto.DurationDays = planItem.DurationDays;
+                dto.EstimatedDateFrom = planItem.EstimatedDateFrom;
+                dto.EstimatedDateTo = planItem.EstimatedDateTo;
                 if (planItem.UnitId.HasValue)
                 {
                     var ou = await orgUnitRepository.FindAsync(planItem.UnitId.Value);
@@ -445,8 +447,8 @@ public class CourseSessionAppService(
     }
 
     /// <summary>
-    /// Maps (session × dependents) → SessionExecutionStage. Internal courses skip travel
-    /// stages (no TI, no per-nominee allowances). Cancelled sessions are terminal.
+    /// Maps (session × dependents) → SessionExecutionStage. Internal courses skip quotes,
+    /// travel, and payments. Cancelled sessions are terminal.
     /// </summary>
     private static SessionExecutionStage ComputeStage(
         CourseSession s,
@@ -458,11 +460,23 @@ public class CourseSessionAppService(
         if (s.Status == SessionStatus.Cancelled)
             return SessionExecutionStage.NoExecutionPending;
 
+        // Internal sessions have no quote, travel, allowance, or course-payment workflow.
+        // They are ready for operational execution as soon as they are created Scheduled.
+        if (s.CourseType == CourseType.Internal)
+        {
+            return s.Status switch
+            {
+                SessionStatus.Completed           => SessionExecutionStage.FinanciallyComplete,
+                SessionStatus.FinanciallyClosed   => SessionExecutionStage.FinanciallyComplete,
+                _ => SessionExecutionStage.AwaitingCompletion,
+            };
+        }
+
         if (s.Status == SessionStatus.Planned)
             return SessionExecutionStage.AwaitingQuoteSelection;
 
         // Patches 4 + 5 (v4.10.5) — travel instruction + per-nominee allowances apply only to
-        // ExternalInternational. Internal + ExternalLocal both skip these stages.
+        // ExternalInternational. ExternalLocal skips these stages.
         var isInternational = s.CourseType == CourseType.ExternalInternational;
 
         if (isInternational && (ti == null || ti.Status != TravelInstructionStatus.Issued))
@@ -475,7 +489,7 @@ public class CourseSessionAppService(
                 return SessionExecutionStage.AwaitingTravelAllowances;
         }
 
-        // Both arms: course payment must be confirmed.
+        // Both external arms: course payment must be confirmed.
         if (coursePayment == null || coursePayment.Status != PaymentStatus.Confirmed)
             return SessionExecutionStage.AwaitingCoursePayment;
 

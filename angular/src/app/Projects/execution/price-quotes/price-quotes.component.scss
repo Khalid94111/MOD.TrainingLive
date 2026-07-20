@@ -94,6 +94,7 @@
 .status-th       { background: #fef3c7; color: #92400e; }
 .status-pending  { background: #fee2e2; color: #991b1b; }
 .status-selected { background: #dcfce7; color: #166534; font-weight: 700; }
+.status-locked   { background: #e2e8f0; color: #334155; }
 
 /* Scope chips */
 .scope-chip {
@@ -152,6 +153,15 @@
   background: #fffbeb;
   border: 1px solid #fde68a;
   color: #92400e;
+}
+.info-banner-success {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+}
+
+.quotes-lock-banner {
+  margin-top: -2px;
 }
 
 /* Quote list */
@@ -250,6 +260,13 @@
   align-items: stretch;
   flex-shrink: 0;
   min-width: 130px;
+}
+
+.readonly-label {
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .btn-link-danger {
@@ -390,6 +407,37 @@
   margin: 0 0 14px;
 }
 
+.expected-window {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  background: #eff6ff;
+}
+
+.expected-window-icon {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 9px;
+  background: #dbeafe;
+}
+
+.expected-window-copy {
+  display: grid;
+  gap: 3px;
+
+  span,
+  small { color: #64748b; font-size: 0.72rem; }
+  strong { color: #1e3a8a; font-size: 0.9rem; }
+  i { margin-inline: 6px; color: #60a5fa; font-style: normal; }
+}
+
 .pick-quote-summary {
   background: #f0fdf4;
   border: 1px solid #bbf7d0;
@@ -404,31 +452,6 @@
   gap: 10px;
   font-size: 0.8rem;
   margin-top: 8px;
-}
-
-.pick-effects {
-  margin-top: 14px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 0.78rem;
-  color: #334155;
-
-  ul {
-    margin: 6px 0 0;
-    padding-inline-start: 18px;
-
-    li { margin-bottom: 4px; }
-  }
-
-  code {
-    background: white;
-    padding: 1px 5px;
-    border-radius: 4px;
-    border: 1px solid #e2e8f0;
-    font-family: monospace;
-  }
 }
 
 // Phase 4C-α Patch 1 (v4.10.1) — live variance under the quote price input.

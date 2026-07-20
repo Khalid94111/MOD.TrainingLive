@@ -1,94 +1,97 @@
-<div class="section-card" [class.section-locked]="state() === 'locked'">
-  <header class="section-header" (click)="onHeaderClick()" [class.clickable]="isExpandable()">
-    <div class="section-title">
-      <span class="section-num">5</span>
-      <h3>{{ '::Training.Sessions.Detail.Section5.Title' | abpLocalization }}</h3>
-      @if (lifecycleComplete()) {
-        <span class="badge badge-confirmed">
-          {{ '::Training.Sessions.Detail.Section5.LifecycleComplete' | abpLocalization }}
-        </span>
-      }
+<div class="payments-content">
+  <div class="payments-summary">
+    <div>
+      <span class="summary-label">
+        {{ '::Training.Sessions.Detail.Section5.TotalLabel' | abpLocalization }}
+      </span>
+      <strong>{{ formatOMR(totalLifecycleOMR()) }} <small>ر.ع</small></strong>
     </div>
-    @if (state() === 'collapsed') {
-      <div class="section-summary">{{ summaryLine() }}</div>
+    @if (lifecycleComplete()) {
+      <span class="completion-pill">
+        <i class="bi bi-check2-circle"></i>
+        {{ '::Training.Sessions.Detail.Section5.LifecycleComplete' | abpLocalization }}
+      </span>
     }
-    @if (state() === 'locked') {
-      <div class="section-locked-msg">🔒 {{ lockReason() }}</div>
-    }
-  </header>
+  </div>
 
-  @if (state() === 'active') {
-    <div class="section-body">
-      <div class="payments-grid" [class.single-card]="!showTravelCard()">
-        @if (showTravelCard()) {
-          <!-- Travel Allowance card -->
-          <div class="payment-card">
-            <header class="payment-card-header">
-              <h4>{{ '::Training.Sessions.Detail.Section5.TravelTitle' | abpLocalization }}</h4>
-              @if (travelStatusBadge(); as b) {
-                <span [class]="'badge ' + b.css">
-                  @if (b.textKey) { {{ b.textKey | abpLocalization }} }
-                  @else { {{ b.textLiteral }} }
-                </span>
-              }
-            </header>
-            <div class="payment-card-body">
-              <div class="metric">
-                <span class="metric-label">{{ '::Training.Sessions.Detail.Section5.ExpectedLabel' | abpLocalization }}</span>
-                <span class="metric-value">{{ expectedNomineeCount() }}</span>
-              </div>
-              <div class="metric">
-                <span class="metric-label">{{ '::Training.Sessions.Detail.Section5.ConfirmedLabel' | abpLocalization }}</span>
-                <span class="metric-value">{{ travelConfirmedCount() }}</span>
-              </div>
-              <div class="metric metric-emphasis">
-                <span class="metric-label">{{ '::Training.Sessions.Detail.Section5.TotalLabel' | abpLocalization }}</span>
-                <span class="metric-value">{{ formatOMR(travelTotalOMR()) }} ر.ع</span>
-              </div>
-            </div>
-            <button type="button" class="btn-link" (click)="goTravelAllowances($event)">
-              {{ '::Training.Sessions.Detail.Section5.OpenTravelAllowances' | abpLocalization }} →
-            </button>
-          </div>
-        }
-
-        <!-- Course Payment card -->
-        <div class="payment-card">
-          <header class="payment-card-header">
-            <h4>{{ '::Training.Sessions.Detail.Section5.CourseTitle' | abpLocalization }}</h4>
-            @if (coursePaymentBadge(); as b) {
-              <span [class]="'badge ' + b.css">
-                @if (b.textKey) { {{ b.textKey | abpLocalization }} }
+  <div class="payments-grid" [class.single-card]="!showTravelCard()">
+    @if (showTravelCard()) {
+      <section class="payment-panel">
+        <header class="payment-panel-header">
+          <span class="payment-icon"><i class="bi bi-person-check"></i></span>
+          <div>
+            <h3>{{ '::Training.Sessions.Detail.Section5.TravelTitle' | abpLocalization }}</h3>
+            @if (travelStatusBadge(); as badge) {
+              <span [class]="'payment-state ' + badge.css">
+                @if (badge.textKey) {
+                  {{ badge.textKey | abpLocalization }}
+                } @else {
+                  {{ badge.textLiteral }}
+                }
               </span>
             }
-          </header>
-          <div class="payment-card-body">
-            @if (coursePayment(); as cp) {
-              <div class="metric">
-                <span class="metric-label">{{ '::Training.Sessions.Detail.Section5.InvoiceLabel' | abpLocalization }}</span>
-                <span class="metric-value">{{ formatOMR(cp.invoiceAmountOMR) }} ر.ع</span>
-              </div>
-              <div class="metric">
-                <span class="metric-label">{{ '::Training.Sessions.Detail.Section5.ProviderLabel' | abpLocalization }}</span>
-                <span class="metric-value">{{ cp.trainingProviderName || '—' }}</span>
-              </div>
-            } @else {
-              <div class="empty-mini">
-                {{ '::Training.Sessions.Detail.Section5.NoCoursePayment' | abpLocalization }}
-              </div>
-            }
           </div>
-          <button type="button" class="btn-link" (click)="goCoursePayments($event)">
-            {{ '::Training.Sessions.Detail.Section5.OpenCoursePayments' | abpLocalization }} →
-          </button>
-        </div>
-      </div>
+        </header>
 
-      @if (lifecycleComplete()) {
-        <div class="banner-green">
-          ✓ {{ '::Training.Sessions.Detail.Section5.LifecycleCompleteBanner' | abpLocalization }}
+        <dl class="payment-facts">
+          <div>
+            <dt>{{ '::Training.Sessions.Detail.Section5.ExpectedLabel' | abpLocalization }}</dt>
+            <dd>{{ expectedNomineeCount() }}</dd>
+          </div>
+          <div>
+            <dt>{{ '::Training.Sessions.Detail.Section5.ConfirmedLabel' | abpLocalization }}</dt>
+            <dd>{{ travelConfirmedCount() }}</dd>
+          </div>
+          <div class="total-fact">
+            <dt>{{ '::Training.Sessions.Detail.Section5.TotalLabel' | abpLocalization }}</dt>
+            <dd>{{ formatOMR(travelTotalOMR()) }} ر.ع</dd>
+          </div>
+        </dl>
+
+        <button type="button" class="payment-link" (click)="goTravelAllowances($event)">
+          {{ '::Training.Sessions.Detail.Section5.OpenTravelAllowances' | abpLocalization }}
+          <i class="bi bi-arrow-up-left"></i>
+        </button>
+      </section>
+    }
+
+    <section class="payment-panel">
+      <header class="payment-panel-header">
+        <span class="payment-icon"><i class="bi bi-receipt"></i></span>
+        <div>
+          <h3>{{ '::Training.Sessions.Detail.Section5.CourseTitle' | abpLocalization }}</h3>
+          @if (coursePaymentBadge(); as badge) {
+            <span [class]="'payment-state ' + badge.css">
+              @if (badge.textKey) {
+                {{ badge.textKey | abpLocalization }}
+              }
+            </span>
+          }
+        </div>
+      </header>
+
+      @if (coursePayment(); as payment) {
+        <dl class="payment-facts">
+          <div class="total-fact">
+            <dt>{{ '::Training.Sessions.Detail.Section5.InvoiceLabel' | abpLocalization }}</dt>
+            <dd>{{ formatOMR(payment.invoiceAmountOMR) }} ر.ع</dd>
+          </div>
+          <div>
+            <dt>{{ '::Training.Sessions.Detail.Section5.ProviderLabel' | abpLocalization }}</dt>
+            <dd>{{ payment.trainingProviderName || '—' }}</dd>
+          </div>
+        </dl>
+      } @else {
+        <div class="empty-payment">
+          <i class="bi bi-clock-history"></i>
+          {{ '::Training.Sessions.Detail.Section5.NoCoursePayment' | abpLocalization }}
         </div>
       }
-    </div>
-  }
+
+      <button type="button" class="payment-link" (click)="goCoursePayments($event)">
+        {{ '::Training.Sessions.Detail.Section5.OpenCoursePayments' | abpLocalization }}
+        <i class="bi bi-arrow-up-left"></i>
+      </button>
+    </section>
+  </div>
 </div>

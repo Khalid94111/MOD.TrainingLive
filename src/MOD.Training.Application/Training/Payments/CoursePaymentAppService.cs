@@ -251,6 +251,8 @@ public class CoursePaymentAppService(
         {
             var session = await sessionRepo.FindAsync(sessionId!.Value)
                 ?? throw new EntityNotFoundException(typeof(CourseSession), sessionId.Value);
+            if (session.CourseType == CourseType.Internal)
+                throw new BusinessException("Training:CoursePayment:InternalSessionNotAllowed");
             if (session.Status == SessionStatus.Cancelled)
                 throw new BusinessException("Training:CoursePayment:CourseNotReady");
         }

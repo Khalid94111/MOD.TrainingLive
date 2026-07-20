@@ -1,70 +1,51 @@
-import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { LocalizationPipe, PermissionService } from '@abp/ng.core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { firstValueFrom } from 'rxjs';
 
-import { CourseSessionService } from 'src/app/proxy/training/plans/course-session.service';
-import type { CourseSessionDetailDto } from 'src/app/proxy/training/plans/dtos/models';
-import { PriceQuoteService } from 'src/app/proxy/training/finance';
 import { TravelInstructionService } from 'src/app/proxy/training/execution/travel-instruction.service';
 import type { TravelInstructionDto } from 'src/app/proxy/training/execution/dtos/models';
-import { TravelInstructionStatus } from 'src/app/proxy/training/enums/travel-instruction-status.enum';
-import { TravelAllowancePaymentService } from 'src/app/proxy/training/payments/travel-allowance-payment.service';
 import { CoursePaymentService } from 'src/app/proxy/training/payments/course-payment.service';
+import { TravelAllowancePaymentService } from 'src/app/proxy/training/payments/travel-allowance-payment.service';
 import type {
-  TravelAllowancePaymentDto,
   CoursePaymentDto,
+  TravelAllowancePaymentDto,
 } from 'src/app/proxy/training/payments/dtos/models';
+import { CourseSessionService } from 'src/app/proxy/training/plans/course-session.service';
+import type { CourseSessionDetailDto } from 'src/app/proxy/training/plans/dtos/models';
 import { CourseType } from 'src/app/proxy/training/enums/course-type.enum';
+import { PaymentStatus } from 'src/app/proxy/training/enums/payment-status.enum';
 import { SessionStatus } from 'src/app/proxy/training/enums/session-status.enum';
+import { TravelInstructionStatus } from 'src/app/proxy/training/enums/travel-instruction-status.enum';
 
-import {
-  CourseInfoBarComponent,
-  type CourseInfoBarData,
-  TrainingLocalizationHelper,
-} from '../../shared';
-import { SessionDetailRefreshService } from './session-detail-refresh.service';
+import { TrainingLocalizationHelper } from '../../shared';
 import { PriceQuotesComponent } from '../../execution/price-quotes/price-quotes.component';
 import { TravelInstructionsComponent } from '../../execution/travel-instructions/travel-instructions.component';
-import {
-  SessionSectionPaymentsComponent,
-  type SectionState,
-} from './sections/section-payments/session-section-payments.component';
+import { SessionDetailRefreshService } from './session-detail-refresh.service';
+import { SessionSectionPaymentsComponent } from './sections/section-payments/session-section-payments.component';
 
-type SectionKey = 'details' | 'nominees' | 'quotes' | 'travel' | 'payments';
+type StageKey = 'overview' | 'nominees' | 'quotes' | 'travel' | 'payments' | 'execution';
+type StageState = 'complete' | 'attention' | 'available' | 'locked';
 
-interface PipelineNode {
-  key: string;
-  labelKey: string;
-  state: 'completed' | 'active' | 'pending';
-  anchor?: SectionKey;
-  skipped?: boolean;
+interface SessionStage {
+  key: StageKey;
+  titleKey: string;
+  descriptionKey: string;
+  iconClass: string;
+  state: StageState;
+  lockReason?: string;
 }
 
-// Phase 4C-α (v4.10.0) — PAGE D: Session Detail shell.
-// Patch 4 (v4.10.4) — Section 4 (Travel) and the Travel pipeline node are skipped for
-// ExternalLocal as well as Internal; Section 5 no longer gates on TI for Local courses.
-//
-// Stage-based progressive disclosure mirroring the casual-course pattern. Five sections:
-//   1) Details          — session context + plan-item ref + dates
-//   2) Nominees         — read-only list with substitution markers
-//   3) Price Quotes     — delegates to <app-price-quotes> (parentArm: 'session')
-//   4) Travel Instruction — delegates to <app-travel-instructions> (parentArm: 'session')
-//   5) Payments         — slim summary; reallocations card omitted (sessions don't reallocate)
-//
-// Sections 3 and 4 are HIDDEN (not just locked) for Internal courses per §5.4 state matrix.
-// Header action bar buttons are computed from (status × user permissions).
 @Component({
   selector: 'app-session-detail',
   standalone: true,
   templateUrl: './session-detail.component.html',
-  styleUrls: ['./session-detail.component.scss', '../../shared/gtms-design.scss'],
+  styleUrls: ['../../shared/gtms-design.scss', './session-detail.component.scss'],
   imports: [
     CommonModule,
     LocalizationPipe,
-    CourseInfoBarComponent,
     PriceQuotesComponent,
     TravelInstructionsComponent,
     SessionSectionPaymentsComponent,
@@ -72,7 +53,6 @@ interface PipelineNode {
 })
 export class SessionDetailComponent implements OnInit {
   private readonly sessionService = inject(CourseSessionService);
-  private readonly quoteService = inject(PriceQuoteService);
   private readonly travelService = inject(TravelInstructionService);
   private readonly travelPaymentService = inject(TravelAllowancePaymentService);
   private readonly coursePaymentService = inject(CoursePaymentService);
@@ -86,26 +66,22 @@ export class SessionDetailComponent implements OnInit {
   readonly CourseType = CourseType;
   readonly SessionStatus = SessionStatus;
 
-  // ── Identity + data signals ────────────────────────────────────────
   readonly id = signal<string>('');
   readonly session = signal<CourseSessionDetailDto | null>(null);
   readonly travelInstruction = signal<TravelInstructionDto | null>(null);
   readonly travelAllowancePayments = signal<TravelAllowancePaymentDto[]>([]);
   readonly coursePayment = signal<CoursePaymentDto | null>(null);
   readonly loading = signal<boolean>(false);
+  readonly actionRunning = signal<boolean>(false);
   readonly actionError = signal<string | null>(null);
 
-  // ── User-toggle overrides ──
-  private readonly userExpanded = signal<SectionKey | null>(null);
-  private readonly userCollapsed = signal<Set<SectionKey>>(new Set());
+  readonly activeStage = signal<StageKey>('overview');
+  private readonly requestedStage = signal<StageKey | null>(null);
 
-  // ── Cancel dialog state ──
   readonly cancelDialogOpen = signal<boolean>(false);
   readonly cancelReason = signal<string>('');
+  readonly transitionAction = signal<'inProgress' | 'completed' | null>(null);
 
-  // ── Permissions ──
-  readonly canSelectQuote = computed(() =>
-    this.permissions.getGrantedPolicy('Training.CourseSession.SelectQuote'));
   readonly canMarkInProgress = computed(() =>
     this.permissions.getGrantedPolicy('Training.CourseSession.MarkInProgress'));
   readonly canMarkCompleted = computed(() =>
@@ -113,31 +89,43 @@ export class SessionDetailComponent implements OnInit {
   readonly canCancel = computed(() =>
     this.permissions.getGrantedPolicy('Training.CourseSession.Cancel'));
 
-  // Phase 4C-α Patch 1 — feeds <app-course-info-bar variant="session">. Returns null
-  // until session loads; the template guards on the null and skips rendering.
-  readonly infoBarData = computed<CourseInfoBarData | null>(() => {
-    const s = this.session();
-    if (!s) return null;
-    return {
-      courseName: s.tenantCourseNameAr || s.tenantCourseNameEn || '',
-      unitName: s.unitName || null,
-      durationDays: s.durationDays ?? 0,
-      nomineesCount: s.nomineesCount ?? 0,
-      officersCount: s.officersCount ?? 0,
-      enlistedCount: s.enlistedCount ?? 0,
-      approvedCostOMR: s.approvedCostOMR ?? 0,
-      unitTotalOMR: s.unitTotalOMR ?? 0,
-    };
-  });
-
-  // ── Derived state ──
   readonly isInternal = computed(() => this.session()?.courseType === CourseType.Internal);
-  // Patch 4 (v4.10.4) — Local provider is in-country, so Section 4 (travel) is hidden.
   readonly isLocal = computed(() => this.session()?.courseType === CourseType.ExternalLocal);
+  readonly isInternational = computed(() =>
+    this.session()?.courseType === CourseType.ExternalInternational);
   readonly status = computed(() => this.session()?.status);
   readonly hasSelectedQuote = computed(() => !!this.session()?.selectedPriceQuoteId);
   readonly travelIssued = computed(() =>
     this.travelInstruction()?.status === TravelInstructionStatus.Issued);
+  readonly coursePaymentConfirmed = computed(() =>
+    this.coursePayment()?.status === PaymentStatus.Confirmed);
+  readonly travelPaymentsComplete = computed(() => {
+    if (!this.isInternational()) return true;
+    const expected = this.session()?.nominations?.length ?? 0;
+    if (expected === 0) return false;
+    const confirmed = this.travelAllowancePayments()
+      .filter(payment => payment.status === PaymentStatus.Confirmed).length;
+    return confirmed === expected;
+  });
+  readonly paymentsComplete = computed(() =>
+    this.isInternal() || (this.coursePaymentConfirmed() && this.travelPaymentsComplete()));
+
+  readonly courseTypeKey = computed(() => {
+    switch (this.session()?.courseType) {
+      case CourseType.Internal:              return '::Training.CourseType.Internal';
+      case CourseType.ExternalLocal:         return '::Training.CourseType.ExternalLocal';
+      case CourseType.ExternalInternational: return '::Training.CourseType.ExternalInternational';
+      default: return '';
+    }
+  });
+  readonly courseTypeCss = computed(() => {
+    switch (this.session()?.courseType) {
+      case CourseType.Internal:              return 'type-pill type-internal';
+      case CourseType.ExternalLocal:         return 'type-pill type-local';
+      case CourseType.ExternalInternational: return 'type-pill type-international';
+      default: return 'type-pill';
+    }
+  });
   readonly statusBadgeKey = computed(() => {
     switch (this.status()) {
       case SessionStatus.Planned:           return '::Training.Session.Status.Planned';
@@ -151,138 +139,215 @@ export class SessionDetailComponent implements OnInit {
   });
   readonly statusBadgeCss = computed(() => {
     switch (this.status()) {
-      case SessionStatus.Planned:    return 'status-badge status-planned';
-      case SessionStatus.Scheduled:  return 'status-badge status-scheduled';
-      case SessionStatus.InProgress: return 'status-badge status-inprogress';
+      case SessionStatus.Planned:    return 'status-pill status-planned';
+      case SessionStatus.Scheduled:  return 'status-pill status-scheduled';
+      case SessionStatus.InProgress: return 'status-pill status-inprogress';
       case SessionStatus.Completed:
-      case SessionStatus.FinanciallyClosed: return 'status-badge status-completed';
-      case SessionStatus.Cancelled:  return 'status-badge status-cancelled';
-      default: return 'status-badge';
+      case SessionStatus.FinanciallyClosed: return 'status-pill status-completed';
+      case SessionStatus.Cancelled:  return 'status-pill status-cancelled';
+      default: return 'status-pill';
     }
   });
 
-  // ── Section state matrix (per §5.4) ──
-  readonly detailsState = computed<SectionState>(() =>
-    this.applyToggle('details', 'collapsed'));
-  readonly nomineesState = computed<SectionState>(() =>
-    this.applyToggle('nominees', 'collapsed'));
-
-  // Section 3: hidden for Internal entirely. For External, active when Planned + canSelectQuote.
-  readonly quotesHidden = computed(() => this.isInternal());
-  readonly quotesState = computed<SectionState>(() => {
-    if (this.quotesHidden()) return 'locked'; // ignored (not rendered)
-    if (this.status() === SessionStatus.Planned && this.canSelectQuote()) {
-      return this.applyToggle('quotes', 'active');
-    }
-    return this.applyToggle('quotes', 'collapsed');
-  });
-  readonly quotesLockReason = computed(() => '');
-
-  // Section 4: hidden for Internal AND ExternalLocal (no travel for in-country providers).
-  // For ExternalInternational, active when Scheduled (post-quote) without an issued TI.
-  readonly travelHidden = computed(() => this.isInternal() || this.isLocal());
-  readonly travelState = computed<SectionState>(() => {
-    if (this.travelHidden()) return 'locked';
-    if (!this.hasSelectedQuote()) return 'locked';
-    if (!this.travelIssued() && this.status() === SessionStatus.Scheduled) {
-      return this.applyToggle('travel', 'active');
-    }
-    return this.applyToggle('travel', 'collapsed');
-  });
-  readonly travelLockReason = computed(() => {
-    if (!this.hasSelectedQuote()) return this.l.t('::Training.Sessions.Detail.TravelLockedNoQuote');
-    return '';
-  });
-
-  // Section 5: unlocked when Intl-with-TI-issued, Local-and-Scheduled+, or Internal-and-Scheduled+.
-  // Patch 4 (v4.10.4) — Local courses skip the TI gate (no travel for in-country providers).
+  readonly travelLockReason = computed(() =>
+    this.hasSelectedQuote()
+      ? ''
+      : this.l.t('::Training.Sessions.Detail.TravelLockedNoQuote'));
   readonly paymentsLocked = computed(() => {
-    if (this.status() === SessionStatus.Planned) return true;
-    if (this.status() === SessionStatus.Cancelled) return true;
-    if (!this.isInternal() && !this.isLocal() && !this.travelIssued()) return true;
-    return false;
-  });
-  readonly paymentsState = computed<SectionState>(() => {
-    if (this.paymentsLocked()) return 'locked';
-    if (this.status() === SessionStatus.Scheduled
-        && (this.isInternal() || this.isLocal() || this.travelIssued())) {
-      return this.applyToggle('payments', 'active');
+    if (this.status() === SessionStatus.Planned || this.status() === SessionStatus.Cancelled) {
+      return true;
     }
-    return this.applyToggle('payments', 'collapsed');
+    return this.isInternational() && !this.travelIssued();
   });
   readonly paymentsLockReason = computed(() => {
+    if (this.status() === SessionStatus.Cancelled) {
+      return this.l.t('::Training.Sessions.Detail.Workspace.CancelledLock');
+    }
     if (this.status() === SessionStatus.Planned) {
       return this.l.t('::Training.Sessions.Detail.PaymentsLockedPlanned');
     }
-    if (!this.isInternal() && !this.isLocal() && !this.travelIssued()) {
+    if (this.isInternational() && !this.travelIssued()) {
       return this.l.t('::Training.Sessions.Detail.PaymentsLockedNoTI');
     }
     return '';
   });
 
-  // ── Pipeline (8 nodes per §5.4) ──
-  readonly pipelineNodes = computed<PipelineNode[]>(() => {
-    const s = this.status();
-    const isInt = this.isInternal();
-    // Patch 4 (v4.10.4) — Local courses also skip the Travel node.
-    const isLoc = this.isLocal();
-    const noTravel = isInt || isLoc;
-    const planDone = true;            // node 1 always done (plan was THApproved)
-    const createdDone = !!s;          // node 2 always done if session exists
-    const quoteDone = isInt || this.hasSelectedQuote();
-    const datesDone = !!this.session()?.actualStartDate;
-    const travelDone = noTravel || this.travelIssued();
-    const paymentsDone = this.coursePayment()?.status === 1; // PaymentStatus.Confirmed
-    const inProgressDone = s !== undefined &&
-      (s === SessionStatus.InProgress || s === SessionStatus.Completed || s === SessionStatus.FinanciallyClosed);
-    const completedDone = s === SessionStatus.Completed || s === SessionStatus.FinanciallyClosed;
-
-    const stateOf = (done: boolean, current: boolean): PipelineNode['state'] =>
-      done ? 'completed' : current ? 'active' : 'pending';
-
-    return [
-      { key: 'plan',       labelKey: '::Training.Sessions.Detail.Pipeline.ByPlan',         state: stateOf(planDone, false),         anchor: undefined },
-      { key: 'created',    labelKey: '::Training.Sessions.Detail.Pipeline.Created',        state: stateOf(createdDone, false),      anchor: 'details' },
-      { key: 'quote',      labelKey: '::Training.Sessions.Detail.Pipeline.Quote',          state: stateOf(quoteDone, s === SessionStatus.Planned && !isInt), anchor: 'quotes', skipped: isInt },
-      { key: 'dates',      labelKey: '::Training.Sessions.Detail.Pipeline.Dates',          state: stateOf(datesDone, false),        anchor: 'details' },
-      { key: 'travel',     labelKey: '::Training.Sessions.Detail.Pipeline.Travel',         state: stateOf(travelDone, s === SessionStatus.Scheduled && !noTravel && !this.travelIssued()), anchor: 'travel', skipped: noTravel },
-      { key: 'payments',   labelKey: '::Training.Sessions.Detail.Pipeline.Payments',       state: stateOf(paymentsDone, s === SessionStatus.Scheduled && (noTravel || this.travelIssued())), anchor: 'payments' },
-      { key: 'inProgress', labelKey: '::Training.Sessions.Detail.Pipeline.InProgress',     state: stateOf(inProgressDone, s === SessionStatus.Scheduled) },
-      { key: 'completed',  labelKey: '::Training.Sessions.Detail.Pipeline.Completed',      state: stateOf(completedDone, s === SessionStatus.InProgress) },
-    ];
+  readonly recommendedStageKey = computed<StageKey>(() => {
+    const status = this.status();
+    if (status === SessionStatus.Cancelled
+      || status === SessionStatus.InProgress
+      || status === SessionStatus.Completed
+      || status === SessionStatus.FinanciallyClosed) {
+      return 'execution';
+    }
+    if (status === SessionStatus.Planned && this.isInternal()) return 'overview';
+    if (!this.isInternal() && !this.hasSelectedQuote()) return 'quotes';
+    if (this.isInternational() && !this.travelIssued()) return 'travel';
+    if (!this.paymentsComplete()) return 'payments';
+    if (status === SessionStatus.Scheduled) return 'execution';
+    return 'overview';
   });
 
-  // ── Action bar (status × role → buttons) per §5.4 ──
+  readonly visibleStages = computed<SessionStage[]>(() => {
+    const status = this.status();
+    const stages: SessionStage[] = [
+      {
+        key: 'overview',
+        titleKey: '::Training.Sessions.Detail.Section1.Title',
+        descriptionKey: '::Training.Sessions.Detail.Workspace.OverviewDescription',
+        iconClass: 'bi bi-grid-1x2',
+        state: 'complete',
+      },
+      {
+        key: 'nominees',
+        titleKey: '::Training.Sessions.Detail.Section2.Title',
+        descriptionKey: '::Training.Sessions.Detail.Workspace.NomineesDescription',
+        iconClass: 'bi bi-people',
+        state: 'complete',
+      },
+    ];
+
+    if (!this.isInternal()) {
+      stages.push({
+        key: 'quotes',
+        titleKey: '::Training.Sessions.Detail.Section3.Title',
+        descriptionKey: '::Training.Sessions.Detail.Workspace.QuotesDescription',
+        iconClass: 'bi bi-receipt',
+        state: this.hasSelectedQuote() ? 'complete' : 'attention',
+      });
+    }
+
+    if (this.isInternational()) {
+      stages.push({
+        key: 'travel',
+        titleKey: '::Training.Sessions.Detail.Section4.Title',
+        descriptionKey: '::Training.Sessions.Detail.Workspace.TravelDescription',
+        iconClass: 'bi bi-airplane',
+        state: this.travelIssued()
+          ? 'complete'
+          : this.hasSelectedQuote() ? 'attention' : 'locked',
+        lockReason: this.travelLockReason(),
+      });
+    }
+
+    if (!this.isInternal()) {
+      stages.push({
+        key: 'payments',
+        titleKey: '::Training.Sessions.Detail.Section5.Title',
+        descriptionKey: '::Training.Sessions.Detail.Workspace.PaymentsDescription',
+        iconClass: 'bi bi-wallet2',
+        state: this.paymentsComplete()
+          ? 'complete'
+          : this.paymentsLocked() ? 'locked' : 'attention',
+        lockReason: this.paymentsLockReason(),
+      });
+    }
+
+    stages.push({
+      key: 'execution',
+      titleKey: '::Training.Sessions.Detail.Workspace.ExecutionTitle',
+      descriptionKey: '::Training.Sessions.Detail.Workspace.ExecutionDescription',
+      iconClass: 'bi bi-play-circle',
+      state: status === SessionStatus.Completed || status === SessionStatus.FinanciallyClosed
+        ? 'complete'
+        : status === SessionStatus.InProgress
+          ? 'attention'
+          : status === SessionStatus.Cancelled
+            ? 'available'
+            : !this.paymentsComplete()
+              ? 'locked'
+              : status === SessionStatus.Scheduled ? 'attention' : 'available',
+      lockReason: !this.paymentsComplete()
+        ? this.l.t('::Training.Sessions.Detail.Workspace.CompletePreviousStage')
+        : '',
+    });
+
+    return stages;
+  });
+
+  readonly activeStageMeta = computed(() =>
+    this.visibleStages().find(stage => stage.key === this.activeStage())
+      ?? this.visibleStages()[0]);
+  readonly activeStageIndex = computed(() =>
+    this.visibleStages().findIndex(stage => stage.key === this.activeStage()));
+  readonly hasPreviousStage = computed(() => this.activeStageIndex() > 0);
+  readonly hasNextStage = computed(() =>
+    this.activeStageIndex() >= 0 && this.activeStageIndex() < this.visibleStages().length - 1);
+  readonly unrestrictedHistory = computed(() =>
+    this.status() === SessionStatus.InProgress
+    || this.status() === SessionStatus.Completed
+    || this.status() === SessionStatus.Cancelled
+    || this.status() === SessionStatus.FinanciallyClosed);
+  readonly unlockedThroughIndex = computed(() => {
+    if (this.unrestrictedHistory()) return this.visibleStages().length - 1;
+    const firstIncomplete = this.visibleStages().findIndex(stage => stage.state !== 'complete');
+    return firstIncomplete === -1 ? this.visibleStages().length - 1 : firstIncomplete;
+  });
+  readonly canGoNextStage = computed(() => {
+    if (!this.hasNextStage()) return false;
+    return this.activeStageIndex() + 1 <= this.unlockedThroughIndex();
+  });
+
   readonly showCancelButton = computed(() =>
-    this.canCancel() && (this.status() === SessionStatus.Planned || this.status() === SessionStatus.Scheduled));
+    this.canCancel()
+    && (this.status() === SessionStatus.Planned || this.status() === SessionStatus.Scheduled));
   readonly showMarkInProgressButton = computed(() =>
     this.canMarkInProgress() && this.status() === SessionStatus.Scheduled);
   readonly showMarkCompletedButton = computed(() =>
     this.canMarkCompleted() && this.status() === SessionStatus.InProgress);
+  readonly executionMessageKey = computed(() => {
+    switch (this.status()) {
+      case SessionStatus.Planned:           return '::Training.Sessions.Detail.Workspace.ExecutionWaiting';
+      case SessionStatus.Scheduled:         return '::Training.Sessions.Detail.Workspace.ExecutionReady';
+      case SessionStatus.InProgress:        return '::Training.Sessions.Detail.Workspace.ExecutionRunning';
+      case SessionStatus.Completed:
+      case SessionStatus.FinanciallyClosed: return '::Training.Sessions.Detail.Workspace.ExecutionDone';
+      case SessionStatus.Cancelled:         return '::Training.Sessions.Detail.Workspace.ExecutionCancelled';
+      default: return '';
+    }
+  });
 
-  // ── Lifecycle ──
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id') ?? '';
     this.id.set(id);
     if (!id) return;
 
-    void this.loadAll();
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const stage = this.parseStage(params.get('stage'));
+        this.requestedStage.set(stage);
+        if (stage) this.activeStage.set(stage);
+      });
 
+    void this.loadAll();
     this.refresh.events
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => void this.loadAll());
   }
 
-  // ── Data loading ──
   private async loadAll(): Promise<void> {
     if (!this.id()) return;
     this.loading.set(true);
     try {
-      await Promise.all([
-        this.loadSession(),
-        this.loadTravelInstruction(),
-        this.loadPayments(),
-      ]);
+      await this.loadSession();
+
+      const dependentLoads: Promise<void>[] = [];
+      if (this.isInternational()) {
+        dependentLoads.push(this.loadTravelInstruction());
+      } else {
+        this.travelInstruction.set(null);
+      }
+
+      if (this.isInternal()) {
+        this.travelAllowancePayments.set([]);
+        this.coursePayment.set(null);
+      } else {
+        dependentLoads.push(this.loadPayments());
+      }
+
+      await Promise.all(dependentLoads);
+      this.normalizeStageSelection();
     } finally {
       this.loading.set(false);
     }
@@ -290,8 +355,7 @@ export class SessionDetailComponent implements OnInit {
 
   private async loadSession(): Promise<void> {
     try {
-      const detail = await firstValueFrom(this.sessionService.get(this.id()));
-      this.session.set(detail);
+      this.session.set(await firstValueFrom(this.sessionService.get(this.id())));
     } catch {
       this.session.set(null);
     }
@@ -299,8 +363,8 @@ export class SessionDetailComponent implements OnInit {
 
   private async loadTravelInstruction(): Promise<void> {
     try {
-      const ti = await firstValueFrom(this.travelService.getByParent('', this.id()));
-      this.travelInstruction.set(ti ?? null);
+      const instruction = await firstValueFrom(this.travelService.getByParent('', this.id()));
+      this.travelInstruction.set(instruction ?? null);
     } catch {
       this.travelInstruction.set(null);
     }
@@ -308,77 +372,71 @@ export class SessionDetailComponent implements OnInit {
 
   private async loadPayments(): Promise<void> {
     const sessionId = this.id();
-    if (!sessionId) return;
     const [travel, course] = await Promise.all([
-      firstValueFrom(this.travelPaymentService.getList({ sessionId, maxResultCount: 200 })).catch(() => null),
-      firstValueFrom(this.coursePaymentService.getList({ sessionId, maxResultCount: 10 })).catch(() => null),
+      firstValueFrom(this.travelPaymentService.getList({ sessionId, maxResultCount: 200 }))
+        .catch(() => null),
+      firstValueFrom(this.coursePaymentService.getList({ sessionId, maxResultCount: 10 }))
+        .catch(() => null),
     ]);
     this.travelAllowancePayments.set(travel?.items ?? []);
     this.coursePayment.set(course?.items?.[0] ?? null);
   }
 
-  // ── Section toggles ──
-  private applyToggle(key: SectionKey, def: SectionState): SectionState {
-    if (def === 'locked') return 'locked';
-    const expanded = this.userExpanded();
-    if (expanded === key) return 'active';
-    if (expanded && expanded !== key) return def === 'active' ? 'collapsed' : def;
-    if (this.userCollapsed().has(key)) return 'collapsed';
-    return def;
+  selectStage(stage: StageKey): void {
+    if (!this.canAccessStage(stage)) return;
+    this.activeStage.set(stage);
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { stage },
+      queryParamsHandling: 'merge',
+    });
+    this.scrollWorkspaceIntoView();
   }
 
-  onSectionToggle(key: SectionKey): void {
-    const currentState = this.stateFor(key);
-    if (currentState === 'active') {
-      this.userCollapsed.update(s => {
-        const next = new Set(s);
-        next.add(key);
-        return next;
-      });
-      if (this.userExpanded() === key) this.userExpanded.set(null);
-    } else if (currentState !== 'locked') {
-      this.userExpanded.set(key);
-      this.userCollapsed.update(s => {
-        const next = new Set(s);
-        next.delete(key);
-        return next;
-      });
+  goPreviousStage(): void {
+    if (!this.hasPreviousStage()) return;
+    this.selectStage(this.visibleStages()[this.activeStageIndex() - 1].key);
+  }
+
+  goNextStage(): void {
+    if (!this.canGoNextStage()) return;
+    this.selectStage(this.visibleStages()[this.activeStageIndex() + 1].key);
+  }
+
+  goRecommendedStage(): void {
+    this.selectStage(this.recommendedStageKey());
+  }
+
+  stageStateKey(state: StageState): string {
+    switch (state) {
+      case 'complete':  return '::Training.Sessions.Detail.Workspace.StateComplete';
+      case 'attention': return '::Training.Sessions.Detail.Workspace.StateAttention';
+      case 'locked':    return '::Training.Sessions.Detail.Workspace.StateLocked';
+      default:          return '::Training.Sessions.Detail.Workspace.StateAvailable';
     }
   }
 
-  private stateFor(key: SectionKey): SectionState {
-    switch (key) {
-      case 'details':  return this.detailsState();
-      case 'nominees': return this.nomineesState();
-      case 'quotes':   return this.quotesState();
-      case 'travel':   return this.travelState();
-      case 'payments': return this.paymentsState();
-    }
+  canAccessStage(stage: StageKey): boolean {
+    const index = this.visibleStages().findIndex(item => item.key === stage);
+    return index >= 0 && index <= this.unlockedThroughIndex();
   }
 
-  onPipelineNodeClick(node: PipelineNode): void {
-    if (!node.anchor || node.skipped) return;
-    this.userExpanded.set(node.anchor);
-    this.userCollapsed.update(s => {
-      const next = new Set(s);
-      next.delete(node.anchor!);
-      return next;
-    });
-    queueMicrotask(() => {
-      const el = document.getElementById(`section-${node.anchor}`);
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
+  requestTransition(action: 'inProgress' | 'completed'): void {
+    this.actionError.set(null);
+    this.transitionAction.set(action);
   }
 
-  // ── Actions ──
-  async onMarkInProgress(): Promise<void> {
-    if (!confirm(this.l.t('::Training.Sessions.Detail.ConfirmMarkInProgress'))) return;
-    await this.runAction(() => this.sessionService.markInProgress(this.id()));
+  cancelTransition(): void {
+    if (!this.actionRunning()) this.transitionAction.set(null);
   }
 
-  async onMarkCompleted(): Promise<void> {
-    if (!confirm(this.l.t('::Training.Sessions.Detail.ConfirmMarkCompleted'))) return;
-    await this.runAction(() => this.sessionService.markCompleted(this.id()));
+  async confirmTransition(): Promise<void> {
+    const action = this.transitionAction();
+    if (!action) return;
+    const ok = action === 'inProgress'
+      ? await this.runAction(() => this.sessionService.markInProgress(this.id()))
+      : await this.runAction(() => this.sessionService.markCompleted(this.id()));
+    if (ok) this.transitionAction.set(null);
   }
 
   openCancelDialog(): void {
@@ -386,12 +444,15 @@ export class SessionDetailComponent implements OnInit {
     this.actionError.set(null);
     this.cancelDialogOpen.set(true);
   }
+
   closeCancelDialog(): void {
-    this.cancelDialogOpen.set(false);
+    if (!this.actionRunning()) this.cancelDialogOpen.set(false);
   }
+
   onCancelReasonChange(event: Event): void {
     this.cancelReason.set((event.target as HTMLTextAreaElement).value);
   }
+
   async confirmCancel(): Promise<void> {
     const reason = this.cancelReason().trim();
     if (!reason) {
@@ -402,20 +463,23 @@ export class SessionDetailComponent implements OnInit {
     if (ok) this.cancelDialogOpen.set(false);
   }
 
-  private async runAction(call: () => any): Promise<boolean> {
+  private async runAction(
+    call: () => ReturnType<CourseSessionService['markInProgress']>,
+  ): Promise<boolean> {
     this.actionError.set(null);
+    this.actionRunning.set(true);
     try {
-      const updated = await firstValueFrom(call());
-      if (updated) this.session.set(updated);
+      await firstValueFrom(call());
       await this.loadAll();
       return true;
-    } catch (err) {
-      this.actionError.set(this.extractError(err));
+    } catch (error) {
+      this.actionError.set(this.extractError(error));
       return false;
+    } finally {
+      this.actionRunning.set(false);
     }
   }
 
-  // ── Display helpers ──
   fmt(iso: string | null | undefined): string {
     return iso ? iso.substring(0, 10) : '';
   }
@@ -424,10 +488,42 @@ export class SessionDetailComponent implements OnInit {
     void this.router.navigate(['/training/sessions']);
   }
 
-  private extractError(err: unknown): string {
-    if (err && typeof err === 'object') {
-      const anyErr = err as { error?: { error?: { message?: string } }; message?: string };
-      return anyErr.error?.error?.message ?? anyErr.message ?? this.l.t('::Training.Sessions.Detail.GenericError');
+  private normalizeStageSelection(): void {
+    const visible = this.visibleStages();
+    if (visible.length === 0) return;
+    const requested = this.requestedStage();
+    const selected = requested && this.canAccessStage(requested)
+      ? requested
+      : this.recommendedStageKey();
+    this.activeStage.set(selected);
+    if (requested !== selected) {
+      void this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { stage: selected },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+    }
+  }
+
+  private parseStage(value: string | null): StageKey | null {
+    const stages: StageKey[] = ['overview', 'nominees', 'quotes', 'travel', 'payments', 'execution'];
+    return stages.includes(value as StageKey) ? value as StageKey : null;
+  }
+
+  private scrollWorkspaceIntoView(): void {
+    queueMicrotask(() => {
+      document.getElementById('session-workspace')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  private extractError(error: unknown): string {
+    if (error && typeof error === 'object') {
+      const apiError = error as { error?: { error?: { message?: string } }; message?: string };
+      return apiError.error?.error?.message
+        ?? apiError.message
+        ?? this.l.t('::Training.Sessions.Detail.GenericError');
     }
     return this.l.t('::Training.Sessions.Detail.GenericError');
   }

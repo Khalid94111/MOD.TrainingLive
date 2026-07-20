@@ -1,178 +1,182 @@
-// Phase 4C-α (v4.10.0) — Section 5 styling. Mirrors casual-course Section 5 layout
-// minus the reallocation card row (sessions don't generate reallocations).
-
-:host { display: block; }
-
-.section-card {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  margin-bottom: 14px;
-  overflow: hidden;
-
-  &.section-locked { opacity: 0.7; }
+:host {
+  display: block;
 }
 
-.section-header {
-  padding: 14px 18px;
+.payments-content {
+  display: grid;
+  gap: 20px;
+}
+
+.payments-summary {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  gap: 16px;
+  padding-block: 2px 20px;
+  border-bottom: 1px solid #e7ebf0;
 
-  &.clickable { cursor: pointer; }
-  &.clickable:hover { background: #f1f5f9; }
-}
+  > div {
+    display: grid;
+    gap: 3px;
+  }
 
-.section-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  strong {
+    color: #17223b;
+    font-size: 24px;
+    line-height: 1.2;
 
-  h3 {
-    margin: 0;
-    font-size: 14px;
-    font-weight: 700;
-    color: #1e293b;
+    small {
+      color: #748096;
+      font-size: 12px;
+      font-weight: 700;
+    }
   }
 }
 
-.section-num {
+.summary-label {
+  color: #748096;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.completion-pill {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: #ede9fe;
-  color: #5b21b6;
-  font-weight: 700;
+  gap: 7px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #e9f8ef;
+  color: #18794e;
   font-size: 12px;
-}
-
-.section-summary {
-  font-size: 12px;
-  color: #475569;
-  text-align: end;
-  flex: 1;
-  max-width: 60%;
-}
-
-.section-locked-msg {
-  font-size: 12px;
-  color: #94a3b8;
-  font-weight: 600;
-}
-
-.section-body {
-  padding: 18px 20px;
+  font-weight: 800;
 }
 
 .payments-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
 
-  /* Patch 5 (v4.10.5) — when only Course Payment renders (Internal/ExternalLocal),
-     force a single full-width column instead of leaving a 280px card stranded. */
   &.single-card {
     grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 768px) {
-  .payments-grid { grid-template-columns: 1fr; }
+.payment-panel {
+  min-width: 0;
+  padding-inline-start: 18px;
+  border-inline-start: 3px solid #dfe5ec;
 }
 
-.payment-card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 14px;
+.payment-panel-header {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+  align-items: flex-start;
+  gap: 11px;
+  margin-bottom: 18px;
 
-.payment-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  h4 {
-    margin: 0;
-    font-size: 13px;
-    font-weight: 700;
-    color: #1e293b;
+  h3 {
+    margin: 1px 0 5px;
+    color: #17223b;
+    font-size: 15px;
+    font-weight: 800;
   }
 }
 
-.payment-card-body {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.metric {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-
-  .metric-label { color: #64748b; font-weight: 600; }
-  .metric-value { color: #1e293b; font-weight: 600; }
-
-  &.metric-emphasis {
-    padding-top: 6px;
-    border-top: 1px dashed #cbd5e1;
-
-    .metric-value { font-weight: 700; font-size: 14px; color: #5b21b6; }
-  }
-}
-
-.empty-mini {
-  font-size: 12px;
-  color: #94a3b8;
-  font-style: italic;
-}
-
-// ── Badges ─────────────────────────────────────────────────────────
-.badge {
-  display: inline-block;
-  font-size: 10px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-weight: 700;
-}
-.badge-confirmed { background: #dcfce7; color: #166534; }
-.badge-pending   { background: #fef3c7; color: #92400e; }
-.badge-cancelled { background: #fee2e2; color: #991b1b; }
-.badge-empty     { background: #f1f5f9; color: #94a3b8; }
-.badge-muted     { background: #f1f5f9; color: #64748b; }
-
-// ── Link button ────────────────────────────────────────────────────
-.btn-link {
-  background: transparent;
-  border: none;
-  color: #6366f1;
-  padding: 4px 0;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  text-align: start;
-  align-self: flex-start;
-
-  &:hover { text-decoration: underline; }
-}
-
-.banner-green {
-  margin-top: 14px;
-  background: #dcfce7;
-  color: #166534;
-  border: 1px solid #86efac;
+.payment-icon {
+  display: grid;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  place-items: center;
   border-radius: 10px;
-  padding: 10px 14px;
-  font-size: 13px;
-  font-weight: 700;
+  background: #eef4ff;
+  color: #3267d6;
+}
+
+.payment-state {
+  display: inline-flex;
+  width: fit-content;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.badge-confirmed { background: #e9f8ef; color: #18794e; }
+.badge-pending { background: #fff4db; color: #9a6700; }
+.badge-cancelled { background: #fdebec; color: #b4232c; }
+.badge-empty,
+.badge-muted { background: #f0f2f5; color: #6f7b8e; }
+
+.payment-facts {
+  display: grid;
+  gap: 0;
+  margin: 0;
+
+  > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid #eef1f4;
+  }
+
+  dt {
+    color: #748096;
+    font-size: 12px;
+    font-weight: 650;
+  }
+
+  dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+    color: #27334e;
+    font-size: 13px;
+    font-weight: 750;
+    text-align: end;
+  }
+
+  .total-fact dd {
+    color: #3267d6;
+    font-size: 15px;
+  }
+}
+
+.empty-payment {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 96px;
+  color: #8791a2;
+  font-size: 12px;
+}
+
+.payment-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 15px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #3267d6;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+
+  &:hover {
+    color: #214da6;
+  }
+}
+
+@media (max-width: 720px) {
+  .payments-grid {
+    grid-template-columns: 1fr;
+    gap: 26px;
+  }
+
+  .payments-summary {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }

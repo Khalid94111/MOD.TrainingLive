@@ -29,7 +29,7 @@
           <div class="meta-line">
             <span><b>المرشحون:</b> {{ course()?.nomineesCount }}</span>
             <span><b>المدة:</b> {{ course()?.durationDays }} يوم</span>
-            @if (course()?.fundingScenario != null) {
+            @if (course()?.fundingScenario !== null && course()?.fundingScenario !== undefined) {
               <span><b>السيناريو:</b> #{{ course()?.fundingScenario }}</span>
             }
           </div>
@@ -62,8 +62,22 @@
     <div class="gtms-card">
       <div class="section-header">
         <h3 class="section-title">عروض الأسعار · {{ quotes().length }} عرض</h3>
-        <button type="button" class="btn btn-primary" (click)="onAddQuote()">+ إضافة عرض جديد</button>
+        @if (quotesLocked()) {
+          <span class="status-pill status-locked">🔒 مرحلة العروض مقفلة</span>
+        } @else {
+          <button type="button" class="btn btn-primary" (click)="onAddQuote()">+ إضافة عرض جديد</button>
+        }
       </div>
+
+      @if (quotesLocked()) {
+        <div class="info-banner info-banner-success quotes-lock-banner">
+          <div class="info-banner-icon">✓</div>
+          <div class="info-banner-text">
+            <b>تم اعتماد العرض الفائز وتأكيد تواريخ الجلسة.</b>
+            أصبحت جميع العروض للقراءة والمراجعة فقط.
+          </div>
+        </div>
+      }
 
       @if (saveError()) {
         <div class="validation-error">⚠ {{ saveError() }}</div>
@@ -126,7 +140,16 @@
                 </div>
 
                 <div class="quote-actions">
-                  @if (!quote.isSelected) {
+                  @if (quote.isSelected) {
+                    <div class="winner-actual-dates">
+                      <div class="muted-xs">تواريخ الانعقاد الفعلية</div>
+                      <div class="actual-dates-line">
+                        {{ actualStartDate() | slice:0:10 }}
+                        →
+                        {{ actualEndDate() | slice:0:10 }}
+                      </div>
+                    </div>
+                  } @else if (!quotesLocked()) {
                     @if (isCourseTHApproved()) {
                       <button type="button" class="btn btn-warning btn-sm" (click)="onOpenPickDialog(quote)">
                         🏆 اختر هذا
@@ -135,14 +158,7 @@
                     <button type="button" class="btn btn-ghost btn-sm" (click)="onEditQuote(quote)">✏️ تعديل</button>
                     <button type="button" class="btn-link-danger btn-sm" (click)="onDeleteQuote(quote)">🗑️ حذف</button>
                   } @else {
-                    <div class="winner-actual-dates">
-                      <div class="muted-xs">تواريخ الانعقاد الفعلية</div>
-                      <div class="actual-dates-line">
-                        {{ course()?.actualStartDate | slice:0:10 }}
-                        →
-                        {{ course()?.actualEndDate | slice:0:10 }}
-                      </div>
-                    </div>
+                    <span class="readonly-label">للمراجعة فقط</span>
                   }
                 </div>
               </div>
@@ -261,6 +277,21 @@
             سيتم قفل هذا الاختيار. تأكد من تواريخ الانعقاد الفعلية مع المعهد قبل المتابعة.
           </p>
 
+          @if (expectedDateFrom() || expectedDateTo()) {
+            <div class="expected-window">
+              <span class="expected-window-icon">📅</span>
+              <div class="expected-window-copy">
+                <span>التواريخ المتوقعة المعتمدة في خطة الدورة</span>
+                <strong>
+                  {{ (expectedDateFrom() | slice:0:10) || '—' }}
+                  <i>←</i>
+                  {{ (expectedDateTo() | slice:0:10) || '—' }}
+                </strong>
+                <small>تم تعبئة التواريخ الفعلية أدناه بهذه الفترة ويمكن تعديلها قبل التأكيد.</small>
+              </div>
+            </div>
+          }
+
           <div class="pick-quote-summary">
             <div class="quote-title-row">
               <span [class]="scopeCssClass(pickQuote()!.providerScope ?? providerScopeOf(pickQuote()!.providerId))">
@@ -315,15 +346,6 @@
                 [value]="fActualEndDate()"
                 (input)="fActualEndDate.set($any($event.target).value)" />
             </div>
-          </div>
-
-          <div class="pick-effects">
-            <b>ماذا سيحدث عند التأكيد:</b>
-            <ul>
-              <li>السطر الفائز سيُعلَّم كـ <code>IsSelected = true</code></li>
-              <li>التواريخ ستُحفَظ على الدورة (ActualStartDate / ActualEndDate)</li>
-              <li>الخطوة التالية ستُفتَح: إصدار تعليمات السفر</li>
-            </ul>
           </div>
 
           @if (saveError()) {

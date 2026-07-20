@@ -63,6 +63,7 @@ public class PriceQuoteAppService(
     public async Task<PriceQuoteDto> CreateAsync(CreateUpdatePriceQuoteDto input)
     {
         ValidatePolymorphicParent(input);
+        await EnsureSessionQuotesOpenAsync(input.SessionId);
         await ValidateCityInCountryAsync(input.CountryId, input.CityId);
 
         var entity = toEntityMapper.Map(input);
@@ -78,11 +79,11 @@ public class PriceQuoteAppService(
     public async Task<PriceQuoteDto> UpdateAsync(Guid id, CreateUpdatePriceQuoteDto input)
     {
         ValidatePolymorphicParent(input);
-        await ValidateCityInCountryAsync(input.CountryId, input.CityId);
-
         var entity = await repository.GetAsync(id);
+        await EnsureSessionQuotesOpenAsync(entity.SessionId);
         if (entity.IsSelected)
             throw new BusinessException("Training:PriceQuote:CannotEditSelected");
+        await ValidateCityInCountryAsync(input.CountryId, input.CityId);
 
         // Preserve immutable / server-controlled fields.
         var sessionIdOriginal = entity.SessionId;
@@ -114,6 +115,7 @@ public class PriceQuoteAppService(
     public async Task DeleteAsync(Guid id)
     {
         var entity = await repository.GetAsync(id);
+        await EnsureSessionQuotesOpenAsync(entity.SessionId);
         if (entity.IsSelected)
             throw new BusinessException("Training:PriceQuote:CannotEditSelected");
 
@@ -124,6 +126,7 @@ public class PriceQuoteAppService(
     public async Task ApproveAsync(Guid id)
     {
         var entity = await repository.GetAsync(id);
+        await EnsureSessionQuotesOpenAsync(entity.SessionId);
         entity.Status = ApprovalStatus.Approved;
         await repository.UpdateAsync(entity, autoSave: true);
     }
@@ -132,6 +135,7 @@ public class PriceQuoteAppService(
     public async Task RejectAsync(Guid id)
     {
         var entity = await repository.GetAsync(id);
+        await EnsureSessionQuotesOpenAsync(entity.SessionId);
         entity.Status = ApprovalStatus.Rejected;
         await repository.UpdateAsync(entity, autoSave: true);
     }
@@ -144,6 +148,15 @@ public class PriceQuoteAppService(
         var hasCasual = input.CasualCourseId.HasValue;
         if (hasSession == hasCasual)
             throw new BusinessException("Training:PriceQuote:OnePolymorphicParentRequired");
+    }
+
+    private async Task EnsureSessionQuotesOpenAsync(Guid? sessionId)
+    {
+        if (!sessionId.HasValue) return;
+
+        var session = await sessionRepository.GetAsync(sessionId.Value);
+        if (session.SelectedPriceQuoteId.HasValue)
+            throw new BusinessException("Training:PriceQuote:SessionQuotesLocked");
     }
 
     private async Task ValidateCityInCountryAsync(Guid? countryId, Guid? cityId)

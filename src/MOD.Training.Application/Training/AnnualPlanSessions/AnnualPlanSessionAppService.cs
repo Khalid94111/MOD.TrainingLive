@@ -528,9 +528,9 @@ public class AnnualPlanSessionAppService(
         Status = session.Status,
         // Lean post-create payload: ExecutionStage derived from Status without dependent lookups.
         // The detail page re-fetches via CourseSessionAppService.GetAsync for the full enrichment.
-        ExecutionStage = session.Status == SessionStatus.Planned
-            ? SessionExecutionStage.AwaitingQuoteSelection
-            : SessionExecutionStage.AwaitingCoursePayment,
+        ExecutionStage = session.CourseType == CourseType.Internal
+            ? SessionExecutionStage.AwaitingCompletion
+            : SessionExecutionStage.AwaitingQuoteSelection,
         NomineesCount = 0,
         CancellationReason = session.CancellationReason,
         CancelledAt = session.CancelledAt,

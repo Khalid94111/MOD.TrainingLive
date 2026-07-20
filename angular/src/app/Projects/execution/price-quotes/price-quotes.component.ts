@@ -102,6 +102,20 @@ export class PriceQuotesComponent implements OnInit {
   approvedCost = computed(() => this.estimatedTotalCost());
   hasSelected = computed(() => this.quotes().some(q => q.isSelected));
   selectedQuote = computed(() => this.quotes().find(q => q.isSelected) ?? null);
+  quotesLocked = computed(() => this.parentArm() === 'session'
+    && (!!this.session()?.selectedPriceQuoteId || this.hasSelected()));
+  expectedDateFrom = computed(() => this.parentArm() === 'session'
+    ? this.session()?.estimatedDateFrom
+    : this.course()?.estimatedDateFrom);
+  expectedDateTo = computed(() => this.parentArm() === 'session'
+    ? this.session()?.estimatedDateTo
+    : this.course()?.estimatedDateTo);
+  actualStartDate = computed(() => this.parentArm() === 'session'
+    ? this.session()?.actualStartDate
+    : this.course()?.actualStartDate);
+  actualEndDate = computed(() => this.parentArm() === 'session'
+    ? this.session()?.actualEndDate
+    : this.course()?.actualEndDate);
 
   // sorted: winner first, then by creation
   sortedQuotes = computed(() => {
@@ -246,6 +260,7 @@ export class PriceQuotesComponent implements OnInit {
 
   // ── Add/Edit quote ──
   onAddQuote(): void {
+    if (!this.ensureQuotesEditable()) return;
     this.isEditMode.set(false);
     this.editingQuoteId.set(null);
     this.fProviderId.set('');
@@ -258,6 +273,7 @@ export class PriceQuotesComponent implements OnInit {
   }
 
   onEditQuote(quote: PriceQuoteDto): void {
+    if (!this.ensureQuotesEditable()) return;
     if (quote.isSelected) {
       this.saveError.set(this.l.t('::Training:PriceQuote:CannotEditSelected'));
       return;
@@ -298,6 +314,7 @@ export class PriceQuotesComponent implements OnInit {
   }
 
   async onSaveQuote(): Promise<void> {
+    if (!this.ensureQuotesEditable()) return;
     if (!this.fProviderId()) {
       this.saveError.set('يرجى اختيار جهة التدريب');
       return;
@@ -335,6 +352,7 @@ export class PriceQuotesComponent implements OnInit {
   }
 
   async onDeleteQuote(quote: PriceQuoteDto): Promise<void> {
+    if (!this.ensureQuotesEditable()) return;
     if (quote.isSelected) {
       this.saveError.set(this.l.t('::Training:PriceQuote:CannotEditSelected'));
       return;
@@ -351,14 +369,14 @@ export class PriceQuotesComponent implements OnInit {
 
   // ── Pick Winner ──
   onOpenPickDialog(quote: PriceQuoteDto): void {
+    if (!this.ensureQuotesEditable()) return;
     if (!this.isCourseTHApproved()) {
       this.saveError.set(this.l.t('::Training:CasualCourse:NotApprovedYet'));
       return;
     }
     this.pickQuote.set(quote);
-    const c = this.course();
-    this.fActualStartDate.set(c?.estimatedDateFrom?.substring(0, 10) ?? '');
-    this.fActualEndDate.set(c?.estimatedDateTo?.substring(0, 10) ?? '');
+    this.fActualStartDate.set(this.expectedDateFrom()?.substring(0, 10) ?? '');
+    this.fActualEndDate.set(this.expectedDateTo()?.substring(0, 10) ?? '');
     this.saveError.set(null);
     this.pickDialogOpen.set(true);
   }
@@ -370,6 +388,7 @@ export class PriceQuotesComponent implements OnInit {
   }
 
   async onConfirmPickWinner(): Promise<void> {
+    if (!this.ensureQuotesEditable()) return;
     const quote = this.pickQuote();
     if (!quote) return;
     if (!this.fActualStartDate() || !this.fActualEndDate()) {
@@ -406,6 +425,14 @@ export class PriceQuotesComponent implements OnInit {
     } catch (err: unknown) {
       this.saveError.set(this.extractError(err));
     }
+  }
+
+  private ensureQuotesEditable(): boolean {
+    if (!this.quotesLocked()) return true;
+    this.quoteDialogOpen.set(false);
+    this.pickDialogOpen.set(false);
+    this.saveError.set(this.l.t('::Training:PriceQuote:SessionQuotesLocked'));
+    return false;
   }
 
   goBack(): void {

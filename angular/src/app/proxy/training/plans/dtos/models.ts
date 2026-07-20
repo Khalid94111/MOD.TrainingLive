@@ -22,6 +22,8 @@ export interface CourseSessionDetailDto extends FullAuditedEntityDto<string> {
   planYear?: number;
   actualStartDate?: string | null;
   actualEndDate?: string | null;
+  estimatedDateFrom?: string | null;
+  estimatedDateTo?: string | null;
   status?: SessionStatus;
   executionStage?: SessionExecutionStage;
   selectedPriceQuoteId?: string | null;

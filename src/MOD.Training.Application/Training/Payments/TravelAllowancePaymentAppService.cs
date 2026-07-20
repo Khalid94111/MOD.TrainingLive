@@ -246,6 +246,8 @@ public class TravelAllowancePaymentAppService(
         {
             var session = await sessionRepo.FindAsync(sessionId!.Value)
                 ?? throw new EntityNotFoundException(typeof(CourseSession), sessionId.Value);
+            if (session.CourseType != CourseType.ExternalInternational)
+                throw new BusinessException("Training:TravelAllowancePayment:SessionTravelNotRequired");
             if (session.Status == SessionStatus.Cancelled)
                 throw new BusinessException("Training:TravelAllowancePayment:CourseNotApproved");
         }
