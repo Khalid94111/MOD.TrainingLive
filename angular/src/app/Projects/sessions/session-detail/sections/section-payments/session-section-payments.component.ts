@@ -4,6 +4,8 @@ import { LocalizationPipe, PermissionService } from '@abp/ng.core';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
+import type { CasualCourseDetailDto } from 'src/app/proxy/training/casual-courses/dtos/models';
+import type { PriceQuoteDto } from 'src/app/proxy/training/finance/dtos/models';
 import type { CourseSessionDetailDto } from 'src/app/proxy/training/plans/dtos/models';
 import { CoursePaymentService } from 'src/app/proxy/training/payments/course-payment.service';
 import type {
@@ -15,6 +17,7 @@ import { CourseType } from 'src/app/proxy/training/enums/course-type.enum';
 import { PaymentStatus } from 'src/app/proxy/training/enums/payment-status.enum';
 
 import { TrainingLocalizationHelper } from '../../../../shared';
+import { CasualCourseDetailRefreshService } from '../../../../casual-courses/casual-course-detail/casual-course-detail-refresh.service';
 import { SessionDetailRefreshService } from '../../session-detail-refresh.service';
 
 @Component({
@@ -29,12 +32,15 @@ export class SessionSectionPaymentsComponent {
   private readonly router = inject(Router);
   private readonly permissions = inject(PermissionService);
   private readonly paymentService = inject(CoursePaymentService);
-  private readonly refresh = inject(SessionDetailRefreshService);
+  private readonly sessionRefresh = inject(SessionDetailRefreshService);
+  private readonly casualCourseRefresh = inject(CasualCourseDetailRefreshService);
 
   readonly CourseType = CourseType;
   readonly PaymentStatus = PaymentStatus;
 
   readonly session = input<CourseSessionDetailDto | null>(null);
+  readonly course = input<CasualCourseDetailDto | null>(null);
+  readonly selectedQuote = input<PriceQuoteDto | null>(null);
   readonly travelAllowancePayments = input<TravelAllowancePaymentDto[]>([]);
   readonly coursePayment = input<CoursePaymentDto | null>(null);
 
@@ -60,12 +66,15 @@ export class SessionSectionPaymentsComponent {
   readonly canDownload = computed(() =>
     this.permissions.getGrantedPolicy('TrainingPayments.CoursePayments.DownloadInvoice'));
 
-  readonly isInternal = computed(() => this.session()?.courseType === CourseType.Internal);
+  readonly isInternal = computed(() => this.courseType() === CourseType.Internal);
   readonly showTravelCard = computed(
-    () => this.session()?.courseType === CourseType.ExternalInternational,
+    () => this.courseType() === CourseType.ExternalInternational,
   );
 
-  readonly expectedNomineeCount = computed(() => this.session()?.nominations?.length ?? 0);
+  readonly courseType = computed(() => this.session()?.courseType ?? this.course()?.courseType);
+  readonly expectedNomineeCount = computed(() => this.session()
+    ? this.session()?.nomineesCount ?? this.session()?.nominations?.length ?? 0
+    : this.course()?.nomineesCount ?? this.course()?.nominations?.length ?? 0);
   readonly travelConfirmedCount = computed(() =>
     this.travelAllowancePayments().filter(p => p.status === PaymentStatus.Confirmed).length,
   );
@@ -123,7 +132,18 @@ export class SessionSectionPaymentsComponent {
     return this.dialogPayment() ? this.canUpdate() : this.canCreate();
   });
   readonly hasInvoice = computed(() => !!this.dialogPayment()?.hasInvoice);
-  readonly agreedAmountOMR = computed(() => this.session()?.selectedPriceQuoteAmountOMR ?? 0);
+  readonly parentId = computed(() => this.session()?.id ?? this.course()?.id ?? null);
+  readonly selectedProviderId = computed(() =>
+    this.session()?.selectedPriceQuoteProviderId ?? this.selectedQuote()?.providerId ?? null);
+  readonly selectedProviderName = computed(() =>
+    this.session()?.selectedPriceQuoteProviderNameAr ?? this.selectedQuote()?.providerName ?? '—');
+  readonly courseName = computed(() =>
+    this.session()?.tenantCourseNameAr ?? this.course()?.courseNameAr ?? '—');
+  readonly agreedAmountOMR = computed(() =>
+    this.session()?.selectedPriceQuoteAmountOMR
+      ?? this.selectedQuote()?.totalPrice
+      ?? this.selectedQuote()?.quotedPriceOMR
+      ?? 0);
   readonly amountDifferenceOMR = computed(
     () => this.roundOMR(this.invoiceAmountOMR() - this.agreedAmountOMR()),
   );
@@ -140,8 +160,7 @@ export class SessionSectionPaymentsComponent {
   }
 
   openPaymentDialog(): void {
-    const session = this.session();
-    if (!session?.id || !session.selectedPriceQuoteProviderId) return;
+    if (!this.parentId() || !this.selectedProviderId()) return;
 
     const payment = this.coursePayment();
     this.workingPayment.set(payment);
@@ -213,7 +232,7 @@ export class SessionSectionPaymentsComponent {
       const updated = await firstValueFrom(this.paymentService.uploadInvoice(payment.id, formData));
       this.workingPayment.set(updated);
       this.dialogSuccess.set(this.l.t('::Training.Sessions.Detail.Section5.InvoiceUploaded'));
-      this.refresh.refresh();
+      this.refreshParent();
     } catch (error) {
       this.dialogError.set(this.extractError(error));
     } finally {
@@ -258,7 +277,7 @@ export class SessionSectionPaymentsComponent {
       if (result.payment) this.workingPayment.set(result.payment);
       this.confirmRequested.set(false);
       this.dialogSuccess.set(this.l.t('::Training.Sessions.Detail.Section5.PaymentConfirmed'));
-      this.refresh.refresh();
+      this.refreshParent();
     } catch (error) {
       this.dialogError.set(this.extractError(error));
     } finally {
@@ -295,9 +314,10 @@ export class SessionSectionPaymentsComponent {
   }
 
   private async persistDraft(silent: boolean): Promise<CoursePaymentDto | null> {
-    const session = this.session();
+    const parentId = this.parentId();
+    const providerId = this.selectedProviderId();
     const current = this.dialogPayment();
-    if (!session?.id || !session.selectedPriceQuoteProviderId) {
+    if (!parentId || !providerId) {
       this.dialogError.set(this.l.t('::Training.Sessions.Detail.Section5.MissingWinningQuote'));
       return null;
     }
@@ -314,9 +334,9 @@ export class SessionSectionPaymentsComponent {
     if (current && !this.canUpdate()) return null;
 
     const dto: CreateUpdateCoursePaymentDto = {
-      casualCourseId: null,
-      sessionId: session.id,
-      trainingProviderId: session.selectedPriceQuoteProviderId,
+      casualCourseId: this.course() ? parentId : null,
+      sessionId: this.session() ? parentId : null,
+      trainingProviderId: providerId,
       invoiceAmountOMR: this.invoiceAmountOMR(),
       invoiceDate: this.invoiceDate(),
       notes: this.notes().trim() || null,
@@ -333,7 +353,7 @@ export class SessionSectionPaymentsComponent {
       if (!silent) {
         this.dialogSuccess.set(this.l.t('::Training.Payments.CoursePayment.Dialog.SaveDraftSuccess'));
       }
-      this.refresh.refresh();
+      this.refreshParent();
       return saved;
     } catch (error) {
       this.dialogError.set(this.extractError(error));
@@ -360,5 +380,13 @@ export class SessionSectionPaymentsComponent {
 
   private roundOMR(value: number): number {
     return Math.round((value + Number.EPSILON) * 1000) / 1000;
+  }
+
+  private refreshParent(): void {
+    if (this.course()) {
+      this.casualCourseRefresh.refresh();
+    } else {
+      this.sessionRefresh.refresh();
+    }
   }
 }

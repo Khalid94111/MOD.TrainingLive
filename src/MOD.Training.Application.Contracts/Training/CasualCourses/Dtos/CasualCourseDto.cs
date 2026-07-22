@@ -39,6 +39,8 @@ public class CasualCourseDto : FullAuditedEntityDto<Guid>
     public DateTime? ActualStartDate { get; set; }
     public DateTime? ActualEndDate { get; set; }
 
+    public SessionStatus ExecutionStatus { get; set; }
+
     public CasualCourseStatus Status { get; set; }
     public CasualCourseStatus? ReturnedFromStatus { get; set; }
 

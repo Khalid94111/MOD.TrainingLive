@@ -5,6 +5,7 @@ import type { EntityDto, FullAuditedEntityDto, PagedAndSortedResultRequestDto } 
 import type { CasualCourseStatus } from '../../enums/casual-course-status.enum';
 import type { ExecutionStage } from '../../enums/execution-stage.enum';
 import type { FinancialAmountSource } from '../../enums/financial-amount-source.enum';
+import type { SessionStatus } from '../../enums/session-status.enum';
 
 export interface AssignScenarioDto {
   fundingScenario: FundingScenario;
@@ -58,6 +59,7 @@ export interface CasualCourseDto extends FullAuditedEntityDto<string> {
   selectedPriceQuoteId?: string | null;
   actualStartDate?: string | null;
   actualEndDate?: string | null;
+  executionStatus?: SessionStatus;
   status?: CasualCourseStatus;
   returnedFromStatus?: CasualCourseStatus | null;
   isReturned?: boolean;
@@ -115,6 +117,7 @@ export interface CasualCourseNominationDto extends FullAuditedEntityDto<string> 
   tenantId?: string | null;
   casualCourseId?: string;
   employeeId?: string;
+  serviceNumber?: string;
   employeeName?: string;
   rankName?: string;
   unitName?: string;

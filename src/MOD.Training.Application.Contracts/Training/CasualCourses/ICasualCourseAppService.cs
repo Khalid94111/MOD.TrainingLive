@@ -39,4 +39,10 @@ public interface ICasualCourseAppService : ICrudAppService<
     /// <c>ActualEndDate</c>, and points <c>SelectedPriceQuoteId</c> at the new quote.
     /// </summary>
     Task<CasualCourseDto> SelectPriceQuoteAsync(Guid id, SelectPriceQuoteDto input);
+
+    /// <summary>Moves an execution-ready course from Scheduled to InProgress.</summary>
+    Task<CasualCourseDto> MarkInProgressAsync(Guid id);
+
+    /// <summary>Moves an active course from InProgress to Completed.</summary>
+    Task<CasualCourseDto> MarkCompletedAsync(Guid id);
 }

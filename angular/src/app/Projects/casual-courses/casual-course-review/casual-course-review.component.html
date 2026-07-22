@@ -41,7 +41,7 @@
         <div class="info-banner-icon">ℹ️</div>
         <div class="info-banner-text">
           <b>الطلب معتمد من UGM وجاهز للمراجعة</b>
-          <div class="banner-hint">اضغط "بدء المراجعة" لبدء تعيين السيناريو والبنود المالية.</div>
+          <div class="banner-hint">اضغط "بدء المراجعة" لمراجعة رسوم الدورة ومصادر تمويل السفر.</div>
         </div>
         @if (mode() === 'all') {
           <div class="banner-actions">
@@ -91,6 +91,7 @@
           <table class="gtms-table">
             <thead>
               <tr>
+                <th>الرقم الوظيفي</th>
                 <th>الاسم</th>
                 <th>الرتبة</th>
                 <th>الوحدة</th>
@@ -101,6 +102,7 @@
             <tbody>
               @for (nom of nominations(); track nom.id) {
                 <tr [class.returned-row]="nom.isReturned">
+                  <td><span class="service-number">{{ nom.serviceNumber || '—' }}</span></td>
                   <td class="cell-bold">{{ nom.employeeName }}</td>
                   <td>{{ nom.rankName }}</td>
                   <td>{{ nom.unitName }}</td>
@@ -128,220 +130,114 @@
     }
 
     @if (showFinancials()) {
-    <!-- Panel 3: Funding Scenario -->
-    <div class="gtms-card">
-      <h3 class="section-title">سيناريو التمويل</h3>
-      <div class="scenario-grid">
-        @for (opt of SCENARIO_OPTIONS; track opt.value) {
-          <div
-            class="scenario-card"
-            [class.selected]="fScenario() === opt.value"
-            (click)="onScenarioSelect(opt.value)"
-          >
-            <div class="scenario-card-head">
-              <span class="scenario-num">{{ scenarioNum(opt.value) }}</span>
-              <span class="scenario-title">{{ l.t(opt.key) }}</span>
-            </div>
-            <p class="scenario-hint">{{ l.t(opt.hint) }}</p>
+      @if (isInternational()) {
+        <div class="gtms-card">
+          <div class="section-heading-block">
+            <span class="section-kicker">الدورة الخارجية الدولية</span>
+            <h3 class="section-title">كيف ستُغطّى مصروفات السفر؟</h3>
+            <p class="section-description">
+              رسوم الدورة تُغطّى دائمًا من مصدر التمويل المدخل في الطلب. اختر فقط مصدر بنود السفر.
+            </p>
           </div>
-        }
-      </div>
-    </div>
 
-    <!-- Panel 4: Progress stats -->
-    <div class="gtms-card progress-panel">
-      <div class="progress-grid">
-        <div class="progress-stat">
-          <span class="stat-label">إجمالي البنود</span>
-          <span class="stat-value">{{ totalItems() }}</span>
-        </div>
-        <div class="progress-stat">
-          <span class="stat-label">مكتملة</span>
-          <span class="stat-value">{{ itemsComplete() }} / {{ totalItems() }}</span>
-          <div class="progress-bar">
-            <div class="progress-bar-fill" [style.width.%]="progressPct()"></div>
+          <div class="scenario-grid two-options">
+            @for (opt of SCENARIO_OPTIONS; track opt.value) {
+              <button
+                type="button"
+                class="scenario-card"
+                [class.selected]="fScenario() === opt.value"
+                [disabled]="!isReviewable() || actionBusy()"
+                (click)="onScenarioSelect(opt.value)"
+              >
+                <span class="scenario-check">{{ fScenario() === opt.value ? '✓' : '' }}</span>
+                <span class="scenario-card-copy">
+                  <span class="scenario-title">{{ l.t(opt.key) }}</span>
+                  <span class="scenario-hint">{{ l.t(opt.hint) }}</span>
+                </span>
+              </button>
+            }
           </div>
         </div>
-        <div class="progress-stat">
-          <span class="stat-label">ناقصة التكلفة</span>
-          <span class="stat-value" [class.warning]="itemsMissingCost() > 0">{{ itemsMissingCost() }}</span>
-          @if (itemsMissingCost() > 0 && isReviewable()) {
-            <button type="button" class="btn btn-outline btn-xs" (click)="jumpToNextIncomplete()">
-              ⤵ الانتقال إلى التالي
-            </button>
-          }
-        </div>
-        <div class="progress-stat">
-          <span class="stat-label">الإجمالي المقدَّر</span>
-          <span class="stat-value cell-money">{{ grandTotal() | number:'1.3-3' }} ر.ع</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Panel 5: Financial Items (rank-aware accordion) -->
-    <div class="gtms-card">
-      <div class="section-header">
-        <h3 class="section-title">البنود المالية</h3>
-        @if (isReviewable()) {
-          <div class="panel-actions">
-            <button type="button" class="btn btn-outline btn-sm" [disabled]="actionBusy()" (click)="toggleAddItem()">
-              ➕ إضافة بند
-            </button>
-          </div>
-        }
-      </div>
-
-      @if (addItemSelectOpen()) {
-        <div class="add-item-form">
-          <div class="form-row">
-            <div class="form-group flex-2">
-              <label class="form-label">البند</label>
-              <select class="form-input" [value]="addItemId()" (change)="addItemId.set($any($event.target).value)">
-                <option value="">اختر بندًا...</option>
-                @for (fi of financialItems(); track fi.id) {
-                  <option [value]="fi.id">{{ fi.nameAr }}</option>
-                }
-              </select>
-            </div>
-          </div>
-          <div class="add-item-actions">
-            <button type="button" class="btn btn-ghost btn-sm" (click)="toggleAddItem()">إلغاء</button>
-            <button type="button" class="btn btn-primary btn-sm" [disabled]="!addItemId() || actionBusy()" (click)="onConfirmAddItem()">
-              إضافة
-            </button>
-          </div>
-          <p class="form-hint">المعدلات تُعيّن تلقائيًا من الافتراضيات لكل رتبة — يمكن تعديلها بعد الإضافة.</p>
-        </div>
-      }
-
-      @if (financials().length === 0) {
-        @if (fScenario() === null) {
-          <div class="empty-state small">
-            اختر سيناريو التمويل أعلاه أولًا — البنود المالية تُعبَّأ تلقائيًا عند أول اختيار.
-          </div>
-        } @else {
-          <div class="empty-state small">
-            لا توجد بنود مالية بعد — استخدم "تعبئة تلقائية" أو أضف بنودًا يدويًا.
-          </div>
-        }
       } @else {
-        <div class="fin-accordion">
-          @for (fin of financials(); track fin.id) {
-            <div class="fin-item" [id]="'fin-' + fin.id" [class.missing]="(fin.estimatedAmountOMR ?? 0) <= 0">
-              <!-- Parent row -->
-              <div class="fin-head"
-                [class.clickable]="!isFlatItem(fin)"
-                (click)="!isFlatItem(fin) && toggleExpand(fin.id)">
-                <div class="fin-head-left">
-                  @if (!isFlatItem(fin)) {
-                    <span class="fin-chevron">{{ isExpanded(fin.id) ? '▾' : '▸' }}</span>
-                  } @else {
-                    <span class="fin-chevron-flat">●</span>
-                  }
-                  <span class="fin-name">{{ fin.financialItemName || financialItemName(fin.financialItemId) }}</span>
-                  @if (fin.isPerDay) {
-                    <span class="chip chip-neutral">لكل يوم</span>
-                  }
-                  @if (fin.isPerNominee) {
-                    <span class="chip chip-info">حسب الرتبة</span>
-                  } @else {
-                    <span class="chip chip-neutral">ثابت</span>
-                  }
-                  <span class="chip chip-days">أيام فعّالة: {{ fin.effectiveDays ?? '—' }}</span>
-                </div>
-                <div class="fin-head-right">
-                  <span class="fin-total cell-money">{{ fin.estimatedAmountOMR | number:'1.3-3' }} ر.ع</span>
-                  <span class="source-cell">{{ sourceLabel(sourceFor(fin.financialItemId)) }}</span>
-                  @if (isReviewable()) {
-                    <button type="button" class="btn btn-ghost btn-sm btn-danger-ghost"
-                      [disabled]="actionBusy()"
-                      (click)="$event.stopPropagation(); onDeleteLine(fin)">
-                      🗑 حذف
-                    </button>
-                  }
-                </div>
-              </div>
-
-              <!-- Expanded body — rank table + notes -->
-              @if (isExpanded(fin.id) && !isFlatItem(fin)) {
-                <div class="fin-body">
-                  <div class="days-explainer">
-                    <span class="lbl">تفصيل الأيام الفعّالة:</span>
-                    <span class="val">{{ effectiveDaysExplainer(fin) }}</span>
-                  </div>
-
-                  @if (!fin.ranks || fin.ranks.length === 0) {
-                    <div class="empty-state small">
-                      لا توجد رتب — قد تكون قائمة المرشحين فارغة. أضف مرشحين ثم أعد التعبئة التلقائية.
-                    </div>
-                  } @else {
-                    <div class="gtms-table-wrap">
-                      <table class="gtms-table rank-table">
-                        <thead>
-                          <tr>
-                            <th>الرتبة</th>
-                            <th class="center">العدد</th>
-                            <th class="center">أيام فعّالة</th>
-                            <th class="center">السعر (ر.ع)</th>
-                            <th class="center">المجموع (ر.ع)</th>
-                            <th class="center">المصدر</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          @for (row of fin.ranks; track row.id) {
-                            <tr>
-                              <td class="cell-bold">{{ row.rankNameAr }}</td>
-                              <td class="center">{{ row.nomineeCount }}</td>
-                              <td class="center">{{ fin.effectiveDays }}</td>
-                              <td class="center">
-                                @if (isReviewable()) {
-                                  <input type="number" min="0" step="0.001" class="form-input form-input-inline"
-                                    [value]="row.ratePerUnitOMR ?? 0"
-                                    (input)="onRateInput(row.id, $any($event.target).value)" />
-                                } @else {
-                                  <span>{{ row.ratePerUnitOMR | number:'1.3-3' }}</span>
-                                }
-                                @if (isFromUtmForm(row.rateSource)) {
-                                  <span class="chip chip-warning utm-chip"
-                                        title="مأخوذة من نموذج UTM. يمكنك تعديلها إذا لزم الأمر.">
-                                    ← UTM
-                                  </span>
-                                }
-                              </td>
-                              <td class="center cell-money">{{ row.subtotalOMR | number:'1.3-3' }}</td>
-                              <td class="center">
-                                <span class="chip"
-                                      [class.chip-info]="row.rateSource === 'RankOverride'"
-                                      [class.chip-warning]="row.rateSource === 'FromUTMForm'"
-                                      [class.chip-neutral]="row.rateSource !== 'RankOverride' && row.rateSource !== 'FromUTMForm'">
-                                  {{ rateSourceLabel(row.rateSource) }}
-                                </span>
-                              </td>
-                            </tr>
-                          }
-                        </tbody>
-                        <tfoot>
-                          <tr class="total-row">
-                            <td colspan="4">مجموع البند</td>
-                            <td class="center cell-money">{{ fin.estimatedAmountOMR | number:'1.3-3' }}</td>
-                            <td></td>
-                          </tr>
-                        </tfoot>
-                      </table>
-                    </div>
-                  }
-                </div>
-              }
-            </div>
-          }
-
-          <div class="fin-grand-total">
-            <span class="lbl">المجموع الكلي</span>
-            <span class="val cell-money">{{ grandTotal() | number:'1.3-3' }} ر.ع</span>
+        <div class="local-approval-banner">
+          <span class="local-approval-icon">✓</span>
+          <div>
+            <b>دورة خارجية محلية — جاهزة للمراجعة والاعتماد</b>
+            <p>لا توجد تعليمات سفر أو خيارات تمويل إضافية. رسوم الدورة تُغطّى من البند المدخل في الطلب.</p>
           </div>
         </div>
       }
-    </div>
+
+      <div class="gtms-card financial-overview-card">
+        <div class="section-heading-block">
+          <span class="section-kicker">عرض تلقائي</span>
+          <h3 class="section-title">البنود المالية</h3>
+          <p class="section-description">هذه البنود مستخرجة تلقائيًا من بيانات الدورة وإعدادات التدريب، ولا تحتاج إلى إضافتها يدويًا.</p>
+        </div>
+
+        <div class="gtms-table-wrap funding-table-wrap">
+          <table class="gtms-table funding-table">
+            <thead>
+              <tr>
+                <th>البند</th>
+                <th>مصدر التمويل</th>
+                <th>رمز البند</th>
+                <th class="center">المبلغ / الحالة</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="course-fee-row">
+                <td>
+                  <span class="funding-item-name">رسوم الدورة</span>
+                  <span class="funding-item-note">المبلغ المسجل عند إنشاء الطلب</span>
+                </td>
+                <td>{{ casualCourse()?.fundingSourceName || '—' }}</td>
+                <td><code class="vote-code">{{ casualCourse()?.fundingSourceVoteCode || 'غير مسجل' }}</code></td>
+                <td class="center cell-money">
+                  @if (courseCost() > 0) {
+                    {{ courseCost() | number:'1.3-3' }} ر.ع
+                  } @else {
+                    <span class="missing-code">غير مسجلة</span>
+                  }
+                </td>
+              </tr>
+
+              @for (row of travelFundingRows(); track row.itemType) {
+                <tr [class.row-missing]="fScenario() !== null && !row.voteCode">
+                  <td>
+                    <span class="funding-item-name">{{ row.name }}</span>
+                    <span class="funding-item-note">يُحتسب المبلغ داخل منظومة السفر</span>
+                  </td>
+                  <td>{{ row.fundingSource }}</td>
+                  <td>
+                    @if (row.voteCode) {
+                      <code class="vote-code">{{ row.voteCode }}</code>
+                    } @else {
+                      <span class="missing-code">{{ fScenario() === null ? 'بانتظار الاختيار' : 'رمز غير مضبوط' }}</span>
+                    }
+                  </td>
+                  <td class="center"><span class="travel-pending-chip">بانتظار تعليمات السفر</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="financial-total-bar">
+          <div>
+            <span class="financial-total-label">المعتمد في التدريب الآن</span>
+            <span class="financial-total-help">رسوم الدورة فقط؛ تُضاف نتائج السفر تلقائيًا بعد اكتمالها.</span>
+          </div>
+          <strong class="cell-money">{{ courseCost() | number:'1.3-3' }} ر.ع</strong>
+        </div>
+
+        @if (isInternational() && fScenario() !== null && missingTravelVoteCodes() > 0) {
+          <div class="alert alert-warning compact-alert">
+            <span class="alert-icon">⚠️</span>
+            توجد {{ missingTravelVoteCodes() }} بنود سفر بدون رمز مالي. يجب ضبطها قبل إنهاء المراجعة.
+          </div>
+        }
+      </div>
     }
 
     @if (isReviewable() && mode() === 'all') {
@@ -352,11 +248,11 @@
         <button type="button" class="btn btn-warning" [disabled]="actionBusy()" (click)="openReturnCourse()">
           🔁 إعادة إلى مُنشئ الطلب
         </button>
-        <button type="button" class="btn btn-outline" [disabled]="actionBusy() || fScenario() === null" (click)="onSaveAssignments(false)">
-          💾 حفظ التعيينات
+        <button type="button" class="btn btn-outline" [disabled]="actionBusy()" (click)="onSaveAssignments(false)">
+          💾 حفظ التقدم
         </button>
         <button type="button" class="btn btn-primary"
-          [disabled]="actionBusy() || fScenario() === null || financials().length === 0 || itemsMissingCost() > 0"
+          [disabled]="actionBusy() || !canFinalizeReview()"
           (click)="onSaveAssignments(true)">
           📤 إرسال إلى TD
         </button>

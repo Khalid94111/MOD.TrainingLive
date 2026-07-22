@@ -7,6 +7,8 @@ export enum ExecutionStage {
   AwaitingCoursePayment = 4,
   AwaitingReallocationApproval = 5,
   FinanciallyComplete = 6,
+  InProgress = 7,
+  Completed = 8,
 }
 
 export const executionStageOptions = mapEnumToOptions(ExecutionStage);

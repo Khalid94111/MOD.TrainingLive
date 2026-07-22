@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 
 import {
   CasualCourseStatus,
+  CourseType,
   FUNDING_SCENARIO_OPTIONS,
   TrainingLocalizationHelper,
 } from '../../../../shared';
@@ -82,12 +83,7 @@ export class CasualCourseSectionFinancialsComponent {
     return opt ? this.l.t(opt.key) : '';
   });
 
-  scenarioNum = computed(() => {
-    const s = this.course()?.fundingScenario;
-    return s === null || s === undefined ? null : Number(s);
-  });
-
-  /** "السيناريو 2 · 5,580 ر.ع · 4 بنود" or "احتساب مبدئي" pre-scenario. */
+  /** Compact summary of the course fee and travel-funding choice. */
   summaryLine = computed(() => {
     const c = this.course();
     if (!c) return '';
@@ -106,16 +102,14 @@ export class CasualCourseSectionFinancialsComponent {
       return parts.join(' · ');
     }
 
-    const num = this.scenarioNum();
-    if (num !== null) {
-      parts.push(`السيناريو ${num}`);
+    if (c.courseType === CourseType.ExternalLocal) {
+      parts.push('رسوم الدورة من مصدر التمويل');
+      parts.push('بدون مصروفات سفر');
     } else {
-      parts.push('بدون سيناريو');
+      parts.push(this.scenarioLabel() || 'بانتظار اختيار مصدر مصروفات السفر');
     }
-    const total = c.estimatedTotalCost ?? 0;
+    const total = c.courseCost ?? c.estimatedTotalCost ?? 0;
     if (total > 0) parts.push(`${this.formatNumber(total)} ر.ع`);
-    const n = c.financialItemsCount ?? 0;
-    if (n > 0) parts.push(`${n} بند`);
     if (s === CasualCourseStatus.THApproved) parts.push('✓ معتمد');
     return parts.join(' · ');
   });

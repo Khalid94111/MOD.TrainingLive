@@ -4,16 +4,18 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
-import { CasualCourseService, CasualCourseFinancialItemService } from 'src/app/proxy/training/casual-courses';
+import { CasualCourseService } from 'src/app/proxy/training/casual-courses';
 import type {
   CalculatePreviewDto,
   CasualCourseDetailDto,
-  CasualCourseFinancialItemDto,
 } from 'src/app/proxy/training/casual-courses/dtos/models';
+import { FinancialItemService } from 'src/app/proxy/training/finance/financial-item.service';
+import type { FinancialItemDto } from 'src/app/proxy/training/finance/dtos/models';
 
 import {
   CasualCourseStatus,
   CASUAL_COURSE_STATUS_OPTIONS,
+  CourseType,
   FundingScenario,
   FUNDING_SCENARIO_OPTIONS,
   TrainingLocalizationHelper,
@@ -21,7 +23,15 @@ import {
 import { NotesDrawerComponent } from '../../shared/components/notes-drawer/notes-drawer.component';
 import { ReturnModalComponent } from '../../shared/components/return-modal/return-modal.component';
 import { PlanNoteEntityType } from 'src/app/proxy/training/enums/plan-note-entity-type.enum';
+import { FinancialItemType } from 'src/app/proxy/training/enums/financial-item-type.enum';
 import { CasualCourseActionService } from '../casual-course-detail/casual-course-action.service';
+
+interface TravelFundingRow {
+  itemType: FinancialItemType;
+  name: string;
+  fundingSource: string;
+  voteCode: string;
+}
 
 @Component({
   standalone: true,
@@ -32,7 +42,7 @@ import { CasualCourseActionService } from '../casual-course-detail/casual-course
 })
 export class CasualCourseApprovalComponent implements OnInit {
   private service = inject(CasualCourseService);
-  private financialService = inject(CasualCourseFinancialItemService);
+  private financialItemService = inject(FinancialItemService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private actions = inject(CasualCourseActionService);
@@ -40,6 +50,7 @@ export class CasualCourseApprovalComponent implements OnInit {
   l = inject(TrainingLocalizationHelper);
 
   CasualCourseStatus = CasualCourseStatus;
+  CourseType = CourseType;
   PlanNoteEntityType = PlanNoteEntityType;
 
   /** Render slot — see CasualCourseRequestComponent for semantics. */
@@ -50,7 +61,7 @@ export class CasualCourseApprovalComponent implements OnInit {
   courseId = signal<string>('');
   embedded = signal<boolean>(false);
   casualCourse = signal<CasualCourseDetailDto | null>(null);
-  financials = signal<CasualCourseFinancialItemDto[]>([]);
+  financialItems = signal<FinancialItemDto[]>([]);
   // Patch 5 — UGM viewing a Submitted course (before scenario is picked) sees a server-
   // computed preview instead of real CasualCourseFinancialItem rows. TD/TH still see the
   // real rows because Staff has finalised review by then.
@@ -80,6 +91,38 @@ export class CasualCourseApprovalComponent implements OnInit {
   });
 
   totalCost = computed(() => this.casualCourse()?.estimatedTotalCost ?? 0);
+  courseCost = computed(() => this.casualCourse()?.courseCost ?? 0);
+  isInternational = computed(
+    () => this.casualCourse()?.courseType === CourseType.ExternalInternational,
+  );
+  travelFundingRows = computed<TravelFundingRow[]>(() => {
+    if (!this.isInternational()) return [];
+
+    const course = this.casualCourse();
+    const useCourseSource = course?.fundingScenario === FundingScenario.FundingSourceCoversAll;
+    const specs: Array<{ itemType: FinancialItemType; name: string }> = [
+      { itemType: FinancialItemType.Ticket, name: 'تذاكر السفر' },
+      { itemType: FinancialItemType.Visa, name: 'التأشيرة' },
+      { itemType: FinancialItemType.Insurance, name: 'التأمين الصحي' },
+      { itemType: FinancialItemType.Allowance, name: 'العلاوة اليومية' },
+      { itemType: FinancialItemType.Clothing, name: 'بدل الملابس' },
+    ];
+
+    return specs.map(spec => {
+      const configured = [...this.financialItems()]
+        .reverse()
+        .find(item => item.itemType === spec.itemType && !!item.voteCode?.trim());
+      return {
+        ...spec,
+        fundingSource: useCourseSource
+          ? course?.fundingSourceName || 'مصدر تمويل الدورة'
+          : configured?.nameAr || 'غير مضبوط في إعدادات التدريب',
+        voteCode: useCourseSource
+          ? course?.fundingSourceVoteCode || ''
+          : configured?.voteCode || '',
+      };
+    });
+  });
   costGateBlocked = computed(() => {
     const cost = this.casualCourse()?.estimatedTotalCost;
     return cost === null || cost === undefined || cost <= 0;
@@ -105,9 +148,24 @@ export class CasualCourseApprovalComponent implements OnInit {
     return CASUAL_COURSE_STATUS_OPTIONS.find(o => o.value === s)?.cssClass ?? '';
   });
 
-  grandTotal = computed(() =>
-    this.financials().reduce((sum, f) => sum + (f.estimatedAmountOMR ?? 0), 0),
-  );
+  courseTypeLabel = computed(() => {
+    switch (this.casualCourse()?.courseType) {
+      case CourseType.ExternalLocal: return 'خارجية محلية';
+      case CourseType.ExternalInternational: return 'خارجية دولية';
+      default: return '—';
+    }
+  });
+
+  priorityLabel = computed(() => {
+    switch (this.casualCourse()?.priority) {
+      case 1: return 'عالية جدًا';
+      case 2: return 'عالية';
+      case 3: return 'متوسطة';
+      case 4: return 'منخفضة';
+      case 5: return 'منخفضة جدًا';
+      default: return '—';
+    }
+  });
 
   async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id') ?? '';
@@ -140,6 +198,15 @@ export class CasualCourseApprovalComponent implements OnInit {
       const detail = await firstValueFrom(this.service.getDetail(this.courseId()));
       this.casualCourse.set(detail);
 
+      if (detail.courseType === CourseType.ExternalInternational) {
+        const items = await firstValueFrom(
+          this.financialItemService.getList({ maxResultCount: 500, isActive: true }),
+        );
+        this.financialItems.set(items.items ?? []);
+      } else {
+        this.financialItems.set([]);
+      }
+
       const isUgmStage = detail.status === CasualCourseStatus.Submitted;
       if (isUgmStage) {
         // Patch 5 — Submitted = pre-scenario; render the calculator preview instead
@@ -155,12 +222,7 @@ export class CasualCourseApprovalComponent implements OnInit {
             courseCost: detail.courseCost ?? null,
           })));
         }
-        this.financials.set([]);
       } else {
-        const financials = await firstValueFrom(
-          this.financialService.getListByCasualCourse(this.courseId()),
-        );
-        this.financials.set(financials);
         this.preview.set(null);
       }
     } catch (e: unknown) {
@@ -170,21 +232,12 @@ export class CasualCourseApprovalComponent implements OnInit {
     }
   }
 
-  rateSourceLabel(source: string | undefined): string {
-    if (source === 'RankOverride') return 'معدل الرتبة';
-    if (source === 'DefaultAmount') return 'افتراضي';
-    if (source === 'FromUTMForm') return 'من UTM';
-    return source ?? '—';
-  }
-
-  isFromUtmForm(source: string | undefined): boolean {
-    return source === 'FromUTMForm';
-  }
-
   previewGrandTotal = computed(() => this.preview()?.totalOMR ?? 0);
 
-  isFlatItem(fin: CasualCourseFinancialItemDto): boolean {
-    return !fin.isPerNominee;
+  formatDate(value?: string | null): string {
+    if (!value) return '—';
+    const [year, month, day] = value.substring(0, 10).split('-');
+    return year && month && day ? `${day}/${month}/${year}` : value;
   }
 
   isExpanded(id: string | undefined): boolean {
@@ -194,14 +247,6 @@ export class CasualCourseApprovalComponent implements OnInit {
   toggleExpand(id: string | undefined): void {
     if (!id) return;
     this.expandedItemId.update(cur => (cur === id ? null : id));
-  }
-
-  effectiveDaysExplainer(fin: CasualCourseFinancialItemDto): string {
-    if (!fin.isPerDay) return 'ليس لكل يوم';
-    const days = this.casualCourse()?.durationDays ?? 0;
-    const before = fin.extraDaysBefore ?? 0;
-    const after = fin.extraDaysAfter ?? 0;
-    return `${days} + ${before} + ${after} = ${fin.effectiveDays ?? days + before + after}`;
   }
 
   async onApprove(): Promise<void> {

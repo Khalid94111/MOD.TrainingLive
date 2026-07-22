@@ -15,6 +15,7 @@ import type {
 import { TenantCourseService } from 'src/app/proxy/training/tenant-courses/tenant-course.service';
 import type { TenantCourseDto } from 'src/app/proxy/training/tenant-courses/dtos/models';
 import { HrLookupService } from 'src/app/proxy/training/hr-integration/hr-lookup.service';
+import type { EmployeeLookupDto } from 'src/app/proxy/training/hr-integration/models';
 
 import { CasualCourseStatus, CourseType, TrainingLocalizationHelper } from '../../shared';
 import { NominationPickerComponent } from '../../shared/components/nomination-picker/nomination-picker.component';
@@ -60,6 +61,7 @@ export class CasualCourseRequestComponent implements OnInit {
   preview = signal<CalculatePreviewDto | null>(null);
   previewLoading = signal(false);
   loading = signal(false);
+  saving = signal(false);
   submitError = signal<string | null>(null);
   notesOpen = signal(false);
   expandedItemId = signal<string | null>(null);
@@ -68,7 +70,7 @@ export class CasualCourseRequestComponent implements OnInit {
   currentUnitId = signal<string>('');
 
   fTenantCourseId = signal<string>('');
-  fCourseType = signal<CourseType>(CourseType.Internal);
+  fCourseType = signal<CourseType>(CourseType.ExternalLocal);
   fPriority = signal<number>(3);
   fJustification = signal<string>('');
   fDescriptionAr = signal<string>('');
@@ -91,8 +93,50 @@ export class CasualCourseRequestComponent implements OnInit {
   isReturned = computed(() => this.casualCourse()?.status === CasualCourseStatus.ReturnedToCreator);
   showFundingSource = computed(() => this.fCourseType() !== CourseType.Internal);
   nomineeCount = computed(() => this.fNomineeIds().length);
+  initialNomineeEmployees = computed<Partial<EmployeeLookupDto>[]>(() =>
+    (this.casualCourse()?.nominations ?? []).map(nomination => ({
+      id: nomination.employeeId,
+      fullNameAr: nomination.employeeName ?? '',
+      rankNameAr: nomination.rankName ?? '',
+      serviceNumber: nomination.serviceNumber ?? '',
+    })),
+  );
   hasPreview = computed(() => (this.preview()?.items?.length ?? 0) > 0);
   grandTotal = computed(() => this.preview()?.totalOMR ?? 0);
+  canSaveDraft = computed(() =>
+    !!this.fTenantCourseId()
+    && !!this.currentUnitId()
+    && this.fDurationDays() > 0
+    && !!this.fDateFrom()
+    && !!this.fDateTo());
+
+  readinessChecks = computed(() => {
+    const checks = [
+      { label: 'اختيار الدورة', done: !!this.fTenantCourseId() },
+      { label: 'المبرر', done: this.fJustification().trim().length > 0 },
+      {
+        label: 'المدة والتاريخ',
+        done: this.fDurationDays() > 0 && !!this.fDateFrom() && !!this.fDateTo(),
+      },
+      { label: 'المرشحون', done: this.fNomineeIds().length > 0 },
+    ];
+
+    if (this.fCourseType() !== CourseType.Internal) {
+      checks.splice(3, 0, {
+        label: 'بيانات التمويل',
+        done: this.fFundingSourceName().trim().length > 0
+          && this.fFundingSourceVoteCode().trim().length > 0,
+      });
+    }
+
+    return checks;
+  });
+  readinessPercent = computed(() => {
+    const checks = this.readinessChecks();
+    return checks.length === 0
+      ? 0
+      : Math.round((checks.filter(check => check.done).length / checks.length) * 100);
+  });
 
   computedDateTo = computed(() => {
     const from = this.fDateFrom();
@@ -277,6 +321,10 @@ export class CasualCourseRequestComponent implements OnInit {
     this.fCourseType.set(+value as CourseType);
   }
 
+  selectCourseType(type: CourseType): void {
+    this.fCourseType.set(type);
+  }
+
   onCourseCostInput(raw: string): void {
     const trimmed = raw.trim();
     if (trimmed === '') {
@@ -353,8 +401,9 @@ export class CasualCourseRequestComponent implements OnInit {
   }
 
   async onSave(isDraft: boolean): Promise<void> {
-    if (!isDraft && !this.canSubmit()) return;
+    if (this.saving() || !this.canSaveDraft() || (!isDraft && !this.canSubmit())) return;
     this.submitError.set(null);
+    this.saving.set(true);
     const dto = this.buildDto();
 
     try {
@@ -397,6 +446,8 @@ export class CasualCourseRequestComponent implements OnInit {
       this.router.navigate(['/training/casual-courses']);
     } catch (e: unknown) {
       this.submitError.set(this.mapError(e));
+    } finally {
+      this.saving.set(false);
     }
   }
 

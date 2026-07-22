@@ -20,21 +20,59 @@
 
   <!-- Selected chips -->
   @if (selectedEmployees().length > 0) {
-    <div class="selected-chips">
-      @for (e of selectedEmployees(); track e.id) {
-        <span class="chip">
-          @if (e.rankNameAr) {
-            <span class="chip-rank" [title]="e.rankNameAr">{{ e.rankNameAr }}</span>
-          }
-          <span class="chip-name">{{ e.fullNameAr || '—' }}</span>
-          @if (e.serviceNumber) {
-            <span class="chip-svc">{{ e.serviceNumber }}</span>
-          }
-          <button type="button" class="chip-remove" (click)="removeEmployee(e.id!, $event)" aria-label="إزالة">×</button>
-        </span>
-      }
-      <button type="button" class="btn btn-ghost btn-sm clear-all" (click)="clearAll()">مسح الكل</button>
-    </div>
+    @if (displayMode() === 'table') {
+      <div class="selected-table-wrap">
+        <table class="selected-table">
+          <thead>
+            <tr>
+              <th class="row-number">#</th>
+              <th>الرقم الوظيفي</th>
+              <th>اسم المرشح</th>
+              <th>الرتبة</th>
+              <th class="row-action">إجراء</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (e of selectedEmployees(); track e.id; let index = $index) {
+              <tr>
+                <td class="row-number">{{ index + 1 }}</td>
+                <td><span class="service-number">{{ e.serviceNumber || '—' }}</span></td>
+                <td class="employee-name">{{ e.fullNameAr || '—' }}</td>
+                <td><span class="rank-badge">{{ e.rankNameAr || '—' }}</span></td>
+                <td class="row-action">
+                  <button type="button"
+                          class="remove-row"
+                          (click)="removeEmployee(e.id!, $event)"
+                          [attr.aria-label]="'إزالة ' + (e.fullNameAr || 'المرشح')">
+                    إزالة
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        <div class="selected-table-footer">
+          <span>{{ selectedCount() }} مرشح مختار</span>
+          <button type="button" class="clear-table" (click)="clearAll()">إزالة الجميع</button>
+        </div>
+      </div>
+    } @else {
+      <div class="selected-chips">
+        @for (e of selectedEmployees(); track e.id) {
+          <span class="chip">
+            @if (e.rankNameAr) {
+              <span class="chip-rank" [title]="e.rankNameAr">{{ e.rankNameAr }}</span>
+            }
+            <span class="chip-name">{{ e.fullNameAr || '—' }}</span>
+            @if (e.serviceNumber) {
+              <span class="chip-svc">{{ e.serviceNumber }}</span>
+            }
+            <button type="button" class="chip-remove" (click)="removeEmployee(e.id!, $event)" aria-label="إزالة">×</button>
+          </span>
+        }
+        <button type="button" class="btn btn-ghost btn-sm clear-all" (click)="clearAll()">مسح الكل</button>
+      </div>
+    }
   }
 
   <!-- Service number input row -->

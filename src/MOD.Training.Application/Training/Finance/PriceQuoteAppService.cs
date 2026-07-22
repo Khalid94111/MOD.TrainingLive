@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using MOD.Training.Training;
+using MOD.Training.Training.CasualCourses;
 using MOD.Training.Training.Enums;
 using MOD.Training.Training.Finance.Dtos;
 using MOD.Training.Training.Hr;
@@ -22,6 +23,8 @@ public class PriceQuoteAppService(
     IRepository<TrainingProvider, Guid> providerRepository,
     IRepository<CourseSession, Guid> sessionRepository,
     IRepository<SessionNomination, Guid> sessionNominationRepository,
+    IRepository<CasualCourse, Guid> casualCourseRepository,
+    IRepository<CasualCourseNomination, Guid> casualCourseNominationRepository,
     IRepository<GeographicalLocation, Guid> geoRepository,
     PriceQuoteToDtoMapper toDtoMapper,
     CreateUpdatePriceQuoteToEntityMapper toEntityMapper)
@@ -64,11 +67,11 @@ public class PriceQuoteAppService(
     public async Task<PriceQuoteDto> CreateAsync(CreateUpdatePriceQuoteDto input)
     {
         ValidatePolymorphicParent(input);
-        await EnsureSessionQuotesOpenAsync(input.SessionId);
+        await EnsureQuotesOpenAsync(input.SessionId, input.CasualCourseId);
         await ValidateCityInCountryAsync(input.CountryId, input.CityId);
 
         var entity = toEntityMapper.Map(input);
-        await NormalizeSessionPricingAsync(entity);
+        await NormalizePricingAsync(entity);
 
         await repository.InsertAsync(entity, autoSave: true);
 
@@ -82,7 +85,7 @@ public class PriceQuoteAppService(
     {
         ValidatePolymorphicParent(input);
         var entity = await repository.GetAsync(id);
-        await EnsureSessionQuotesOpenAsync(entity.SessionId);
+        await EnsureQuotesOpenAsync(entity.SessionId, entity.CasualCourseId);
         if (entity.IsSelected)
             throw new BusinessException("Training:PriceQuote:CannotEditSelected");
         await ValidateCityInCountryAsync(input.CountryId, input.CityId);
@@ -101,9 +104,7 @@ public class PriceQuoteAppService(
         entity.IsSelected = isSelectedOriginal;
         entity.Status = statusOriginal;
 
-        if (entity.CasualCourseId.HasValue && entity.QuotedPriceOMR <= 0 && entity.QuotedPrice > 0)
-            entity.QuotedPriceOMR = entity.QuotedPrice;
-        await NormalizeSessionPricingAsync(entity);
+        await NormalizePricingAsync(entity);
 
         await repository.UpdateAsync(entity, autoSave: true);
 
@@ -116,7 +117,7 @@ public class PriceQuoteAppService(
     public async Task DeleteAsync(Guid id)
     {
         var entity = await repository.GetAsync(id);
-        await EnsureSessionQuotesOpenAsync(entity.SessionId);
+        await EnsureQuotesOpenAsync(entity.SessionId, entity.CasualCourseId);
         if (entity.IsSelected)
             throw new BusinessException("Training:PriceQuote:CannotEditSelected");
 
@@ -127,7 +128,7 @@ public class PriceQuoteAppService(
     public async Task ApproveAsync(Guid id)
     {
         var entity = await repository.GetAsync(id);
-        await EnsureSessionQuotesOpenAsync(entity.SessionId);
+        await EnsureQuotesOpenAsync(entity.SessionId, entity.CasualCourseId);
         entity.Status = ApprovalStatus.Approved;
         await repository.UpdateAsync(entity, autoSave: true);
     }
@@ -136,7 +137,7 @@ public class PriceQuoteAppService(
     public async Task RejectAsync(Guid id)
     {
         var entity = await repository.GetAsync(id);
-        await EnsureSessionQuotesOpenAsync(entity.SessionId);
+        await EnsureQuotesOpenAsync(entity.SessionId, entity.CasualCourseId);
         entity.Status = ApprovalStatus.Rejected;
         await repository.UpdateAsync(entity, autoSave: true);
     }
@@ -151,24 +152,41 @@ public class PriceQuoteAppService(
             throw new BusinessException("Training:PriceQuote:OnePolymorphicParentRequired");
     }
 
-    private async Task EnsureSessionQuotesOpenAsync(Guid? sessionId)
+    private async Task EnsureQuotesOpenAsync(Guid? sessionId, Guid? casualCourseId)
     {
-        if (!sessionId.HasValue) return;
+        if (sessionId.HasValue)
+        {
+            var session = await sessionRepository.GetAsync(sessionId.Value);
+            if (session.SelectedPriceQuoteId.HasValue)
+                throw new BusinessException("Training:PriceQuote:SessionQuotesLocked");
+            return;
+        }
 
-        var session = await sessionRepository.GetAsync(sessionId.Value);
-        if (session.SelectedPriceQuoteId.HasValue)
-            throw new BusinessException("Training:PriceQuote:SessionQuotesLocked");
+        if (casualCourseId.HasValue)
+        {
+            var course = await casualCourseRepository.GetAsync(casualCourseId.Value);
+            if (course.SelectedPriceQuoteId.HasValue)
+                throw new BusinessException("Training:PriceQuote:SessionQuotesLocked");
+        }
     }
 
-    private async Task NormalizeSessionPricingAsync(PriceQuote entity)
+    private async Task NormalizePricingAsync(PriceQuote entity)
     {
-        if (!entity.SessionId.HasValue) return;
         if (entity.QuotedPrice <= 0)
             throw new BusinessException("Training:PriceQuote:InvalidQuotedPrice");
 
-        var nominations = await sessionNominationRepository.GetQueryableAsync();
-        entity.ParticipantsCount = await AsyncExecuter.CountAsync(
-            nominations.Where(nomination => nomination.SessionId == entity.SessionId.Value));
+        if (entity.SessionId.HasValue)
+        {
+            var nominations = await sessionNominationRepository.GetQueryableAsync();
+            entity.ParticipantsCount = await AsyncExecuter.CountAsync(
+                nominations.Where(nomination => nomination.SessionId == entity.SessionId.Value));
+        }
+        else
+        {
+            var nominations = await casualCourseNominationRepository.GetQueryableAsync();
+            entity.ParticipantsCount = await AsyncExecuter.CountAsync(
+                nominations.Where(nomination => nomination.CasualCourseId == entity.CasualCourseId!.Value));
+        }
 
         if (entity.PricingType == PricingType.PerPerson && entity.ParticipantsCount == 0)
             throw new BusinessException("Training:PriceQuote:PerPersonRequiresNominees");

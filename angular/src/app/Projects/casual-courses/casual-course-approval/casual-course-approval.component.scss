@@ -87,9 +87,113 @@
   .cost-bad { color: #b91c1c; }
 }
 
+.course-type-badge,
+.priority-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.course-type-badge {
+  color: #0369a1;
+  background: #e0f2fe;
+
+  &.international {
+    color: #6d28d9;
+    background: #ede9fe;
+  }
+}
+
+.priority-badge {
+  color: #92400e;
+  background: #fef3c7;
+}
+
+.period-summary { grid-column: span 1; }
+
+.date-range {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  direction: ltr;
+  font-variant-numeric: tabular-nums;
+}
+
+.date-separator {
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+.international-notice {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-top: 16px;
+  padding: 11px 13px;
+  border: 1px solid #ddd6fe;
+  border-radius: 10px;
+  background: #f5f3ff;
+  color: #5b21b6;
+
+  > i { font-size: 1.1rem; }
+  > div { display: flex; flex-direction: column; gap: 2px; }
+  strong { font-size: 0.82rem; }
+  span { color: #6d28d9; font-size: 0.76rem; }
+}
+
+.additional-details {
+  margin-top: 14px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 12px;
+
+  summary {
+    width: fit-content;
+    color: #475569;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+}
+
+.additional-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 11px;
+
+  > div {
+    padding: 11px 13px;
+    border-radius: 9px;
+    background: #f8fafc;
+  }
+
+  span { color: #64748b; font-size: 0.72rem; font-weight: 800; }
+  p { margin: 5px 0 0; color: #334155; font-size: 0.82rem; line-height: 1.7; white-space: pre-line; }
+}
+
 .total-row {
   font-weight: 700;
   background: #f8fafc;
+}
+
+.nominees-card .section-meta {
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.nominees-table .row-number { color: #94a3b8; width: 42px; }
+
+.service-number {
+  direction: ltr;
+  display: inline-block;
+  color: #1d4ed8;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
 .action-bar {
@@ -98,6 +202,86 @@
   gap: 10px;
   flex-wrap: wrap;
   padding: 12px 0;
+}
+
+.section-subtitle {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 0.76rem;
+}
+
+.scenario-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.funding-table-wrap {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+.funding-table {
+  margin: 0;
+
+  td { vertical-align: middle; }
+  td small {
+    display: block;
+    margin-top: 2px;
+    color: #94a3b8;
+    font-size: 0.7rem;
+  }
+  .course-fee-row { background: #f8fafc; }
+  .row-missing { background: #fff7ed; }
+}
+
+.vote-code {
+  direction: ltr;
+  display: inline-block;
+  padding: 4px 8px;
+  border: 1px solid #bfdbfe;
+  border-radius: 7px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.missing-code {
+  color: #b45309;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.travel-pending-chip {
+  display: inline-block;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.financial-total-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 16px;
+  margin-top: 12px;
+  border-radius: 12px;
+  background: #0f172a;
+  color: #f8fafc;
+
+  span { font-size: 0.8rem; font-weight: 700; }
+  strong { font-size: 1.05rem; }
 }
 
 .alert-sub {
@@ -197,6 +381,9 @@
 
 @media (max-width: 768px) {
   .summary-grid { grid-template-columns: 1fr; }
+  .period-summary { grid-column: auto; }
+  .additional-details-grid { grid-template-columns: 1fr; }
   .fin-head { flex-direction: column; align-items: flex-start; }
   .fin-head-right { align-self: stretch; justify-content: space-between; }
+  .section-header { align-items: flex-start; gap: 10px; }
 }

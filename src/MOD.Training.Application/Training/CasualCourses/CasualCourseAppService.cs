@@ -34,12 +34,9 @@ public class CasualCourseAppService(
     // Execution-stage compute on GetList reads these aggregates per post-approval course.
     IRepository<MOD.Training.Training.Payments.CoursePayment, Guid> coursePaymentRepo,
     IRepository<MOD.Training.Training.Payments.TravelAllowancePayment, Guid> travelAllowanceRepo,
-    IRepository<MOD.Training.Training.Payments.BudgetReallocation, Guid> reallocationRepo,
     IOrganizationUnitRepository orgUnitRepository,
     CasualCourseValidator validator,
-    FundingScenarioSourceResolver scenarioSourceResolver,
     FinancialItemDefaultResolver rateResolver,
-    CasualCourseRankBreakdownManager rankManager,
     PriceQuoteValidator priceQuoteValidator,
     EmployeeResolver employeeResolver,
     CourseNameResolver courseNameResolver,
@@ -52,6 +49,15 @@ public class CasualCourseAppService(
     ITrainingTravelGateway travelGateway)
     : ApplicationService, ICasualCourseAppService
 {
+    private static readonly FinancialItemType[] RequiredTravelFinancialItemTypes =
+    [
+        FinancialItemType.Ticket,
+        FinancialItemType.Visa,
+        FinancialItemType.Insurance,
+        FinancialItemType.Allowance,
+        FinancialItemType.Clothing
+    ];
+
     // ─── READ ──────────────────────────────────────────────────────────
 
     public async Task<CasualCourseDto> GetAsync(Guid id)
@@ -95,6 +101,7 @@ public class CasualCourseAppService(
             SelectedPriceQuoteId = baseDto.SelectedPriceQuoteId,
             ActualStartDate = baseDto.ActualStartDate,
             ActualEndDate = baseDto.ActualEndDate,
+            ExecutionStatus = baseDto.ExecutionStatus,
             Status = baseDto.Status,
             ReturnedFromStatus = baseDto.ReturnedFromStatus,
             IsReturned = baseDto.IsReturned,
@@ -116,7 +123,7 @@ public class CasualCourseAppService(
             FinancialItems = (entity.FinancialItems ?? new List<CasualCourseFinancialItem>())
                 .Select(f => financialToDtoMapper.Map(f)).ToList(),
             Nominations = await HydrateNominationsAsync(entity.Nominations ?? new List<CasualCourseNomination>()),
-            FundingScenarioLabel = ResolveFundingScenarioLabel(baseDto.FundingScenario),
+            FundingScenarioLabel = ResolveFundingScenarioLabel(baseDto.FundingScenario, baseDto.CourseType),
         };
 
         // Info Bar (Patch 1): officer/enlisted breakdown via Rank.PersonnelType.
@@ -239,13 +246,6 @@ public class CasualCourseAppService(
             .GroupBy(x => x.CasualCourseId!.Value)
             .ToDictionary(g => g.Key, g => g.ToList());
 
-        var raQ = await reallocationRepo.GetQueryableAsync();
-        var reallocations = await AsyncExecuter.ToListAsync(
-            raQ.Where(x => thApprovedIds.Contains(x.CasualCourseId)));
-        var reallocationsByCourseId = reallocations
-            .GroupBy(x => x.CasualCourseId)
-            .ToDictionary(g => g.Key, g => g.ToList());
-
         // Walk dtos and entities in parallel — same order, same length.
         for (var i = 0; i < dtos.Count; i++)
         {
@@ -256,11 +256,9 @@ public class CasualCourseAppService(
             var travelCompleted = travelCompletedByCourseId.GetValueOrDefault(entity.Id);
             coursePaymentByCourseId.TryGetValue(entity.Id, out var payment);
             allowancesByCourseId.TryGetValue(entity.Id, out var allowances);
-            reallocationsByCourseId.TryGetValue(entity.Id, out var entityReallocations);
-
             var nomineesCount = dto.NomineesCount;
             var (stage, current, total) = ComputeExecutionStage(
-                entity, travelCompleted, payment, allowances, entityReallocations, nomineesCount);
+                entity, travelCompleted, payment, allowances, nomineesCount);
             dto.ExecutionStage = stage;
             dto.ExecutionStageProgressCurrent = current;
             dto.ExecutionStageProgressTotal = total;
@@ -277,9 +275,17 @@ public class CasualCourseAppService(
         bool travelCompleted,
         MOD.Training.Training.Payments.CoursePayment? payment,
         List<MOD.Training.Training.Payments.TravelAllowancePayment>? allowances,
-        List<MOD.Training.Training.Payments.BudgetReallocation>? reallocations,
         int nomineesCount)
     {
+        if (course.ExecutionStatus == SessionStatus.Completed
+            || course.ExecutionStatus == SessionStatus.FinanciallyClosed)
+        {
+            return (ExecutionStage.Completed, null, null);
+        }
+
+        if (course.ExecutionStatus == SessionStatus.InProgress)
+            return (ExecutionStage.InProgress, null, null);
+
         // Internal courses have no financial execution workflow.
         if (course.CourseType == CourseType.Internal)
         {
@@ -304,15 +310,9 @@ public class CasualCourseAppService(
         if (payment == null || payment.Status != PaymentStatus.Confirmed)
             return (ExecutionStage.AwaitingCoursePayment, null, null);
 
-        // Scenario 1 (funding source covers everything) generates no reallocations.
-        if (course.FundingScenario == FundingScenario.FundingSourceCoversAll)
-            return (ExecutionStage.FinanciallyComplete, null, null);
-
-        var totalReallocations = reallocations?.Count ?? 0;
-        var approvedReallocations = reallocations?.Count(r => r.Status == ReallocationStatus.Approved) ?? 0;
-        if (totalReallocations > 0 && approvedReallocations < totalReallocations)
-            return (ExecutionStage.AwaitingReallocationApproval, approvedReallocations, totalReallocations);
-
+        // Casual-course travel costs are executed by the Travel module. Training only
+        // records the course invoice, so neither supported funding mode creates a
+        // budget-reallocation approval step here.
         return (ExecutionStage.FinanciallyComplete, null, null);
     }
 
@@ -334,10 +334,13 @@ public class CasualCourseAppService(
             })
             .ToList();
 
-        // Preview uses all active financial items; no course-type defaults.
+        // Financial review owns only the course fee. Travel expenses are calculated by
+        // the Travel module after approval and are therefore not estimated here.
         var fiQ = await financialItemRepo.GetQueryableAsync();
         var financialItems = await AsyncExecuter.ToListAsync(
-            fiQ.Where(x => x.IsActive).OrderBy(x => x.NameAr));
+            fiQ.Where(x => x.IsActive && x.ItemType == FinancialItemType.CourseCost)
+                .OrderBy(x => x.CreationTime)
+                .Take(1));
 
         var items = new List<PreviewItemDto>(financialItems.Count);
         decimal grandTotal = 0m;
@@ -414,6 +417,8 @@ public class CasualCourseAppService(
     [Authorize(TrainingPermissions.CasualCourses.Create)]
     public async Task<CasualCourseDto> CreateAsync(CreateUpdateCasualCourseDto input)
     {
+        validator.ValidateCourseType(input.CourseType);
+
         if (input.EstimatedDateFrom > input.EstimatedDateTo)
             throw new BusinessException("Training:CasualCourse:DateRangeInvalid");
 
@@ -452,9 +457,8 @@ public class CasualCourseAppService(
                 autoSave: true);
         }
 
-        // Patch 5 — financial rows are NOT created here. UTM's view is a read-only calculator
-        // (POST /calculate-preview); rows materialise when Staff picks a scenario via
-        // AssignScenarioAsync. CourseCost on the entity carries UTM's seed value forward.
+        // Financial rows are not created here. CourseCost is the Training-owned amount;
+        // Travel calculates its own expenses after approval.
 
         return await BuildDtoAsync(entity);
     }
@@ -462,6 +466,8 @@ public class CasualCourseAppService(
     [Authorize(TrainingPermissions.CasualCourses.Edit)]
     public async Task<CasualCourseDto> UpdateAsync(Guid id, CreateUpdateCasualCourseDto input)
     {
+        validator.ValidateCourseType(input.CourseType);
+
         var entity = await repository.GetAsync(id);
         await unitScope.EnsureCanAccessAsync(entity);
 
@@ -488,9 +494,7 @@ public class CasualCourseAppService(
 
         await DiffNomineesAsync(entity, input.NomineeEmployeeIds);
 
-        // Patch 5 — no financial rows exist during Draft / ReturnedToCreator (UpdateAsync's
-        // only valid statuses), so nothing to recompute on nominee or duration changes. Rows
-        // are created later by Staff via AssignScenarioAsync.
+        // No derived financial rows need recomputing. Travel expenses are owned by Travel.
 
         return await BuildDtoAsync(entity);
     }
@@ -565,6 +569,12 @@ public class CasualCourseAppService(
             throw new BusinessException("Training:CasualCourse:InvalidStatusTransition");
 
         entity.Status = CasualCourseStatus.UnderReview;
+        if (entity.CourseType == CourseType.ExternalLocal)
+        {
+            // Local courses have no Travel handoff, so there is no funding choice.
+            entity.FundingScenario = FundingScenario.FundingSourceCoversAll;
+            entity.EstimatedTotalCost = entity.CourseCost;
+        }
         await repository.UpdateAsync(entity, autoSave: true);
         return await BuildDtoAsync(entity);
     }
@@ -576,51 +586,58 @@ public class CasualCourseAppService(
         if (entity.Status != CasualCourseStatus.UnderReview)
             throw new BusinessException("Training:CasualCourse:InvalidStatusTransition");
 
-        // Step 1 — commit the scenario before doing anything that depends on it.
-        // (Subsequent picks land here too — the picker on PAGE 4.3 fires with Commit=false
-        // on each click; only the final click sets Commit=true to advance status.)
-        entity.FundingScenario = input.FundingScenario;
+        var scenario = entity.CourseType == CourseType.ExternalLocal
+            ? FundingScenario.FundingSourceCoversAll
+            : input.FundingScenario;
+        if (scenario != FundingScenario.FundingSourceCoversAll
+            && scenario != FundingScenario.FundingSourceCoversCourse)
+        {
+            throw new BusinessException("Training:CasualCourse:UnknownFundingScenario");
+        }
+
+        // Both supported modes fund the course fee from the source entered on the
+        // request. Only the vote codes sent to Travel differ between the two modes.
+        entity.FundingScenario = scenario;
+        entity.EstimatedTotalCost = entity.CourseCost;
         await repository.UpdateAsync(entity, autoSave: true);
 
-        // Step 2 — scenario change: re-derive Source on every parent. Staff's manual rate
-        // edits on rank rows are preserved.
-        var parentQ = await financialRepo.GetQueryableAsync();
-        var parents = await AsyncExecuter.ToListAsync(parentQ.Where(x => x.CasualCourseId == id));
-        var fiIds = parents.Select(p => p.FinancialItemId).Distinct().ToList();
-        var fiQ = await financialItemRepo.GetQueryableAsync();
-        var fis = (await AsyncExecuter.ToListAsync(fiQ.Where(x => fiIds.Contains(x.Id))))
-            .ToDictionary(x => x.Id);
-
-        foreach (var parent in parents)
-        {
-            if (fis.TryGetValue(parent.FinancialItemId, out var fi))
-            {
-                parent.Source = scenarioSourceResolver.Resolve(input.FundingScenario, fi);
-                await financialRepo.UpdateAsync(parent);
-            }
-        }
-
-        // Step 3 — apply targeted Staff adjustments (each mutates one rank row and refreshes
-        // parent + course totals).
-        if (input.Adjustments != null && input.Adjustments.Count > 0)
-        {
-            foreach (var adj in input.Adjustments)
-            {
-                await rankManager.UpdateRateAsync(adj.CasualCourseFinancialItemRankId, adj.NewRatePerUnitOMR);
-            }
-        }
-
-        // Step 4 — make sure the course total is up to date for both the auto-fill-only
-        // path (no adjustments) and the no-adjustments-on-existing-rows path.
-        await rankManager.RefreshCourseTotalAsync(id);
-
-        entity = await repository.GetAsync(id);
-
-        // Step 5 — commit if requested.
+        // Commit if requested.
         if (input.Commit)
         {
             if (!entity.EstimatedTotalCost.HasValue || entity.EstimatedTotalCost.Value <= 0)
                 throw new BusinessException("Training:CasualCourse:CostRequired");
+
+            if (entity.CourseType == CourseType.ExternalInternational)
+            {
+                if (scenario == FundingScenario.FundingSourceCoversAll
+                    && string.IsNullOrWhiteSpace(entity.FundingSourceVoteCode))
+                {
+                    throw new BusinessException("Training:CasualCourse:FundingSourceVoteCodeRequired");
+                }
+
+                if (scenario == FundingScenario.FundingSourceCoversCourse)
+                {
+                    var travelItemQuery = await financialItemRepo.GetQueryableAsync();
+                    var configuredTypes = (await AsyncExecuter.ToListAsync(travelItemQuery.Where(x =>
+                            x.IsActive
+                            && x.ItemType.HasValue
+                            && RequiredTravelFinancialItemTypes.Contains(x.ItemType.Value)
+                            && !string.IsNullOrWhiteSpace(x.VoteCode))))
+                        .Select(x => x.ItemType!.Value)
+                        .Distinct()
+                        .ToHashSet();
+                    var missingTypes = RequiredTravelFinancialItemTypes
+                        .Where(type => !configuredTypes.Contains(type))
+                        .ToList();
+                    if (missingTypes.Count > 0)
+                    {
+                        throw new UserFriendlyException(string.Join(
+                            Environment.NewLine,
+                            missingTypes.Select(type => L["Training:SessionTravel:VoteCodeRequired", type.ToString()])));
+                    }
+                }
+            }
+
             entity.Status = CasualCourseStatus.StaffReviewed;
             await repository.UpdateAsync(entity, autoSave: true);
         }
@@ -649,6 +666,12 @@ public class CasualCourseAppService(
 
         var entity = await repository.GetAsync(id);
         entity.Status = CasualCourseStatus.THApproved;
+        if (entity.CourseType == CourseType.Internal)
+        {
+            entity.ActualStartDate = entity.EstimatedDateFrom;
+            entity.ActualEndDate = entity.EstimatedDateTo;
+            entity.ExecutionStatus = SessionStatus.Scheduled;
+        }
         await repository.UpdateAsync(entity, autoSave: true);
 
         await AppendNoteIfPresentAsync(id, note, isReturnReason: false);
@@ -730,6 +753,8 @@ public class CasualCourseAppService(
 
         if (entity.Status != CasualCourseStatus.THApproved)
             throw new BusinessException("Training:CasualCourse:NotApprovedYet");
+        if (entity.SelectedPriceQuoteId.HasValue)
+            throw new BusinessException("Training:PriceQuote:SessionQuotesLocked");
 
         if (input.ActualEndDate < input.ActualStartDate)
             throw new BusinessException("Training:CasualCourse:InvalidActualDates");
@@ -750,14 +775,56 @@ public class CasualCourseAppService(
 
         var newQuote = await priceQuoteRepo.GetAsync(input.PriceQuoteId);
         newQuote.IsSelected = true;
+        if (newQuote.TotalPrice.HasValue && newQuote.TotalPrice.Value > 0)
+            newQuote.QuotedPriceOMR = newQuote.TotalPrice.Value;
         await priceQuoteRepo.UpdateAsync(newQuote);
 
         entity.SelectedPriceQuoteId = input.PriceQuoteId;
         entity.ActualStartDate = input.ActualStartDate;
         entity.ActualEndDate = input.ActualEndDate;
+        entity.ExecutionStatus = SessionStatus.Scheduled;
 
         await repository.UpdateAsync(entity, autoSave: true);
 
+        return await BuildDtoAsync(entity);
+    }
+
+    // ─── EXECUTION ─────────────────────────────────────────────────────
+
+    [Authorize(TrainingPermissions.CourseSession.MarkInProgress)]
+    public async Task<CasualCourseDto> MarkInProgressAsync(Guid id)
+    {
+        var entity = await repository.GetAsync(id);
+        await unitScope.EnsureCanAccessAsync(entity);
+
+        if (entity.Status != CasualCourseStatus.THApproved
+            || entity.ExecutionStatus != SessionStatus.Scheduled)
+        {
+            throw new BusinessException("Training:CasualCourse:InvalidStatusTransition");
+        }
+
+        if (!await IsReadyForExecutionAsync(entity))
+            throw new BusinessException("Training:CasualCourse:CompletePreviousStages");
+
+        entity.ExecutionStatus = SessionStatus.InProgress;
+        await repository.UpdateAsync(entity, autoSave: true);
+        return await BuildDtoAsync(entity);
+    }
+
+    [Authorize(TrainingPermissions.CourseSession.MarkCompleted)]
+    public async Task<CasualCourseDto> MarkCompletedAsync(Guid id)
+    {
+        var entity = await repository.GetAsync(id);
+        await unitScope.EnsureCanAccessAsync(entity);
+
+        if (entity.Status != CasualCourseStatus.THApproved
+            || entity.ExecutionStatus != SessionStatus.InProgress)
+        {
+            throw new BusinessException("Training:CasualCourse:InvalidStatusTransition");
+        }
+
+        entity.ExecutionStatus = SessionStatus.Completed;
+        await repository.UpdateAsync(entity, autoSave: true);
         return await BuildDtoAsync(entity);
     }
 
@@ -851,15 +918,62 @@ public class CasualCourseAppService(
         return dto;
     }
 
+    private async Task<bool> IsReadyForExecutionAsync(CasualCourse entity)
+    {
+        if (entity.CourseType == CourseType.Internal)
+            return true;
+
+        if (!entity.SelectedPriceQuoteId.HasValue)
+            return false;
+
+        if (entity.CourseType == CourseType.ExternalInternational)
+        {
+            try
+            {
+                var travel = await travelGateway.GetByTrainingCourseAsync(entity.Id);
+                if (!travel.IsCompleted) return false;
+            }
+            catch
+            {
+                return false;
+            }
+
+            var nomineeQuery = await nominationRepo.GetQueryableAsync();
+            var nomineesCount = await AsyncExecuter.CountAsync(
+                nomineeQuery.Where(x => x.CasualCourseId == entity.Id));
+            if (nomineesCount == 0) return false;
+
+            var allowanceQuery = await travelAllowanceRepo.GetQueryableAsync();
+            var confirmedAllowances = await AsyncExecuter.CountAsync(allowanceQuery.Where(x =>
+                x.CasualCourseId == entity.Id && x.Status == PaymentStatus.Confirmed));
+            if (confirmedAllowances < nomineesCount) return false;
+        }
+
+        var paymentQuery = await coursePaymentRepo.GetQueryableAsync();
+        return await AsyncExecuter.AnyAsync(paymentQuery.Where(x =>
+            x.CasualCourseId == entity.Id && x.Status == PaymentStatus.Confirmed));
+    }
+
     // Patch 1 (v4.10.1) — short Arabic label for the Info Bar; matches the wording used
     // in the funding-scenario picker dialog. Returns null when no scenario has been chosen yet.
-    private static string? ResolveFundingScenarioLabel(FundingScenario? scenario) => scenario switch
+    private static string? ResolveFundingScenarioLabel(
+        FundingScenario? scenario,
+        CourseType courseType)
     {
-        FundingScenario.FundingSourceCoversAll      => "سيناريو 1 — كامل",
-        FundingScenario.FundingSourceCoversCourse   => "سيناريو 2 — جزئي",
-        FundingScenario.FinancialItemsCoverAll      => "سيناريو 3 — مستقل",
-        _ => null,
-    };
+        if (courseType == CourseType.ExternalLocal
+            && scenario == FundingScenario.FundingSourceCoversAll)
+        {
+            return "رسوم الدورة من مصدر التمويل";
+        }
+
+        return scenario switch
+        {
+            FundingScenario.FundingSourceCoversAll      => "مصدر التمويل يغطي الدورة والسفر",
+            FundingScenario.FundingSourceCoversCourse   => "مصدر التمويل يغطي رسوم الدورة فقط",
+            FundingScenario.FinancialItemsCoverAll      => "سيناريو قديم",
+            _ => null,
+        };
+    }
 
     private async Task<List<CasualCourseNominationDto>> HydrateNominationsAsync(ICollection<CasualCourseNomination> noms)
     {
@@ -880,6 +994,7 @@ public class CasualCourseAppService(
             var dto = nominationToDtoMapper.Map(n);
             if (empMap.TryGetValue(n.EmployeeId, out var emp))
             {
+                dto.ServiceNumber = emp.ServiceNumber;
                 dto.EmployeeName = emp.FullNameAr;
                 dto.RankName = emp.Rank?.NameAr ?? "";
                 if (unitLookup.TryGetValue(emp.MainUnitId, out var un))

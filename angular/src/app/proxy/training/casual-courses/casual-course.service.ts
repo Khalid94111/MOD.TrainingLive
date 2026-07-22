@@ -79,6 +79,20 @@ export class CasualCourseService {
       body: note,
     },
     { apiName: this.apiName,...config });
+
+  markCompleted = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, CasualCourseDto>({
+      method: 'POST',
+      url: `/api/app/casual-course/${id}/mark-completed`,
+    },
+    { apiName: this.apiName,...config });
+
+  markInProgress = (id: string, config?: Partial<Rest.Config>) =>
+    this.restService.request<any, CasualCourseDto>({
+      method: 'POST',
+      url: `/api/app/casual-course/${id}/mark-in-progress`,
+    },
+    { apiName: this.apiName,...config });
   
 
   reject = (id: string, input: RejectDto, config?: Partial<Rest.Config>) =>

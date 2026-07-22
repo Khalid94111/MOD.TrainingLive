@@ -15,9 +15,20 @@ public class CasualCourseValidator(
     IRepository<CasualCourseNomination, Guid> nominationRepo)
     : DomainService
 {
+    public void ValidateCourseType(CourseType courseType)
+    {
+        if (courseType != CourseType.ExternalLocal
+            && courseType != CourseType.ExternalInternational)
+        {
+            throw new BusinessException("Training:CasualCourse:ExternalCourseTypeRequired");
+        }
+    }
+
     public async Task ValidateForSubmitAsync(Guid casualCourseId)
     {
         var cc = await casualCourseRepo.GetAsync(casualCourseId);
+
+        ValidateCourseType(cc.CourseType);
 
         if (cc.Status != CasualCourseStatus.Draft &&
             cc.Status != CasualCourseStatus.ReturnedToCreator)
@@ -29,13 +40,10 @@ public class CasualCourseValidator(
         if (cc.EstimatedDateFrom > cc.EstimatedDateTo)
             throw new BusinessException("Training:CasualCourse:DateRangeInvalid");
 
-        if (cc.CourseType != CourseType.Internal)
-        {
-            if (string.IsNullOrWhiteSpace(cc.FundingSourceName))
-                throw new BusinessException("Training:CasualCourse:FundingSourceNameRequired");
-            if (string.IsNullOrWhiteSpace(cc.FundingSourceVoteCode))
-                throw new BusinessException("Training:CasualCourse:FundingSourceVoteCodeRequired");
-        }
+        if (string.IsNullOrWhiteSpace(cc.FundingSourceName))
+            throw new BusinessException("Training:CasualCourse:FundingSourceNameRequired");
+        if (string.IsNullOrWhiteSpace(cc.FundingSourceVoteCode))
+            throw new BusinessException("Training:CasualCourse:FundingSourceVoteCodeRequired");
 
         // Patch 5 — UTM no longer enters financial rows; Staff creates them after scenario pick
         // during review. Submit no longer requires any CasualCourseFinancialItem rows to exist.

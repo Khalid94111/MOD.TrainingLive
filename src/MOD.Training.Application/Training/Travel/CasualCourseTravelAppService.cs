@@ -144,14 +144,40 @@ public class CasualCourseTravelAppService(
             blockers.Add(L["Training:SessionTravel:EmployeeNumbersRequired"]);
         }
 
-        var financialQuery = await financialItemRepo.GetQueryableAsync();
-        var financialItems = await AsyncExecuter.ToListAsync(financialQuery.Where(x =>
-            x.IsActive && x.ItemType.HasValue && RequiredFinancialItemTypes.Contains(x.ItemType.Value)));
-        var voteCodes = financialItems
-            .Where(x => !string.IsNullOrWhiteSpace(x.VoteCode))
-            .GroupBy(x => x.ItemType!.Value)
-            .ToDictionary(x => x.Key, x => x.Last().VoteCode.Trim());
-        foreach (var type in RequiredFinancialItemTypes.Where(type => !voteCodes.ContainsKey(type)))
+        var voteCodes = new Dictionary<FinancialItemType, string>();
+        if (course.FundingScenario == FundingScenario.FundingSourceCoversAll)
+        {
+            if (string.IsNullOrWhiteSpace(course.FundingSourceVoteCode))
+            {
+                blockers.Add(L["Training:CasualCourse:FundingSourceVoteCodeRequired"]);
+            }
+            else
+            {
+                var fundingSourceVoteCode = course.FundingSourceVoteCode.Trim();
+                foreach (var type in RequiredFinancialItemTypes)
+                {
+                    voteCodes[type] = fundingSourceVoteCode;
+                }
+            }
+        }
+        else if (course.FundingScenario == FundingScenario.FundingSourceCoversCourse)
+        {
+            var financialQuery = await financialItemRepo.GetQueryableAsync();
+            var financialItems = await AsyncExecuter.ToListAsync(financialQuery.Where(x =>
+                x.IsActive && x.ItemType.HasValue && RequiredFinancialItemTypes.Contains(x.ItemType.Value)));
+            voteCodes = financialItems
+                .Where(x => !string.IsNullOrWhiteSpace(x.VoteCode))
+                .GroupBy(x => x.ItemType!.Value)
+                .ToDictionary(x => x.Key, x => x.Last().VoteCode.Trim());
+        }
+        else
+        {
+            blockers.Add(L["Training:CasualCourse:ScenarioRequired"]);
+        }
+
+        foreach (var type in RequiredFinancialItemTypes.Where(type =>
+                     course.FundingScenario == FundingScenario.FundingSourceCoversCourse
+                     && !voteCodes.ContainsKey(type)))
         {
             blockers.Add(L["Training:SessionTravel:VoteCodeRequired", type.ToString()]);
         }

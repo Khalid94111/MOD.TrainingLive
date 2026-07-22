@@ -1,76 +1,35 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { LocalizationPipe, PermissionService } from '@abp/ng.core';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import {
-  DxPopupModule,
-  DxSelectBoxModule,
-  DxNumberBoxModule,
-  DxTextBoxModule,
-  DxTextAreaModule,
-  DxButtonModule,
-  DxDateBoxModule,
-} from 'devextreme-angular';
-import type { ToolbarItem } from 'devextreme/ui/popup';
+import { DxSelectBoxModule } from 'devextreme-angular';
 
+import { FundingScenario } from 'src/app/proxy/training/enums/funding-scenario.enum';
+import { PaymentStatus } from 'src/app/proxy/training/enums/payment-status.enum';
 import { CoursePaymentService } from 'src/app/proxy/training/payments/course-payment.service';
 import type {
   CoursePaymentDto,
-  CreateUpdateCoursePaymentDto,
   CoursePaymentGetListInput,
-  CoursePaymentConfirmResultDto,
 } from 'src/app/proxy/training/payments/dtos/models';
-import { PaymentStatus } from 'src/app/proxy/training/enums/payment-status.enum';
-
-import { CasualCourseService } from 'src/app/proxy/training/casual-courses';
-import type {
-  CasualCourseDto,
-  CasualCourseDetailDto,
-  CasualCourseFinancialItemDto,
-} from 'src/app/proxy/training/casual-courses/dtos/models';
-import { CasualCourseStatus } from 'src/app/proxy/training/enums/casual-course-status.enum';
-import { FundingScenario } from 'src/app/proxy/training/enums/funding-scenario.enum';
-import { FinancialAmountSource } from 'src/app/proxy/training/enums/financial-amount-source.enum';
-
-import { TrainingProviderService } from 'src/app/proxy/training/finance';
-import type { TrainingProviderDto } from 'src/app/proxy/training/finance/dtos/models';
-import { PriceQuoteService } from 'src/app/proxy/training/finance/price-quote.service';
 
 import { TrainingLocalizationHelper } from '../../shared';
 
-interface DialogState {
-  visible: boolean;
-  isEdit: boolean;
-  id: string | null;
-  current: CoursePaymentDto | null;
-}
-
-interface UploadState {
-  status: 'idle' | 'uploading' | 'uploaded' | 'error';
-  fileName: string | null;
-  fileSize: number | null;
-  progress: number;
-  errorMessage: string | null;
-}
-
-interface ForecastRow {
-  voteCode: string;
-  itemName: string;
-  amountOMR: number;
+interface FilterOption {
+  id: string;
+  label: string;
 }
 
 interface ToastState {
   visible: boolean;
   text: string;
-  kind: 'success' | 'error';
 }
 
-interface PaymentCourseOption {
-  id: string;
-  label: string;
-}
-
+/**
+ * Central read-only register for course invoices.
+ * Payment mutations belong to the source workflow (annual-plan session or
+ * casual course); this page only searches, downloads and opens that workflow.
+ */
 @Component({
   standalone: true,
   selector: 'app-course-payments',
@@ -79,263 +38,183 @@ interface PaymentCourseOption {
     './course-payments.component.scss',
     '../../shared/gtms-design.scss',
   ],
-  imports: [
-    CommonModule,
-    LocalizationPipe,
-    DxPopupModule,
-    DxSelectBoxModule,
-    DxNumberBoxModule,
-    DxTextBoxModule,
-    DxTextAreaModule,
-    DxButtonModule,
-    DxDateBoxModule,
-  ],
+  imports: [CommonModule, LocalizationPipe, DxSelectBoxModule],
 })
 export class CoursePaymentsComponent implements OnInit {
-  private paymentService = inject(CoursePaymentService);
-  private courseService = inject(CasualCourseService);
-  private providerService = inject(TrainingProviderService);
-  private quoteService = inject(PriceQuoteService);
-  private permissions = inject(PermissionService);
-  private router = inject(Router);
-  l = inject(TrainingLocalizationHelper);
+  private readonly paymentService = inject(CoursePaymentService);
+  private readonly permissions = inject(PermissionService);
+  private readonly router = inject(Router);
+  readonly l = inject(TrainingLocalizationHelper);
 
-  PaymentStatus = PaymentStatus;
-  FundingScenario = FundingScenario;
+  readonly PaymentStatus = PaymentStatus;
 
-  // ── Lookups & state ──
-  rows = signal<CoursePaymentDto[]>([]);
-  loading = signal(true);
-  approvedCourses = signal<CasualCourseDto[]>([]);
-  providers = signal<TrainingProviderDto[]>([]);
+  readonly rows = signal<CoursePaymentDto[]>([]);
+  readonly loading = signal(true);
+  readonly toast = signal<ToastState>({ visible: false, text: '' });
 
-  // ── Filters ──
-  filterCourseId = signal<string | null>(null);
-  filterProviderId = signal<string | null>(null);
-  filterSource = signal<'all' | 'session' | 'casual'>('all');
-  searchTerm = signal('');
+  readonly filterCourseId = signal<string | null>(null);
+  readonly filterProviderId = signal<string | null>(null);
+  readonly filterSource = signal<'all' | 'session' | 'casual'>('all');
+  readonly searchTerm = signal('');
 
-  // ── Permissions ──
-  canCreate = computed(() => this.permissions.getGrantedPolicy('TrainingPayments.CoursePayments.Create'));
-  canUpdate = computed(() => this.permissions.getGrantedPolicy('TrainingPayments.CoursePayments.Update'));
-  canDelete = computed(() => this.permissions.getGrantedPolicy('TrainingPayments.CoursePayments.Delete'));
-  canConfirm = computed(() => this.permissions.getGrantedPolicy('TrainingPayments.CoursePayments.Confirm'));
-  canUpload = computed(() => this.permissions.getGrantedPolicy('TrainingPayments.CoursePayments.UploadInvoice'));
-  canDownload = computed(() => this.permissions.getGrantedPolicy('TrainingPayments.CoursePayments.DownloadInvoice'));
+  readonly canDownload = computed(() =>
+    this.permissions.getGrantedPolicy('TrainingPayments.CoursePayments.DownloadInvoice'));
 
-  // ── Dialog ──
-  dialog = signal<DialogState>({ visible: false, isEdit: false, id: null, current: null });
-  dialogError = signal<string | null>(null);
-  dialogSaving = signal(false);
-  dialogCourse = signal<CasualCourseDetailDto | null>(null);
-  dialogQuoteProviderId = signal<string | null>(null);   // locked from SelectedPriceQuote when present
-  upload = signal<UploadState>({ status: 'idle', fileName: null, fileSize: null, progress: 0, errorMessage: null });
-  toast = signal<ToastState>({ visible: false, text: '', kind: 'success' });
-  isDragging = signal(false);
+  readonly totalPayments = computed(() => this.rows().length);
+  readonly draftPayments = computed(() =>
+    this.rows().filter(row => row.status === PaymentStatus.Draft).length);
+  readonly confirmedPayments = computed(() =>
+    this.rows().filter(row => row.status === PaymentStatus.Confirmed).length);
+  readonly attachedInvoices = computed(() =>
+    this.rows().filter(row => row.hasInvoice).length);
+  readonly confirmedTotalOMR = computed(() => this.rows()
+    .filter(row => row.status === PaymentStatus.Confirmed)
+    .reduce((sum, row) => sum + (row.invoiceAmountOMR ?? 0), 0));
 
-  // Form
-  fCourseId = signal<string | null>(null);
-  fProviderId = signal<string | null>(null);
-  fInvoiceAmountOMR = signal<number>(0);
-  fInvoiceDate = signal<string>(new Date().toISOString().substring(0, 10));
-  fNotes = signal<string>('');
-
-  statusOptions: { value: PaymentStatus; text: string }[] = [];
-
-  // ── Derived ──
-  totalPayments = computed(() => this.rows().length);
-  draftPayments = computed(() =>
-    this.rows().filter(row => row.status === PaymentStatus.Draft).length,
-  );
-  confirmedPayments = computed(() =>
-    this.rows().filter(row => row.status === PaymentStatus.Confirmed).length,
-  );
-  attachedInvoices = computed(() =>
-    this.rows().filter(row => row.hasInvoice).length,
-  );
-  confirmedTotalOMR = computed(() =>
-    this.rows()
-      .filter(row => row.status === PaymentStatus.Confirmed)
-      .reduce((sum, row) => sum + (row.invoiceAmountOMR ?? 0), 0),
-  );
-  hasActiveFilters = computed(() =>
+  readonly hasActiveFilters = computed(() =>
     this.filterSource() !== 'all'
     || !!this.filterCourseId()
     || !!this.filterProviderId()
-    || !!this.searchTerm().trim(),
-  );
+    || !!this.searchTerm().trim());
 
-  courseFilterOptions = computed<PaymentCourseOption[]>(() => {
-    const options = new Map<string, string>();
-    for (const row of this.rows()) {
-      const id = row.casualCourseId ?? row.sessionId;
-      if (id) options.set(id, row.courseNameAr || '—');
-    }
-    return Array.from(options, ([id, label]) => ({ id, label }))
-      .sort((a, b) => a.label.localeCompare(b.label, 'ar'));
-  });
+  readonly courseFilterOptions = computed<FilterOption[]>(() =>
+    this.distinctOptions(row => row.casualCourseId ?? row.sessionId, row => row.courseNameAr));
 
-  filteredRows = computed(() => {
+  readonly providerFilterOptions = computed<FilterOption[]>(() =>
+    this.distinctOptions(row => row.trainingProviderId, row => row.trainingProviderName));
+
+  readonly filteredRows = computed(() => {
     const courseId = this.filterCourseId();
     const providerId = this.filterProviderId();
     const source = this.filterSource();
     const search = this.searchTerm().trim().toLocaleLowerCase('ar');
-    return this.rows().filter(r => {
-      if (courseId && (r.casualCourseId ?? r.sessionId) !== courseId) return false;
-      if (providerId && r.trainingProviderId !== providerId) return false;
-      if (source === 'session' && !r.sessionId) return false;
-      if (source === 'casual' && !r.casualCourseId) return false;
-      if (search) {
-        const haystack = [
-          r.courseNameAr,
-          r.trainingProviderName,
-          r.invoiceOriginalFileName,
-          r.notes,
-        ].filter(Boolean).join(' ').toLocaleLowerCase('ar');
-        if (!haystack.includes(search)) return false;
-      }
-      return true;
+
+    return this.rows().filter(row => {
+      if (courseId && (row.casualCourseId ?? row.sessionId) !== courseId) return false;
+      if (providerId && row.trainingProviderId !== providerId) return false;
+      if (source === 'session' && !row.sessionId) return false;
+      if (source === 'casual' && !row.casualCourseId) return false;
+      if (!search) return true;
+
+      return [
+        row.courseNameAr,
+        row.trainingProviderName,
+        row.invoiceOriginalFileName,
+        row.notes,
+        row.confirmedByName,
+      ].filter(Boolean).join(' ').toLocaleLowerCase('ar').includes(search);
     }).sort((a, b) => {
-      const statusOrder = (row: CoursePaymentDto): number =>
+      const priority = (row: CoursePaymentDto): number =>
         row.status === PaymentStatus.Draft ? 0 : row.status === PaymentStatus.Confirmed ? 1 : 2;
-      const byStatus = statusOrder(a) - statusOrder(b);
-      if (byStatus !== 0) return byStatus;
-      return (b.creationTime ?? '').localeCompare(a.creationTime ?? '');
+      return priority(a) - priority(b)
+        || (b.creationTime ?? '').localeCompare(a.creationTime ?? '');
     });
   });
 
-  /**
-   * Courses offered in the dialog picker. Filters out casual courses that
-   * already carry a course payment (server enforces the polymorphic-parent
-   * uniqueness invariant). In Edit mode the currently-selected course is
-   * preserved so the dropdown can render its bound value.
-   */
-  dialogAvailableCourses = computed<CasualCourseDto[]>(() => {
-    const editingCourseId = this.dialog().isEdit
-      ? this.dialog().current?.casualCourseId ?? null
-      : null;
-    const takenIds = new Set(
-      this.rows()
-        .map(r => r.casualCourseId)
-        .filter((id): id is string => !!id && id !== editingCourseId),
-    );
-    return this.approvedCourses().filter(c => !takenIds.has(c.id ?? ''));
-  });
+  private statusOptions: { value: PaymentStatus; text: string }[] = [];
 
-  // Forecast — computed from loaded course detail (client-side preview).
-  forecast = computed<ForecastRow[]>(() => {
-    const c = this.dialogCourse();
-    if (!c) return [];
-    const scenario = c.fundingScenario;
-    if (scenario === undefined || scenario === null) return [];
-    if (scenario === FundingScenario.FundingSourceCoversAll) return [];
-    const voteCode = c.fundingSourceVoteCode || '';
-    if (!voteCode) return [];
-    const items = c.financialItems ?? [];
-    return items
-      .filter(it => this.itemEligibleForReallocation(it, scenario))
-      .map(it => ({
-        voteCode,
-        itemName: it.financialItemName ?? '—',
-        amountOMR: this.sumRanks(it),
-      }))
-      .filter(r => r.amountOMR > 0);
-  });
-
-  forecastTotalOMR = computed(() => this.forecast().reduce((s, r) => s + r.amountOMR, 0));
-
-  forecastApplicable = computed(() => {
-    const c = this.dialogCourse();
-    if (!c) return false;
-    return !!c.id && c.fundingScenario !== undefined && c.fundingScenario !== null;
-  });
-
-  scenarioPillCss = computed(() => {
-    switch (this.dialogCourse()?.fundingScenario) {
-      case FundingScenario.FundingSourceCoversAll:    return 'scenario-pill scenario-1';
-      case FundingScenario.FundingSourceCoversCourse: return 'scenario-pill scenario-2';
-      case FundingScenario.FinancialItemsCoverAll:    return 'scenario-pill scenario-3';
-      default: return 'scenario-pill';
-    }
-  });
-
-  scenarioLabel = computed(() => {
-    return this.scenarioLabelFor(this.dialogCourse()?.fundingScenario);
-  });
-
-  scenarioLabelFor(scenario: FundingScenario | null | undefined): string {
-    switch (scenario) {
-      case FundingScenario.FundingSourceCoversAll:    return this.l.t('::Training.Payments.CoursePayment.Scenario1');
-      case FundingScenario.FundingSourceCoversCourse: return this.l.t('::Training.Payments.CoursePayment.Scenario2');
-      case FundingScenario.FinancialItemsCoverAll:    return this.l.t('::Training.Payments.CoursePayment.Scenario3');
-      default: return this.l.t('::Training.Payments.CoursePayment.ScenarioUnknown');
-    }
-  }
-
-  hasInvoice = computed(() => {
-    if (this.upload().status === 'uploaded') return true;
-    return !!this.dialog().current?.invoiceBlobName;
-  });
-
-  dialogLocked = computed(() => {
-    const current = this.dialog().current;
-    return !!current && current.status !== PaymentStatus.Draft;
-  });
-
-  confirmDisabled = computed(() => {
-    const cur = this.dialog().current;
-    if (!cur || !cur.id) return true;
-    if (cur.status !== PaymentStatus.Draft) return true;
-    if (!this.hasInvoice()) return true;
-    return this.dialogSaving();
-  });
-
-  /** Toolbar buttons reflect the current row's status:
-   *   • Confirmed (or any non-Draft) → only Close, since the record is immutable.
-   *   • Draft / new                  → Cancel + Save Draft + Confirm.
-   *  Built as a computed so status transitions update the button set live. */
-  dialogToolbarItems = computed<ToolbarItem[]>(() => {
-    const cur = this.dialog().current;
-    const isLocked = !!cur && cur.status !== PaymentStatus.Draft;
-    const cancelItem: ToolbarItem = {
-      widget: 'dxButton', location: 'after', toolbar: 'bottom',
-      options: { text: this.l.t('::Close'), onClick: () => this.closeDialog() },
-    };
-    if (isLocked) return [cancelItem];
-    return [
-      { widget: 'dxButton', location: 'after', toolbar: 'bottom',
-        options: { text: this.l.t('::Cancel'), onClick: () => this.closeDialog() } },
-      { widget: 'dxButton', location: 'after', toolbar: 'bottom',
-        options: {
-          text: this.l.t('::Training.Payments.SaveDraft'),
-          disabled: this.dialogSaving()
-            || (this.dialog().isEdit ? !this.canUpdate() : !this.canCreate()),
-          onClick: () => this.onSaveDraft(),
-        } },
-      { widget: 'dxButton', location: 'after', toolbar: 'bottom',
-        options: {
-          text: this.l.t('::Training.Payments.CoursePayment.Dialog.ConfirmActionLabel'),
-          type: 'success',
-          disabled: this.confirmDisabled() || !this.canConfirm(),
-          onClick: () => this.onConfirm(),
-        },
-      },
-    ];
-  });
-
-  // ── Lifecycle ──
   async ngOnInit(): Promise<void> {
     this.statusOptions = [
-      { value: PaymentStatus.Draft,     text: this.l.t('::Training.PaymentStatus.Draft') },
+      { value: PaymentStatus.Draft, text: this.l.t('::Training.PaymentStatus.Draft') },
       { value: PaymentStatus.Confirmed, text: this.l.t('::Training.Payments.CoursePayment.StatusConfirmed') },
       { value: PaymentStatus.Cancelled, text: this.l.t('::Training.PaymentStatus.Cancelled') },
     ];
+    await this.loadRows();
+  }
 
-    await Promise.all([
-      this.loadRows(),
-      this.loadApprovedCourses(),
-      this.loadProviders(),
-    ]);
+  async reload(): Promise<void> {
+    await this.loadRows();
+  }
+
+  onCourseFilterChange(value: string | null): void {
+    this.filterCourseId.set(value);
+  }
+
+  onProviderFilterChange(value: string | null): void {
+    this.filterProviderId.set(value);
+  }
+
+  onSourceFilterChange(value: 'all' | 'session' | 'casual'): void {
+    this.filterSource.set(value);
+  }
+
+  onSearchChange(event: Event): void {
+    this.searchTerm.set((event.target as HTMLInputElement).value ?? '');
+  }
+
+  clearFilters(): void {
+    this.filterCourseId.set(null);
+    this.filterProviderId.set(null);
+    this.filterSource.set('all');
+    this.searchTerm.set('');
+  }
+
+  openPaymentStage(row: CoursePaymentDto): void {
+    if (row.sessionId) {
+      void this.router.navigate(['/training/sessions', row.sessionId], {
+        queryParams: { stage: 'payments' },
+      });
+      return;
+    }
+
+    if (row.casualCourseId) {
+      void this.router.navigate(['/training/casual-courses', row.casualCourseId], {
+        queryParams: { stage: 'payments' },
+      });
+    }
+  }
+
+  async downloadInvoice(row: CoursePaymentDto): Promise<void> {
+    if (!row.id || !row.hasInvoice || !this.canDownload()) return;
+    try {
+      const blob = await firstValueFrom(this.paymentService.downloadInvoice(row.id));
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = row.invoiceOriginalFileName ?? 'invoice.pdf';
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      this.showError(this.extractError(error));
+    }
+  }
+
+  dismissToast(): void {
+    this.toast.set({ visible: false, text: '' });
+  }
+
+  formatOMR(value: number | null | undefined): string {
+    return (value ?? 0).toLocaleString('en-US', {
+      minimumFractionDigits: 3,
+      maximumFractionDigits: 3,
+    });
+  }
+
+  statusBadgeText(status: PaymentStatus | undefined): string {
+    return this.statusOptions.find(option => option.value === status)?.text ?? '';
+  }
+
+  statusBadgeCss(status: PaymentStatus | undefined): string {
+    switch (status) {
+      case PaymentStatus.Confirmed: return 'status-badge status-confirmed';
+      case PaymentStatus.Cancelled: return 'status-badge status-cancelled';
+      default: return 'status-badge status-draft';
+    }
+  }
+
+  scenarioLabelFor(scenario: FundingScenario | null | undefined): string {
+    switch (scenario) {
+      case FundingScenario.FundingSourceCoversAll:
+        return this.l.t('::Training.Payments.CoursePayment.Scenario1');
+      case FundingScenario.FundingSourceCoversCourse:
+        return this.l.t('::Training.Payments.CoursePayment.Scenario2');
+      case FundingScenario.FinancialItemsCoverAll:
+        return this.l.t('::Training.Payments.CoursePayment.Scenario3');
+      default:
+        return this.l.t('::Training.Payments.CoursePayment.ScenarioUnknown');
+    }
   }
 
   private async loadRows(): Promise<void> {
@@ -344,400 +223,37 @@ export class CoursePaymentsComponent implements OnInit {
       const input: CoursePaymentGetListInput = { maxResultCount: 1000 };
       const result = await firstValueFrom(this.paymentService.getList(input));
       this.rows.set(result.items ?? []);
+    } catch (error) {
+      this.rows.set([]);
+      this.showError(this.extractError(error));
     } finally {
       this.loading.set(false);
     }
   }
 
-  private async loadApprovedCourses(): Promise<void> {
-    try {
-      const result = await firstValueFrom(
-        this.courseService.getList({
-          status: [CasualCourseStatus.THApproved],
-          maxResultCount: 500,
-        }),
-      );
-      this.approvedCourses.set(result.items ?? []);
-    } catch {
-      this.approvedCourses.set([]);
+  private distinctOptions(
+    idSelector: (row: CoursePaymentDto) => string | null | undefined,
+    labelSelector: (row: CoursePaymentDto) => string | null | undefined,
+  ): FilterOption[] {
+    const options = new Map<string, string>();
+    for (const row of this.rows()) {
+      const id = idSelector(row);
+      if (id) options.set(id, labelSelector(row) || '—');
     }
+    return Array.from(options, ([id, label]) => ({ id, label }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'ar'));
   }
 
-  private async loadProviders(): Promise<void> {
-    try {
-      const list = await firstValueFrom(this.providerService.getAllActive());
-      this.providers.set(list ?? []);
-    } catch {
-      this.providers.set([]);
-    }
+  private showError(text: string): void {
+    this.toast.set({ visible: true, text });
+    setTimeout(() => this.dismissToast(), 4500);
   }
 
-  // ── Display helpers ──
-  formatOMR(value: number | null | undefined): string {
-    return (value ?? 0).toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
-  }
-
-  statusBadgeText(s: PaymentStatus | undefined): string {
-    if (s === undefined) return '';
-    return this.statusOptions.find(o => o.value === s)?.text ?? '';
-  }
-
-  statusBadgeCss(s: PaymentStatus | undefined): string {
-    switch (s) {
-      case PaymentStatus.Confirmed: return 'status-badge status-confirmed';
-      case PaymentStatus.Cancelled: return 'status-badge status-cancelled';
-      default: return 'status-badge status-draft';
-    }
-  }
-
-  providerName(id: string | null | undefined): string {
-    if (!id) return '—';
-    return this.providers().find(p => p.id === id)?.providerNameAr ?? '—';
-  }
-
-  courseLabel(id: string | null | undefined): string {
-    if (!id) return '—';
-    return this.approvedCourses().find(c => c.id === id)?.courseNameAr ?? '—';
-  }
-
-  formatFileSize(bytes: number | null | undefined): string {
-    const b = bytes ?? 0;
-    if (b < 1024) return `${b} B`;
-    if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
-    return `${(b / (1024 * 1024)).toFixed(1)} MB`;
-  }
-
-  // ── Forecast helpers ──
-  private itemEligibleForReallocation(item: CasualCourseFinancialItemDto, scenario: FundingScenario): boolean {
-    if (scenario === FundingScenario.FundingSourceCoversCourse) {
-      return item.source !== FinancialAmountSource.FundingSource;
-    }
-    if (scenario === FundingScenario.FinancialItemsCoverAll) return true;
-    return false;
-  }
-
-  private sumRanks(item: CasualCourseFinancialItemDto): number {
-    return (item.ranks ?? []).reduce((s, r) => s + (r.subtotalOMR ?? 0), 0);
-  }
-
-  // ── Filter handlers ──
-  onCourseFilterChange(v: string | null): void { this.filterCourseId.set(v); }
-  onProviderFilterChange(v: string | null): void { this.filterProviderId.set(v); }
-  onSourceFilterChange(v: 'all' | 'session' | 'casual'): void { this.filterSource.set(v); }
-  onSearchChange(event: Event): void {
-    this.searchTerm.set((event.target as HTMLInputElement).value ?? '');
-  }
-  clearFilters(): void {
-    this.filterCourseId.set(null);
-    this.filterProviderId.set(null);
-    this.filterSource.set('all');
-    this.searchTerm.set('');
-  }
-
-  async reload(): Promise<void> {
-    await this.loadRows();
-  }
-
-  // ── Dialog flow ──
-  async onAdd(): Promise<void> {
-    if (!this.canCreate()) return;
-    this.resetForm();
-    this.dialog.set({ visible: true, isEdit: false, id: null, current: null });
-    this.dialogCourse.set(null);
-    this.dialogQuoteProviderId.set(null);
-    this.upload.set({ status: 'idle', fileName: null, fileSize: null, progress: 0, errorMessage: null });
-    const courseId = this.filterCourseId();
-    if (courseId && this.approvedCourses().some(course => course.id === courseId)) {
-      this.fCourseId.set(courseId);
-      await this.loadCourseContext(courseId);
-    }
-  }
-
-  async onEdit(row: CoursePaymentDto): Promise<void> {
-    if (row.sessionId) {
-      this.openSessionPayment(row);
-      return;
-    }
-    if (!this.canUpdate() || row.status !== PaymentStatus.Draft) return;
-    await this.openExistingPayment(row);
-  }
-
-  async onView(row: CoursePaymentDto): Promise<void> {
-    if (row.sessionId) {
-      this.openSessionPayment(row);
-      return;
-    }
-    await this.openExistingPayment(row);
-  }
-
-  openSessionPayment(row: CoursePaymentDto): void {
-    if (!row.sessionId) return;
-    void this.router.navigate(['/training/sessions', row.sessionId], {
-      queryParams: { stage: 'payments' },
-    });
-  }
-
-  private async openExistingPayment(row: CoursePaymentDto): Promise<void> {
-    this.dialog.set({ visible: true, isEdit: true, id: row.id, current: row });
-    this.dialogError.set(null);
-    this.fCourseId.set(row.casualCourseId ?? null);
-    this.fProviderId.set(row.trainingProviderId ?? null);
-    this.fInvoiceAmountOMR.set(row.invoiceAmountOMR ?? 0);
-    this.fInvoiceDate.set((row.invoiceDate ?? '').substring(0, 10));
-    this.fNotes.set(row.notes ?? '');
-    this.upload.set({
-      status: row.invoiceBlobName ? 'uploaded' : 'idle',
-      fileName: row.invoiceOriginalFileName ?? null,
-      fileSize: null,
-      progress: row.invoiceBlobName ? 100 : 0,
-      errorMessage: null,
-    });
-    if (row.casualCourseId) await this.loadCourseContext(row.casualCourseId);
-  }
-
-  closeDialog(): void {
-    this.dialog.set({ visible: false, isEdit: false, id: null, current: null });
-    this.dialogError.set(null);
-    this.dialogCourse.set(null);
-    this.dialogQuoteProviderId.set(null);
-    this.upload.set({ status: 'idle', fileName: null, fileSize: null, progress: 0, errorMessage: null });
-  }
-
-  private async loadCourseContext(courseId: string): Promise<void> {
-    try {
-      const detail = await firstValueFrom(this.courseService.getDetail(courseId));
-      this.dialogCourse.set(detail);
-      // If the course has a SelectedPriceQuote, lock the provider to its provider.
-      if (detail.selectedPriceQuoteId) {
-        try {
-          const quote = await firstValueFrom(this.quoteService.get(detail.selectedPriceQuoteId));
-          if (quote?.providerId) {
-            this.dialogQuoteProviderId.set(quote.providerId);
-            // Only auto-fill provider on Create; don't override an explicit Edit selection.
-            if (!this.dialog().isEdit) this.fProviderId.set(quote.providerId);
-          }
-        } catch { /* noop */ }
-      }
-    } catch {
-      this.dialogCourse.set(null);
-      this.dialogQuoteProviderId.set(null);
-    }
-  }
-
-  async onDialogCourseChange(courseId: string | null): Promise<void> {
-    this.fCourseId.set(courseId);
-    this.dialogCourse.set(null);
-    this.dialogQuoteProviderId.set(null);
-    if (!this.dialog().isEdit) this.fProviderId.set(null);
-    if (courseId) await this.loadCourseContext(courseId);
-  }
-
-  // ── Save / Confirm / Delete ──
-  private buildDto(): CreateUpdateCoursePaymentDto {
-    return {
-      casualCourseId: this.fCourseId(),
-      sessionId: null,
-      trainingProviderId: this.dialogQuoteProviderId() ?? this.fProviderId() ?? '',
-      invoiceAmountOMR: this.fInvoiceAmountOMR(),
-      invoiceDate: this.fInvoiceDate(),
-      notes: this.fNotes() || null,
-    };
-  }
-
-  async onSaveDraft(): Promise<void> {
-    if (!this.fCourseId()) {
-      this.dialogError.set(this.l.t('::Training.Payments.CoursePayment.Dialog.PickCourseFirst'));
-      return;
-    }
-    if (!this.fProviderId() && !this.dialogQuoteProviderId()) {
-      this.dialogError.set(this.l.t('::Training.Payments.CoursePayment.Dialog.ProviderRequired'));
-      return;
-    }
-    if (this.fInvoiceAmountOMR() <= 0) {
-      this.dialogError.set(this.l.t('::Training.Payments.CoursePayment.Dialog.InvoiceAmountRequired'));
-      return;
-    }
-    if (!this.fInvoiceDate()) {
-      this.dialogError.set(this.l.t('::Training.Payments.CoursePayment.Dialog.InvoiceDateRequired'));
-      return;
-    }
-    this.dialogError.set(null);
-    this.dialogSaving.set(true);
-    try {
-      const dto = this.buildDto();
-      let saved: CoursePaymentDto;
-      if (this.dialog().isEdit && this.dialog().id) {
-        saved = await firstValueFrom(this.paymentService.update(this.dialog().id!, dto));
-      } else {
-        saved = await firstValueFrom(this.paymentService.create(dto));
-      }
-      this.dialog.set({ visible: true, isEdit: true, id: saved.id, current: saved });
-      this.fInvoiceAmountOMR.set(saved.invoiceAmountOMR ?? 0);
-      await this.loadRows();
-      this.showToast(this.l.t('::Training.Payments.CoursePayment.Dialog.SaveDraftSuccess'), 'success');
-    } catch (err) {
-      this.dialogError.set(this.extractError(err));
-    } finally {
-      this.dialogSaving.set(false);
-    }
-  }
-
-  async onConfirm(): Promise<void> {
-    const id = this.dialog().id;
-    if (!id) {
-      this.dialogError.set(this.l.t('::Training.Payments.SaveBeforeAction'));
-      return;
-    }
-    if (!this.hasInvoice()) {
-      this.dialogError.set(this.l.t('::Training.Payments.CoursePayment.Dialog.UploadRequired'));
-      return;
-    }
-    if (this.fInvoiceAmountOMR() <= 0) {
-      this.dialogError.set(this.l.t('::Training.Payments.CoursePayment.Dialog.InvoiceAmountRequired'));
-      return;
-    }
-    if (this.dialog().current?.status !== PaymentStatus.Draft) {
-      this.dialogError.set(this.l.t('::Training.Payments.CoursePayment.Dialog.OnlyDraftConfirmable'));
-      return;
-    }
-    if (!confirm(this.l.t('::Training.Payments.CoursePayment.Dialog.ConfirmPrompt'))) return;
-    this.dialogError.set(null);
-    this.dialogSaving.set(true);
-    try {
-      // Persist any pending edits first.
-      const dto = this.buildDto();
-      await firstValueFrom(this.paymentService.update(id, dto));
-      const result: CoursePaymentConfirmResultDto = await firstValueFrom(this.paymentService.confirm(id));
-      const count = result.generatedReallocationsCount ?? 0;
-      await this.loadRows();
-      // Confirm is terminal — close the dialog and surface the result via toast.
-      this.closeDialog();
-      const toastMsg = count > 0
-        ? this.l.t('::Training.Payments.CoursePayment.Dialog.ConfirmedToastWithCount').replace('{0}', String(count))
-        : this.l.t('::Training.Payments.CoursePayment.Dialog.ConfirmedToastNoReallocations');
-      this.showToast(toastMsg, 'success');
-    } catch (err) {
-      this.dialogError.set(this.extractError(err));
-    } finally {
-      this.dialogSaving.set(false);
-    }
-  }
-
-  async onDelete(row: CoursePaymentDto): Promise<void> {
-    if (!this.canDelete() || row.status !== PaymentStatus.Draft) return;
-    const prompt = `${this.l.t('::Training.Payments.CoursePayment.Dialog.DeletePromptPrefix')} "${row.courseNameAr ?? ''}"؟`;
-    if (!confirm(prompt)) return;
-    await firstValueFrom(this.paymentService.delete(row.id));
-    await this.loadRows();
-  }
-
-  // ── Upload flow ──
-  async onFileSelected(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    const file = input.files && input.files.length > 0 ? input.files[0] : null;
-    input.value = '';   // allow same file to be re-selected later
-    if (file) await this.handleFile(file);
-  }
-
-  onDragOver(event: DragEvent): void {
-    event.preventDefault();
-    this.isDragging.set(true);
-  }
-  onDragLeave(event: DragEvent): void {
-    event.preventDefault();
-    this.isDragging.set(false);
-  }
-  async onDrop(event: DragEvent): Promise<void> {
-    event.preventDefault();
-    this.isDragging.set(false);
-    const file = event.dataTransfer?.files?.[0];
-    if (file) await this.handleFile(file);
-  }
-
-  private async handleFile(file: File): Promise<void> {
-    if (!this.dialog().id) {
-      this.dialogError.set(this.l.t('::Training.Payments.CoursePayment.Dialog.SaveBeforeUpload'));
-      return;
-    }
-    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-      this.upload.set({ status: 'error', fileName: file.name, fileSize: file.size, progress: 0, errorMessage: this.l.t('::Training.Payments.CoursePayment.Dialog.UploadOnlyPdf') });
-      return;
-    }
-    if (file.size > 25 * 1024 * 1024) {
-      this.upload.set({ status: 'error', fileName: file.name, fileSize: file.size, progress: 0, errorMessage: this.l.t('::Training.Payments.CoursePayment.Dialog.UploadTooLarge') });
-      return;
-    }
-    this.upload.set({ status: 'uploading', fileName: file.name, fileSize: file.size, progress: 50, errorMessage: null });
-    try {
-      const formData = new FormData();
-      formData.append('file', file, file.name);
-      const updated = await firstValueFrom(this.paymentService.uploadInvoice(this.dialog().id!, formData));
-      this.dialog.update(d => ({ ...d, current: updated }));
-      this.upload.set({
-        status: 'uploaded',
-        fileName: updated.invoiceOriginalFileName ?? file.name,
-        fileSize: file.size,
-        progress: 100,
-        errorMessage: null,
-      });
-      await this.loadRows();
-    } catch (err) {
-      this.upload.set({ status: 'error', fileName: file.name, fileSize: file.size, progress: 0, errorMessage: this.extractError(err) });
-    }
-  }
-
-  async onDownloadInvoice(row: CoursePaymentDto | null): Promise<void> {
-    const target = row ?? this.dialog().current;
-    if (!target?.id || !target.invoiceBlobName) return;
-    try {
-      const blob = await firstValueFrom(this.paymentService.downloadInvoice(target.id));
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = target.invoiceOriginalFileName ?? 'invoice.pdf';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      this.showToast(this.extractError(err), 'error');
-    }
-  }
-
-  // ── Form field setters ──
-  updateCourseId(v: string | null): void { void this.onDialogCourseChange(v); }
-  updateProviderId(v: string | null): void { this.fProviderId.set(v); }
-  updateInvoiceAmount(v: number | null): void { this.fInvoiceAmountOMR.set(v ?? 0); }
-  updateInvoiceDate(v: string | null | Date): void {
-    if (!v) { this.fInvoiceDate.set(''); return; }
-    const iso = typeof v === 'string' ? v : v.toISOString();
-    this.fInvoiceDate.set(iso.substring(0, 10));
-  }
-  updateNotes(v: string): void { this.fNotes.set(v ?? ''); }
-
-  private resetForm(): void {
-    this.fCourseId.set(null);
-    this.fProviderId.set(null);
-    this.fInvoiceAmountOMR.set(0);
-    this.fInvoiceDate.set(new Date().toISOString().substring(0, 10));
-    this.fNotes.set('');
-    this.dialogError.set(null);
-  }
-
-  private showToast(text: string, kind: 'success' | 'error'): void {
-    this.toast.set({ visible: true, text, kind });
-    setTimeout(() => this.toast.set({ visible: false, text: '', kind }), 4500);
-  }
-
-  dismissToast(): void {
-    this.toast.update(t => ({ ...t, visible: false }));
-  }
-
-  private extractError(err: unknown): string {
+  private extractError(error: unknown): string {
     const fallback = this.l.t('::Training.Payments.GenericError');
-    if (err && typeof err === 'object') {
-      const anyErr = err as { error?: { error?: { message?: string } }; message?: string };
-      return anyErr.error?.error?.message ?? anyErr.message ?? fallback;
+    if (error && typeof error === 'object') {
+      const response = error as { error?: { error?: { message?: string } }; message?: string };
+      return response.error?.error?.message ?? response.message ?? fallback;
     }
     return fallback;
   }

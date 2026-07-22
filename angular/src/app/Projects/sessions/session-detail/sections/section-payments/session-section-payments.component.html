@@ -70,7 +70,7 @@
 
       <div class="winning-quote-context">
         <span>{{ '::Training.Sessions.Detail.Section5.WinningQuote' | abpLocalization }}</span>
-        <strong>{{ session()?.selectedPriceQuoteProviderNameAr || '—' }}</strong>
+        <strong>{{ selectedProviderName() }}</strong>
         <b>{{ formatOMR(agreedAmountOMR()) }} ر.ع</b>
       </div>
 
@@ -145,11 +145,11 @@
         <div class="payment-context-grid">
           <div>
             <span>{{ '::Training.Sessions.Detail.Section5.CourseLabel' | abpLocalization }}</span>
-            <strong>{{ session()?.tenantCourseNameAr || '—' }}</strong>
+            <strong>{{ courseName() }}</strong>
           </div>
           <div>
             <span>{{ '::Training.Sessions.Detail.Section5.ProviderLabel' | abpLocalization }}</span>
-            <strong>{{ session()?.selectedPriceQuoteProviderNameAr || '—' }} <i class="bi bi-lock-fill"></i></strong>
+            <strong>{{ selectedProviderName() }} <i class="bi bi-lock-fill"></i></strong>
           </div>
           <div>
             <span>{{ '::Training.Sessions.Detail.Section5.AgreedAmount' | abpLocalization }}</span>

@@ -341,26 +341,28 @@
                 <app-casual-course-section-payments
                   [state]="'active'"
                   [course]="course()"
+                  [selectedQuote]="selectedQuote()"
                   [travelAllowancePayments]="travelAllowancePayments()"
                   [coursePayment]="coursePayment()"
-                  [reallocations]="reallocations()"
                   [lockReason]="stage.lockReason || ''" />
               }
 
               @case ('execution') {
                 <div class="execution-panel">
                   <div class="execution-status">
-                    <span class="execution-status-icon status-icon-1">
-                      <i class="bi bi-play-circle" aria-hidden="true"></i>
+                    <span [class]="'execution-status-icon status-icon-' + executionStatus()">
+                      @if (executionStatus() === SessionStatus.Completed || executionStatus() === SessionStatus.FinanciallyClosed) {
+                        <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                      } @else if (executionStatus() === SessionStatus.InProgress) {
+                        <i class="bi bi-play-circle" aria-hidden="true"></i>
+                      } @else {
+                        <i class="bi bi-calendar2-check" aria-hidden="true"></i>
+                      }
                     </span>
                     <div>
-                      <span>حالة الجاهزية</span>
-                      <h3>{{ paymentsComplete() && approvalsComplete() ? 'جاهزة للتنفيذ' : 'بانتظار استكمال المتطلبات' }}</h3>
-                      <p>
-                        {{ isInternal()
-                          ? 'الدورة الداخلية لا تتطلب عروض أسعار أو سفرًا أو مدفوعات.'
-                          : 'اكتملت المتطلبات السابقة ويمكن متابعة تنفيذ الدورة.' }}
-                      </p>
+                      <span>حالة التنفيذ الحالية</span>
+                      <h3>{{ executionStatusLabel() }}</h3>
+                      <p>{{ executionStatusMessage() }}</p>
                     </div>
                   </div>
 
@@ -389,13 +391,46 @@
                     }
                   </div>
 
-                  <div class="execution-ready-note">
-                    <i class="bi bi-info-circle" aria-hidden="true"></i>
-                    <div>
-                      <strong>مرحلة المتابعة التشغيلية</strong>
-                      <p>تم توحيد تجربة الجاهزية، بينما ستبقى حالة الطلب «معتمدة» حتى إضافة دورة التنفيذ الرسمية.</p>
+                  @if (actionError()) {
+                    <div class="error-banner" role="alert">{{ actionError() }}</div>
+                  }
+
+                  @if (transitionAction(); as transition) {
+                    <div class="inline-confirmation">
+                      <div>
+                        <strong>{{ transition === 'completed' ? 'إنهاء الدورة' : 'بدء التنفيذ' }}</strong>
+                        <p>
+                          {{ transition === 'completed'
+                            ? 'سيتم تسجيل الدورة كمكتملة ولن يظهر إجراء تنفيذ آخر.'
+                            : 'سيتم تغيير حالة الدورة إلى «قيد التنفيذ».' }}
+                        </p>
+                      </div>
+                      <div class="confirmation-actions">
+                        <button type="button" class="btn-secondary" [disabled]="actionRunning()" (click)="cancelTransition()">
+                          تراجع
+                        </button>
+                        <button type="button" class="btn-primary" [disabled]="actionRunning()" (click)="confirmTransition()">
+                          @if (actionRunning()) { <span class="button-spinner" aria-hidden="true"></span> }
+                          {{ transition === 'completed' ? 'تأكيد الإنهاء' : 'تأكيد البدء' }}
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  } @else {
+                    <div class="execution-actions">
+                      @if (showMarkInProgressButton()) {
+                        <button type="button" class="btn-primary" (click)="requestTransition('inProgress')">
+                          <i class="bi bi-play-fill" aria-hidden="true"></i>
+                          بدء التنفيذ
+                        </button>
+                      }
+                      @if (showMarkCompletedButton()) {
+                        <button type="button" class="btn-success" (click)="requestTransition('completed')">
+                          <i class="bi bi-check2" aria-hidden="true"></i>
+                          إنهاء الدورة
+                        </button>
+                      }
+                    </div>
+                  }
                 </div>
               }
             }

@@ -73,7 +73,7 @@
         <div class="info-banner info-banner-success quotes-lock-banner">
           <div class="info-banner-icon">✓</div>
           <div class="info-banner-text">
-            <b>تم اعتماد العرض الفائز وتأكيد تواريخ الجلسة.</b>
+            <b>تم اعتماد العرض الفائز وتأكيد تواريخ التنفيذ.</b>
             أصبحت جميع العروض للقراءة والمراجعة فقط.
           </div>
         </div>
@@ -206,28 +206,9 @@
               <div class="form-hint">جهات نشطة فقط</div>
             </div>
 
-            @if (parentArm() !== 'session') {
-              <div class="form-group">
-                <label class="form-label">السعر المعروض (ر.ع) <span class="required">*</span></label>
-                <input type="number" min="0" step="0.001" class="form-input"
-                  [value]="fQuotedPrice()"
-                  (input)="fQuotedPrice.set(+$any($event.target).value)" />
-                @if (fQuotedPrice() > 0 && approvedCost() > 0) {
-                  <div class="variance-inline">
-                    <app-variance-chip
-                      [quotedPrice]="totalPricePreview()"
-                      [approvedCost]="approvedCost()" />
-                    <span class="approved-cost-hint">
-                      المعتمد: {{ formatCurrency(approvedCost()) }} ر.ع
-                    </span>
-                  </div>
-                }
-              </div>
-            }
           </div>
 
-          @if (parentArm() === 'session') {
-            <section class="pricing-builder">
+          <section class="pricing-builder">
               <div class="pricing-builder-header">
                 <div>
                   <span>{{ '::Training.PricingType' | abpLocalization }}</span>
@@ -317,8 +298,7 @@
                   </span>
                 </div>
               }
-            </section>
-          }
+          </section>
 
           <div class="form-row">
             <div class="form-group">

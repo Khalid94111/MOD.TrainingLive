@@ -134,7 +134,6 @@ export const CASUAL_COURSE_STATUS_OPTIONS = [
 export const FUNDING_SCENARIO_OPTIONS = [
   { value: FundingScenario.FundingSourceCoversAll,    key: '::Training.FundingScenario.FundingSourceCoversAll',    hint: '::Training.FundingScenario.NoReallocation' },
   { value: FundingScenario.FundingSourceCoversCourse, key: '::Training.FundingScenario.FundingSourceCoversCourse', hint: '::Training.FundingScenario.PartialReallocation' },
-  { value: FundingScenario.FinancialItemsCoverAll,    key: '::Training.FundingScenario.FinancialItemsCoverAll',    hint: '::Training.FundingScenario.FullReallocation' },
 ];
 
 // Mirrors ExecutionStage enum in MOD.Training.Domain.Shared/Training/Enums.
@@ -148,6 +147,8 @@ export enum ExecutionStage {
   AwaitingCoursePayment        = 4,
   AwaitingReallocationApproval = 5,
   FinanciallyComplete          = 6,
+  InProgress                   = 7,
+  Completed                    = 8,
 }
 
 export const EXECUTION_STAGE_OPTIONS = [
@@ -157,4 +158,6 @@ export const EXECUTION_STAGE_OPTIONS = [
   { value: ExecutionStage.AwaitingCoursePayment,        key: '::Training.ExecutionStage.AwaitingCoursePayment',        progressKey: null,                                                            cssClass: 'badge-stage-pending'  },
   { value: ExecutionStage.AwaitingReallocationApproval, key: '::Training.ExecutionStage.AwaitingReallocationApproval', progressKey: '::Training.ExecutionStage.AwaitingReallocationApprovalProgress', cssClass: 'badge-stage-progress' },
   { value: ExecutionStage.FinanciallyComplete,          key: '::Training.ExecutionStage.FinanciallyComplete',          progressKey: null,                                                            cssClass: 'badge-stage-complete' },
+  { value: ExecutionStage.InProgress,                   key: '::Training.ExecutionStage.InProgress',                   progressKey: null,                                                            cssClass: 'badge-stage-progress' },
+  { value: ExecutionStage.Completed,                    key: '::Training.ExecutionStage.Completed',                    progressKey: null,                                                            cssClass: 'badge-stage-complete' },
 ];

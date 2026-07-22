@@ -1,347 +1,446 @@
+<div class="request-page" [class.is-embedded]="embedded()">
   @if (!embedded()) {
-    <!-- Header (standalone mode only — shell renders its own header) -->
-    <div class="page-toolbar">
-      <div class="page-toolbar-title">
-        <div>
-          <a routerLink="/training/casual-courses" class="back-link">← الدورات العرضية</a>
-          <h2 class="gtms-card-title page-h1">
-            @if (isEdit()) { تعديل طلب دورة عرضية } @else { طلب دورة عرضية جديد }
-          </h2>
+    <header class="request-hero">
+      <div class="hero-copy">
+        <a routerLink="/training/casual-courses" class="back-link">
+          <i class="bi bi-arrow-right" aria-hidden="true"></i>
+          العودة إلى الدورات العرضية
+        </a>
+        <div class="hero-title-row">
+          <span class="hero-icon"><i class="bi bi-lightning-charge-fill" aria-hidden="true"></i></span>
+          <div>
+            <span class="hero-eyebrow">طلب خارج الخطة السنوية</span>
+            <h1>@if (isEdit()) { تعديل طلب دورة عرضية } @else { إضافة دورة عرضية }</h1>
+            <p>أدخل بيانات الدورة والمرشحين، وستتحدث معاينة التكلفة تلقائيًا أثناء العمل.</p>
+          </div>
         </div>
       </div>
-    </div>
+
+      <div class="hero-guidance">
+        <span><i class="bi bi-layout-text-window" aria-hidden="true"></i> صفحة واحدة</span>
+        <span><i class="bi bi-calculator" aria-hidden="true"></i> احتساب مباشر</span>
+        <span><i class="bi bi-cloud-check" aria-hidden="true"></i> متاح كمسودة</span>
+      </div>
+    </header>
   }
 
   @if (isReturned()) {
-    <div class="info-banner info-banner-returned">
-      <div class="info-banner-icon">⚠️</div>
-      <div class="info-banner-text">
-        <b>تمت إعادة الطلب لإجراء تعديلات</b>
+    <div class="return-banner">
+      <span class="return-banner-icon"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></span>
+      <div>
+        <strong>أُعيد الطلب لاستكمال بعض التعديلات</strong>
         @if (casualCourse()?.latestReturnReason) {
-          <div class="mt-1"><b>سبب الإعادة:</b> {{ casualCourse()?.latestReturnReason }}</div>
+          <p><b>السبب:</b> {{ casualCourse()?.latestReturnReason }}</p>
+        } @else {
+          <p>راجع البيانات والملاحظات قبل إعادة الإرسال.</p>
         }
-        <div class="banner-hint">قم بمعالجة الملاحظات وأعد إرسال الطلب.</div>
       </div>
-      <div class="banner-actions">
-        <button type="button" class="btn btn-warning btn-sm" (click)="openNotesDrawer()">
-          📑 كل الملاحظات
-        </button>
-      </div>
+      <button type="button" class="btn btn-outline btn-sm" (click)="openNotesDrawer()">
+        <i class="bi bi-journal-text" aria-hidden="true"></i>
+        عرض الملاحظات
+      </button>
     </div>
   }
 
   @if (loading()) {
-    <div class="gtms-card">
-      <div class="empty-state">
-        <div class="empty-icon">⏳</div>
-        جاري التحميل...
-      </div>
+    <div class="loading-panel" aria-live="polite">
+      <span class="loading-spinner"></span>
+      <strong>جارٍ تجهيز نموذج الدورة...</strong>
+      <p>يتم تحميل الدورات وبيانات الوحدة.</p>
     </div>
   } @else {
-    @if (showDetails()) {
-    <!-- Section A — Course details -->
-    <div class="gtms-card">
-      <h3 class="section-title">تفاصيل الدورة</h3>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">الدورة <span class="required">*</span></label>
-          <select class="form-input" (change)="onTenantCourseChange($any($event.target).value)">
-            <option value="" [selected]="!fTenantCourseId()">اختر دورة...</option>
-            @for (tc of tenantCourses(); track tc.id) {
-              <option [value]="tc.id" [selected]="fTenantCourseId() === tc.id">{{ tc.catalogCourseNameAr }}</option>
-            }
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">نوع الدورة <span class="required">*</span></label>
-          <select class="form-input" (change)="onCourseTypeChange($any($event.target).value)">
-            <option [value]="CourseType.Internal"              [selected]="fCourseType() === CourseType.Internal">داخلية</option>
-            <option [value]="CourseType.ExternalLocal"         [selected]="fCourseType() === CourseType.ExternalLocal">خارجية محلية</option>
-            <option [value]="CourseType.ExternalInternational" [selected]="fCourseType() === CourseType.ExternalInternational">خارجية دولية</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">الأولوية</label>
-          <select class="form-input" (change)="fPriority.set(+$any($event.target).value)">
-            <option [value]="1" [selected]="fPriority() === 1">عالية جدًا</option>
-            <option [value]="2" [selected]="fPriority() === 2">عالية</option>
-            <option [value]="3" [selected]="fPriority() === 3">متوسطة</option>
-            <option [value]="4" [selected]="fPriority() === 4">منخفضة</option>
-            <option [value]="5" [selected]="fPriority() === 5">منخفضة جدًا</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">المبرر <span class="required">*</span></label>
-        <textarea
-          class="form-input"
-          rows="3"
-          [value]="fJustification()"
-          (input)="fJustification.set($any($event.target).value)"
-          placeholder="ما هو المبرر الإداري لهذه الدورة خارج الخطة السنوية؟"
-        ></textarea>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">وصف الدورة</label>
-        <textarea
-          class="form-input"
-          rows="3"
-          [value]="fDescriptionAr()"
-          (input)="fDescriptionAr.set($any($event.target).value)"
-        ></textarea>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">أهداف الدورة</label>
-        <textarea
-          class="form-input"
-          rows="3"
-          [value]="fObjectivesAr()"
-          (input)="fObjectivesAr.set($any($event.target).value)"
-        ></textarea>
-      </div>
-    </div>
-
-    <!-- Section B — Duration + dates -->
-    <div class="gtms-card">
-      <h3 class="section-title">المدة والتواريخ</h3>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">سنوات</label>
-          <input type="number" min="0" class="form-input"
-            [value]="fDurationYears()" (input)="fDurationYears.set(+$any($event.target).value)" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">أشهر</label>
-          <input type="number" min="0" class="form-input"
-            [value]="fDurationMonths()" (input)="fDurationMonths.set(+$any($event.target).value)" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">أيام <span class="required">*</span></label>
-          <input type="number" min="0" class="form-input"
-            [value]="fDurationDays()" (input)="fDurationDays.set(+$any($event.target).value)" />
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">من تاريخ <span class="required">*</span></label>
-          <input type="date" class="form-input"
-            [value]="fDateFrom()" (input)="fDateFrom.set($any($event.target).value)" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">إلى تاريخ</label>
-          <input type="date" class="form-input" readonly [value]="fDateTo()" />
-          <div class="form-hint">يُحسب تلقائيًا من تاريخ البداية والمدة</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Section C — Funding source (conditional) -->
-    @if (showFundingSource()) {
-      <div class="gtms-card">
-        <h3 class="section-title">الجهة الممولة</h3>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">اسم مصدر التمويل <span class="required">*</span></label>
-            <input type="text" class="form-input"
-              [value]="fFundingSourceName()"
-              (input)="fFundingSourceName.set($any($event.target).value)"
-              placeholder="مثال: مشروع شمس 2" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">كود نبراس <span class="required">*</span></label>
-            <input type="text" class="form-input"
-              [value]="fFundingSourceVoteCode()"
-              (input)="fFundingSourceVoteCode.set($any($event.target).value)"
-              placeholder="مثال: wew-232-343-2" />
-          </div>
-        </div>
-        <div class="alert alert-info">
-          <span class="alert-icon">💡</span>
-          رصيد نبراس سيتم احتسابه عند اعتماد الطلب من قبل الإدارة المالية.
-        </div>
+    @if (submitError()) {
+      <div class="form-error" role="alert">
+        <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+        <span>{{ submitError() }}</span>
       </div>
     }
 
-    <!-- Section C2 — Course cost (UTM seed) -->
-    <div class="gtms-card">
-      <h3 class="section-title">تكلفة الدورة</h3>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">التكلفة المتوقعة (ر.ع)</label>
-          <input type="number" min="0" step="0.001" class="form-input"
-            [value]="fCourseCost() ?? ''"
-            (input)="onCourseCostInput($any($event.target).value)"
-            placeholder="مثال: 3000" />
-          <div class="form-hint">
-            تُستخدم كقيمة أولية لبند تكلفة الدورة عند مراجعة مكتب التدريب — يمكن تعديلها لاحقًا.
-          </div>
-        </div>
-      </div>
-    </div>
+    <div class="request-layout" [class.preview-only]="!showDetails()">
+      @if (showDetails()) {
+        <main class="form-column">
+          <section class="form-section">
+            <header class="form-section-header">
+              <span class="section-marker">01</span>
+              <div>
+                <h2>بيانات الدورة</h2>
+                <p>حدد نوع الدورة أولًا، ثم اختر الدورة وسبب طلبها خارج الخطة السنوية.</p>
+              </div>
+              <span class="required-note"><span>*</span> حقول مطلوبة</span>
+            </header>
 
-    <!-- Section D — Nominees -->
-    <div class="gtms-card">
-      <div class="section-header">
-        <h3 class="section-title">المرشحون</h3>
-        <span class="section-meta">
-          عدد مختارين: {{ nomineeCount() }}
-        </span>
-      </div>
-      @if (currentUnitId()) {
-        <gtms-nomination-picker
-          [unitId]="currentUnitId()"
-          [initialSelection]="fNomineeIds()"
-          (selectionChange)="onNomineesChange($event)"
-        ></gtms-nomination-picker>
-      } @else {
-        <div class="alert alert-warning">
-          <span class="alert-icon">⚠️</span>
-          يتعذر تحميل منتقي المرشحين — لا توجد وحدة رئيسية مرتبطة بالحساب الحالي.
-        </div>
-      }
-    </div>
-    }
-
-    @if (showDetails() || showFinancials()) {
-    <!-- Section E — Financial preview (read-only calculator).
-         Visible alongside the form (mode='details') so UTM gets a live cost
-         estimate while editing, AND in Section 2 (mode='financials') as the
-         canonical financials view. Same component instance owns both. -->
-    <div class="gtms-card">
-      <div class="section-header">
-        <h3 class="section-title">معاينة التكلفة المتوقعة</h3>
-        <span class="section-meta">
-          مجموع متوقَّع: <b>{{ grandTotal() | number:'1.3-3' }}</b> ر.ع
-          @if (previewLoading()) { <span class="autosave-chip">حساب...</span> }
-        </span>
-      </div>
-
-      @if (!hasPreview()) {
-        <div class="empty-state small">
-          أضف مرشحًا واحدًا على الأقل وأدخل عدد الأيام لعرض المعاينة.
-        </div>
-      } @else {
-        <div class="alert alert-info">
-          <span class="alert-icon">🧮</span>
-          هذه معاينة تقديرية فقط — الأرقام النهائية يحددها مكتب التدريب عند المراجعة بعد اختيار سيناريو التمويل.
-        </div>
-
-        <div class="fin-accordion">
-          @for (item of preview()?.items ?? []; track item.financialItemId) {
-            <div class="fin-item" [id]="'fin-' + item.financialItemId">
-              <div class="fin-head"
-                [class.clickable]="item.isPerNominee"
-                (click)="item.isPerNominee && toggleExpand(item.financialItemId)">
-                <div class="fin-head-left">
-                  @if (item.isPerNominee) {
-                    <span class="fin-chevron">{{ isExpanded(item.financialItemId) ? '▾' : '▸' }}</span>
-                  } @else {
-                    <span class="fin-chevron-flat">●</span>
-                  }
-                  <span class="fin-name">{{ item.financialItemNameAr }}</span>
-                  @if (item.isPerDay) {
-                    <span class="chip chip-neutral">لكل يوم</span>
-                  }
-                  @if (item.isPerNominee) {
-                    <span class="chip chip-info">حسب الرتبة</span>
-                  } @else {
-                    <span class="chip chip-neutral">ثابت</span>
-                  }
-                  <span class="chip chip-days">أيام فعّالة: {{ item.effectiveDays }}</span>
-                </div>
-                <div class="fin-head-right">
-                  <span class="fin-total cell-money">{{ item.subtotalOMR | number:'1.3-3' }} ر.ع</span>
+            <div class="form-section-body">
+              <div class="form-group">
+                <label class="form-label">نوع الدورة <span class="required">*</span></label>
+                <div class="course-type-picker" role="group" aria-label="نوع الدورة">
+                  <button type="button"
+                          [class.selected]="fCourseType() === CourseType.ExternalLocal"
+                          [attr.aria-pressed]="fCourseType() === CourseType.ExternalLocal"
+                          (click)="selectCourseType(CourseType.ExternalLocal)">
+                    <i class="bi bi-geo-alt" aria-hidden="true"></i>
+                    <span><strong>خارجية محلية</strong><small>داخل سلطنة عُمان</small></span>
+                  </button>
+                  <button type="button"
+                          [class.selected]="fCourseType() === CourseType.ExternalInternational"
+                          [attr.aria-pressed]="fCourseType() === CourseType.ExternalInternational"
+                          (click)="selectCourseType(CourseType.ExternalInternational)">
+                    <i class="bi bi-airplane" aria-hidden="true"></i>
+                    <span><strong>خارجية دولية</strong><small>تتطلب إجراءات سفر</small></span>
+                  </button>
                 </div>
               </div>
 
-              @if (isExpanded(item.financialItemId) && item.isPerNominee && item.rankBreakdown) {
-                <div class="fin-body">
-                  @if (item.rankBreakdown.length === 0) {
-                    <div class="empty-state small">
-                      لا توجد رتب — قد تكون قائمة المرشحين فارغة.
-                    </div>
-                  } @else {
-                    <div class="gtms-table-wrap">
-                      <table class="gtms-table rank-table">
-                        <thead>
-                          <tr>
-                            <th>الرتبة</th>
-                            <th class="center">العدد</th>
-                            <th class="center">أيام فعّالة</th>
-                            <th class="center">السعر (ر.ع)</th>
-                            <th class="center">المجموع (ر.ع)</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          @for (row of item.rankBreakdown; track row.rankId) {
-                            <tr>
-                              <td class="cell-bold">{{ row.rankNameAr }}</td>
-                              <td class="center">{{ row.nomineeCount }}</td>
-                              <td class="center">{{ item.effectiveDays }}</td>
-                              <td class="center">{{ row.ratePerUnitOMR | number:'1.3-3' }}</td>
-                              <td class="center cell-money">{{ row.subtotalOMR | number:'1.3-3' }}</td>
-                            </tr>
-                          }
-                        </tbody>
-                        <tfoot>
-                          <tr class="total-row">
-                            <td colspan="4">مجموع البند</td>
-                            <td class="center cell-money">{{ item.subtotalOMR | number:'1.3-3' }}</td>
-                          </tr>
-                        </tfoot>
-                      </table>
-                    </div>
-                  }
+              <div class="form-row course-row">
+                <div class="form-group flex-2">
+                  <label class="form-label">الدورة <span class="required">*</span></label>
+                  <select class="form-input form-input-lg" (change)="onTenantCourseChange($any($event.target).value)">
+                    <option value="" [selected]="!fTenantCourseId()">اختر دورة من الكتالوج...</option>
+                    @for (tc of tenantCourses(); track tc.id) {
+                      <option [value]="tc.id" [selected]="fTenantCourseId() === tc.id">
+                        {{ tc.catalogCourseNameAr }}
+                      </option>
+                    }
+                  </select>
+                  <span class="form-hint">تظهر هنا الدورات المضافة إلى كتالوج الجهة.</span>
+                </div>
+
+                <div class="form-group priority-field">
+                  <label class="form-label">الأولوية</label>
+                  <select class="form-input form-input-lg" (change)="fPriority.set(+$any($event.target).value)">
+                    <option [value]="1" [selected]="fPriority() === 1">عالية جدًا</option>
+                    <option [value]="2" [selected]="fPriority() === 2">عالية</option>
+                    <option [value]="3" [selected]="fPriority() === 3">متوسطة</option>
+                    <option [value]="4" [selected]="fPriority() === 4">منخفضة</option>
+                    <option [value]="5" [selected]="fPriority() === 5">منخفضة جدًا</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">المبرر الإداري <span class="required">*</span></label>
+                <textarea class="form-input"
+                          rows="3"
+                          maxlength="500"
+                          [value]="fJustification()"
+                          (input)="fJustification.set($any($event.target).value)"
+                          placeholder="وضّح سبب الحاجة إلى الدورة خارج الخطة السنوية..."></textarea>
+                <span class="field-counter">{{ fJustification().length }} / 500</span>
+              </div>
+
+              <div class="form-row narrative-row">
+                <div class="form-group">
+                  <label class="form-label">وصف الدورة</label>
+                  <textarea class="form-input"
+                            rows="3"
+                            [value]="fDescriptionAr()"
+                            (input)="fDescriptionAr.set($any($event.target).value)"
+                            placeholder="نبذة مختصرة عن محتوى الدورة"></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">أهداف الدورة</label>
+                  <textarea class="form-input"
+                            rows="3"
+                            [value]="fObjectivesAr()"
+                            (input)="fObjectivesAr.set($any($event.target).value)"
+                            placeholder="النتائج المتوقع تحقيقها"></textarea>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="form-section">
+            <header class="form-section-header">
+              <span class="section-marker">02</span>
+              <div>
+                <h2>المدة والتواريخ</h2>
+                <p>حدد مدة الدورة وتاريخ بدايتها، وسيُحسب تاريخ الانتهاء تلقائيًا.</p>
+              </div>
+            </header>
+
+            <div class="form-section-body schedule-layout">
+              <div class="duration-block">
+                <span class="field-group-label">مدة الدورة</span>
+                <div class="duration-fields">
+                  <label>
+                    <span>سنوات</span>
+                    <input type="number" min="0" class="form-input"
+                           [value]="fDurationYears()"
+                           (input)="fDurationYears.set(+$any($event.target).value)" />
+                  </label>
+                  <label>
+                    <span>أشهر</span>
+                    <input type="number" min="0" class="form-input"
+                           [value]="fDurationMonths()"
+                           (input)="fDurationMonths.set(+$any($event.target).value)" />
+                  </label>
+                  <label>
+                    <span>أيام <b>*</b></span>
+                    <input type="number" min="0" class="form-input"
+                           [value]="fDurationDays()"
+                           (input)="fDurationDays.set(+$any($event.target).value)" />
+                  </label>
+                </div>
+              </div>
+
+              <div class="date-block">
+                <div class="form-group">
+                  <label class="form-label">تاريخ البداية <span class="required">*</span></label>
+                  <input type="date" class="form-input form-input-lg"
+                         [value]="fDateFrom()"
+                         (input)="fDateFrom.set($any($event.target).value)" />
+                </div>
+                <span class="date-arrow"><i class="bi bi-arrow-left" aria-hidden="true"></i></span>
+                <div class="form-group">
+                  <label class="form-label">تاريخ الانتهاء</label>
+                  <input type="date" class="form-input form-input-lg calculated-input" readonly [value]="fDateTo()" />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="form-section">
+            <header class="form-section-header">
+              <span class="section-marker">03</span>
+              <div>
+                <h2>التمويل والتكلفة</h2>
+                <p>بيانات أولية تساعد مكتب التدريب في مراجعة الطلب وتوزيع التكلفة.</p>
+              </div>
+            </header>
+
+            <div class="form-section-body">
+              @if (showFundingSource()) {
+                <div class="funding-callout">
+                  <i class="bi bi-info-circle" aria-hidden="true"></i>
+                  <span>الدورات الخارجية تتطلب تحديد مصدر التمويل وكود البند قبل الإرسال.</span>
+                </div>
+                <div class="form-row funding-row">
+                  <div class="form-group">
+                    <label class="form-label">اسم مصدر التمويل <span class="required">*</span></label>
+                    <input type="text" class="form-input form-input-lg"
+                           [value]="fFundingSourceName()"
+                           (input)="fFundingSourceName.set($any($event.target).value)"
+                           placeholder="مثال: موازنة التدريب" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">كود نبراس <span class="required">*</span></label>
+                    <input type="text" class="form-input form-input-lg code-input"
+                           dir="ltr"
+                           [value]="fFundingSourceVoteCode()"
+                           (input)="fFundingSourceVoteCode.set($any($event.target).value)"
+                           placeholder="مثال: TRN-2026-001" />
+                  </div>
+                </div>
+              } @else {
+                <div class="funding-callout internal">
+                  <i class="bi bi-building-check" aria-hidden="true"></i>
+                  <span>الدورة الداخلية لا تتطلب إدخال مصدر تمويل خارجي.</span>
+                </div>
+              }
+
+              <div class="cost-field-wrap">
+                <div class="cost-field-copy">
+                  <span class="cost-field-icon"><i class="bi bi-cash-stack" aria-hidden="true"></i></span>
+                  <div>
+                    <label class="form-label" for="casual-course-cost">التكلفة المتوقعة للدورة</label>
+                    <p>قيمة أولية لبند الدورة، ويمكن لمكتب التدريب تعديلها لاحقًا.</p>
+                  </div>
+                </div>
+                <div class="money-input">
+                  <input id="casual-course-cost"
+                         type="number"
+                         min="0"
+                         step="0.001"
+                         class="form-input"
+                         [value]="fCourseCost() ?? ''"
+                         (input)="onCourseCostInput($any($event.target).value)"
+                         placeholder="0.000" />
+                  <span>ر.ع</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="form-section nominees-section">
+            <header class="form-section-header">
+              <span class="section-marker">04</span>
+              <div>
+                <h2>المرشحون</h2>
+                <p>اختر موظفًا واحدًا على الأقل لإكمال الطلب واحتساب التكلفة.</p>
+              </div>
+              <span class="nominee-counter">
+                <i class="bi bi-people" aria-hidden="true"></i>
+                {{ nomineeCount() }} مختار
+              </span>
+            </header>
+
+            <div class="form-section-body nominee-picker-wrap">
+              @if (currentUnitId()) {
+                <gtms-nomination-picker
+                  [unitId]="currentUnitId()"
+                  [initialSelection]="fNomineeIds()"
+                  [initialEmployees]="initialNomineeEmployees()"
+                  displayMode="table"
+                  (selectionChange)="onNomineesChange($event)">
+                </gtms-nomination-picker>
+              } @else {
+                <div class="picker-unavailable">
+                  <i class="bi bi-person-exclamation" aria-hidden="true"></i>
+                  <div>
+                    <strong>تعذر تحميل موظفي الوحدة</strong>
+                    <p>لا توجد وحدة رئيسية مرتبطة بالحساب الحالي. راجع بيانات الموظف في الموارد البشرية.</p>
+                  </div>
                 </div>
               }
             </div>
+          </section>
+        </main>
+      }
+
+      @if (showDetails() || showFinancials()) {
+        <aside class="summary-column">
+          @if (showDetails()) {
+            <section class="readiness-card">
+              <div class="readiness-head">
+                <div>
+                  <span>اكتمال الطلب</span>
+                  <strong>{{ readinessPercent() }}%</strong>
+                </div>
+                @if (canSubmit()) {
+                  <span class="ready-badge"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> جاهز للإرسال</span>
+                } @else {
+                  <span class="draft-badge">مسودة</span>
+                }
+              </div>
+              <div class="readiness-track" aria-hidden="true">
+                <span [style.width.%]="readinessPercent()"></span>
+              </div>
+              <ul class="readiness-list">
+                @for (check of readinessChecks(); track check.label) {
+                  <li [class.done]="check.done">
+                    <i [class]="check.done ? 'bi bi-check-circle-fill' : 'bi bi-circle'" aria-hidden="true"></i>
+                    {{ check.label }}
+                  </li>
+                }
+              </ul>
+            </section>
           }
 
-          <div class="fin-grand-total">
-            <span class="lbl">المجموع الكلي المتوقع</span>
-            <span class="val cell-money">{{ grandTotal() | number:'1.3-3' }} ر.ع</span>
-          </div>
-        </div>
+          <section class="cost-summary-card">
+            <header class="cost-summary-head">
+              <div>
+                <span class="summary-eyebrow">معاينة مباشرة</span>
+                <h2>التكلفة المتوقعة</h2>
+              </div>
+              @if (previewLoading()) {
+                <span class="calculating-chip"><span></span> جارٍ الحساب</span>
+              }
+            </header>
+
+            <div class="grand-total-block">
+              <span>المجموع الكلي</span>
+              <strong>{{ grandTotal() | number:'1.3-3' }}</strong>
+              <small>ريال عُماني</small>
+            </div>
+
+            @if (!hasPreview()) {
+              <div class="preview-empty">
+                <span><i class="bi bi-calculator" aria-hidden="true"></i></span>
+                <strong>المعاينة بانتظار البيانات</strong>
+                <p>حدد مدة الدورة واختر المرشحين لتظهر تفاصيل التكلفة هنا.</p>
+              </div>
+            } @else {
+              <div class="preview-note">
+                <i class="bi bi-info-circle" aria-hidden="true"></i>
+                تقدير أولي؛ يعتمد المبلغ النهائي بعد مراجعة مكتب التدريب.
+              </div>
+
+              <div class="fin-accordion">
+                @for (item of preview()?.items ?? []; track item.financialItemId) {
+                  <div class="fin-item">
+                    <button type="button"
+                            class="fin-head"
+                            [class.clickable]="item.isPerNominee"
+                            [disabled]="!item.isPerNominee"
+                            (click)="item.isPerNominee && toggleExpand(item.financialItemId)">
+                      <span class="fin-head-left">
+                        <i [class]="item.isPerNominee
+                          ? (isExpanded(item.financialItemId) ? 'bi bi-chevron-up' : 'bi bi-chevron-down')
+                          : 'bi bi-dot'" aria-hidden="true"></i>
+                        <span>
+                          <strong>{{ item.financialItemNameAr }}</strong>
+                          <small>
+                            @if (item.isPerNominee) { حسب المرشحين }
+                            @else { مبلغ ثابت }
+                            @if (item.isPerDay) { · {{ item.effectiveDays }} يوم }
+                          </small>
+                        </span>
+                      </span>
+                      <span class="fin-total">{{ item.subtotalOMR | number:'1.3-3' }}</span>
+                    </button>
+
+                    @if (isExpanded(item.financialItemId) && item.isPerNominee && item.rankBreakdown) {
+                      <div class="fin-body">
+                        @if (item.rankBreakdown.length === 0) {
+                          <div class="empty-breakdown">لا توجد بيانات رتب متاحة.</div>
+                        } @else {
+                          <div class="rank-breakdown">
+                            @for (row of item.rankBreakdown; track row.rankId) {
+                              <div>
+                                <span>{{ row.rankNameAr }} × {{ row.nomineeCount }}</span>
+                                <strong>{{ row.subtotalOMR | number:'1.3-3' }}</strong>
+                              </div>
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </section>
+        </aside>
       }
     </div>
-    }
 
-    <!-- Phase 4B-α — Execution Status cards.
-         Per stage-based layout spec, these cards distribute into the collapsed-summary
-         content of Sections 1, 3, 4 — so they only appear in legacy 'all' mode here. -->
-    @if (submitError()) {
-      <div class="alert alert-danger">
-        <span class="alert-icon">⚠️</span>{{ submitError() }}
-      </div>
-    }
     @if (mode() === 'all') {
-      <!-- In-component action bar — only the standalone /new route renders it.
-           When embedded in the shell (mode = 'details' / 'financials'), the
-           shell's sticky header action bar takes over. -->
-      <div class="action-bar">
-        <button type="button" class="btn btn-ghost" (click)="onCancel()">إلغاء</button>
-        <button type="button" class="btn btn-warning" (click)="onSave(true)">💾 حفظ كمسودة</button>
-        <button
-          type="button"
-          class="btn btn-primary"
-          [disabled]="!canSubmit()"
-          (click)="onSave(false)"
-        >
-          @if (isReturned()) { 🔁 إعادة الإرسال } @else { 📤 إرسال الطلب }
-        </button>
+      <div class="action-dock">
+        <div class="action-dock-copy">
+          @if (canSubmit()) {
+            <i class="bi bi-check-circle-fill ready" aria-hidden="true"></i>
+            <span><strong>اكتملت البيانات المطلوبة</strong><small>يمكنك إرسال الطلب الآن.</small></span>
+          } @else {
+            <i class="bi bi-info-circle" aria-hidden="true"></i>
+            <span><strong>يمكنك المتابعة لاحقًا</strong><small>احفظ الطلب كمسودة أو أكمل المتطلبات للإرسال.</small></span>
+          }
+        </div>
+        <div class="action-dock-buttons">
+          <button type="button" class="btn btn-ghost" [disabled]="saving()" (click)="onCancel()">إلغاء</button>
+          <button type="button" class="btn btn-outline" [disabled]="saving() || !canSaveDraft()" (click)="onSave(true)">
+            <i class="bi bi-file-earmark" aria-hidden="true"></i>
+            حفظ كمسودة
+          </button>
+          <button type="button" class="btn btn-primary submit-button"
+                  [disabled]="saving() || !canSubmit()"
+                  (click)="onSave(false)">
+            @if (saving()) {
+              <span class="button-spinner"></span> جارٍ الحفظ...
+            } @else if (isReturned()) {
+              <i class="bi bi-arrow-repeat" aria-hidden="true"></i> إعادة الإرسال
+            } @else {
+              <i class="bi bi-send" aria-hidden="true"></i> حفظ وإرسال
+            }
+          </button>
+        </div>
       </div>
     }
   }
-
+</div>
 
 <gtms-notes-drawer
   [isOpen]="notesOpen()"
   [entityType]="PlanNoteEntityType.CasualCourse"
   [entityId]="id() ?? ''"
   [title]="'ملاحظات الطلب'"
-  (closeDrawer)="closeNotesDrawer()"
-></gtms-notes-drawer>
+  (closeDrawer)="closeNotesDrawer()">
+</gtms-notes-drawer>

@@ -36,6 +36,7 @@ export class NominationPickerComponent implements OnInit {
   unitId = input.required<string>();
   minCount = input<number>(1);
   maxCount = input<number>(0);
+  displayMode = input<'chips' | 'table'>('chips');
   /** Array of employee IDs for create mode (unused after initial setup) */
   initialSelection = input<string[]>([]);
   /** Pre-resolved employee objects for edit mode (displays chips immediately) */

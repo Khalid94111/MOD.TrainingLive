@@ -143,16 +143,13 @@ export const TRAINING_ROUTES: Routes = [
           import('./casual-courses/casual-courses-list/casual-courses-list.component')
             .then(m => m.CasualCoursesListComponent),
       },
-      // /new uses the same shell as /:id so the layout is identical (header +
-      // pipeline + sections). After the first nominee triggers autosave, the
-      // request component dispatches the new id to the shell and replaces the
-      // URL via history.replaceState — no full reload, no layout shift.
+      // Creation is a focused full-page form. Once saved, the request enters the
+      // normal stage-based detail shell under /:id.
       {
         path: 'casual-courses/new',
-        data: { embedded: true },
         loadComponent: () =>
-          import('./casual-courses/casual-course-detail/casual-course-detail.component')
-            .then(m => m.CasualCourseDetailComponent),
+          import('./casual-courses/casual-course-request/casual-course-request.component')
+            .then(m => m.CasualCourseRequestComponent),
       },
       // ===== Phase 4B-α: Casual Course Detail (stage-based progressive disclosure) =====
       // Single-page layout: sticky header + status pipeline + 4 accordion sections.

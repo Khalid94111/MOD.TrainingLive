@@ -131,6 +131,101 @@
 
 .clear-all { margin-inline-start: auto; font-size: 0.75rem; }
 
+/* ── Selected table ── */
+.selected-table-wrap {
+  margin-bottom: 14px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.selected-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.selected-table th {
+  padding: 10px 12px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-align: start;
+  white-space: nowrap;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.selected-table td {
+  padding: 11px 12px;
+  color: #334155;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.selected-table tbody tr:last-child td { border-bottom: 0; }
+.selected-table tbody tr:hover { background: #f8fbff; }
+
+.selected-table .row-number {
+  width: 38px;
+  color: #94a3b8;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.selected-table .row-action {
+  width: 76px;
+  text-align: center;
+}
+
+.service-number {
+  direction: ltr;
+  display: inline-block;
+  color: #1d4ed8;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.employee-name { color: #0f172a !important; font-weight: 800; }
+
+.rank-badge {
+  display: inline-flex;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.remove-row,
+.clear-table {
+  border: 0;
+  background: transparent;
+  color: #dc2626;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.remove-row:hover,
+.clear-table:hover { text-decoration: underline; }
+
+.selected-table-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
 /* ── Add row (service number input) ── */
 .add-row {
   display: flex;
@@ -231,4 +326,6 @@
 @media (max-width: 576px) {
   .add-row { flex-direction: column; }
   .picker-header { flex-direction: column; align-items: flex-start; }
+  .selected-table-wrap { overflow-x: auto; }
+  .selected-table { min-width: 600px; }
 }

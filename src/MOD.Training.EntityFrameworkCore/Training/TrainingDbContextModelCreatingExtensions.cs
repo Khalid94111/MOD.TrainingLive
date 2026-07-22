@@ -537,6 +537,7 @@ builder.ConfigurePaymentsPhase4BBeta();
             b.Property(x => x.EstimatedTotalCost).HasColumnType("decimal(18,3)");
             b.Property(x => x.RejectedReason).HasMaxLength(500);
             b.Property(x => x.Status).IsRequired();
+            b.Property(x => x.ExecutionStatus).IsRequired();
 
             // Phase 4B-α — actual confirmed dates (written by SelectPriceQuoteAsync).
             b.Property(x => x.ActualStartDate).IsRequired(false);

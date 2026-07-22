@@ -9,6 +9,7 @@ public class CasualCourseNominationDto : FullAuditedEntityDto<Guid>
     public Guid CasualCourseId { get; set; }
     public Guid EmployeeId { get; set; }
 
+    public string ServiceNumber { get; set; } = "";
     public string EmployeeName { get; set; } = "";
     public string RankName { get; set; } = "";
     public string UnitName { get; set; } = "";

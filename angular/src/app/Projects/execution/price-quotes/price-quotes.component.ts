@@ -107,7 +107,8 @@ export class PriceQuotesComponent implements OnInit {
   hasSelected = computed(() => this.quotes().some(q => q.isSelected));
   selectedQuote = computed(() => this.quotes().find(q => q.isSelected) ?? null);
   quotesLocked = computed(() => this.parentArm() === 'session'
-    && (!!this.session()?.selectedPriceQuoteId || this.hasSelected()));
+    ? !!this.session()?.selectedPriceQuoteId || this.hasSelected()
+    : !!this.course()?.selectedPriceQuoteId || this.hasSelected());
   expectedDateFrom = computed(() => this.parentArm() === 'session'
     ? this.session()?.estimatedDateFrom
     : this.course()?.estimatedDateFrom);
@@ -122,17 +123,15 @@ export class PriceQuotesComponent implements OnInit {
     : this.course()?.actualEndDate);
   sessionParticipantsCount = computed(() => this.parentArm() === 'session'
     ? this.session()?.nomineesCount ?? this.session()?.nominations?.length ?? 0
-    : 0);
+    : this.course()?.nomineesCount ?? this.course()?.nominations?.length ?? 0);
   pricePerPersonPreview = computed(() => {
     const entered = this.fQuotedPrice() ?? 0;
-    if (this.parentArm() !== 'session') return entered;
     if (this.fPricingType() === PricingType.PerPerson) return entered;
     const participants = this.sessionParticipantsCount();
     return participants > 0 ? this.roundOMR(entered / participants) : 0;
   });
   totalPricePreview = computed(() => {
     const entered = this.fQuotedPrice() ?? 0;
-    if (this.parentArm() !== 'session') return entered;
     return this.fPricingType() === PricingType.PerPerson
       ? this.roundOMR(entered * this.sessionParticipantsCount())
       : entered;
@@ -355,23 +354,20 @@ export class PriceQuotesComponent implements OnInit {
       this.saveError.set('يرجى إدخال سعر معروض صحيح');
       return;
     }
-    if (this.parentArm() === 'session'
-      && this.fPricingType() === PricingType.PerPerson
+    if (this.fPricingType() === PricingType.PerPerson
       && this.sessionParticipantsCount() === 0) {
       this.saveError.set(this.l.t('::Training:PriceQuote:PerPersonRequiresNominees'));
       return;
     }
 
-    const isSession = this.parentArm() === 'session';
-
     const dto: CreateUpdatePriceQuoteDto = {
       casualCourseId: this.parentArm() === 'casualCourse' ? this.parentId() : null,
-      sessionId: isSession ? this.parentId() : null,
+      sessionId: this.parentArm() === 'session' ? this.parentId() : null,
       providerId: this.fProviderId(),
-      pricingType: isSession ? this.fPricingType() : PricingType.Total,
-      quotedPrice: isSession ? this.fQuotedPrice() : 0,
-      participantsCount: isSession ? this.sessionParticipantsCount() : 0,
-      quotedPriceOMR: isSession ? this.totalPricePreview() : this.fQuotedPrice(),
+      pricingType: this.fPricingType(),
+      quotedPrice: this.fQuotedPrice(),
+      participantsCount: this.sessionParticipantsCount(),
+      quotedPriceOMR: this.totalPricePreview(),
       countryId: this.fCountryId(),
       cityId: this.fCityId(),
       notes: this.fNotes() || null,

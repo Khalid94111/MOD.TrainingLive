@@ -72,6 +72,74 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
+
+  &.two-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.section-heading-block {
+  margin-bottom: 18px;
+
+  .section-title {
+    margin: 3px 0 5px;
+    padding: 0;
+    border: 0;
+    font-size: 1.05rem;
+  }
+}
+
+.section-kicker {
+  color: #2563eb;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.section-description {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.82rem;
+  line-height: 1.7;
+}
+
+.scenario-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  text-align: start;
+  font-family: inherit;
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.8;
+  }
+}
+
+.scenario-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 25px;
+  height: 25px;
+  flex: 0 0 25px;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.scenario-card.selected .scenario-check {
+  border-color: #2563eb;
+  background: #2563eb;
+}
+
+.scenario-card-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
 .scenario-card-head {
@@ -92,9 +160,156 @@
   margin: 0;
 }
 
+.local-approval-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+  border: 1px solid #a7f3d0;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #ecfdf5, #f0fdfa);
+  color: #065f46;
+
+  p {
+    margin: 4px 0 0;
+    color: #047857;
+    font-size: 0.8rem;
+  }
+}
+
+.local-approval-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border-radius: 50%;
+  background: #059669;
+  color: #fff;
+  font-weight: 900;
+}
+
+.financial-overview-card {
+  overflow: hidden;
+}
+
+.funding-table-wrap {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+.funding-table {
+  margin: 0;
+
+  td {
+    vertical-align: middle;
+  }
+
+  .course-fee-row {
+    background: #f8fafc;
+  }
+
+  .row-missing {
+    background: #fff7ed;
+  }
+}
+
+.funding-item-name,
+.funding-item-note {
+  display: block;
+}
+
+.funding-item-name {
+  color: #0f172a;
+  font-weight: 750;
+}
+
+.funding-item-note {
+  margin-top: 2px;
+  color: #94a3b8;
+  font-size: 0.7rem;
+}
+
+.vote-code {
+  direction: ltr;
+  display: inline-block;
+  padding: 4px 8px;
+  border: 1px solid #bfdbfe;
+  border-radius: 7px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.missing-code {
+  color: #b45309;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.travel-pending-chip {
+  display: inline-block;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+.financial-total-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  margin-top: 12px;
+  border-radius: 12px;
+  background: #0f172a;
+  color: #f8fafc;
+
+  strong {
+    font-size: 1.05rem;
+    white-space: nowrap;
+  }
+}
+
+.financial-total-label,
+.financial-total-help {
+  display: block;
+}
+
+.financial-total-label {
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.financial-total-help {
+  margin-top: 3px;
+  color: #cbd5e1;
+  font-size: 0.72rem;
+}
+
+.compact-alert {
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
 .returned-row {
   background: #fffbeb !important;
   border-inline-end: 3px solid #f59e0b;
+}
+
+.service-number {
+  direction: ltr;
+  display: inline-block;
+  color: #1d4ed8;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
 .source-cell {
@@ -328,9 +543,11 @@
 }
 
 @media (max-width: 768px) {
-  .scenario-grid { grid-template-columns: 1fr; }
+  .scenario-grid,
+  .scenario-grid.two-options { grid-template-columns: 1fr; }
   .summary-grid { grid-template-columns: 1fr; }
   .progress-grid { grid-template-columns: repeat(2, 1fr); }
   .fin-head { flex-direction: column; align-items: flex-start; }
   .fin-head-right { align-self: stretch; justify-content: space-between; }
+  .financial-total-bar { align-items: flex-start; flex-direction: column; }
 }

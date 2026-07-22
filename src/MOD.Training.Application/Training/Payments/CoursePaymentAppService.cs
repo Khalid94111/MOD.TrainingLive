@@ -26,10 +26,8 @@ namespace MOD.Training.Training.Payments;
 /// <summary>
 /// Course-level invoice CRUD + invoice file upload/download + atomic Confirm.
 ///
-/// Confirm is the heart of Phase 4B-β: it flips Status to Confirmed AND fires the
-/// BudgetReallocationGenerator inside a single transactional UnitOfWork. If generation
-/// throws, the status update is rolled back — there must never be a "Confirmed payment
-/// without reallocations" state for casual courses.
+/// Confirm flips the invoice status atomically. Casual-course travel expenses are
+/// executed by the Travel module and do not generate training budget reallocations.
 ///
 /// File storage: the typed <see cref="CourseInvoiceContainer"/> is wired to BlobStoring.FileSystem
 /// in <c>TrainingDomainModule.ConfigureServicesAsync</c>, with BasePath driven by the
@@ -45,7 +43,6 @@ public class CoursePaymentAppService(
     IRepository<PriceQuote, Guid> priceQuoteRepo,
     IRepository<IdentityUser, Guid> userRepo,
     IBlobContainer<CourseInvoiceContainer> invoiceBlobs,
-    BudgetReallocationGenerator reallocGenerator,
     CourseNameResolver courseNameResolver,
     CoursePaymentToDtoMapper toDtoMapper,
     CreateUpdateCoursePaymentToEntityMapper toEntityMapper)
@@ -220,19 +217,11 @@ public class CoursePaymentAppService(
 
         await repository.UpdateAsync(entity, autoSave: true);
 
-        var generated = 0;
-        if (entity.CasualCourseId.HasValue)
-        {
-            generated = await reallocGenerator.GenerateForCasualCoursePaymentAsync(
-                coursePaymentId: entity.Id,
-                casualCourseId: entity.CasualCourseId.Value);
-        }
-
         var dto = await BuildDtoAsync(entity);
         return new CoursePaymentConfirmResultDto
         {
             Payment = dto,
-            GeneratedReallocationsCount = generated
+            GeneratedReallocationsCount = 0
         };
     }
 

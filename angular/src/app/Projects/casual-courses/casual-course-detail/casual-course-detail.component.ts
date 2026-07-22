@@ -9,16 +9,14 @@ import { CasualCourseService } from 'src/app/proxy/training/casual-courses';
 import type { CasualCourseDetailDto } from 'src/app/proxy/training/casual-courses/dtos/models';
 import { PriceQuoteService } from 'src/app/proxy/training/finance';
 import type { PriceQuoteDto } from 'src/app/proxy/training/finance/dtos/models';
-import { BudgetReallocationService } from 'src/app/proxy/training/payments/budget-reallocation.service';
 import { CoursePaymentService } from 'src/app/proxy/training/payments/course-payment.service';
 import { TravelAllowancePaymentService } from 'src/app/proxy/training/payments/travel-allowance-payment.service';
 import type {
-  BudgetReallocationDto,
   CoursePaymentDto,
   TravelAllowancePaymentDto,
 } from 'src/app/proxy/training/payments/dtos/models';
 import { PaymentStatus } from 'src/app/proxy/training/enums/payment-status.enum';
-import { ReallocationStatus } from 'src/app/proxy/training/enums/reallocation-status.enum';
+import { SessionStatus } from 'src/app/proxy/training/enums/session-status.enum';
 
 import {
   CASUAL_COURSE_STATUS_OPTIONS,
@@ -73,7 +71,6 @@ export class CasualCourseDetailComponent implements OnInit {
   private readonly travelService = inject(CasualCourseTravelService);
   private readonly travelPaymentService = inject(TravelAllowancePaymentService);
   private readonly coursePaymentService = inject(CoursePaymentService);
-  private readonly reallocationService = inject(BudgetReallocationService);
   private readonly permissions = inject(PermissionService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -83,6 +80,7 @@ export class CasualCourseDetailComponent implements OnInit {
 
   readonly CourseType = CourseType;
   readonly CasualCourseStatus = CasualCourseStatus;
+  readonly SessionStatus = SessionStatus;
 
   readonly id = signal<string>('');
   readonly course = signal<CasualCourseDetailDto | null>(null);
@@ -91,10 +89,12 @@ export class CasualCourseDetailComponent implements OnInit {
   readonly travelProcess = signal<CasualCourseTravelDto | null>(null);
   readonly travelAllowancePayments = signal<TravelAllowancePaymentDto[]>([]);
   readonly coursePayment = signal<CoursePaymentDto | null>(null);
-  readonly reallocations = signal<BudgetReallocationDto[]>([]);
   readonly loading = signal<boolean>(false);
   readonly travelActionRunning = signal<boolean>(false);
   readonly travelActionError = signal<string | null>(null);
+  readonly actionRunning = signal<boolean>(false);
+  readonly actionError = signal<string | null>(null);
+  readonly transitionAction = signal<'inProgress' | 'completed' | null>(null);
 
   readonly activeStage = signal<StageKey>('details');
   private readonly requestedStage = signal<StageKey | null>(null);
@@ -111,9 +111,15 @@ export class CasualCourseDetailComponent implements OnInit {
     this.permissions.getGrantedPolicy('Training.CasualCourses.HeadApprove'));
   readonly canSendTravel = computed(() =>
     this.permissions.getGrantedPolicy('TrainingExecution.TravelRequests.Send'));
+  readonly canMarkInProgress = computed(() =>
+    this.permissions.getGrantedPolicy('Training.CourseSession.MarkInProgress'));
+  readonly canMarkCompleted = computed(() =>
+    this.permissions.getGrantedPolicy('Training.CourseSession.MarkCompleted'));
 
   readonly isNewMode = computed(() => !this.id());
   readonly status = computed(() => this.course()?.status);
+  readonly executionStatus = computed(() =>
+    this.course()?.executionStatus ?? SessionStatus.Planned);
   readonly isInternal = computed(() => this.course()?.courseType === CourseType.Internal);
   readonly isLocal = computed(() => this.course()?.courseType === CourseType.ExternalLocal);
   readonly isInternational = computed(() =>
@@ -143,18 +149,19 @@ export class CasualCourseDetailComponent implements OnInit {
   readonly coursePaymentComplete = computed(() =>
     this.coursePayment()?.status === PaymentStatus.Confirmed);
 
-  readonly reallocationsComplete = computed(() => {
-    const rows = this.reallocations();
-    return rows.length === 0
-      || rows.every(row => row.status === ReallocationStatus.Approved);
-  });
-
   readonly paymentsComplete = computed(() => {
     if (this.isInternal()) return true;
     return this.travelPaymentsComplete()
-      && this.coursePaymentComplete()
-      && this.reallocationsComplete();
+      && this.coursePaymentComplete();
   });
+
+  readonly showMarkInProgressButton = computed(() =>
+    this.canMarkInProgress()
+    && this.executionStatus() === SessionStatus.Scheduled
+    && this.approvalsComplete()
+    && this.paymentsComplete());
+  readonly showMarkCompletedButton = computed(() =>
+    this.canMarkCompleted() && this.executionStatus() === SessionStatus.InProgress);
 
   readonly detailsComplete = computed(() => {
     const status = this.status();
@@ -253,7 +260,7 @@ export class CasualCourseDetailComponent implements OnInit {
       stages.push({
         key: 'payments',
         title: 'المدفوعات',
-        description: 'دفعة الدورة وإعادة التخصيص والنتائج المعتمدة من السفر',
+        description: 'دفعة الدورة والنتائج المالية المعتمدة من منظومة السفر',
         iconClass: 'bi bi-wallet2',
         state: paymentsLocked
           ? 'locked'
@@ -271,7 +278,10 @@ export class CasualCourseDetailComponent implements OnInit {
       title: 'التنفيذ',
       description: 'متابعة جاهزية الدورة وبدء تنفيذها',
       iconClass: 'bi bi-play-circle',
-      state: prerequisitesComplete ? 'attention' : 'locked',
+      state: this.executionStatus() === SessionStatus.Completed
+        || this.executionStatus() === SessionStatus.FinanciallyClosed
+        ? 'complete'
+        : prerequisitesComplete ? 'attention' : 'locked',
       lockReason: 'أكمل المراحل السابقة أولًا.',
     });
 
@@ -370,7 +380,6 @@ export class CasualCourseDetailComponent implements OnInit {
       if (this.isInternal()) {
         this.travelAllowancePayments.set([]);
         this.coursePayment.set(null);
-        this.reallocations.set([]);
       } else {
         await this.loadPaymentsBundle();
       }
@@ -412,17 +421,14 @@ export class CasualCourseDetailComponent implements OnInit {
 
   private async loadPaymentsBundle(): Promise<void> {
     const courseId = this.id();
-    const [travel, course, reallocations] = await Promise.all([
+    const [travel, course] = await Promise.all([
       firstValueFrom(this.travelPaymentService.getList({ casualCourseId: courseId, maxResultCount: 200 }))
         .catch(() => null),
       firstValueFrom(this.coursePaymentService.getList({ casualCourseId: courseId, maxResultCount: 10 }))
         .catch(() => null),
-      firstValueFrom(this.reallocationService.getList({ casualCourseId: courseId, maxResultCount: 200 }))
-        .catch(() => null),
     ]);
     this.travelAllowancePayments.set(travel?.items ?? []);
     this.coursePayment.set(course?.items?.[0] ?? null);
-    this.reallocations.set(reallocations?.items ?? []);
   }
 
   async sendToTravel(): Promise<void> {
@@ -437,6 +443,49 @@ export class CasualCourseDetailComponent implements OnInit {
       this.travelActionError.set(this.extractError(error));
     } finally {
       this.travelActionRunning.set(false);
+    }
+  }
+
+  requestTransition(action: 'inProgress' | 'completed'): void {
+    this.actionError.set(null);
+    this.transitionAction.set(action);
+  }
+
+  cancelTransition(): void {
+    if (!this.actionRunning()) this.transitionAction.set(null);
+  }
+
+  async confirmTransition(): Promise<void> {
+    const action = this.transitionAction();
+    if (!action) return;
+
+    const succeeded = await this.runExecutionAction(() => action === 'inProgress'
+      ? this.courseService.markInProgress(this.id())
+      : this.courseService.markCompleted(this.id()));
+    if (succeeded) this.transitionAction.set(null);
+  }
+
+  executionStatusLabel(): string {
+    switch (this.executionStatus()) {
+      case SessionStatus.Scheduled: return 'جاهزة للتنفيذ';
+      case SessionStatus.InProgress: return 'قيد التنفيذ';
+      case SessionStatus.Completed:
+      case SessionStatus.FinanciallyClosed: return 'مكتملة';
+      default: return 'بانتظار استكمال المتطلبات';
+    }
+  }
+
+  executionStatusMessage(): string {
+    switch (this.executionStatus()) {
+      case SessionStatus.Scheduled:
+        return 'اكتملت جميع المتطلبات السابقة ويمكن بدء تنفيذ الدورة.';
+      case SessionStatus.InProgress:
+        return 'الدورة قيد التنفيذ حاليًا. عند انتهائها يمكنك تسجيل اكتمالها.';
+      case SessionStatus.Completed:
+      case SessionStatus.FinanciallyClosed:
+        return 'تم إنهاء تنفيذ الدورة وتسجيلها كمكتملة.';
+      default:
+        return 'أكمل المتطلبات السابقة قبل بدء تنفيذ الدورة.';
     }
   }
 
@@ -560,5 +609,22 @@ export class CasualCourseDetailComponent implements OnInit {
         ?? this.l.t('::Training.Sessions.Detail.GenericError');
     }
     return this.l.t('::Training.Sessions.Detail.GenericError');
+  }
+
+  private async runExecutionAction(
+    call: () => ReturnType<CasualCourseService['markInProgress']>,
+  ): Promise<boolean> {
+    this.actionError.set(null);
+    this.actionRunning.set(true);
+    try {
+      await firstValueFrom(call());
+      await this.loadAll();
+      return true;
+    } catch (error) {
+      this.actionError.set(this.extractError(error));
+      return false;
+    } finally {
+      this.actionRunning.set(false);
+    }
   }
 }

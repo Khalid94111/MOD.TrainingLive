@@ -41,6 +41,10 @@ public class CasualCourse : FullAuditedEntity<Guid>, IMultiTenant
     public DateTime? ActualStartDate { get; set; }
     public DateTime? ActualEndDate { get; set; }
 
+    // Approval and execution are separate lifecycles. Approval remains THApproved while
+    // execution advances Planned -> Scheduled -> InProgress -> Completed.
+    public SessionStatus ExecutionStatus { get; set; } = SessionStatus.Planned;
+
     public CasualCourseStatus Status { get; set; } = CasualCourseStatus.Draft;
     public CasualCourseStatus? ReturnedFromStatus { get; set; }
 
