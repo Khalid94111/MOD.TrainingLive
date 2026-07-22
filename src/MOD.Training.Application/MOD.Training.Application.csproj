@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <Import Project="..\..\common.props" />
 
@@ -11,6 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\MOD.Training.Domain\MOD.Training.Domain.csproj" />
     <ProjectReference Include="..\MOD.Training.Application.Contracts\MOD.Training.Application.Contracts.csproj" />
+    <ProjectReference Include="..\..\modules\travel\src\Travel.Application\Travel.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

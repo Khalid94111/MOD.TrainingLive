@@ -1,0 +1,1065 @@
+<div class="request-detail-page">
+  <div class="loading-state" *ngIf="loading()">
+    <div class="spinner-ring"><div></div><div></div><div></div><div></div></div>
+    <p>{{ l('Loading') | abpLocalization }}</p>
+  </div>
+
+  <ng-container *ngIf="!loading() && request() as req">
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <div class="header-icon"><i class="fa-solid fa-file-invoice"></i></div>
+        <div class="header-text">
+          <h1>{{ l('RequestDetails') | abpLocalization }}</h1>
+          <p class="text-muted">
+            <span class="status-badge" [class]="getStatusBadgeClass(req.status)">
+              {{ getStatusLabel(req.status) | abpLocalization }}
+            </span>
+            <span class="request-id">#{{ req.id?.slice(0,8) }}</span>
+          </p>
+        </div>
+      </div>
+      <div class="header-actions" *abpPermission="'TravelManagement.TravelRequests.Edit'">
+        <button class="btn btn-submit" *ngIf="req.status === RequestStatus.Draft || req.status === RequestStatus.Returned" (click)="submitRequest()">
+          <i class="fa-solid fa-paper-plane me-2"></i>{{ l('SendToTravelOffice') | abpLocalization }}
+        </button>
+        <button class="btn btn-next" *ngIf="getNextWorkflowStatus(req.status)" (click)="moveToNextWorkflowStep()">
+          <i class="fa-solid fa-arrow-right me-2"></i>{{ getNextWorkflowLabel(req.status) | abpLocalization }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="timeline-card">
+      <div class="timeline-track">
+        <div class="timeline-progress" [style.width.%]="getTimelineProgress(req.status)"></div>
+        <div class="timeline-steps">
+          <div class="timeline-step" *ngFor="let stage of timelineStages; let i = index"
+            [class.completed]="getTimelineStageState(stage.status, req.status) === 'completed'"
+            [class.active]="getTimelineStageState(stage.status, req.status) === 'active'">
+            <div class="step-circle">
+              <i class="fa-solid fa-check" *ngIf="getTimelineStageState(stage.status, req.status) === 'completed'"></i>
+              <i class="fa-solid fa-circle" *ngIf="getTimelineStageState(stage.status, req.status) === 'active'"></i>
+              <span *ngIf="getTimelineStageState(stage.status, req.status) === 'pending'">{{ i + 1 }}</span>
+            </div>
+            <span class="step-label">{{ getStatusLabel(stage.status) | abpLocalization }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Warnings -->
+    <div class="alert alert-warning" *ngIf="req.integrationWarnings">
+      <i class="fa-solid fa-triangle-exclamation me-2"></i>{{ req.integrationWarnings }}
+    </div>
+
+    <!-- Overview -->
+    <div class="detail-card">
+      <div class="card-header-bar"><h6><i class="fa-solid fa-circle-info me-2"></i>{{ l('Overview') | abpLocalization }}</h6></div>
+      <div class="card-body">
+        <div class="info-grid">
+          <div class="info-item full-width">
+            <span class="info-label">{{ l('Title') | abpLocalization }}</span>
+            <span class="info-value title">{{ req.title }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('TravelType') | abpLocalization }}</span>
+            <span class="type-badge">{{ getTypeLabel(req.travelTypeDefinitionId) | abpLocalization }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('AllowanceCategory') | abpLocalization }}</span>
+            <span class="category-badge" [class.cat-a]="req.category === 1" [class.cat-b]="req.category === 2">
+              {{ ('Travel::AllowanceCategory.' + (req.category === 1 ? 'A' : 'B')) | abpLocalization }}
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('Department') | abpLocalization }}</span>
+            <span class="info-value">{{ req.department }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('Destination') | abpLocalization }}</span>
+            <span class="info-value"><i class="fa-solid fa-map-pin me-1"></i>{{ req.destinationCountry }} - {{ req.destinationCity }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('TotalTravelDays') | abpLocalization }}</span>
+            <span class="info-value highlight">{{ getDurationDays(req) }} {{ l('Days') | abpLocalization }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('StartDate') | abpLocalization }}</span>
+            <span class="info-value">{{ req.startDate | date:'shortDate' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('EndDate') | abpLocalization }}</span>
+            <span class="info-value">{{ req.endDate | date:'shortDate' }}</span>
+          </div>
+          <div class="info-item full-width">
+            <span class="info-label">{{ l('Description') | abpLocalization }}</span>
+            <span class="info-value description">{{ req.description || (l('NoDescription') | abpLocalization) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Travel Info Flags -->
+    <div class="detail-card">
+      <div class="card-header-bar"><h6><i class="fa-solid fa-list-check me-2"></i>{{ l('TravelInfo') | abpLocalization }}</h6></div>
+      <div class="card-body">
+        <div class="flags-grid">
+          <div class="flag-item" [class.active]="req.needsPermission">
+            <i class="fa-solid" [class.fa-circle-check]="req.needsPermission" [class.fa-circle-xmark]="!req.needsPermission"></i>
+            <span>{{ l('NeedsPermission') | abpLocalization }}</span>
+          </div>
+          <div class="flag-item" [class.active]="req.needsAwareness">
+            <i class="fa-solid" [class.fa-circle-check]="req.needsAwareness" [class.fa-circle-xmark]="!req.needsAwareness"></i>
+            <span>{{ l('NeedsAwareness') | abpLocalization }}</span>
+          </div>
+          <div class="flag-item" [class.active]="req.hasTicketCompensation">
+            <i class="fa-solid" [class.fa-circle-check]="req.hasTicketCompensation" [class.fa-circle-xmark]="!req.hasTicketCompensation"></i>
+            <span>{{ l('HasTicketCompensation') | abpLocalization }}</span>
+          </div>
+          <div class="flag-item" [class.active]="req.needsTransportation">
+            <i class="fa-solid" [class.fa-circle-check]="req.needsTransportation" [class.fa-circle-xmark]="!req.needsTransportation"></i>
+            <span>{{ l('NeedsTransportation') | abpLocalization }}</span>
+          </div>
+          <div class="flag-item" [class.active]="req.includesAccommodation">
+            <i class="fa-solid" [class.fa-circle-check]="req.includesAccommodation" [class.fa-circle-xmark]="!req.includesAccommodation"></i>
+            <span>{{ l('IncludesAccommodation') | abpLocalization }}</span>
+          </div>
+          <div class="flag-item" [class.active]="req.useHighestAllowance">
+            <i class="fa-solid" [class.fa-circle-check]="req.useHighestAllowance" [class.fa-circle-xmark]="!req.useHighestAllowance"></i>
+            <span>{{ l('UseHighestAllowance') | abpLocalization }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Employees -->
+    <div class="detail-card">
+      <div class="card-header-bar">
+        <h6><i class="fa-solid fa-users me-2"></i>{{ l('EmployeesList') | abpLocalization }}</h6>
+        <span class="count-badge">{{ req.employees?.length || 0 }}</span>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive" *ngIf="req.employees?.length; else noEmployees">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>{{ l('EmployeeNumber') | abpLocalization }}</th>
+                <th>{{ l('EmployeeName') | abpLocalization }}</th>
+                <th>{{ l('Rank') | abpLocalization }}</th>
+                <th>{{ l('DailyAllowanceRate') | abpLocalization }}</th>
+                <th>{{ l('TicketClass') | abpLocalization }}</th>
+                <th class="text-end">{{ l('Actions') | abpLocalization }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let employee of req.employees">
+                <td><span class="emp-number">{{ employee.employeeNumber }}</span></td>
+                <td><strong>{{ employee.employeeName }}</strong></td>
+                <td>{{ employee.rankName }}</td>
+                <td>{{ employee.dailyAllowanceRate | number:'1.2-2' }} OMR</td>
+                <td>
+                  <span class="ticket-class-badge" [class.business]="employee.ticketClass === TicketClass.Business">
+                    <i class="fa-solid" [class.fa-crown]="employee.ticketClass === TicketClass.Business" [class.fa-chair]="employee.ticketClass === TicketClass.Economy"></i>
+                    {{ getTicketClassLabel(employee.ticketClass) | abpLocalization }}
+                  </span>
+                </td>
+                <td class="text-end">
+                  <a class="btn-action btn-view" [routerLink]="['/travel/requests', req.id, 'employees', employee.employeeId]">
+                    <i class="fa-solid fa-eye"></i>{{ l('View') | abpLocalization }}
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noEmployees>
+          <div class="empty-inline"><i class="fa-solid fa-users"></i><span>{{ l('NoEmployeesSelected') | abpLocalization }}</span></div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Travel Office Setup Panel -->
+    <div class="detail-card" *ngIf="showTravelOfficeSetupPanel">
+      <div class="card-header-bar"><h6><i class="fa-solid fa-building me-2"></i>{{ l('TravelOfficeProcedures') | abpLocalization }}</h6></div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="form-section-toggle">
+              <div class="toggle-wrapper">
+                <div class="toggle-info"><label class="form-label mb-0">{{ l('VisaRequired') | abpLocalization }}</label></div>
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="travelOfficeDetails.requiresVisa" />
+                  <span class="toggle-slider"><span class="toggle-knob"></span></span>
+                </label>
+              </div>
+            </div>
+            <input type="number" min="0" step="0.01" class="form-control mt-2" [disabled]="!travelOfficeDetails.requiresVisa"
+              [(ngModel)]="travelOfficeDetails.visaCostPerEmployee" [placeholder]="l('VisaCostPerEmployee') | abpLocalization" />
+          </div>
+          <div class="col-md-6">
+            <div class="form-section-toggle">
+              <div class="toggle-wrapper">
+                <div class="toggle-info"><label class="form-label mb-0">{{ l('TravelInsuranceRequired') | abpLocalization }}</label></div>
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="travelOfficeDetails.requiresTravelInsurance" />
+                  <span class="toggle-slider"><span class="toggle-knob"></span></span>
+                </label>
+              </div>
+            </div>
+            <input type="number" min="0" step="0.01" class="form-control mt-2" [disabled]="!travelOfficeDetails.requiresTravelInsurance"
+              [(ngModel)]="travelOfficeDetails.travelInsuranceCostPerEmployee" [placeholder]="l('TravelInsuranceCostPerEmployee') | abpLocalization" />
+          </div>
+          <div class="col-12">
+            <textarea class="form-control" rows="2" [(ngModel)]="travelOfficeDetails.travelOfficeNotes" [placeholder]="l('TravelOfficeNotes') | abpLocalization"></textarea>
+          </div>
+        </div>
+
+        <!-- Flight Offers -->
+        <div class="flight-offers-section mt-4">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <h6 class="section-subtitle">{{ l('DepartureFlightOffers') | abpLocalization }}</h6>
+              <div class="offer-card" *ngFor="let offer of departureOfferInputs">
+                <div class="offer-header">
+                  <span class="offer-class">{{ getTicketClassLabel(offer.ticketClass) | abpLocalization }}</span>
+                  <span class="offer-flight">{{ offer.airline }} {{ offer.flightNumber }}</span>
+                  <button class="btn-remove-offer" (click)="removeFlightOffer(offer)"><i class="fa-solid fa-trash-can"></i></button>
+                </div>
+                <div class="offer-meta">
+                  <span><i class="fa-regular fa-clock"></i> {{ offer.departureTime | date:'short' }}</span>
+                  <span class="offer-arrow">→</span>
+                  <span><i class="fa-regular fa-clock"></i> {{ offer.arrivalTime | date:'short' }}</span>
+                  <span class="offer-divider">|</span>
+                  <span class="offer-duration"><i class="fa-solid fa-hourglass-half"></i> {{ calculateFlightDuration(offer.departureTime, offer.arrivalTime) }}</span>
+                  <span class="offer-divider">|</span>
+                  <span class="offer-price">{{ offer.price | number:'1.2-2' }} OMR</span>
+                </div>
+              </div>
+              <div class="empty-inline" *ngIf="departureOfferInputs.length === 0">{{ 'Travel::NoDepartureOffer' | abpLocalization }}</div>
+            </div>
+            <div class="col-md-6">
+              <h6 class="section-subtitle">{{ l('ReturnFlightOffers') | abpLocalization }}</h6>
+              <div class="offer-card" *ngFor="let offer of returnOfferInputs">
+                <div class="offer-header">
+                  <span class="offer-class">{{ getTicketClassLabel(offer.ticketClass) | abpLocalization }}</span>
+                  <span class="offer-flight">{{ offer.airline }} {{ offer.flightNumber }}</span>
+                  <button class="btn-remove-offer" (click)="removeFlightOffer(offer)"><i class="fa-solid fa-trash-can"></i></button>
+                </div>
+                <div class="offer-meta">
+                  <span><i class="fa-regular fa-clock"></i> {{ offer.departureTime | date:'short' }}</span>
+                  <span class="offer-arrow">→</span>
+                  <span><i class="fa-regular fa-clock"></i> {{ offer.arrivalTime | date:'short' }}</span>
+                  <span class="offer-divider">|</span>
+                  <span class="offer-duration"><i class="fa-solid fa-hourglass-half"></i> {{ calculateFlightDuration(offer.departureTime, offer.arrivalTime) }}</span>
+                  <span class="offer-divider">|</span>
+                  <span class="offer-price">{{ offer.price | number:'1.2-2' }} OMR</span>
+                </div>
+              </div>
+              <div class="empty-inline" *ngIf="returnOfferInputs.length === 0">{{ 'Travel::NoReturnOffer' | abpLocalization }}</div>
+            </div>
+          </div>
+
+          <!-- Add Offer Form -->
+          <div class="add-offer-form mt-3">
+            <h6 class="section-subtitle">{{ l('AddFlightOffer') | abpLocalization }}</h6>
+            <div class="row g-2">
+              <div class="col-6 col-md-2">
+                <select class="form-select" [(ngModel)]="newFlightOffer.direction" (ngModelChange)="onNewFlightOfferDirectionChange($event)">
+                  <option [ngValue]="FlightDirection.Departure">{{ l('Departure') | abpLocalization }}</option>
+                  <option [ngValue]="FlightDirection.Return">{{ l('ReturnFlight') | abpLocalization }}</option>
+                </select>
+              </div>
+              <div class="col-6 col-md-2">
+                <select class="form-select" [(ngModel)]="newFlightOffer.ticketClass">
+                  <option [ngValue]="TicketClass.Economy">{{ l('TicketClass.Economy') | abpLocalization }}</option>
+                  <option [ngValue]="TicketClass.Business">{{ l('TicketClass.Business') | abpLocalization }}</option>
+                </select>
+              </div>
+              <div class="col-6 col-md-2"><input class="form-control" [(ngModel)]="newFlightOffer.airline" [placeholder]="l('Airline') | abpLocalization" /></div>
+              <div class="col-6 col-md-2"><input class="form-control" [(ngModel)]="newFlightOffer.flightNumber" [placeholder]="l('FlightNumber') | abpLocalization" /></div>
+              <div class="col-6 col-md-2"><input class="form-control" type="datetime-local" [(ngModel)]="newFlightOffer.departureTime" /></div>
+              <div class="col-6 col-md-2"><input class="form-control" type="datetime-local" [(ngModel)]="newFlightOffer.arrivalTime" /></div>
+            </div>
+            <div class="row g-2 mt-1">
+              <div class="col-6 col-md-2">
+                <input class="form-control" type="number" min="0" step="0.01" [(ngModel)]="newFlightOffer.price" [placeholder]="l('Price') | abpLocalization" />
+              </div>
+              <div class="col-6 col-md-2 d-flex align-items-center">
+                <span class="computed-duration" *ngIf="newFlightOffer.departureTime && newFlightOffer.arrivalTime">
+                  <i class="fa-solid fa-hourglass-half"></i> {{ calculateFlightDuration(newFlightOffer.departureTime, newFlightOffer.arrivalTime) }}
+                </span>
+              </div>
+              <div class="col-12 col-md-2 ms-md-auto">
+                <button type="button" class="btn btn-add-offer w-100" (click)="addFlightOffer()">
+                  <i class="fa-solid fa-plus me-1"></i>{{ l('Add') | abpLocalization }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+            <strong>{{ l('TravelOfficeTotalEstimate') | abpLocalization }}: {{ travelOfficeTotal | number:'1.2-2' }} OMR</strong>
+            <button type="button" class="btn btn-primary" [disabled]="!canSendFlightOffers" (click)="sendFlightOffersForSelection()">
+              <i class="fa-solid fa-paper-plane me-2"></i>{{ l('SendFlightOffersForSelection') | abpLocalization }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flight Selection Panel -->
+    <div class="detail-card" *ngIf="showFlightSelectionPanel">
+      <div class="card-header-bar"><h6><i class="fa-solid fa-plane-departure me-2"></i>{{ l('ManagementFlightSelection') | abpLocalization }}</h6></div>
+      <div class="card-body">
+        <div *ngFor="let ticketClass of requiredTicketClasses">
+          <h6 class="section-subtitle">{{ getTicketClassLabel(ticketClass) | abpLocalization }}</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">{{ l('DepartureFlightOffers') | abpLocalization }}</label>
+              <div class="flight-select-card" *ngFor="let offer of getDepartureOffers(ticketClass)"
+                [class.selected]="selectedDepartureFlightOfferIds[ticketClass] === offer.id"
+                (click)="selectedDepartureFlightOfferIds[ticketClass] = offer.id">
+                <div class="select-indicator">
+                  <i class="fa-solid fa-circle-check" *ngIf="selectedDepartureFlightOfferIds[ticketClass] === offer.id"></i>
+                  <i class="fa-regular fa-circle" *ngIf="selectedDepartureFlightOfferIds[ticketClass] !== offer.id"></i>
+                </div>
+                <div class="flight-info">
+                  <div class="flight-airline">
+                    <strong>{{ offer.airline }} {{ offer.flightNumber }}</strong>
+                    <span class="flight-class-badge" [class.business]="offer.ticketClass === TicketClass.Business">
+                      {{ getTicketClassLabel(offer.ticketClass) | abpLocalization }}
+                    </span>
+                  </div>
+                  <div class="flight-times">
+                    <span>{{ offer.departureTime | date:'short' }}</span>
+                    <span class="flight-arrow">→</span>
+                    <span>{{ offer.arrivalTime | date:'short' }}</span>
+                  </div>
+                  <div class="flight-footer">
+                    <span class="flight-duration"><i class="fa-solid fa-hourglass-half"></i> {{ calculateFlightDuration(offer.departureTime, offer.arrivalTime) }}</span>
+                    <span class="flight-price">{{ offer.price | number:'1.2-2' }} OMR</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">{{ l('ReturnFlightOffers') | abpLocalization }}</label>
+              <div class="flight-select-card" *ngFor="let offer of getReturnOffers(ticketClass)"
+                [class.selected]="selectedReturnFlightOfferIds[ticketClass] === offer.id"
+                (click)="selectedReturnFlightOfferIds[ticketClass] = offer.id">
+                <div class="select-indicator">
+                  <i class="fa-solid fa-circle-check" *ngIf="selectedReturnFlightOfferIds[ticketClass] === offer.id"></i>
+                  <i class="fa-regular fa-circle" *ngIf="selectedReturnFlightOfferIds[ticketClass] !== offer.id"></i>
+                </div>
+                <div class="flight-info">
+                  <div class="flight-airline">
+                    <strong>{{ offer.airline }} {{ offer.flightNumber }}</strong>
+                    <span class="flight-class-badge" [class.business]="offer.ticketClass === TicketClass.Business">
+                      {{ getTicketClassLabel(offer.ticketClass) | abpLocalization }}
+                    </span>
+                  </div>
+                  <div class="flight-times">
+                    <span>{{ offer.departureTime | date:'short' }}</span>
+                    <span class="flight-arrow">→</span>
+                    <span>{{ offer.arrivalTime | date:'short' }}</span>
+                  </div>
+                  <div class="flight-footer">
+                    <span class="flight-duration"><i class="fa-solid fa-hourglass-half"></i> {{ calculateFlightDuration(offer.departureTime, offer.arrivalTime) }}</span>
+                    <span class="flight-price">{{ offer.price | number:'1.2-2' }} OMR</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+          <strong>{{ l('SelectedTicketsTotal') | abpLocalization }}: {{ selectedFlightTotal | number:'1.2-2' }} OMR</strong>
+          <button type="button" class="btn btn-primary" [disabled]="!canConfirmFlightSelection" (click)="selectFlightOffers()">
+            <i class="fa-solid fa-check me-2"></i>{{ l('ConfirmFlightSelection') | abpLocalization }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ticket Booking Panel -->
+    <div class="detail-card" *ngIf="showTicketBookingPanel">
+      <div class="card-header-bar"><h6><i class="fa-solid fa-ticket me-2"></i>{{ l('TicketBookingConfirmation') | abpLocalization }}</h6></div>
+      <div class="card-body">
+        <div class="ticket-cards">
+          <!-- Departure Ticket -->
+          <div class="ticket-card departure" *ngFor="let offer of selectedDepartureOffers">
+            <div class="ticket-stub"></div>
+            <div class="ticket-body">
+              <div class="ticket-header">
+                <span class="ticket-direction"><i class="fa-solid fa-plane-departure"></i> {{ l('Departure') | abpLocalization }}</span>
+                <span class="ticket-class" [class.business]="offer.ticketClass === TicketClass.Business">{{ getTicketClassLabel(offer.ticketClass) | abpLocalization }}</span>
+              </div>
+              <div class="ticket-airline">
+                <i class="fa-solid fa-plane"></i>
+                <strong>{{ offer.airline }} {{ offer.flightNumber }}</strong>
+              </div>
+              <div class="ticket-route">
+                <div class="ticket-time">
+                  <span class="ticket-time-value">{{ offer.departureTime | date:'shortTime' }}</span>
+                  <span class="ticket-date">{{ offer.departureTime | date:'shortDate' }}</span>
+                </div>
+                <div class="ticket-route-line">
+                  <span class="ticket-dot"></span>
+                  <span class="ticket-line"></span>
+                  <i class="fa-solid fa-plane"></i>
+                  <span class="ticket-line"></span>
+                  <span class="ticket-dot"></span>
+                </div>
+                <div class="ticket-time">
+                  <span class="ticket-time-value">{{ offer.arrivalTime | date:'shortTime' }}</span>
+                  <span class="ticket-date">{{ offer.arrivalTime | date:'shortDate' }}</span>
+                </div>
+              </div>
+              <div class="ticket-footer">
+                <span class="ticket-duration"><i class="fa-solid fa-hourglass-half"></i> {{ calculateFlightDuration(offer.departureTime, offer.arrivalTime) }}</span>
+                <span class="ticket-price">{{ offer.price | number:'1.2-2' }} OMR</span>
+              </div>
+            </div>
+          </div>
+          <!-- Return Ticket -->
+          <div class="ticket-card return" *ngFor="let offer of selectedReturnOffers">
+            <div class="ticket-stub"></div>
+            <div class="ticket-body">
+              <div class="ticket-header">
+                <span class="ticket-direction"><i class="fa-solid fa-plane-arrival"></i> {{ l('ReturnFlight') | abpLocalization }}</span>
+                <span class="ticket-class" [class.business]="offer.ticketClass === TicketClass.Business">{{ getTicketClassLabel(offer.ticketClass) | abpLocalization }}</span>
+              </div>
+              <div class="ticket-airline">
+                <i class="fa-solid fa-plane"></i>
+                <strong>{{ offer.airline }} {{ offer.flightNumber }}</strong>
+              </div>
+              <div class="ticket-route">
+                <div class="ticket-time">
+                  <span class="ticket-time-value">{{ offer.departureTime | date:'shortTime' }}</span>
+                  <span class="ticket-date">{{ offer.departureTime | date:'shortDate' }}</span>
+                </div>
+                <div class="ticket-route-line">
+                  <span class="ticket-dot"></span>
+                  <span class="ticket-line"></span>
+                  <i class="fa-solid fa-plane"></i>
+                  <span class="ticket-line"></span>
+                  <span class="ticket-dot"></span>
+                </div>
+                <div class="ticket-time">
+                  <span class="ticket-time-value">{{ offer.arrivalTime | date:'shortTime' }}</span>
+                  <span class="ticket-date">{{ offer.arrivalTime | date:'shortDate' }}</span>
+                </div>
+              </div>
+              <div class="ticket-footer">
+                <span class="ticket-duration"><i class="fa-solid fa-hourglass-half"></i> {{ calculateFlightDuration(offer.departureTime, offer.arrivalTime) }}</span>
+                <span class="ticket-price">{{ offer.price | number:'1.2-2' }} OMR</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="btn btn-success mt-3" (click)="openTicketBookingModal()">
+          <i class="fa-solid fa-ticket me-2"></i>{{ l('ConfirmTicketBooking') | abpLocalization }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Documents -->
+    <div class="detail-card" *ngIf="req.documents?.length">
+      <div class="card-header-bar"><h6><i class="fa-solid fa-paperclip me-2"></i>{{ l('Documents') | abpLocalization }}</h6></div>
+      <div class="card-body">
+        <div class="doc-list">
+          <div class="doc-item" *ngFor="let doc of req.documents">
+            <div class="doc-icon">
+              <i [class]="getDocumentIcon(doc.fileExtension)"></i>
+            </div>
+            <div class="doc-info">
+              <span class="doc-name" [title]="doc.name">{{ doc.name }}</span>
+              <span class="doc-meta">{{ doc.fileExtension.toUpperCase() }} | {{ (doc.fileSize / 1024).toFixed(1) }} KB</span>
+            </div>
+            <div class="doc-actions">
+              <button class="doc-btn doc-btn-view" (click)="viewDocument(doc)" [title]="l('View') | abpLocalization">
+                <i class="fa-solid fa-eye"></i>
+                <span>{{ l('View') | abpLocalization }}</span>
+              </button>
+              <button class="doc-btn doc-btn-download" (click)="downloadDocument(doc)" [title]="l('Download') | abpLocalization">
+                <i class="fa-solid fa-download"></i>
+                <span>{{ l('Download') | abpLocalization }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cost Summary -->
+    <div class="detail-card">
+      <div class="card-header-bar"><h6><i class="fa-solid fa-coins me-2"></i>{{ l('TravelCostSummary') | abpLocalization }}</h6></div>
+      <div class="card-body">
+        <div class="cost-grid">
+          <div class="cost-card">
+            <span class="cost-label">{{ l('TicketsTotal') | abpLocalization }}</span>
+            <span class="cost-value">{{ (costSummary()?.ticketsTotal ?? ticketTotal) | number:'1.2-2' }} OMR</span>
+          </div>
+          <div class="cost-card">
+            <span class="cost-label">{{ l('VisaTotal') | abpLocalization }}</span>
+            <span class="cost-value">{{ (costSummary()?.visaTotal ?? visaTotal) | number:'1.2-2' }} OMR</span>
+          </div>
+          <div class="cost-card">
+            <span class="cost-label">{{ l('InsuranceTotal') | abpLocalization }}</span>
+            <span class="cost-value">{{ (costSummary()?.travelInsuranceTotal ?? insuranceTotal) | number:'1.2-2' }} OMR</span>
+          </div>
+          <div class="cost-card">
+            <span class="cost-label">{{ l('AllowancesTotal') | abpLocalization }}</span>
+            <span class="cost-value">{{ (costSummary()?.allowancesTotal ?? allowanceTotal) | number:'1.2-2' }} OMR</span>
+            <small class="cost-hint">{{ (costSummary()?.isAllowanceCalculated ? l('FinalAllowance') : l('EstimatedAllowance')) | abpLocalization }}</small>
+          </div>
+        </div>
+        <div class="cost-grand">
+          <span>{{ l('GrandTravelCost') | abpLocalization }}</span>
+          <strong>{{ (costSummary()?.grandTotal ?? grandTravelCost) | number:'1.2-2' }} OMR</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Allowance Details -->
+    <div class="detail-card">
+      <div class="card-header-bar"><h6><i class="fa-solid fa-calculator me-2"></i>{{ l('AllowanceDetails') | abpLocalization }}</h6></div>
+      <div class="card-body">
+        <div class="table-responsive" *ngIf="allowanceDetails().length; else noAllowance">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>{{ l('EmployeeNumber') | abpLocalization }}</th>
+                <th>{{ l('EmployeeName') | abpLocalization }}</th>
+                <th>{{ l('Rank') | abpLocalization }}</th>
+                <th>{{ l('DailyRate') | abpLocalization }}</th>
+                <th>{{ l('AccommodationPaymentPercentage') | abpLocalization }}</th>
+                <th>{{ l('OverseasAllowance') | abpLocalization }}</th>
+                <th>{{ l('ClothingAllowance') | abpLocalization }}</th>
+                <th>{{ l('NetTotal') | abpLocalization }}</th>
+                <th class="text-end">{{ l('Actions') | abpLocalization }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let detail of allowanceDetails()">
+                <td>{{ detail.employeeNumber }}</td>
+                <td><strong>{{ detail.employeeName }}</strong></td>
+                <td>{{ detail.rankName }}</td>
+                <td>{{ detail.dailyRate | number:'1.2-2' }} OMR</td>
+                <td>{{ detail.accommodationPaymentPercentage | number:'1.0-2' }}%</td>
+                <td>{{ detail.overseasTotal | number:'1.2-2' }} OMR</td>
+                <td>{{ detail.clothingAmount | number:'1.2-2' }} OMR</td>
+                <td><strong>{{ detail.netTotal | number:'1.2-2' }} OMR</strong></td>
+                <td class="text-end">
+                  <button type="button" class="btn-action btn-view" (click)="openAllowanceDetail(detail)">
+                    <i class="fa-solid fa-eye"></i>{{ l('ViewDetails') | abpLocalization }}
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noAllowance>
+          <div class="empty-inline"><i class="fa-solid fa-calculator"></i><span>{{ l('AllowanceNotCalculatedYet') | abpLocalization }}</span></div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Creator Info -->
+    <div class="detail-card creator-card">
+      <div class="card-body">
+        <div class="creator-info">
+          <div class="creator-item">
+            <i class="fa-solid fa-calendar-plus"></i>
+            <div>
+              <span class="creator-label">{{ l('CreatedAt') | abpLocalization }}</span>
+              <span class="creator-value">{{ req.creationTime | date:'medium' }}</span>
+            </div>
+          </div>
+          <div class="creator-item">
+            <i class="fa-solid fa-user"></i>
+            <div>
+              <span class="creator-label">{{ l('CreatedBy') | abpLocalization }}</span>
+              <span class="creator-value">{{ req.requesterName }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<!-- Ticket Booking Modal -->
+<div class="modal d-block ticket-booking-modal" tabindex="-1" *ngIf="showTicketBookingModal()">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header ticket-booking-header">
+        <div class="ticket-booking-title">
+          <div class="ticket-booking-icon"><i class="fa-solid fa-ticket"></i></div>
+          <div>
+            <h5>{{ l('EmployeeTravelDocuments') | abpLocalization }}</h5>
+            <small>{{ l('UploadDocumentsForAllEmployees') | abpLocalization }}</small>
+          </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" (click)="showTicketBookingModal.set(false)"></button>
+      </div>
+
+      <div class="modal-body ticket-booking-body">
+        <!-- Common Files Section -->
+        <div class="common-files-section">
+          <div class="common-files-header">
+            <i class="fa-solid fa-share-nodes"></i>
+            <span>{{ l('CommonFilesForAll') | abpLocalization }}</span>
+          </div>
+          <div class="common-files-grid">
+            <!-- Common Ticket File -->
+            <div class="common-file-card">
+              <div class="common-file-toggle">
+                <span><i class="fa-solid fa-ticket me-2"></i>{{ l('TicketFile') | abpLocalization }}</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="useCommonTicketFile" (change)="useCommonTicketFile && applyCommonFileToAll('ticket')" />
+                  <span class="toggle-slider"><span class="toggle-knob"></span></span>
+                </label>
+              </div>
+              <div class="common-file-upload" *ngIf="!commonTicketFile">
+                <input type="file" #commonTicketInput class="d-none" (change)="onCommonFileSelected($event, 'ticket')" />
+                <button type="button" class="btn btn-upload" (click)="commonTicketInput.click()" [disabled]="uploadingFiles['common-ticket']">
+                  <i class="fa-solid" [class.fa-spinner.fa-spin]="uploadingFiles['common-ticket']" [class.fa-cloud-arrow-up]="!uploadingFiles['common-ticket']"></i>
+                  {{ uploadingFiles['common-ticket'] ? (l('Uploading') | abpLocalization) : (l('SelectFile') | abpLocalization) }}
+                </button>
+              </div>
+              <div class="common-file-info" *ngIf="commonTicketFile">
+                <i class="fa-solid fa-file-pdf"></i>
+                <span class="file-name">{{ commonTicketFile.fileName }}</span>
+                <div class="common-file-actions">
+                  <button type="button" class="doc-btn btn-view" (click)="viewFile(commonTicketFile.blobName, commonTicketFile.fileName)" [title]="l('View') | abpLocalization">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+                  <button type="button" class="doc-btn btn-download" (click)="downloadFile(commonTicketFile.blobName, commonTicketFile.fileName)" [title]="l('Download') | abpLocalization">
+                    <i class="fa-solid fa-download"></i>
+                  </button>
+                  <button type="button" class="doc-btn btn-remove" (click)="commonTicketFile = null" [title]="l('Remove') | abpLocalization">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Common Visa File -->
+            <div class="common-file-card" *ngIf="request()?.requiresVisa">
+              <div class="common-file-toggle">
+                <span><i class="fa-solid fa-passport me-2"></i>{{ l('VisaFile') | abpLocalization }}</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="useCommonVisaFile" (change)="useCommonVisaFile && applyCommonFileToAll('visa')" />
+                  <span class="toggle-slider"><span class="toggle-knob"></span></span>
+                </label>
+              </div>
+              <div class="common-file-upload" *ngIf="!commonVisaFile">
+                <input type="file" #commonVisaInput class="d-none" (change)="onCommonFileSelected($event, 'visa')" />
+                <button type="button" class="btn btn-upload" (click)="commonVisaInput.click()" [disabled]="uploadingFiles['common-visa']">
+                  <i class="fa-solid" [class.fa-spinner.fa-spin]="uploadingFiles['common-visa']" [class.fa-cloud-arrow-up]="!uploadingFiles['common-visa']"></i>
+                  {{ uploadingFiles['common-visa'] ? (l('Uploading') | abpLocalization) : (l('SelectFile') | abpLocalization) }}
+                </button>
+              </div>
+              <div class="common-file-info" *ngIf="commonVisaFile">
+                <i class="fa-solid fa-file-pdf"></i>
+                <span class="file-name">{{ commonVisaFile.fileName }}</span>
+                <div class="common-file-actions">
+                  <button type="button" class="doc-btn btn-view" (click)="viewFile(commonVisaFile.blobName, commonVisaFile.fileName)" [title]="l('View') | abpLocalization">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+                  <button type="button" class="doc-btn btn-download" (click)="downloadFile(commonVisaFile.blobName, commonVisaFile.fileName)" [title]="l('Download') | abpLocalization">
+                    <i class="fa-solid fa-download"></i>
+                  </button>
+                  <button type="button" class="doc-btn btn-remove" (click)="commonVisaFile = null" [title]="l('Remove') | abpLocalization">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Common Insurance File -->
+            <div class="common-file-card" *ngIf="request()?.requiresTravelInsurance">
+              <div class="common-file-toggle">
+                <span><i class="fa-solid fa-shield-halved me-2"></i>{{ l('InsuranceFile') | abpLocalization }}</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" [(ngModel)]="useCommonInsuranceFile" (change)="useCommonInsuranceFile && applyCommonFileToAll('insurance')" />
+                  <span class="toggle-slider"><span class="toggle-knob"></span></span>
+                </label>
+              </div>
+              <div class="common-file-upload" *ngIf="!commonInsuranceFile">
+                <input type="file" #commonInsuranceInput class="d-none" (change)="onCommonFileSelected($event, 'insurance')" />
+                <button type="button" class="btn btn-upload" (click)="commonInsuranceInput.click()" [disabled]="uploadingFiles['common-insurance']">
+                  <i class="fa-solid" [class.fa-spinner.fa-spin]="uploadingFiles['common-insurance']" [class.fa-cloud-arrow-up]="!uploadingFiles['common-insurance']"></i>
+                  {{ uploadingFiles['common-insurance'] ? (l('Uploading') | abpLocalization) : (l('SelectFile') | abpLocalization) }}
+                </button>
+              </div>
+              <div class="common-file-info" *ngIf="commonInsuranceFile">
+                <i class="fa-solid fa-file-pdf"></i>
+                <span class="file-name">{{ commonInsuranceFile.fileName }}</span>
+                <div class="common-file-actions">
+                  <button type="button" class="doc-btn btn-view" (click)="viewFile(commonInsuranceFile.blobName, commonInsuranceFile.fileName)" [title]="l('View') | abpLocalization">
+                    <i class="fa-solid fa-eye"></i>
+                  </button>
+                  <button type="button" class="doc-btn btn-download" (click)="downloadFile(commonInsuranceFile.blobName, commonInsuranceFile.fileName)" [title]="l('Download') | abpLocalization">
+                    <i class="fa-solid fa-download"></i>
+                  </button>
+                  <button type="button" class="doc-btn btn-remove" (click)="commonInsuranceFile = null" [title]="l('Remove') | abpLocalization">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Per-Employee Documents -->
+        <div class="employee-docs-section">
+          <div class="employee-docs-header">
+            <i class="fa-solid fa-users"></i>
+            <span>{{ l('EmployeeDocuments') | abpLocalization }}</span>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle employee-docs-table">
+              <thead>
+                <tr>
+                  <th>{{ l('EmployeeName') | abpLocalization }}</th>
+                  <th>{{ l('EmployeeNumber') | abpLocalization }}</th>
+                  <th>{{ l('TicketNumber') | abpLocalization }} / {{ l('Pnr') | abpLocalization }}</th>
+                  <th>{{ l('TicketFile') | abpLocalization }}</th>
+                  <th *ngIf="request()?.requiresVisa">{{ l('VisaFile') | abpLocalization }}</th>
+                  <th *ngIf="request()?.requiresTravelInsurance">{{ l('InsuranceFile') | abpLocalization }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let document of employeeDocumentInputs">
+                  <td><strong>{{ document.employeeName }}</strong></td>
+                  <td><span class="emp-number">{{ document.employeeNumber }}</span></td>
+                  <td>
+                    <div class="ticket-inputs">
+                      <input class="form-control form-control-sm ticket-num-input" [placeholder]="l('TicketNumber') | abpLocalization" required [(ngModel)]="document.ticketNumber" />
+                      <input class="form-control form-control-sm pnr-input" [placeholder]="l('Pnr') | abpLocalization" required [(ngModel)]="document.pnr" />
+                    </div>
+                  </td>
+                  <!-- Ticket File -->
+                  <td>
+                    <div class="file-cell">
+                      <ng-container *ngIf="!document.ticketFileName; else ticketFileInfo">
+                        <input type="file" #ticketFileInput class="d-none" (change)="onEmployeeFileSelected($event, 'ticket', document.employeeId)" />
+                        <button type="button" class="btn btn-sm btn-upload-file" (click)="ticketFileInput.click()" [disabled]="uploadingFiles[getFileUploadKey('ticket', document.employeeId)]">
+                          <i class="fa-solid" [class.fa-spinner.fa-spin]="uploadingFiles[getFileUploadKey('ticket', document.employeeId)]" [class.fa-cloud-arrow-up]="!uploadingFiles[getFileUploadKey('ticket', document.employeeId)]"></i>
+                        </button>
+                      </ng-container>
+                      <ng-template #ticketFileInfo>
+                        <div class="file-chip">
+                          <i class="fa-solid fa-file-pdf"></i>
+                          <span class="file-chip-name">{{ document.ticketFileName }}</span>
+                          <div class="file-chip-actions">
+                            <button type="button" class="chip-btn chip-view" (click)="viewFile(document.ticketBlobName, document.ticketFileName)" [title]="l('View') | abpLocalization">
+                              <i class="fa-solid fa-eye"></i>
+                            </button>
+                            <button type="button" class="chip-btn chip-download" (click)="downloadFile(document.ticketBlobName, document.ticketFileName)" [title]="l('Download') | abpLocalization">
+                              <i class="fa-solid fa-download"></i>
+                            </button>
+                            <button type="button" class="chip-btn chip-remove" (click)="clearEmployeeFile('ticket', document.employeeId)" [title]="l('Remove') | abpLocalization">
+                              <i class="fa-solid fa-xmark"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </ng-template>
+                    </div>
+                  </td>
+                  <!-- Visa File -->
+                  <td *ngIf="request()?.requiresVisa">
+                    <div class="file-cell">
+                      <ng-container *ngIf="!document.visaFileName; else visaFileInfo">
+                        <input type="file" #visaFileInput class="d-none" (change)="onEmployeeFileSelected($event, 'visa', document.employeeId)" />
+                        <button type="button" class="btn btn-sm btn-upload-file" (click)="visaFileInput.click()" [disabled]="uploadingFiles[getFileUploadKey('visa', document.employeeId)]">
+                          <i class="fa-solid" [class.fa-spinner.fa-spin]="uploadingFiles[getFileUploadKey('visa', document.employeeId)]" [class.fa-cloud-arrow-up]="!uploadingFiles[getFileUploadKey('visa', document.employeeId)]"></i>
+                        </button>
+                      </ng-container>
+                      <ng-template #visaFileInfo>
+                        <div class="file-chip">
+                          <i class="fa-solid fa-file-pdf"></i>
+                          <span class="file-chip-name">{{ document.visaFileName }}</span>
+                          <div class="file-chip-actions">
+                            <button type="button" class="chip-btn chip-view" (click)="viewFile(document.visaBlobName, document.visaFileName)" [title]="l('View') | abpLocalization">
+                              <i class="fa-solid fa-eye"></i>
+                            </button>
+                            <button type="button" class="chip-btn chip-download" (click)="downloadFile(document.visaBlobName, document.visaFileName)" [title]="l('Download') | abpLocalization">
+                              <i class="fa-solid fa-download"></i>
+                            </button>
+                            <button type="button" class="chip-btn chip-remove" (click)="clearEmployeeFile('visa', document.employeeId)" [title]="l('Remove') | abpLocalization">
+                              <i class="fa-solid fa-xmark"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </ng-template>
+                    </div>
+                  </td>
+                  <!-- Insurance File -->
+                  <td *ngIf="request()?.requiresTravelInsurance">
+                    <div class="file-cell">
+                      <ng-container *ngIf="!document.insuranceFileName; else insuranceFileInfo">
+                        <input type="file" #insuranceFileInput class="d-none" (change)="onEmployeeFileSelected($event, 'insurance', document.employeeId)" />
+                        <button type="button" class="btn btn-sm btn-upload-file" (click)="insuranceFileInput.click()" [disabled]="uploadingFiles[getFileUploadKey('insurance', document.employeeId)]">
+                          <i class="fa-solid" [class.fa-spinner.fa-spin]="uploadingFiles[getFileUploadKey('insurance', document.employeeId)]" [class.fa-cloud-arrow-up]="!uploadingFiles[getFileUploadKey('insurance', document.employeeId)]"></i>
+                        </button>
+                      </ng-container>
+                      <ng-template #insuranceFileInfo>
+                        <div class="file-chip">
+                          <i class="fa-solid fa-file-pdf"></i>
+                          <span class="file-chip-name">{{ document.insuranceFileName }}</span>
+                          <div class="file-chip-actions">
+                            <button type="button" class="chip-btn chip-view" (click)="viewFile(document.insuranceBlobName, document.insuranceFileName)" [title]="l('View') | abpLocalization">
+                              <i class="fa-solid fa-eye"></i>
+                            </button>
+                            <button type="button" class="chip-btn chip-download" (click)="downloadFile(document.insuranceBlobName, document.insuranceFileName)" [title]="l('Download') | abpLocalization">
+                              <i class="fa-solid fa-download"></i>
+                            </button>
+                            <button type="button" class="chip-btn chip-remove" (click)="clearEmployeeFile('insurance', document.employeeId)" [title]="l('Remove') | abpLocalization">
+                              <i class="fa-solid fa-xmark"></i>
+                            </button>
+                          </div>
+                        </div>
+                      </ng-template>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="alert alert-danger mt-3 mb-0" *ngIf="!canConfirmTicketBooking">
+          <i class="fa-solid fa-triangle-exclamation me-2"></i>{{ l('CompleteRequiredBookingFields') | abpLocalization }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" (click)="showTicketBookingModal.set(false)">
+          <i class="fa-solid fa-xmark me-2"></i>{{ l('Cancel') | abpLocalization }}
+        </button>
+        <button type="button" class="btn btn-success" [disabled]="!canConfirmTicketBooking" (click)="confirmTicketBooking()">
+          <i class="fa-solid fa-check me-2"></i>{{ l('ConfirmTicketBooking') | abpLocalization }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Allowance Detail Modal -->
+<div class="modal d-block allowance-modal" tabindex="-1" *ngIf="selectedAllowanceDetail() as allowanceDetail">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <!-- Modal Header -->
+      <div class="modal-header allowance-modal-header">
+        <div class="allowance-modal-title">
+          <div class="allowance-modal-icon">
+            <i class="fa-solid fa-user-tie"></i>
+          </div>
+          <div class="allowance-modal-title-text">
+            <h5>{{ l('AllowanceEmployeeDetails') | abpLocalization }}</h5>
+            <span class="allowance-modal-subtitle">{{ allowanceDetail.employeeName }}</span>
+          </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" (click)="closeAllowanceDetail()"></button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body allowance-modal-body">
+        <!-- Stats Cards -->
+        <div class="allowance-stats-grid">
+          <div class="allowance-stat-card primary">
+            <div class="allowance-stat-icon"><i class="fa-solid fa-calendar-days"></i></div>
+            <div class="allowance-stat-info">
+              <span class="allowance-stat-label">{{ l('TotalTravelDays') | abpLocalization }}</span>
+              <span class="allowance-stat-value">{{ allowanceDetail.calculatedDays }}</span>
+            </div>
+          </div>
+          <div class="allowance-stat-card success">
+            <div class="allowance-stat-icon"><i class="fa-solid fa-coins"></i></div>
+            <div class="allowance-stat-info">
+              <span class="allowance-stat-label">{{ l('DailyRate') | abpLocalization }}</span>
+              <span class="allowance-stat-value">{{ allowanceDetail.dailyRate | number:'1.2-2' }} <small>OMR</small></span>
+            </div>
+          </div>
+          <div class="allowance-stat-card info">
+            <div class="allowance-stat-icon"><i class="fa-solid fa-bed"></i></div>
+            <div class="allowance-stat-info">
+              <span class="allowance-stat-label">{{ l('AccommodationPaymentPercentage') | abpLocalization }}</span>
+              <span class="allowance-stat-value">{{ allowanceDetail.accommodationPaymentPercentage | number:'1.0-2' }}%</span>
+            </div>
+          </div>
+          <div class="allowance-stat-card warning">
+            <div class="allowance-stat-icon"><i class="fa-solid fa-shirt"></i></div>
+            <div class="allowance-stat-info">
+              <span class="allowance-stat-label">{{ l('ClothingAllowance') | abpLocalization }}</span>
+              <span class="allowance-stat-value">{{ allowanceDetail.clothingAmount | number:'1.2-2' }} <small>OMR</small></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accommodation Progress Bar -->
+        <div class="allowance-progress-card" *ngIf="allowanceDetail.accommodationPaymentPercentage > 0">
+          <div class="allowance-progress-header">
+            <span><i class="fa-solid fa-percent me-1"></i>{{ l('AccommodationPaymentPercentage') | abpLocalization }}</span>
+            <strong>{{ allowanceDetail.accommodationPaymentPercentage | number:'1.0-2' }}%</strong>
+          </div>
+          <div class="allowance-progress-track">
+            <div class="allowance-progress-fill" [style.width.%]="allowanceDetail.accommodationPaymentPercentage"></div>
+          </div>
+        </div>
+
+        <!-- Segments Table -->
+        <div class="allowance-segments-section">
+          <div class="allowance-segments-header">
+            <i class="fa-solid fa-layer-group"></i>
+            <span>{{ l('AllowanceSegments') | abpLocalization }}</span>
+            <span class="allowance-segments-count">{{ allowanceDetail.segments?.length || 0 }}</span>
+          </div>
+          <div class="allowance-segments-table-wrap">
+            <table class="allowance-segments-table">
+              <thead>
+                <tr>
+                  <th>{{ l('FromDay') | abpLocalization }}</th>
+                  <th>{{ l('ToDay') | abpLocalization }}</th>
+                  <th>{{ l('Days') | abpLocalization }}</th>
+                  <th>{{ l('Percentage') | abpLocalization }}</th>
+                  <th class="text-end">{{ l('Amount') | abpLocalization }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let segment of allowanceDetail.segments; let i = index" [class.even]="i % 2 === 0">
+                  <td><span class="day-badge">{{ segment.fromDay }}</span></td>
+                  <td><span class="day-badge">{{ segment.toDay }}</span></td>
+                  <td><strong>{{ segment.days }}</strong></td>
+                  <td>
+                    <div class="segment-percent">
+                      <div class="segment-percent-bar" [style.width.%]="segment.percentage"></div>
+                      <span>{{ segment.percentage | number:'1.0-2' }}%</span>
+                    </div>
+                  </td>
+                  <td class="text-end"><span class="segment-amount">{{ segment.amount | number:'1.2-2' }} OMR</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Clothing Note -->
+        <div class="allowance-note-card" *ngIf="allowanceDetail.clothingCalculationNote">
+          <div class="allowance-note-icon"><i class="fa-solid fa-circle-info"></i></div>
+          <div class="allowance-note-content">
+            <strong>{{ l('ClothingAllowance') | abpLocalization }}</strong>
+            <p style="white-space:pre-line">{{ formatClothingNote(allowanceDetail.clothingCalculationNote) }}</p>
+          </div>
+        </div>
+
+        <!-- Net Total -->
+        <div class="allowance-grand-total">
+          <div class="allowance-grand-total-label">
+            <i class="fa-solid fa-receipt"></i>
+            <span>{{ l('NetTotal') | abpLocalization }}</span>
+          </div>
+          <div class="allowance-grand-total-value">
+            {{ allowanceDetail.netTotal | number:'1.2-2' }}
+            <small>OMR</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer allowance-modal-footer">
+        <button type="button" class="btn btn-light" (click)="closeAllowanceDetail()">
+          <i class="fa-solid fa-xmark me-2"></i>{{ l('Close') | abpLocalization }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Payroll Element Selection Modal -->
+<div class="modal d-block payroll-element-modal" tabindex="-1" *ngIf="showPayrollElementModal()">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header payroll-element-modal-header">
+        <div class="payroll-element-modal-title">
+          <div class="payroll-element-modal-icon"><i class="fa-solid fa-money-check-dollar"></i></div>
+          <div>
+            <h5>{{ l('SelectPayrollElement') | abpLocalization }}</h5>
+            <small *ngIf="overseasPayrollPreview() as preview">
+              {{ localizationService.instant('Travel::LongTravelPayrollWarning', preview.totalDays.toString(), preview.extraDays.toString()) }}
+            </small>
+          </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" (click)="closePayrollElementModal()"></button>
+      </div>
+
+      <div class="modal-body payroll-element-modal-body">
+        <div class="alert alert-info" *ngIf="overseasPayrollPreview() as preview">
+          <i class="fa-solid fa-circle-info me-2"></i>
+          {{ l('ExtraPeriod') | abpLocalization }}:
+          <strong>{{ preview.extraPeriodStartDate | date:'shortDate' }} - {{ preview.extraPeriodEndDate | date:'shortDate' }}</strong>
+          ({{ preview.extraDays }} {{ l('Days') | abpLocalization }})
+        </div>
+
+        <div class="form-group mb-3">
+          <label class="form-label">{{ l('PayrollElement') | abpLocalization }}</label>
+          <select class="form-select" [ngModel]="selectedPayrollElementId()" (ngModelChange)="selectedPayrollElementId.set($event)">
+            <option [ngValue]="null">{{ l('Select') | abpLocalization }}</option>
+            <option *ngFor="let element of payrollElements()" [value]="element.id">
+              {{ element.arabicName || element.englishName }}
+            </option>
+          </select>
+          <div class="text-muted mt-1" *ngIf="loadingPayrollElements()">
+            <i class="fa-solid fa-spinner fa-spin me-1"></i>{{ l('LoadingPayrollElements') | abpLocalization }}
+          </div>
+          <div class="text-warning mt-1" *ngIf="!loadingPayrollElements() && payrollElements().length === 0">
+            <i class="fa-solid fa-triangle-exclamation me-1"></i>{{ l('NoPayrollElementsFound') | abpLocalization }}
+          </div>
+        </div>
+
+        <div class="payroll-preview-table" *ngIf="overseasPayrollPreview() as preview">
+          <div class="payroll-preview-header">
+            <i class="fa-solid fa-users"></i>
+            <span>{{ l('Employees') | abpLocalization }}</span>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead>
+                <tr>
+                  <th>{{ l('EmployeeName') | abpLocalization }}</th>
+                  <th>{{ l('EmployeeNumber') | abpLocalization }}</th>
+                  <th>{{ l('DailyRate') | abpLocalization }}</th>
+                  <th>{{ l('Percentage') | abpLocalization }}</th>
+                  <th>{{ l('DailyAmount') | abpLocalization }}</th>
+                  <th>{{ l('TotalAmountForEmployee') | abpLocalization }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let employee of preview.employees">
+                  <td><strong>{{ employee.employeeName }}</strong></td>
+                  <td><span class="emp-number">{{ employee.employeeNumber }}</span></td>
+                  <td>{{ employee.dailyRate | number:'1.2-2' }} OMR</td>
+                  <td>{{ employee.percentage | number:'1.0-2' }}%</td>
+                  <td>{{ employee.dailyAmount | number:'1.2-2' }} OMR</td>
+                  <td><strong>{{ employee.totalAmount | number:'1.2-2' }} OMR</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" (click)="closePayrollElementModal()">
+          <i class="fa-solid fa-xmark me-2"></i>{{ l('Cancel') | abpLocalization }}
+        </button>
+        <button type="button" class="btn btn-success" [disabled]="!selectedPayrollElementId()" (click)="confirmPayrollElementAndComplete()">
+          <i class="fa-solid fa-check me-2"></i>{{ l('SendToPayrollAndComplete') | abpLocalization }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

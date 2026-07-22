@@ -143,7 +143,7 @@ export const FUNDING_SCENARIO_OPTIONS = [
 // {0}/{1} from executionStageProgressCurrent / executionStageProgressTotal at render time.
 export enum ExecutionStage {
   AwaitingQuoteSelection       = 1,
-  AwaitingTravelInstruction    = 2,
+  AwaitingTravelCompletion     = 2,
   AwaitingTravelAllowances     = 3,
   AwaitingCoursePayment        = 4,
   AwaitingReallocationApproval = 5,
@@ -152,7 +152,7 @@ export enum ExecutionStage {
 
 export const EXECUTION_STAGE_OPTIONS = [
   { value: ExecutionStage.AwaitingQuoteSelection,       key: '::Training.ExecutionStage.AwaitingQuoteSelection',       progressKey: null,                                                            cssClass: 'badge-stage-pending'  },
-  { value: ExecutionStage.AwaitingTravelInstruction,    key: '::Training.ExecutionStage.AwaitingTravelInstruction',    progressKey: null,                                                            cssClass: 'badge-stage-pending'  },
+  { value: ExecutionStage.AwaitingTravelCompletion,     key: '::Training.ExecutionStage.AwaitingTravelCompletion',     progressKey: null,                                                            cssClass: 'badge-stage-pending'  },
   { value: ExecutionStage.AwaitingTravelAllowances,     key: '::Training.ExecutionStage.AwaitingTravelAllowances',     progressKey: '::Training.ExecutionStage.AwaitingTravelAllowancesProgress',     cssClass: 'badge-stage-progress' },
   { value: ExecutionStage.AwaitingCoursePayment,        key: '::Training.ExecutionStage.AwaitingCoursePayment',        progressKey: null,                                                            cssClass: 'badge-stage-pending'  },
   { value: ExecutionStage.AwaitingReallocationApproval, key: '::Training.ExecutionStage.AwaitingReallocationApproval', progressKey: '::Training.ExecutionStage.AwaitingReallocationApprovalProgress', cssClass: 'badge-stage-progress' },

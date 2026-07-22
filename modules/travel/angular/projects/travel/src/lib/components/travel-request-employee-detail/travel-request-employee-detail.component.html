@@ -1,0 +1,423 @@
+<div class="employee-detail-page">
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="loading()">
+    <div class="spinner-ring"><div></div><div></div><div></div><div></div></div>
+    <p>{{ l('Loading') | abpLocalization }}</p>
+  </div>
+
+  <ng-container *ngIf="!loading() && request() && employee()">
+    <ng-container *ngIf="request() as req">
+    <ng-container *ngIf="employee() as emp">
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <div class="header-icon"><i class="fa-solid fa-user-tie"></i></div>
+        <div class="header-text">
+          <h1>{{ l('EmployeeTravelDetails') | abpLocalization }}</h1>
+          <p class="text-muted">{{ req.title }}</p>
+        </div>
+      </div>
+      <a class="btn btn-back" [routerLink]="['/travel/requests', req.id]">
+        <i class="fa-solid fa-arrow-left me-2"></i>{{ l('BackToRequest') | abpLocalization }}
+      </a>
+    </div>
+
+    <!-- Employee Details -->
+    <div class="detail-card">
+      <div class="card-header-bar">
+        <h6><i class="fa-solid fa-id-card me-2"></i>{{ l('EmployeeDetails') | abpLocalization }}</h6>
+      </div>
+      <div class="card-body">
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">{{ l('EmployeeNumber') | abpLocalization }}</span>
+            <span class="info-value highlight">{{ emp.employeeNumber }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('EmployeeName') | abpLocalization }}</span>
+            <span class="info-value title">{{ emp.employeeName }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('Rank') | abpLocalization }}</span>
+            <span class="info-value">{{ emp.rankName || lookupEmployee()?.rankName || (l('NoData') | abpLocalization) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('TicketClass') | abpLocalization }}</span>
+            <span class="type-badge">{{ getTicketClassLabel(emp.ticketClass) | abpLocalization }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('JobTitle') | abpLocalization }}</span>
+            <span class="info-value">{{ lookupEmployee()?.jobTitle || (l('NoData') | abpLocalization) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('Department') | abpLocalization }}</span>
+            <span class="info-value">{{ lookupEmployee()?.department || req.department }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('Phone') | abpLocalization }}</span>
+            <span class="info-value">{{ lookupEmployee()?.phone || (l('NoData') | abpLocalization) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('Email') | abpLocalization }}</span>
+            <span class="info-value">{{ lookupEmployee()?.email || (l('NoData') | abpLocalization) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('YearsOfService') | abpLocalization }}</span>
+            <span class="info-value">{{ lookupEmployee()?.yearsOfService ?? 0 }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('PassportNumber') | abpLocalization }}</span>
+            <span class="info-value">{{ lookupEmployee()?.passportNumber || (l('NoData') | abpLocalization) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('PassportExpiryDate') | abpLocalization }}</span>
+            <span class="info-value">{{ lookupEmployee()?.passportExpiryDate ? (lookupEmployee()!.passportExpiryDate | date:'shortDate') : (l('NoData') | abpLocalization) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('TotalTrips') | abpLocalization }}</span>
+            <span class="info-value">{{ lookupEmployee()?.totalTrips ?? 0 }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('LastClothingAllowanceDate') | abpLocalization }}</span>
+            <span class="info-value">{{ lookupEmployee()?.lastClothingAllowanceDate ? (lookupEmployee()!.lastClothingAllowanceDate | date:'shortDate') : (l('NoData') | abpLocalization) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Travel Details -->
+    <div class="detail-card">
+      <div class="card-header-bar"><h6><i class="fa-solid fa-plane me-2"></i>{{ l('TravelDetails') | abpLocalization }}</h6></div>
+      <div class="card-body">
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">{{ l('TravelType') | abpLocalization }}</span>
+            <span class="info-value">{{ getTypeLabel(req) | abpLocalization }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('RequestStatus') | abpLocalization }}</span>
+            <span class="status-badge" [class]="getStatusBadgeClass(req.status)">{{ getStatusLabel(req) | abpLocalization }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('Destination') | abpLocalization }}</span>
+            <span class="info-value"><i class="fa-solid fa-map-pin me-1"></i>{{ req.destinationCountry }} - {{ req.destinationCity }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('TotalTravelDays') | abpLocalization }}</span>
+            <span class="info-value highlight">{{ durationDays() }} {{ l('Days') | abpLocalization }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('StartDate') | abpLocalization }}</span>
+            <span class="info-value">{{ req.startDate | date:'shortDate' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('EndDate') | abpLocalization }}</span>
+            <span class="info-value">{{ req.endDate | date:'shortDate' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('IncludesAccommodation') | abpLocalization }}</span>
+            <span class="flag-tag" [class.active]="req.includesAccommodation"><i class="fa-solid" [class.fa-check]="req.includesAccommodation" [class.fa-xmark]="!req.includesAccommodation"></i>{{ (req.includesAccommodation ? l('Yes') : l('No')) | abpLocalization }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">{{ l('NeedsAwareness') | abpLocalization }}</span>
+            <span class="flag-tag" [class.active]="req.needsAwareness"><i class="fa-solid" [class.fa-check]="req.needsAwareness" [class.fa-xmark]="!req.needsAwareness"></i>{{ (req.needsAwareness ? l('Yes') : l('No')) | abpLocalization }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <!-- Ticket & Documents -->
+      <div class="col-12">
+        <div class="detail-card">
+          <div class="card-header-bar"><h6><i class="fa-solid fa-ticket me-2"></i>{{ l('TicketAndDocuments') | abpLocalization }}</h6></div>
+          <div class="card-body">
+            <!-- Flight Tickets -->
+            <div class="flight-tickets">
+              <!-- Departure Ticket -->
+              <div class="ticket-card departure" *ngIf="selectedDepartureOffer() as depOffer">
+                <div class="ticket-stub"></div>
+                <div class="ticket-body">
+                  <div class="ticket-header">
+                    <div class="ticket-airline">
+                      <i class="fa-solid fa-plane-departure"></i>
+                      <span>{{ depOffer.airline }}</span>
+                    </div>
+                    <div class="ticket-class">{{ getTicketClassLabel(depOffer.ticketClass) | abpLocalization }}</div>
+                  </div>
+                  <div class="ticket-route">
+                    <div class="route-from">
+                      <span class="route-code">{{ req.destinationCountry }}</span>
+                      <span class="route-city">{{ req.destinationCity }}</span>
+                    </div>
+                    <div class="route-line">
+                      <i class="fa-solid fa-plane"></i>
+                      <span class="route-duration">{{ depOffer.duration }}</span>
+                    </div>
+                    <div class="route-to">
+                      <span class="route-code">OMN</span>
+                      <span class="route-city">Oman</span>
+                    </div>
+                  </div>
+                  <div class="ticket-details">
+                    <div class="ticket-detail">
+                      <span class="detail-label">{{ l('FlightNumber') | abpLocalization }}</span>
+                      <span class="detail-value">{{ depOffer.flightNumber }}</span>
+                    </div>
+                    <div class="ticket-detail">
+                      <span class="detail-label">{{ l('Departure') | abpLocalization }}</span>
+                      <span class="detail-value">{{ depOffer.departureTime | date:'short' }}</span>
+                    </div>
+                    <div class="ticket-detail">
+                      <span class="detail-label">{{ l('Arrival') | abpLocalization }}</span>
+                      <span class="detail-value">{{ depOffer.arrivalTime | date:'short' }}</span>
+                    </div>
+                    <div class="ticket-detail">
+                      <span class="detail-label">{{ l('Price') | abpLocalization }}</span>
+                      <span class="detail-value price">{{ depOffer.price | number:'1.2-2' }} OMR</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="empty-inline" *ngIf="!selectedDepartureOffer()">
+                <i class="fa-solid fa-plane-departure"></i><span>{{ l('NoDepartureOffer') | abpLocalization }}</span>
+              </div>
+
+              <!-- Return Ticket -->
+              <div class="ticket-card return" *ngIf="selectedReturnOffer() as retOffer">
+                <div class="ticket-stub"></div>
+                <div class="ticket-body">
+                  <div class="ticket-header">
+                    <div class="ticket-airline">
+                      <i class="fa-solid fa-plane-arrival"></i>
+                      <span>{{ retOffer.airline }}</span>
+                    </div>
+                    <div class="ticket-class">{{ getTicketClassLabel(retOffer.ticketClass) | abpLocalization }}</div>
+                  </div>
+                  <div class="ticket-route">
+                    <div class="route-from">
+                      <span class="route-code">OMN</span>
+                      <span class="route-city">Oman</span>
+                    </div>
+                    <div class="route-line">
+                      <i class="fa-solid fa-plane"></i>
+                      <span class="route-duration">{{ retOffer.duration }}</span>
+                    </div>
+                    <div class="route-to">
+                      <span class="route-code">{{ req.destinationCountry }}</span>
+                      <span class="route-city">{{ req.destinationCity }}</span>
+                    </div>
+                  </div>
+                  <div class="ticket-details">
+                    <div class="ticket-detail">
+                      <span class="detail-label">{{ l('FlightNumber') | abpLocalization }}</span>
+                      <span class="detail-value">{{ retOffer.flightNumber }}</span>
+                    </div>
+                    <div class="ticket-detail">
+                      <span class="detail-label">{{ l('Departure') | abpLocalization }}</span>
+                      <span class="detail-value">{{ retOffer.departureTime | date:'short' }}</span>
+                    </div>
+                    <div class="ticket-detail">
+                      <span class="detail-label">{{ l('Arrival') | abpLocalization }}</span>
+                      <span class="detail-value">{{ retOffer.arrivalTime | date:'short' }}</span>
+                    </div>
+                    <div class="ticket-detail">
+                      <span class="detail-label">{{ l('Price') | abpLocalization }}</span>
+                      <span class="detail-value price">{{ retOffer.price | number:'1.2-2' }} OMR</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="empty-inline" *ngIf="!selectedReturnOffer()">
+                <i class="fa-solid fa-plane-arrival"></i><span>{{ l('NoReturnOffer') | abpLocalization }}</span>
+              </div>
+            </div>
+
+            <!-- Documents Row -->
+            <div class="documents-row" *ngIf="employeeDocument() as doc">
+              <div class="doc-badge" *ngIf="doc.ticketNumber">
+                <div class="doc-icon"><i class="fa-solid fa-ticket"></i></div>
+                <div class="doc-info">
+                  <span class="doc-label">{{ l('TicketNumber') | abpLocalization }}</span>
+                  <span class="doc-value">{{ doc.ticketNumber }}</span>
+                </div>
+              </div>
+              <div class="doc-badge" *ngIf="doc.pnr">
+                <div class="doc-icon"><i class="fa-solid fa-barcode"></i></div>
+                <div class="doc-info">
+                  <span class="doc-label">{{ l('Pnr') | abpLocalization }}</span>
+                  <span class="doc-value">{{ doc.pnr }}</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Attachments -->
+      <div class="col-12" *ngIf="employeeDocument() as doc">
+        <div class="detail-card">
+          <div class="card-header-bar">
+            <h6><i class="fa-solid fa-paperclip me-2"></i>{{ l('Attachments') | abpLocalization }}</h6>
+          </div>
+          <div class="card-body">
+            <div class="attachments-grid" *ngIf="hasAttachments(doc); else noAttachments">
+              <!-- Ticket File -->
+              <div class="attachment-card" *ngIf="doc.ticketBlobName">
+                <div class="attachment-icon green"><i class="fa-solid fa-file-pdf"></i></div>
+                <div class="attachment-info">
+                  <span class="attachment-name" [title]="doc.ticketFileName || doc.ticketBlobName">{{ doc.ticketFileName || doc.ticketBlobName }}</span>
+                  <span class="attachment-type">{{ l('TicketFile') | abpLocalization }}</span>
+                </div>
+                <div class="attachment-actions">
+                  <button type="button" class="btn btn-view" (click)="viewFile(doc.ticketBlobName, doc.ticketFileName || doc.ticketBlobName)" [title]="l('View') | abpLocalization">
+                    <i class="fa-solid fa-eye"></i><span class="btn-label">{{ l('View') | abpLocalization }}</span>
+                  </button>
+                  <button type="button" class="btn btn-download" (click)="downloadFile(doc.ticketBlobName, doc.ticketFileName || doc.ticketBlobName)" [title]="l('Download') | abpLocalization">
+                    <i class="fa-solid fa-download"></i><span class="btn-label">{{ l('Download') | abpLocalization }}</span>
+                  </button>
+                </div>
+              </div>
+              <!-- Visa File -->
+              <div class="attachment-card" *ngIf="doc.visaBlobName">
+                <div class="attachment-icon orange"><i class="fa-solid fa-passport"></i></div>
+                <div class="attachment-info">
+                  <span class="attachment-name" [title]="doc.visaFileName || doc.visaBlobName">{{ doc.visaFileName || doc.visaBlobName }}</span>
+                  <span class="attachment-type">{{ l('VisaFile') | abpLocalization }}</span>
+                </div>
+                <div class="attachment-actions">
+                  <button type="button" class="btn btn-view" (click)="viewFile(doc.visaBlobName, doc.visaFileName || doc.visaBlobName)" [title]="l('View') | abpLocalization">
+                    <i class="fa-solid fa-eye"></i><span class="btn-label">{{ l('View') | abpLocalization }}</span>
+                  </button>
+                  <button type="button" class="btn btn-download" (click)="downloadFile(doc.visaBlobName, doc.visaFileName || doc.visaBlobName)" [title]="l('Download') | abpLocalization">
+                    <i class="fa-solid fa-download"></i><span class="btn-label">{{ l('Download') | abpLocalization }}</span>
+                  </button>
+                </div>
+              </div>
+              <!-- Insurance File -->
+              <div class="attachment-card" *ngIf="doc.insuranceBlobName">
+                <div class="attachment-icon blue"><i class="fa-solid fa-shield-halved"></i></div>
+                <div class="attachment-info">
+                  <span class="attachment-name" [title]="doc.insuranceFileName || doc.insuranceBlobName">{{ doc.insuranceFileName || doc.insuranceBlobName }}</span>
+                  <span class="attachment-type">{{ l('InsuranceFile') | abpLocalization }}</span>
+                </div>
+                <div class="attachment-actions">
+                  <button type="button" class="btn btn-view" (click)="viewFile(doc.insuranceBlobName, doc.insuranceFileName || doc.insuranceBlobName)" [title]="l('View') | abpLocalization">
+                    <i class="fa-solid fa-eye"></i><span class="btn-label">{{ l('View') | abpLocalization }}</span>
+                  </button>
+                  <button type="button" class="btn btn-download" (click)="downloadFile(doc.insuranceBlobName, doc.insuranceFileName || doc.insuranceBlobName)" [title]="l('Download') | abpLocalization">
+                    <i class="fa-solid fa-download"></i><span class="btn-label">{{ l('Download') | abpLocalization }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <ng-template #noAttachments>
+              <div class="empty-inline">
+                <i class="fa-solid fa-paperclip"></i>
+                <span>{{ l('NoAttachments') | abpLocalization }}</span>
+              </div>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cost Summary -->
+      <div class="col-12">
+        <div class="detail-card">
+          <div class="card-header-bar"><h6><i class="fa-solid fa-coins me-2"></i>{{ l('EmployeeCostSummary') | abpLocalization }}</h6></div>
+          <div class="card-body">
+            <div class="cost-grid">
+              <div class="cost-card">
+                <span class="cost-label">{{ l('TicketCost') | abpLocalization }}</span>
+                <span class="cost-value">{{ ticketCost() | number:'1.2-2' }} OMR</span>
+              </div>
+              <div class="cost-card">
+                <span class="cost-label">{{ l('VisaCost') | abpLocalization }}</span>
+                <span class="cost-value">{{ visaCost() | number:'1.2-2' }} OMR</span>
+              </div>
+              <div class="cost-card">
+                <span class="cost-label">{{ l('InsuranceCost') | abpLocalization }}</span>
+                <span class="cost-value">{{ insuranceCost() | number:'1.2-2' }} OMR</span>
+              </div>
+              <div class="cost-card">
+                <span class="cost-label">{{ l('AllowancesTotal') | abpLocalization }}</span>
+                <span class="cost-value">{{ (allowanceDetail()?.netTotal || 0) | number:'1.2-2' }} OMR</span>
+              </div>
+            </div>
+            <div class="cost-grand">
+              <span>{{ l('EmployeeGrandTotal') | abpLocalization }}</span>
+              <strong>{{ employeeGrandTotal() | number:'1.2-2' }} OMR</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Allowance Details -->
+    <div class="detail-card">
+      <div class="card-header-bar"><h6><i class="fa-solid fa-calculator me-2"></i>{{ l('AllowanceDetails') | abpLocalization }}</h6></div>
+      <div class="card-body">
+        <ng-container *ngIf="allowanceDetail() as detail">
+          <div class="info-grid compact mb-3">
+            <div class="info-item">
+              <span class="info-label">{{ l('DailyRate') | abpLocalization }}</span>
+              <span class="info-value">{{ detail.dailyRate | number:'1.2-2' }} OMR</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">{{ l('AccommodationPaymentPercentage') | abpLocalization }}</span>
+              <span class="info-value">{{ detail.accommodationPaymentPercentage | number:'1.0-2' }}%</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">{{ l('OverseasAllowance') | abpLocalization }}</span>
+              <span class="info-value">{{ detail.overseasTotal | number:'1.2-2' }} OMR</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">{{ l('ClothingAllowance') | abpLocalization }}</span>
+              <span class="info-value">{{ detail.clothingAmount | number:'1.2-2' }} OMR</span>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>{{ l('FromDay') | abpLocalization }}</th>
+                  <th>{{ l('ToDay') | abpLocalization }}</th>
+                  <th>{{ l('Days') | abpLocalization }}</th>
+                  <th>{{ l('Percentage') | abpLocalization }}</th>
+                  <th>{{ l('Amount') | abpLocalization }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let segment of detail.segments">
+                  <td>{{ segment.fromDay }}</td>
+                  <td>{{ segment.toDay }}</td>
+                  <td>{{ segment.days }}</td>
+                  <td>{{ segment.percentage | number:'1.0-2' }}%</td>
+                  <td><strong>{{ segment.amount | number:'1.2-2' }} OMR</strong></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="alert alert-light border mt-3 mb-0" *ngIf="detail.clothingCalculationNote">
+            <small class="text-muted d-block">{{ l('ClothingAllowance') | abpLocalization }}</small>
+            {{ detail.clothingCalculationNote }}
+          </div>
+        </ng-container>
+        <div class="empty-inline" *ngIf="!allowanceDetail()">
+          <i class="fa-solid fa-calculator"></i>
+          <span>{{ l('AllowanceNotCalculatedYet') | abpLocalization }}</span>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+  </ng-container>
+  </ng-container>
+
+  <!-- Not Found -->
+  <div class="alert alert-warning" *ngIf="!loading() && (!request() || !employee())"
+       role="alert">
+    <i class="fa-solid fa-triangle-exclamation me-2"></i>
+    {{ l('EmployeeNotFoundInRequest') | abpLocalization }}
+  </div>
+</div>

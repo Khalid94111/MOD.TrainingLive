@@ -19,7 +19,7 @@ public class TravelAllowancePayment : FullAuditedAggregateRoot<Guid>, IMultiTena
     public Guid? SessionId { get; set; }
     public Guid? CasualCourseId { get; set; }
 
-    public Guid NominationId { get; set; }            // FK — CasualCourseNomination.Id (casual arm) OR Nomination.Id (session arm)
+    public Guid NominationId { get; set; }            // FK — CasualCourseNomination.Id (casual arm) OR SessionNomination.Id (session arm)
     public PersonnelType PersonnelType { get; set; }  // auto-filled from nominee rank, never editable
 
     // Five amount components — all in OMR.

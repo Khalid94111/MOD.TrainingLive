@@ -2,7 +2,7 @@ import { mapEnumToOptions } from '@abp/ng.core';
 
 export enum ExecutionStage {
   AwaitingQuoteSelection = 1,
-  AwaitingTravelInstruction = 2,
+  AwaitingTravelCompletion = 2,
   AwaitingTravelAllowances = 3,
   AwaitingCoursePayment = 4,
   AwaitingReallocationApproval = 5,

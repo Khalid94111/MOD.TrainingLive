@@ -298,18 +298,12 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
             TrainingExecutionPermissions.PriceQuotes.Select,
             L("Permission:TrainingExecution.PriceQuotes.Select"));
 
-        var travelInstructionsPermission = executionGroup.AddPermission(
-            TrainingExecutionPermissions.TravelInstructions.Default,
-            L("Permission:TrainingExecution.TravelInstructions"));
-        travelInstructionsPermission.AddChild(
-            TrainingExecutionPermissions.TravelInstructions.Edit,
-            L("Permission:TrainingExecution.TravelInstructions.Edit"));
-        travelInstructionsPermission.AddChild(
-            TrainingExecutionPermissions.TravelInstructions.Issue,
-            L("Permission:TrainingExecution.TravelInstructions.Issue"));
-        travelInstructionsPermission.AddChild(
-            TrainingExecutionPermissions.TravelInstructions.Cancel,
-            L("Permission:TrainingExecution.TravelInstructions.Cancel"));
+        var travelRequestsPermission = executionGroup.AddPermission(
+            TrainingExecutionPermissions.TravelRequests.Default,
+            L("Permission:TrainingExecution.TravelRequests"));
+        travelRequestsPermission.AddChild(
+            TrainingExecutionPermissions.TravelRequests.Send,
+            L("Permission:TrainingExecution.TravelRequests.Send"));
 
         // ── Phase 4B-β — payments + auto-reallocation (separate group) ──────
         var paymentsGroup = context.AddGroup(
@@ -319,18 +313,6 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
         var travelAllowance = paymentsGroup.AddPermission(
             TrainingPaymentsPermissions.TravelAllowance.Default,
             L("Permission:TrainingPayments.TravelAllowance"));
-        travelAllowance.AddChild(
-            TrainingPaymentsPermissions.TravelAllowance.Create,
-            L("Permission:TrainingPayments.TravelAllowance.Create"));
-        travelAllowance.AddChild(
-            TrainingPaymentsPermissions.TravelAllowance.Update,
-            L("Permission:TrainingPayments.TravelAllowance.Update"));
-        travelAllowance.AddChild(
-            TrainingPaymentsPermissions.TravelAllowance.Delete,
-            L("Permission:TrainingPayments.TravelAllowance.Delete"));
-        travelAllowance.AddChild(
-            TrainingPaymentsPermissions.TravelAllowance.Confirm,
-            L("Permission:TrainingPayments.TravelAllowance.Confirm"));
 
         var coursePayments = paymentsGroup.AddPermission(
             TrainingPaymentsPermissions.CoursePayments.Default,

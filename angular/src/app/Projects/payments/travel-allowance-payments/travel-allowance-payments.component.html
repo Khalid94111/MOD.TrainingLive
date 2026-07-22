@@ -1,459 +1,203 @@
-<div class="page-container">
-  <div class="page-header">
+<div class="travel-register-page">
+  <header class="register-hero">
+    <div class="hero-copy">
+      <span class="hero-icon"><i class="bi bi-airplane-engines"></i></span>
+      <div>
+        <span class="hero-eyebrow">{{ '::Training.Payments.TravelRegister.Eyebrow' | abpLocalization }}</span>
+        <h1>{{ '::Training.Payments.TravelRegister.Title' | abpLocalization }}</h1>
+        <p>{{ '::Training.Payments.TravelRegister.Subtitle' | abpLocalization }}</p>
+      </div>
+    </div>
+
+    <div class="hero-actions">
+      <button type="button" class="icon-action" [disabled]="loading()" (click)="reload()"
+              [attr.title]="'::Training.Payments.TravelRegister.Refresh' | abpLocalization">
+        <i class="bi bi-arrow-clockwise" [class.spin]="loading()"></i>
+      </button>
+    </div>
+  </header>
+
+  <section class="source-guidance">
+    <span class="guidance-icon"><i class="bi bi-shield-check"></i></span>
     <div>
-      <h2>{{ '::Training.Payments.TravelAllowance.Title' | abpLocalization }}</h2>
-      <p class="subtitle">{{ '::Training.Payments.TravelAllowance.Subtitle' | abpLocalization }}</p>
+      <strong>{{ '::Training.Payments.TravelRegister.GuidanceTitle' | abpLocalization }}</strong>
+      <p>{{ '::Training.Payments.TravelRegister.GuidanceText' | abpLocalization }}</p>
     </div>
-    @if (canCreate()) {
-      <dx-button
-        [text]="'::Training.Payments.TravelAllowance.NewButton' | abpLocalization"
-        type="default"
-        (onClick)="onAdd()">
-      </dx-button>
+  </section>
+
+  <section class="register-workspace">
+    <div class="register-toolbar">
+      <label class="search-field">
+        <i class="bi bi-search"></i>
+        <input type="search" [value]="filterSearch()" (input)="onSearchInput($event)"
+               [placeholder]="'::Training.Payments.TravelRegister.SearchPlaceholder' | abpLocalization" />
+        @if (hasSearch()) {
+          <button type="button" (click)="clearSearch()"
+                  [attr.aria-label]="'::Training.Payments.TravelRegister.ClearSearch' | abpLocalization">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        }
+      </label>
+
+      @if (hasSearch()) {
+        <span class="search-result-count">
+          {{ filteredGroups().length }} {{ '::Training.Payments.TravelRegister.Results' | abpLocalization }}
+        </span>
+      }
+    </div>
+
+    @if (loadError()) {
+      <div class="load-error" role="alert">
+        <i class="bi bi-exclamation-triangle"></i>
+        <span>{{ loadError() }}</span>
+        <button type="button" (click)="reload()">{{ '::Training.Payments.TravelRegister.Retry' | abpLocalization }}</button>
+      </div>
+    } @else if (loading()) {
+      <div class="loading-list" aria-live="polite">
+        @for (item of [1, 2, 3]; track item) {
+          <div class="loading-card">
+            <span></span><span></span><span></span>
+          </div>
+        }
+      </div>
+    } @else if (filteredGroups().length === 0) {
+      <div class="empty-state">
+        <span><i class="bi bi-inbox"></i></span>
+        <h3>{{ '::Training.Payments.TravelRegister.EmptyTitle' | abpLocalization }}</h3>
+        <p>{{ (hasSearch()
+          ? '::Training.Payments.TravelRegister.EmptySearchHint'
+          : '::Training.Payments.TravelRegister.EmptyHint') | abpLocalization }}</p>
+        @if (hasSearch()) {
+          <button type="button" (click)="clearSearch()">{{ '::Training.Payments.TravelRegister.ClearSearch' | abpLocalization }}</button>
+        }
+      </div>
+    } @else {
+      <div class="course-records">
+        @for (group of filteredGroups(); track group.key) {
+          <article class="course-record" [class.expanded]="isExpanded(group.key)"
+                   [class.annual-record]="group.source === 'session'">
+            <div class="record-summary">
+              <button type="button" class="record-toggle" (click)="toggleGroup(group.key)"
+                      [attr.aria-expanded]="isExpanded(group.key)">
+                <span [class]="group.source === 'session' ? 'record-icon annual' : 'record-icon casual'">
+                  <i [class]="group.source === 'session' ? 'bi bi-calendar2-week' : 'bi bi-mortarboard'"></i>
+                </span>
+
+                <span class="record-identity">
+                  <span class="record-tags">
+                    <span [class]="group.source === 'session' ? 'source-pill annual' : 'source-pill casual'">
+                      {{ sourceKey(group.source) | abpLocalization }}
+                    </span>
+                    <span [class]="groupStatusCss(group)">
+                      <i [class]="group.allConfirmed ? 'bi bi-check2-circle' : 'bi bi-hourglass-split'"></i>
+                      {{ groupStatusKey(group) | abpLocalization }}
+                    </span>
+                  </span>
+                  <strong>{{ group.courseName }}</strong>
+                  <small>
+                    <span><i class="bi bi-people"></i> {{ group.employeeCount }} {{ '::Training.Payments.TravelRegister.EmployeeUnit' | abpLocalization }}</span>
+                    @if (group.effectiveTravelDays > 0) {
+                      <span><i class="bi bi-calendar3"></i> {{ group.effectiveTravelDays }} {{ '::Training.Payments.TravelRegister.DayUnit' | abpLocalization }}</span>
+                    }
+                    @if (group.confirmedAt) {
+                      <span><i class="bi bi-clock-history"></i> {{ shortDate(group.confirmedAt) }}</span>
+                    }
+                  </small>
+                </span>
+
+                <span class="record-total">
+                  <small>{{ '::Training.Payments.TravelRegister.GroupTotal' | abpLocalization }}</small>
+                  <strong>{{ formatOMR(group.totalOMR) }} <b>ر.ع</b></strong>
+                </span>
+
+                <span class="expand-icon"><i class="bi bi-chevron-down"></i></span>
+              </button>
+
+              <div class="record-links">
+                @if (group.externalRequestId) {
+                  <button type="button" class="link-action travel" (click)="openTravelRequest(group)">
+                    <i class="bi bi-airplane"></i>
+                    {{ '::Training.Payments.TravelRegister.OpenTravelRequest' | abpLocalization }}
+                  </button>
+                }
+                @if (group.parentId) {
+                  <button type="button" class="link-action" (click)="openParent(group)">
+                    <i class="bi bi-box-arrow-up-left"></i>
+                    {{ (group.source === 'session'
+                      ? '::Training.Payments.TravelRegister.OpenSession'
+                      : '::Training.Payments.TravelRegister.OpenCasualCourse') | abpLocalization }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            @if (isExpanded(group.key)) {
+              <div class="record-details">
+                @if (group.externalRequestId) {
+                  <div class="source-confirmation">
+                    <i class="bi bi-patch-check-fill"></i>
+                    <div>
+                      <strong>{{ '::Training.Payments.TravelRegister.AutomaticConfirmationTitle' | abpLocalization }}</strong>
+                      <p>{{ '::Training.Payments.TravelRegister.AutomaticConfirmationText' | abpLocalization }}</p>
+                    </div>
+                  </div>
+                }
+
+                <div class="employee-expenses">
+                  @for (row of group.rows; track row.id) {
+                    <article class="employee-expense" [class.draft-expense]="row.status === PaymentStatus.Draft">
+                      <header class="employee-header">
+                        <span class="employee-avatar"><i class="bi bi-person"></i></span>
+                        <div class="employee-copy">
+                          <strong>{{ row.employeeNameAr || '—' }}</strong>
+                          <small>
+                            {{ row.rankNameAr || '—' }}
+                            <span class="dot">•</span>
+                            {{ personnelBadgeText(row.personnelType) }}
+                          </small>
+                        </div>
+                        <div class="employee-total">
+                          <span>{{ '::Training.Payments.TravelRegister.EmployeeTotal' | abpLocalization }}</span>
+                          <strong>{{ formatOMR(row.totalOMR) }} <small>ر.ع</small></strong>
+                        </div>
+                      </header>
+
+                      <div class="cost-breakdown">
+                        <div>
+                          <span><i class="bi bi-ticket-perforated"></i>{{ '::Training.Payments.TravelAllowance.Grid.Tickets' | abpLocalization }}</span>
+                          <strong>{{ formatOMR(row.ticketAmountOMR) }}</strong>
+                        </div>
+                        <div>
+                          <span><i class="bi bi-cash-coin"></i>{{ '::Training.Payments.TravelAllowance.Grid.DailyAllowance' | abpLocalization }}</span>
+                          <strong>{{ formatOMR(row.travelAllowanceOMR) }}</strong>
+                        </div>
+                        <div>
+                          <span><i class="bi bi-person-badge"></i>{{ '::Training.Payments.TravelAllowance.Grid.Clothing' | abpLocalization }}</span>
+                          <strong>{{ formatOMR(row.clothingAllowanceOMR) }}</strong>
+                        </div>
+                        <div>
+                          <span><i class="bi bi-shield-check"></i>{{ '::Training.Payments.TravelAllowance.Grid.Insurance' | abpLocalization }}</span>
+                          <strong>{{ formatOMR(row.insuranceOMR) }}</strong>
+                        </div>
+                        <div>
+                          <span><i class="bi bi-passport"></i>{{ '::Training.Payments.TravelAllowance.Grid.Visa' | abpLocalization }}</span>
+                          <strong>{{ formatOMR(row.visaFeesOMR) }}</strong>
+                        </div>
+                      </div>
+
+                      @if (row.notes) {
+                        <footer class="employee-footer">
+                          <p><i class="bi bi-chat-left-text"></i>{{ row.notes }}</p>
+                        </footer>
+                      }
+                    </article>
+                  }
+                </div>
+              </div>
+            }
+          </article>
+        }
+      </div>
     }
-  </div>
-
-  <!-- Filter bar -->
-  <div class="filter-bar">
-    <span class="filter-label">{{ '::Training.Payments.Filter' | abpLocalization }}:</span>
-    <dx-select-box
-      [items]="approvedCourses()"
-      displayExpr="courseNameAr"
-      valueExpr="id"
-      [value]="filterCourseId()"
-      [searchEnabled]="true"
-      [placeholder]="'::Training.Payments.AllCourses' | abpLocalization"
-      [showClearButton]="true"
-      width="220"
-      (onValueChanged)="onCourseFilterChange($event.value)">
-    </dx-select-box>
-    <dx-select-box
-      [items]="statusOptions"
-      displayExpr="text"
-      valueExpr="value"
-      [value]="filterStatus()"
-      [showClearButton]="true"
-      [placeholder]="'::Training.Payments.AllStatuses' | abpLocalization"
-      width="140"
-      (onValueChanged)="onStatusFilterChange($event.value)">
-    </dx-select-box>
-    <dx-select-box
-      [items]="personnelOptions"
-      displayExpr="text"
-      valueExpr="value"
-      [value]="filterPersonnelType()"
-      [showClearButton]="true"
-      [placeholder]="'::Training.Payments.AllPersonnel' | abpLocalization"
-      width="140"
-      (onValueChanged)="onPersonnelFilterChange($event.value)">
-    </dx-select-box>
-    <dx-text-box
-      [value]="filterSearch()"
-      [placeholder]="'::Training.Payments.TravelAllowance.SearchPlaceholder' | abpLocalization"
-      width="220"
-      (onValueChanged)="onSearchInput($event.value)">
-    </dx-text-box>
-    <dx-button [text]="'::Training.Payments.Clear' | abpLocalization" stylingMode="text" (onClick)="clearFilters()"></dx-button>
-    <span class="row-count">{{ '::Training.Payments.TravelAllowance.RowCount' | abpLocalization }}: {{ filteredRows().length }}</span>
-  </div>
-
-  <!-- Grid -->
-  <dx-data-grid
-    [dataSource]="filteredRows()"
-    [showBorders]="true"
-    [columnAutoWidth]="false"
-    [rowAlternationEnabled]="true"
-    keyExpr="id">
-
-    <dxi-column dataField="employeeNameAr" [caption]="'::Training.Payments.TravelAllowance.Grid.Employee'        | abpLocalization" [width]="200" cellTemplate="employeeTpl"></dxi-column>
-    <dxi-column dataField="courseNameAr"   [caption]="'::Training.Payments.TravelAllowance.Grid.Course'          | abpLocalization" [width]="200" cellTemplate="courseTpl"></dxi-column>
-    <dxi-column dataField="personnelType"  [caption]="'::Training.Payments.TravelAllowance.Grid.Type'            | abpLocalization" [width]="90"  alignment="center" cellTemplate="personnelTpl"></dxi-column>
-    <dxi-column dataField="ticketAmountOMR"     [caption]="'::Training.Payments.TravelAllowance.Grid.Tickets'       | abpLocalization" [width]="110" alignment="end" cellTemplate="moneyTpl"></dxi-column>
-    <dxi-column dataField="travelAllowanceOMR"  [caption]="'::Training.Payments.TravelAllowance.Grid.DailyAllowance' | abpLocalization" [width]="110" alignment="end" cellTemplate="moneyTpl"></dxi-column>
-    <dxi-column dataField="clothingAllowanceOMR" [caption]="'::Training.Payments.TravelAllowance.Grid.Clothing'      | abpLocalization" [width]="110" alignment="end" cellTemplate="moneyTpl"></dxi-column>
-    <dxi-column dataField="insuranceOMR"   [caption]="'::Training.Payments.TravelAllowance.Grid.Insurance'       | abpLocalization" [width]="100" alignment="end" cellTemplate="moneyTpl"></dxi-column>
-    <dxi-column dataField="visaFeesOMR"    [caption]="'::Training.Payments.TravelAllowance.Grid.Visa'            | abpLocalization" [width]="100" alignment="end" cellTemplate="moneyTpl"></dxi-column>
-    <dxi-column dataField="totalOMR"       [caption]="'::Training.Payments.TravelAllowance.Grid.Total'           | abpLocalization" [width]="120" alignment="end" cellTemplate="totalTpl"></dxi-column>
-    <dxi-column dataField="status"         [caption]="'::Training.Payments.TravelAllowance.Grid.Status'          | abpLocalization" [width]="110" alignment="center" cellTemplate="statusTpl"></dxi-column>
-    <dxi-column caption="" [width]="120" cellTemplate="actionsTpl" [allowSorting]="false"></dxi-column>
-
-    <div *dxTemplate="let cell of 'employeeTpl'">
-      <div class="employee-name">{{ cell.data.employeeNameAr || '—' }}</div>
-      @if (cell.data.rankNameAr) {
-        <div class="muted">{{ '::Training.Payments.TravelAllowance.Grid.RankPrefix' | abpLocalization }} {{ cell.data.rankNameAr }}</div>
-      }
-    </div>
-
-    <div *dxTemplate="let cell of 'courseTpl'">
-      <div class="course-name">{{ cell.data.courseNameAr || '—' }}</div>
-      @if (cell.data.effectiveTravelDays) {
-        <div class="muted">{{ cell.data.effectiveTravelDays }} {{ '::Training.Payments.TravelAllowance.Grid.TravelDaysSuffix' | abpLocalization }}</div>
-      }
-    </div>
-
-    <div *dxTemplate="let cell of 'personnelTpl'">
-      <span class="personnel-pill" [class.officer]="cell.data.personnelType === PersonnelType.Officer"
-            [class.enlisted]="cell.data.personnelType === PersonnelType.Enlisted">
-        @if (cell.data.personnelType === PersonnelType.Officer) {
-          {{ '::Training.Payments.TravelAllowance.OfficerPill' | abpLocalization }}
-        } @else {
-          {{ '::Training.Payments.TravelAllowance.EnlistedPill' | abpLocalization }}
-        }
-      </span>
-    </div>
-
-    <div *dxTemplate="let cell of 'moneyTpl'">
-      <span class="money">{{ formatOMR(cell.value) }}</span>
-    </div>
-
-    <div *dxTemplate="let cell of 'totalTpl'">
-      <span class="currency-omr">{{ formatOMR(cell.value) }}</span>
-    </div>
-
-    <div *dxTemplate="let cell of 'statusTpl'">
-      <span [class]="statusBadgeCss(cell.data.status)">{{ statusBadgeText(cell.data.status) }}</span>
-    </div>
-
-    <div *dxTemplate="let cell of 'actionsTpl'">
-      @if (cell.data.status === PaymentStatus.Draft) {
-        @if (canUpdate()) {
-          <dx-button icon="edit" stylingMode="text" [hint]="'::Training.Payments.Edit' | abpLocalization" (onClick)="onEdit(cell.data)"></dx-button>
-        }
-        @if (canDelete()) {
-          <dx-button icon="trash" stylingMode="text" [hint]="'::Training.Payments.Delete' | abpLocalization" (onClick)="onDelete(cell.data)"></dx-button>
-        }
-      }
-      <dx-button icon="eyeopen" stylingMode="text" [hint]="'::Training.Payments.View' | abpLocalization" (onClick)="onView(cell.data)"></dx-button>
-    </div>
-  </dx-data-grid>
-
-  <!-- Total row (sum of TotalOMR for visible rows) -->
-  <div class="total-row">
-    <span class="total-label">{{ '::Training.Payments.TravelAllowance.GridTotalLabel' | abpLocalization }}</span>
-    <span class="currency-omr total-amount">{{ formatOMR(totalRow()) }} ر.ع</span>
-  </div>
-
-  <!-- Create / Edit / View Dialog -->
-  <dx-popup
-    [visible]="dialog().visible"
-    [title]="dialog().isEdit ? ('::Training.Payments.TravelAllowance.Dialog.TitleEdit' | abpLocalization) : ('::Training.Payments.TravelAllowance.Dialog.TitleNew' | abpLocalization)"
-    [showCloseButton]="true"
-    [width]="1180"
-    [height]="800"
-    [toolbarItems]="dialogToolbarItems()"
-    (onHidden)="closeDialog()">
-
-    <div class="dialog-form">
-      <!-- Auto-fill banner (full width, above the two-column grid) -->
-      @if (dialogCourse()) {
-        <div class="info-banner">
-          <span class="info-icon">ℹ️</span>
-          <div>
-            <b>{{ '::Training.Payments.TravelAllowance.Dialog.AutoFillBanner' | abpLocalization }}</b>
-            {{ '::Training.Payments.TravelAllowance.Dialog.AutoFillExplain' | abpLocalization }}
-          </div>
-        </div>
-      }
-
-      <!-- Two-column layout: form (right in RTL) + context aside (left in RTL).
-           Form is first in DOM so RTL flow places it at the start; aside takes the
-           secondary visual-left position. -->
-      <div class="dialog-grid">
-        <!-- ─── Main column: editable form ─── -->
-        <div class="dialog-main">
-      <!-- Course + Nominee selectors (Create only; Edit shows them as read-only chips) -->
-      <div class="form-row">
-        <div class="form-field flex-1">
-          <label>{{ '::Training.Payments.TravelAllowance.Grid.Course' | abpLocalization }} <span class="required">*</span></label>
-          @if (dialog().isEdit) {
-            <div class="readonly-chip">{{ dialogCourse()?.courseNameAr || '—' }} 🔒</div>
-          } @else {
-            <dx-select-box
-              [items]="approvedCourses()"
-              displayExpr="courseNameAr"
-              valueExpr="id"
-              [value]="dialogCourse()?.id ?? null"
-              [searchEnabled]="true"
-              [placeholder]="'::Training.Payments.TravelAllowance.Dialog.PickCoursePlaceholder' | abpLocalization"
-              (onValueChanged)="onDialogCourseChange($event.value)">
-            </dx-select-box>
-          }
-        </div>
-        <div class="form-field flex-1">
-          <label>{{ '::Training.Payments.TravelAllowance.Dialog.PickNominee' | abpLocalization }} <span class="required">*</span></label>
-          @if (dialog().isEdit) {
-            <div class="readonly-chip">{{ dialog().current?.employeeNameAr || '—' }} 🔒</div>
-          } @else {
-            <dx-select-box
-              [items]="dialogNominees()"
-              displayExpr="employeeName"
-              valueExpr="id"
-              [value]="fNominationId()"
-              [disabled]="!dialogCourse()"
-              [searchEnabled]="true"
-              [placeholder]="dialogCourse() ? ('::Training.Payments.TravelAllowance.Dialog.PickNomineePlaceholder' | abpLocalization) : ('::Training.Payments.TravelAllowance.Dialog.PickNomineeDisabled' | abpLocalization)"
-              (onValueChanged)="updateNominationId($event.value)">
-            </dx-select-box>
-          }
-        </div>
-      </div>
-
-      @if (selectedNominee(); as n) {
-        <div class="muted-row">
-          <span class="muted">{{ '::Training.Payments.TravelAllowance.Dialog.NomineeRank' | abpLocalization }}</span> <b>{{ n.rankName || '—' }}</b>
-          <span class="sep">·</span>
-          <span class="muted">{{ '::Training.Payments.TravelAllowance.Dialog.NomineeUnit' | abpLocalization }}</span> <b>{{ n.unitName || '—' }}</b>
-        </div>
-      }
-
-      <!-- Amount grid (5 fields + computed total) -->
-      <div class="amount-grid">
-        <div class="amount-field">
-          <label>{{ '::Training.Payments.TravelAllowance.Dialog.AmountTickets' | abpLocalization }} <span class="required">*</span></label>
-          <div class="dual-input">
-            <dx-number-box
-              [value]="fTicketAmountOMR()"
-              [min]="0"
-              format="#,##0.000 'ر.ع'"
-              (onValueChanged)="updateTicket($event.value)">
-            </dx-number-box>
-
-          </div>
-        </div>
-
-        <div class="amount-field">
-          <label>{{ '::Training.Payments.TravelAllowance.Dialog.AmountDailyAllowance' | abpLocalization }} <span class="required">*</span></label>
-          <!-- Editable per-day rate -->
-          <div class="dual-input">
-            <dx-number-box
-              [value]="fDailyAllowanceRateOMR()"
-              [min]="0"
-              format="#,##0.000 'ر.ع'"
-              [placeholder]="'::Training.Payments.TravelAllowance.Dialog.AmountDailyAllowanceRate' | abpLocalization"
-              (onValueChanged)="updateDailyAllowanceRate($event.value)">
-            </dx-number-box>
-
-          </div>
-          <!-- Read-only computed total: days × rate = total -->
-          <div class="computed-total">
-            <span class="formula">⚡ {{ contextEffectiveTravelDays() }} {{ '::Training.Payments.TravelAllowance.Dialog.TIDayUnit' | abpLocalization }} × {{ formatOMR(fDailyAllowanceRateOMR()) }} ر.ع =</span>
-            <b class="computed-value">{{ formatOMR(fTravelAllowanceOMR()) }} ر.ع</b>
-
-          </div>
-          <div class="hint">{{ '::Training.Payments.TravelAllowance.Dialog.DailyAllowanceHint' | abpLocalization }}</div>
-        </div>
-
-        <div class="amount-field">
-          <label>{{ '::Training.Payments.TravelAllowance.Dialog.AmountClothing' | abpLocalization }}</label>
-          <div class="dual-input">
-            <dx-number-box
-              [value]="fClothingAllowanceOMR()"
-              [min]="0"
-              format="#,##0.000 'ر.ع'"
-              (onValueChanged)="updateClothing($event.value)">
-            </dx-number-box>
-
-          </div>
-        </div>
-
-        <div class="amount-field">
-          <label>{{ '::Training.Payments.TravelAllowance.Dialog.AmountInsurance' | abpLocalization }}</label>
-          <div class="dual-input">
-            <dx-number-box
-              [value]="fInsuranceOMR()"
-              [min]="0"
-              format="#,##0.000 'ر.ع'"
-              (onValueChanged)="updateInsurance($event.value)">
-            </dx-number-box>
-
-          </div>
-        </div>
-
-        <div class="amount-field">
-          <label>{{ '::Training.Payments.TravelAllowance.Dialog.AmountVisa' | abpLocalization }}</label>
-          <div class="dual-input">
-            <dx-number-box
-              [value]="fVisaFeesOMR()"
-              [min]="0"
-              format="#,##0.000 'ر.ع'"
-              (onValueChanged)="updateVisaFees($event.value)">
-            </dx-number-box>
-
-          </div>
-        </div>
-
-        <!-- Total card -->
-        <div class="total-card">
-          <div class="total-card-label">{{ '::Training.Payments.TravelAllowance.Dialog.TotalLabel' | abpLocalization }}</div>
-          <div class="total-card-omr">{{ formatOMR(formTotalOMR()) }} <span class="omr-sm">ر.ع</span></div>
-
-        </div>
-      </div>
-
-      <div class="form-field">
-        <label>📝 {{ '::Training.Payments.Notes' | abpLocalization }}</label>
-        <dx-text-area
-          [value]="fNotes()"
-          [height]="80"
-          [placeholder]="'::Training.Payments.TravelAllowance.Dialog.NotesPlaceholder' | abpLocalization"
-          (onValueChanged)="updateNotes($event.value)">
-        </dx-text-area>
-      </div>
-        </div>
-        <!-- /.dialog-main -->
-
-        <!-- ─── Aside column: read-only context (course / quote / TI / nebras) ─── -->
-        <aside class="dialog-aside">
-          @if (dialogCourse(); as c) {
-            <div class="context-panel">
-              <!-- Section: Course -->
-              <div class="context-section">
-                <div class="context-section-title">{{ '::Training.Payments.TravelAllowance.Dialog.CourseSection' | abpLocalization }}</div>
-                <div class="context-grid">
-                  <div><span class="muted">{{ '::Training.Payments.TravelAllowance.Dialog.CourseName' | abpLocalization }}:</span> <b>{{ c.courseNameAr }}</b></div>
-                  @if (courseDurationDays() > 0) {
-                    <div><span class="muted">{{ '::Training.Payments.TravelAllowance.Dialog.CourseDuration' | abpLocalization }}:</span> <b>{{ courseDurationDays() }} {{ '::Training.Payments.TravelAllowance.Dialog.DurationUnit' | abpLocalization }}</b></div>
-                  }
-                  @if (courseDateRange(); as r) {
-                    <div class="date-range-row">
-                      <span class="muted">
-                        {{ '::Training.Payments.TravelAllowance.Dialog.CourseDateRangeLabelFrom' | abpLocalization }}
-                        <i class="fas fa-long-arrow-alt-right date-arrow"></i>
-                        {{ '::Training.Payments.TravelAllowance.Dialog.CourseDateRangeLabelTo' | abpLocalization }}
-                        <span class="date-source-tag" [class.tag-actual]="r.actual">
-                          {{ (r.actual
-                              ? '::Training.Payments.TravelAllowance.Dialog.CourseDatesActualTag'
-                              : '::Training.Payments.TravelAllowance.Dialog.CourseDatesEstimatedTag') | abpLocalization }}
-                        </span>
-                      </span>
-                      <b>{{ shortDate(r.from) }} <i class="fas fa-long-arrow-alt-right date-arrow"></i> {{ shortDate(r.to) }}</b>
-                    </div>
-                  }
-                </div>
-              </div>
-
-              <!-- Section: Selected Price Quote -->
-              @if (dialogSelectedQuote(); as q) {
-                <div class="context-section">
-                  <div class="context-section-title">{{ '::Training.Payments.TravelAllowance.Dialog.QuoteSection' | abpLocalization }}</div>
-                  <div class="context-grid">
-                    <div><span class="muted">{{ '::Training.Payments.TravelAllowance.Dialog.Provider' | abpLocalization }}:</span> <b>{{ q.providerName || '—' }}</b></div>
-                    @if (q.cityNameAr || q.countryNameAr) {
-                      <div>
-                        <span class="muted">{{ '::Training.Payments.TravelAllowance.Dialog.Location' | abpLocalization }}:</span>
-                        <b>
-                          {{ q.cityNameAr || q.cityNameEn || '—' }}@if (q.countryNameAr || q.countryNameEn) {، {{ q.countryNameAr || q.countryNameEn }} }
-                        </b>
-                      </div>
-                    }
-                    @if (q.quotedPriceOMR) {
-                      <div><span class="muted">{{ '::Training.Payments.TravelAllowance.Dialog.AgreedPrice' | abpLocalization }}:</span> <b>{{ formatOMR(q.quotedPriceOMR) }} ر.ع</b></div>
-                    }
-                    @if (q.participantsCount) {
-                      <div><span class="muted">{{ '::Training.Payments.TravelAllowance.Dialog.NomineesCount' | abpLocalization }}:</span> <b>{{ q.participantsCount }}</b></div>
-                    }
-                  </div>
-                </div>
-              }
-
-              <!-- Section: Travel Instruction -->
-              @if (dialogTravelInstruction(); as ti) {
-                <div class="context-section">
-                  <div class="context-section-title">{{ '::Training.Payments.TravelAllowance.Dialog.TISection' | abpLocalization }}</div>
-                  <div class="context-grid">
-                    @if (ti.departureDate && ti.arrivalBackDate) {
-                      <div>
-                        <span class="muted">
-                          {{ '::Training.Payments.TravelAllowance.Dialog.TIOuterRangeFrom' | abpLocalization }}
-                          <i class="fas fa-long-arrow-alt-right date-arrow"></i>
-                          {{ '::Training.Payments.TravelAllowance.Dialog.TIOuterRangeTo' | abpLocalization }}
-                        </span>
-                        <b>{{ shortDate(ti.departureDate) }} <i class="fas fa-long-arrow-alt-right date-arrow"></i> {{ shortDate(ti.arrivalBackDate) }}</b>
-                        @if (travelSpanDays() > 0) { <span class="muted-xs"> ({{ travelSpanDays() }} {{ '::Training.Payments.TravelAllowance.Dialog.TIDayUnit' | abpLocalization }})</span> }
-                      </div>
-                    }
-                    @if (ti.arrivalDate && ti.returnDate) {
-                      <div>
-                        <span class="muted">
-                          {{ '::Training.Payments.TravelAllowance.Dialog.TIInnerRangeFrom' | abpLocalization }}
-                          <i class="fas fa-long-arrow-alt-right date-arrow"></i>
-                          {{ '::Training.Payments.TravelAllowance.Dialog.TIInnerRangeTo' | abpLocalization }}
-                        </span>
-                        <b>{{ shortDate(ti.arrivalDate) }} <i class="fas fa-long-arrow-alt-right date-arrow"></i> {{ shortDate(ti.returnDate) }}</b>
-                      </div>
-                    }
-                    @if (contextEffectiveTravelDays() > 0) {
-                      <div><span class="muted">{{ '::Training.Payments.TravelAllowance.Dialog.TIEffectiveDays' | abpLocalization }}</span> <b>{{ contextEffectiveTravelDays() }}</b></div>
-                    }
-                    <div class="ti-flags">
-                      <span class="ti-flag" [class.flag-on]="ti.visaRequired">
-                        @if (ti.visaRequired) {
-                          {{ '::Training.Payments.TravelAllowance.Dialog.TIVisaRequired' | abpLocalization }}
-                        } @else {
-                          {{ '::Training.Payments.TravelAllowance.Dialog.TIVisaNotRequired' | abpLocalization }}
-                        }
-                      </span>
-                      <span class="ti-flag" [class.flag-on]="ti.insuranceArranged">
-                        @if (ti.insuranceArranged) {
-                          {{ '::Training.Payments.TravelAllowance.Dialog.TIInsuranceArranged' | abpLocalization }}
-                        } @else {
-                          {{ '::Training.Payments.TravelAllowance.Dialog.TIInsuranceNotArranged' | abpLocalization }}
-                        }
-                      </span>
-                      <span class="ti-flag" [class.flag-on]="ti.ticketsBooked">
-                        @if (ti.ticketsBooked) {
-                          {{ '::Training.Payments.TravelAllowance.Dialog.TITicketsBooked' | abpLocalization }}
-                        } @else {
-                          {{ '::Training.Payments.TravelAllowance.Dialog.TITicketsNotBooked' | abpLocalization }}
-                        }
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              } @else if (dialogCourse()) {
-                <div class="context-section context-section-warn">
-                  <div class="context-section-title">{{ '::Training.Payments.TravelAllowance.Dialog.TISection' | abpLocalization }}</div>
-                  <div class="muted">{{ '::Training.Payments.TravelAllowance.Dialog.TINotIssued' | abpLocalization }}</div>
-                </div>
-              }
-            </div>
-          }
-
-          <!-- Nebras section (read-only display) — moved into the aside since it's reference info -->
-          <div class="nebras-block">
-            <h4>{{ '::Training.Payments.TravelAllowance.Dialog.NebrasSection' | abpLocalization }}</h4>
-            <div class="nebras-grid">
-              <div>
-                <span class="muted">{{ '::Training.Payments.TravelAllowance.Dialog.NebrasRequestId' | abpLocalization }}</span>
-                <span class="value">{{ dialog().current?.externalRequestId || ('::Training.Payments.TravelAllowance.Dialog.NebrasNotSent' | abpLocalization) }}</span>
-              </div>
-              <div>
-                <span class="muted">{{ '::Training.Payments.TravelAllowance.Dialog.NebrasStatus' | abpLocalization }}</span>
-                <span class="value">{{ dialog().current?.externalStatus || '—' }}</span>
-              </div>
-              <div>
-                <span class="muted">{{ '::Training.Payments.TravelAllowance.Dialog.NebrasResponseAt' | abpLocalization }}</span>
-                <span class="value">{{ (dialog().current?.externalResponseAt || '').substring(0, 10) || '—' }}</span>
-              </div>
-            </div>
-          </div>
-        </aside>
-      </div>
-      <!-- /.dialog-grid -->
-
-      @if (dialogError()) {
-        <div class="error-banner">⚠ {{ dialogError() }}</div>
-      }
-
-      @if (dialog().current?.status === PaymentStatus.Confirmed) {
-        <div class="confirmed-banner">
-          ✓ {{ '::Training.Payments.TravelAllowance.Dialog.ConfirmedBanner' | abpLocalization }}
-        </div>
-      } @else if (dialog().current?.status === PaymentStatus.Draft || !dialog().isEdit) {
-        <div class="warn-footer">
-          {{ '::Training.Payments.TravelAllowance.Dialog.ConfirmWarning' | abpLocalization }}
-        </div>
-      }
-    </div>
-  </dx-popup>
+  </section>
 </div>

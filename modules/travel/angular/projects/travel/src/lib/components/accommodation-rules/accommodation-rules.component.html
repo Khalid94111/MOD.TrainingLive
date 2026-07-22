@@ -1,0 +1,251 @@
+<div class="accommodation-rules-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-icon">
+        <i class="fa-solid fa-bed"></i>
+      </div>
+      <div class="header-text">
+        <h1>{{ 'Travel::Menu:AccommodationRules' | abpLocalization }}</h1>
+        <p class="text-muted">{{ 'Travel::AccommodationRulesSubtitle' | abpLocalization }}</p>
+      </div>
+    </div>
+    <button
+      class="btn btn-primary btn-create"
+      *abpPermission="'TravelManagement.AccommodationRules.Create'"
+      (click)="openModal()"
+    >
+      <i class="fa-solid fa-plus"></i>
+      <span>{{ 'Travel::CreateNewRule' | abpLocalization }}</span>
+    </button>
+  </div>
+
+  <!-- Stats Bar -->
+  <div class="stats-bar" *ngIf="!isLoading() && rules().length > 0">
+    <div class="stat-item">
+      <span class="stat-value">{{ rules().length }}</span>
+      <span class="stat-label">{{ 'Travel::TotalRules' | abpLocalization }}</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <span class="stat-value">{{ activeRulesCount() }}</span>
+      <span class="stat-label">{{ 'Travel::ActiveRules' | abpLocalization }}</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <span class="stat-value">{{ averagePercentage() | number:'1.0-0' }}%</span>
+      <span class="stat-label">{{ 'Travel::AvgPaymentPercentage' | abpLocalization }}</span>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading()">
+    <div class="spinner-ring">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+    <p>{{ 'Travel::LoadingRules' | abpLocalization }}</p>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!isLoading() && rules().length === 0">
+    <div class="empty-icon">
+      <i class="fa-solid fa-bed"></i>
+    </div>
+    <h4>{{ 'Travel::NoRulesFound' | abpLocalization }}</h4>
+    <p class="text-muted">{{ 'Travel::NoRulesDescription' | abpLocalization }}</p>
+    <button
+      class="btn btn-primary"
+      *abpPermission="'TravelManagement.AccommodationRules.Create'"
+      (click)="openModal()"
+    >
+      <i class="fa-solid fa-plus me-2"></i>
+      {{ 'Travel::CreateFirstRule' | abpLocalization }}
+    </button>
+  </div>
+
+  <!-- Rules Grid -->
+  <div class="rules-grid" *ngIf="!isLoading() && rules().length > 0">
+    <div
+      class="rule-card"
+      *ngFor="let rule of rules(); let i = index"
+      [class.inactive]="!rule.isActive"
+      [style.animation-delay]="i * 0.05 + 's'"
+    >
+      <div class="rule-header">
+        <div class="rule-badge">
+          <i class="fa-solid fa-bed"></i>
+        </div>
+        <div class="rule-title">
+          <h5>{{ rule.name }}</h5>
+          <span class="rule-priority">{{ 'Travel::Priority' | abpLocalization }}: {{ rule.priority }}</span>
+        </div>
+        <div class="rule-status">
+          <span class="status-badge" [class.active]="rule.isActive" [class.inactive]="!rule.isActive">
+            {{ (rule.isActive ? 'Travel::IsActive' : 'Travel::Inactive') | abpLocalization }}
+          </span>
+        </div>
+      </div>
+
+      <div class="rule-body">
+        <div class="percentage-ring">
+          <svg viewBox="0 0 36 36" class="circular-chart">
+            <path class="circle-bg"
+              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+            />
+            <path class="circle"
+              [attr.stroke-dasharray]="rule.paymentPercentage + ', 100'"
+              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+            />
+            <text x="18" y="20.35" class="percentage">{{ rule.paymentPercentage | number:'1.0-0' }}</text>
+          </svg>
+          <span class="percentage-label">{{ 'Travel::PaymentPercentage' | abpLocalization }}</span>
+        </div>
+
+        <div class="rule-links">
+          <label class="links-label">
+            <i class="fa-solid fa-link me-1"></i>
+            {{ 'Travel::LinkedAllowanceRules' | abpLocalization }}
+          </label>
+          <div class="links-list" *ngIf="rule.allowanceRuleNames?.length; else noLinks">
+            <span class="link-chip" *ngFor="let name of rule.allowanceRuleNames">{{ name }}</span>
+          </div>
+          <ng-template #noLinks>
+            <span class="text-muted small">{{ 'Travel::NoLinkedRules' | abpLocalization }}</span>
+          </ng-template>
+        </div>
+      </div>
+
+      <div class="rule-footer">
+        <button
+          class="btn-action btn-edit"
+          *abpPermission="'TravelManagement.AccommodationRules.Edit'"
+          (click)="openModal(rule)"
+          [title]="'Travel::Edit' | abpLocalization"
+        >
+          <i class="fa-solid fa-pen-to-square"></i>
+          {{ 'Travel::Edit' | abpLocalization }}
+        </button>
+        <button
+          class="btn-action btn-delete"
+          *abpPermission="'TravelManagement.AccommodationRules.Delete'"
+          (click)="deleteRule(rule.id)"
+          [title]="'Travel::Delete' | abpLocalization"
+        >
+          <i class="fa-solid fa-trash-can"></i>
+          {{ 'Travel::Delete' | abpLocalization }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<ng-template #ruleModal let-modal>
+  <div class="custom-modal">
+    <div class="modal-header">
+      <div class="modal-header-icon">
+        <i class="fa-solid" [class.fa-plus-circle]="!editingRule()" [class.fa-pen-to-square]="editingRule()"></i>
+      </div>
+      <div class="modal-header-text">
+        <h5 class="modal-title">
+          {{ editingRule() ? ('Travel::EditAccommodationRule' | abpLocalization) : ('Travel::CreateAccommodationRule' | abpLocalization) }}
+        </h5>
+        <p class="modal-subtitle">{{ 'Travel::AccommodationRuleFormSubtitle' | abpLocalization }}</p>
+      </div>
+      <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-section">
+        <label class="form-label">
+          <i class="fa-solid fa-tag me-1"></i>
+          {{ 'Travel::Name' | abpLocalization }} <span class="required">*</span>
+        </label>
+        <input type="text" class="form-control form-control-lg" [(ngModel)]="form.name" maxlength="256" [placeholder]="'Travel::RuleNamePlaceholder' | abpLocalization">
+      </div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-section">
+            <label class="form-label">
+              <i class="fa-solid fa-percent me-1"></i>
+              {{ 'Travel::PaymentPercentage' | abpLocalization }}
+            </label>
+            <div class="percentage-input">
+              <input type="range" class="form-range" min="0" max="100" step="1" [(ngModel)]="form.paymentPercentage">
+              <div class="percentage-value">
+                <span class="value">{{ form.paymentPercentage }}</span>
+                <span class="unit">%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-section">
+            <label class="form-label">
+              <i class="fa-solid fa-arrow-up-1-9 me-1"></i>
+              {{ 'Travel::Priority' | abpLocalization }}
+            </label>
+            <input type="number" class="form-control" [(ngModel)]="form.priority" min="0">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <label class="form-label">
+          <i class="fa-solid fa-link me-1"></i>
+          {{ 'Travel::LinkedAllowanceRules' | abpLocalization }}
+        </label>
+        <div class="checkbox-list">
+          <div class="checkbox-item" *ngFor="let allowanceRule of allowanceRules()">
+            <label class="custom-checkbox">
+              <input
+                type="checkbox"
+                [checked]="isAllowanceRuleSelected(allowanceRule.id)"
+                (change)="toggleAllowanceRule(allowanceRule.id, $any($event.target).checked)"
+              />
+              <span class="checkmark"></span>
+              <span class="label-text">{{ allowanceRule.name }}</span>
+            </label>
+          </div>
+          <div *ngIf="allowanceRules().length === 0" class="text-muted small p-2">
+            {{ 'Travel::NoAllowanceRulesToLink' | abpLocalization }}
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section form-section-toggle">
+        <div class="toggle-wrapper">
+          <div class="toggle-info">
+            <label class="form-label mb-0">{{ 'Travel::IsActive' | abpLocalization }}</label>
+            <small class="form-hint">{{ 'Travel::ActiveRuleHint' | abpLocalization }}</small>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" [(ngModel)]="form.isActive" />
+            <span class="toggle-slider">
+              <span class="toggle-knob"></span>
+            </span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">
+        <i class="fa-solid fa-xmark me-2"></i>{{ 'Travel::Cancel' | abpLocalization }}
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary btn-save"
+        [disabled]="!form.name?.trim()"
+        (click)="save(); modal.close()"
+      >
+        <i class="fa-solid" [class.fa-plus]="!editingRule()" [class.fa-check]="editingRule()"></i>
+        <span>{{ editingRule() ? ('Travel::Update' | abpLocalization) : ('Travel::Save' | abpLocalization) }}</span>
+      </button>
+    </div>
+  </div>
+</ng-template>

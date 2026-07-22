@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 
 // Phase 4C-α (v4.10.0) — mirrors CasualCourseDetailRefreshService but scoped to the
-// session-detail shell. Embedded child components (price-quotes, travel-instructions,
+// session-detail shell. Embedded child components (price quotes, Travel integration,
 // the slim section-payments display) fire .refresh() after any state-mutating action
 // so the shell reloads the session detail + recomputes section states.
 //

@@ -272,7 +272,177 @@
                     <small>{{ '::Training.Sessions.Detail.Workspace.LockedHint' | abpLocalization }}</small>
                   </div>
                 } @else {
-                  <app-travel-instructions />
+                  <div class="travel-panel">
+                    <div class="travel-intro">
+                      <span class="travel-intro-icon"><i class="bi bi-send" aria-hidden="true"></i></span>
+                      <div>
+                        <h3>{{ '::Training.Sessions.Detail.Travel.Title' | abpLocalization }}</h3>
+                        <p>{{ '::Training.Sessions.Detail.Travel.Intro' | abpLocalization }}</p>
+                      </div>
+                    </div>
+
+                    @if (travelActionError()) {
+                      <div class="error-banner" role="alert">{{ travelActionError() }}</div>
+                    }
+
+                    @if (travelProcess(); as travel) {
+                      @if (!travel.integrationAvailable) {
+                        <div class="travel-notice travel-notice-warning">
+                          <i class="bi bi-plug" aria-hidden="true"></i>
+                          <div>
+                            <strong>{{ '::Training.Sessions.Detail.Travel.IntegrationUnavailableTitle' | abpLocalization }}</strong>
+                            <p>{{ '::Training.Sessions.Detail.Travel.IntegrationUnavailableHint' | abpLocalization }}</p>
+                          </div>
+                        </div>
+                      } @else if (!travel.isFound) {
+                        <section class="travel-handoff-card">
+                          <div class="travel-handoff-copy">
+                            <span class="travel-state-icon"><i class="bi bi-box-arrow-up-left" aria-hidden="true"></i></span>
+                            <div>
+                              <h3>{{ '::Training.Sessions.Detail.Travel.NotSentTitle' | abpLocalization }}</h3>
+                              <p>{{ '::Training.Sessions.Detail.Travel.NotSentDescription' | abpLocalization }}</p>
+                            </div>
+                          </div>
+
+                          <div class="travel-payload-summary">
+                            <div>
+                              <i class="bi bi-calendar-range" aria-hidden="true"></i>
+                              <span>{{ fmt(currentSession.actualStartDate) }} — {{ fmt(currentSession.actualEndDate) }}</span>
+                            </div>
+                            <div>
+                              <i class="bi bi-people" aria-hidden="true"></i>
+                              <span>{{ currentSession.nominations?.length ?? 0 }} {{ '::Training.Sessions.Detail.Travel.EmployeeCount' | abpLocalization }}</span>
+                            </div>
+                            <div>
+                              <i class="bi bi-list-check" aria-hidden="true"></i>
+                              <span>{{ '::Training.Sessions.Detail.Travel.FinancialItems' | abpLocalization }}</span>
+                            </div>
+                          </div>
+
+                          @if (travel.blockingReasons.length > 0) {
+                            <div class="travel-requirements">
+                              <strong>{{ '::Training.Sessions.Detail.Travel.BlockingTitle' | abpLocalization }}</strong>
+                              <ul>
+                                @for (reason of travel.blockingReasons; track reason) {
+                                  <li><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ reason }}</li>
+                                }
+                              </ul>
+                            </div>
+                          } @else {
+                            <div class="travel-ready">
+                              <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                              {{ '::Training.Sessions.Detail.Travel.Ready' | abpLocalization }}
+                            </div>
+                          }
+
+                          @if (canSendTravel()) {
+                            <button type="button" class="btn-primary travel-send-button"
+                                    [disabled]="!travel.canSend || travelActionRunning()"
+                                    (click)="sendToTravel()">
+                              @if (travelActionRunning()) {
+                                <span class="button-spinner" aria-hidden="true"></span>
+                                {{ '::Training.Sessions.Detail.Travel.Sending' | abpLocalization }}
+                              } @else {
+                                <i class="bi bi-send-fill" aria-hidden="true"></i>
+                                {{ '::Training.Sessions.Detail.Travel.Send' | abpLocalization }}
+                              }
+                            </button>
+                          }
+                        </section>
+                      } @else {
+                        <section class="travel-tracking-card" [class.travel-completed]="travel.isCompleted">
+                          <div class="travel-tracking-header">
+                            <div class="travel-handoff-copy">
+                              <span class="travel-state-icon">
+                                <i [class]="travel.isCompleted ? 'bi bi-check2-circle' : 'bi bi-airplane'" aria-hidden="true"></i>
+                              </span>
+                              <div>
+                                <h3>
+                                  {{ (travel.isCompleted
+                                    ? '::Training.Sessions.Detail.Travel.CompletedTitle'
+                                    : '::Training.Sessions.Detail.Travel.SentTitle') | abpLocalization }}
+                                </h3>
+                                <p>
+                                  {{ (travel.isCompleted
+                                    ? '::Training.Sessions.Detail.Travel.CompletedDescription'
+                                    : '::Training.Sessions.Detail.Travel.SentDescription') | abpLocalization }}
+                                </p>
+                              </div>
+                            </div>
+                            <span class="travel-status-pill">
+                              <small>{{ '::Training.Sessions.Detail.Travel.Status' | abpLocalization }}</small>
+                              <strong>{{ travelStatusLabel() }}</strong>
+                            </span>
+                          </div>
+
+                          <div class="travel-progress" aria-label="Travel request progress">
+                            <div class="travel-progress-step step-done">
+                              <span><i class="bi bi-check-lg" aria-hidden="true"></i></span>
+                              <strong>{{ '::Training.Sessions.Detail.Travel.Step.Received' | abpLocalization }}</strong>
+                            </div>
+                            <div class="travel-progress-line" [class.line-done]="travel.isCompleted"></div>
+                            <div class="travel-progress-step" [class.step-done]="travel.isCompleted" [class.step-active]="!travel.isCompleted">
+                              <span><i [class]="travel.isCompleted ? 'bi bi-check-lg' : 'bi bi-hourglass-split'" aria-hidden="true"></i></span>
+                              <strong>{{ '::Training.Sessions.Detail.Travel.Step.Processing' | abpLocalization }}</strong>
+                            </div>
+                            <div class="travel-progress-line" [class.line-done]="travel.isCompleted"></div>
+                            <div class="travel-progress-step" [class.step-done]="travel.isCompleted">
+                              <span><i [class]="travel.isCompleted ? 'bi bi-check-lg' : 'bi bi-circle'" aria-hidden="true"></i></span>
+                              <strong>{{ '::Training.Sessions.Detail.Travel.Step.FinancialResult' | abpLocalization }}</strong>
+                            </div>
+                          </div>
+
+                          @if (travel.warningMessage) {
+                            <div class="travel-notice travel-notice-warning">
+                              <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                              <div>
+                                <strong>{{ '::Training.Sessions.Detail.Travel.Warning' | abpLocalization }}</strong>
+                                <p>{{ travel.warningMessage }}</p>
+                              </div>
+                            </div>
+                          }
+
+                          @if (travel.isCompleted) {
+                            <div class="travel-summary-lead">
+                              <div>
+                                <span>{{ '::Training.Sessions.Detail.Travel.CalculatedDays' | abpLocalization }}</span>
+                                <strong>{{ travel.calculatedDays }}</strong>
+                              </div>
+                              <div>
+                                <span>{{ '::Training.Sessions.Detail.Travel.EmployeeCount' | abpLocalization }}</span>
+                                <strong>{{ travel.employeeCount }}</strong>
+                              </div>
+                              <div class="travel-grand-total">
+                                <span>{{ '::Training.Sessions.Detail.Travel.GrandTotal' | abpLocalization }}</span>
+                                <strong>{{ travel.grandTotal | number:'1.0-3' }} {{ travel.currency }}</strong>
+                              </div>
+                            </div>
+
+                            <div class="travel-cost-grid">
+                              <div><i class="bi bi-ticket-perforated"></i><span>{{ '::Training.Sessions.Detail.Travel.Tickets' | abpLocalization }}</span><strong>{{ travel.ticketsTotal | number:'1.0-3' }}</strong></div>
+                              <div><i class="bi bi-passport"></i><span>{{ '::Training.Sessions.Detail.Travel.Visas' | abpLocalization }}</span><strong>{{ travel.visaTotal | number:'1.0-3' }}</strong></div>
+                              <div><i class="bi bi-shield-check"></i><span>{{ '::Training.Sessions.Detail.Travel.Insurance' | abpLocalization }}</span><strong>{{ travel.healthInsuranceTotal | number:'1.0-3' }}</strong></div>
+                              <div><i class="bi bi-cash-coin"></i><span>{{ '::Training.Sessions.Detail.Travel.Allowances' | abpLocalization }}</span><strong>{{ travel.travelAllowanceTotal | number:'1.0-3' }}</strong></div>
+                              <div><i class="bi bi-person-badge"></i><span>{{ '::Training.Sessions.Detail.Travel.Clothing' | abpLocalization }}</span><strong>{{ travel.clothingAllowanceTotal | number:'1.0-3' }}</strong></div>
+                              <div class="cost-deduction"><i class="bi bi-dash-circle"></i><span>{{ '::Training.Sessions.Detail.Travel.Deductions' | abpLocalization }}</span><strong>{{ travel.deductionTotal | number:'1.0-3' }}</strong></div>
+                            </div>
+                          }
+
+                          <div class="travel-actions">
+                            <button type="button" class="btn-secondary" [disabled]="travelActionRunning()" (click)="refreshTravel()">
+                              @if (travelActionRunning()) { <span class="button-spinner" aria-hidden="true"></span> }
+                              @else { <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> }
+                              {{ '::Training.Sessions.Detail.Travel.Refresh' | abpLocalization }}
+                            </button>
+                            <button type="button" class="btn-primary" (click)="openTravelRequest()">
+                              <i class="bi bi-box-arrow-up-left" aria-hidden="true"></i>
+                              {{ '::Training.Sessions.Detail.Travel.Open' | abpLocalization }}
+                            </button>
+                          </div>
+                        </section>
+                      }
+                    }
+                  </div>
                 }
               }
 
@@ -319,8 +489,8 @@
                       <span>{{ '::Training.Sessions.Detail.Pipeline.Dates' | abpLocalization }}</span>
                     </div>
                     @if (isInternational()) {
-                      <div [class.check-done]="travelIssued()">
-                        <i [class]="travelIssued() ? 'bi bi-check-circle-fill' : 'bi bi-circle'" aria-hidden="true"></i>
+                      <div [class.check-done]="travelComplete()">
+                        <i [class]="travelComplete() ? 'bi bi-check-circle-fill' : 'bi bi-circle'" aria-hidden="true"></i>
                         <span>{{ '::Training.Sessions.Detail.Pipeline.Travel' | abpLocalization }}</span>
                       </div>
                     }

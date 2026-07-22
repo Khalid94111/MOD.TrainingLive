@@ -1,0 +1,20 @@
+<Solution>
+    <Configurations>
+        <Platform Name="Any CPU" />
+    </Configurations>
+
+    <Folder Name="/src/">
+        <Project Path="src/Travel.Domain.Shared/Travel.Domain.Shared.csproj" />
+        <Project Path="src/Travel.Domain/Travel.Domain.csproj" />
+        <Project Path="src/Travel.Application.Contracts/Travel.Application.Contracts.csproj" />
+        <Project Path="src/Travel.Application/Travel.Application.csproj" />
+        <Project Path="src/Travel.EntityFrameworkCore/Travel.EntityFrameworkCore.csproj" />
+        <Project Path="src/Travel.HttpApi/Travel.HttpApi.csproj" />
+        <Project Path="src/Travel.HttpApi.Client/Travel.HttpApi.Client.csproj" />
+        <Project Path="src/Travel.Installer/Travel.Installer.csproj" />
+    </Folder>
+    <Folder Name="/test/">
+        <Project Path="src/Travel.Domain.Tests/Travel.Domain.Tests.csproj" />
+        <Project Path="src/Travel.Application.Tests/Travel.Application.Tests.csproj" />
+    </Folder>
+</Solution>

@@ -1,0 +1,430 @@
+<div class="allowance-rates-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-icon">
+        <i class="fa-solid fa-coins"></i>
+      </div>
+      <div class="header-text">
+        <h1>{{ 'Travel::Menu:AllowanceRates' | abpLocalization }}</h1>
+        <p class="text-muted">{{ 'Travel::AllowanceRatesSubtitle' | abpLocalization }}</p>
+      </div>
+    </div>
+    <button
+      class="btn btn-primary btn-create"
+      *abpPermission="'TravelManagement.AllowanceRates.Create'"
+      (click)="openModal()"
+    >
+      <i class="fa-solid fa-plus"></i>
+      <span>{{ 'Travel::CreateNewRate' | abpLocalization }}</span>
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card stat-card-primary">
+      <div class="stat-icon">
+        <i class="fa-solid fa-layer-group"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ groupedRates().length }}</span>
+        <span class="stat-label">{{ 'Travel::TotalRanks' | abpLocalization }}</span>
+      </div>
+      <div class="stat-decoration"></div>
+    </div>
+
+    <div class="stat-card stat-card-success">
+      <div class="stat-icon">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ activeRatesCount() }}</span>
+        <span class="stat-label">{{ 'Travel::ActiveRates' | abpLocalization }}</span>
+      </div>
+      <div class="stat-decoration"></div>
+    </div>
+
+    <div class="stat-card stat-card-info">
+      <div class="stat-icon">
+        <i class="fa-solid fa-money-bill-wave"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ highestRate() | number:'1.2-2' }}</span>
+        <span class="stat-label">{{ 'Travel::HighestDailyRate' | abpLocalization }}</span>
+      </div>
+      <div class="stat-decoration"></div>
+    </div>
+
+    <div class="stat-card stat-card-warning">
+      <div class="stat-icon">
+        <i class="fa-solid fa-calculator"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ averageRate() | number:'1.2-2' }}</span>
+        <span class="stat-label">{{ 'Travel::AverageDailyRate' | abpLocalization }}</span>
+      </div>
+      <div class="stat-decoration"></div>
+    </div>
+  </div>
+
+  <!-- Main Content Card -->
+  <div class="main-card">
+    <!-- Toolbar -->
+    <div class="card-toolbar">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input
+          type="text"
+          class="form-control"
+          [placeholder]="'Travel::SearchByRank' | abpLocalization"
+          [(ngModel)]="searchText"
+          (input)="onSearch()"
+        />
+        <button class="btn-clear" *ngIf="searchText" (click)="clearSearch()">
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
+
+      <div class="toolbar-actions">
+        <div class="filter-chip" [class.active]="showActiveOnly" (click)="toggleActiveFilter()">
+          <i class="fa-solid" [class.fa-toggle-on]="showActiveOnly" [class.fa-toggle-off]="!showActiveOnly"></i>
+          <span>{{ 'Travel::ActiveOnly' | abpLocalization }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="loading()">
+      <div class="spinner-ring">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+      <p>{{ 'Travel::LoadingRates' | abpLocalization }}</p>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!loading() && filteredRates().length === 0">
+      <div class="empty-icon">
+        <i class="fa-solid fa-file-invoice-dollar"></i>
+      </div>
+      <h4>{{ 'Travel::NoRatesFound' | abpLocalization }}</h4>
+      <p class="text-muted">{{ 'Travel::NoRatesDescription' | abpLocalization }}</p>
+      <button
+        class="btn btn-primary"
+        *abpPermission="'TravelManagement.AllowanceRates.Create'"
+        (click)="openModal()"
+      >
+        <i class="fa-solid fa-plus me-2"></i>
+        {{ 'Travel::CreateFirstRate' | abpLocalization }}
+      </button>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-container" *ngIf="!loading() && filteredRates().length > 0">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="col-rank">
+              <div class="th-content">
+                <i class="fa-solid fa-ranking-star"></i>
+                <span>{{ 'Travel::Rank' | abpLocalization }}</span>
+              </div>
+            </th>
+            <th class="col-category">
+              <div class="th-content">
+                <span class="badge-category badge-category-a">A</span>
+                <span>{{ 'Travel::CategoryA' | abpLocalization }}</span>
+              </div>
+            </th>
+            <th class="col-ticket">
+              <div class="th-content">
+                <i class="fa-solid fa-plane"></i>
+                <span>{{ 'Travel::TicketClass' | abpLocalization }}</span>
+              </div>
+            </th>
+            <th class="col-category">
+              <div class="th-content">
+                <span class="badge-category badge-category-b">B</span>
+                <span>{{ 'Travel::CategoryB' | abpLocalization }}</span>
+              </div>
+            </th>
+            <th class="col-ticket">
+              <div class="th-content">
+                <i class="fa-solid fa-plane"></i>
+                <span>{{ 'Travel::TicketClass' | abpLocalization }}</span>
+              </div>
+            </th>
+            <th class="col-status">
+              <div class="th-content">
+                <i class="fa-solid fa-circle-half-stroke"></i>
+                <span>{{ 'Travel::Status' | abpLocalization }}</span>
+              </div>
+            </th>
+            <th class="col-actions">{{ 'Travel::Actions' | abpLocalization }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let rate of filteredRates(); let i = index"
+            class="data-row"
+            [class.inactive]="!rate.isActiveA && !rate.isActiveB"
+            [style.animation-delay]="i * 0.03 + 's'"
+          >
+            <td class="col-rank">
+              <div class="rank-cell">
+                <div class="rank-avatar">
+                  {{ rate.rankName.charAt(0) }}
+                </div>
+                <span class="rank-name">{{ rate.rankName }}</span>
+              </div>
+            </td>
+            <td class="col-category">
+              <div class="amount-cell">
+                <span class="amount-value" [class.inactive-amount]="!rate.isActiveA">
+                  {{ rate.amountA | number:'1.2-2' }}
+                </span>
+                <span class="amount-currency">OMR</span>
+              </div>
+            </td>
+            <td class="col-ticket">
+              <span class="ticket-badge" [class]="'ticket-' + (rate.ticketClassA === 2 ? 'business' : 'economy')">
+                <i class="fa-solid" [class.fa-crown]="rate.ticketClassA === 2" [class.fa-chair]="rate.ticketClassA !== 2"></i>
+                {{ getTicketClassLabel(rate.ticketClassA) | abpLocalization }}
+              </span>
+            </td>
+            <td class="col-category">
+              <div class="amount-cell">
+                <span class="amount-value" [class.inactive-amount]="!rate.isActiveB">
+                  {{ rate.amountB | number:'1.2-2' }}
+                </span>
+                <span class="amount-currency">OMR</span>
+              </div>
+            </td>
+            <td class="col-ticket">
+              <span class="ticket-badge" [class]="'ticket-' + (rate.ticketClassB === 2 ? 'business' : 'economy')">
+                <i class="fa-solid" [class.fa-crown]="rate.ticketClassB === 2" [class.fa-chair]="rate.ticketClassB !== 2"></i>
+                {{ getTicketClassLabel(rate.ticketClassB) | abpLocalization }}
+              </span>
+            </td>
+            <td class="col-status">
+              <div class="status-indicators">
+                <span
+                  class="status-dot"
+                  [class.status-active]="rate.isActiveA"
+                  [class.status-inactive]="!rate.isActiveA"
+                  [title]="'A: ' + (rate.isActiveA ? ('Travel::Active' | abpLocalization) : ('Travel::Inactive' | abpLocalization))"
+                ></span>
+                <span
+                  class="status-dot"
+                  [class.status-active]="rate.isActiveB"
+                  [class.status-inactive]="!rate.isActiveB"
+                  [title]="'B: ' + (rate.isActiveB ? ('Travel::Active' | abpLocalization) : ('Travel::Inactive' | abpLocalization))"
+                ></span>
+              </div>
+            </td>
+            <td class="col-actions">
+              <div class="action-buttons">
+                <button
+                  class="btn-action btn-edit"
+                  *abpPermission="'TravelManagement.AllowanceRates.Edit'"
+                  (click)="openModal(rate)"
+                  [title]="'Travel::Edit' | abpLocalization"
+                >
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button
+                  class="btn-action btn-delete"
+                  *abpPermission="'TravelManagement.AllowanceRates.Delete'"
+                  (click)="deleteRateGroup(rate)"
+                  [title]="'Travel::Delete' | abpLocalization"
+                >
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Footer Summary -->
+    <div class="card-footer-bar" *ngIf="!loading() && filteredRates().length > 0">
+      <span class="footer-text">
+        {{ 'Travel::Showing' | abpLocalization }} <strong>{{ filteredRates().length }}</strong>
+        {{ 'Travel::Of' | abpLocalization }} <strong>{{ groupedRates().length }}</strong>
+        {{ 'Travel::Ranks' | abpLocalization }}
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<ng-template #rateModal let-modal>
+  <div class="custom-modal">
+    <div class="modal-header">
+      <div class="modal-header-icon">
+        <i class="fa-solid" [class.fa-plus-circle]="!editingRate" [class.fa-pen-to-square]="editingRate"></i>
+      </div>
+      <div class="modal-header-text">
+        <h5 class="modal-title">
+          {{ editingRate ? ('Travel::EditAllowanceRate' | abpLocalization) : ('Travel::CreateAllowanceRate' | abpLocalization) }}
+        </h5>
+        <p class="modal-subtitle">{{ 'Travel::RateFormSubtitle' | abpLocalization }}</p>
+      </div>
+      <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Rank Selection -->
+      <div class="form-section">
+        <label class="form-label">
+          <i class="fa-solid fa-ranking-star me-1"></i>
+          {{ 'Travel::Rank' | abpLocalization }} <span class="required">*</span>
+        </label>
+        <select class="form-select form-select-lg" [(ngModel)]="rateForm.rankId" [disabled]="!!editingRate">
+          <option value="">{{ 'Travel::SelectRank' | abpLocalization }}</option>
+          <option *ngFor="let rank of ranks()" [value]="rank.id">{{ rank.name }}</option>
+        </select>
+        <small class="form-hint" *ngIf="editingRate">
+          <i class="fa-solid fa-lock me-1"></i>{{ 'Travel::RankLocked' | abpLocalization }}
+        </small>
+      </div>
+
+      <!-- Categories Grid -->
+      <div class="categories-grid">
+        <!-- Category A -->
+        <div class="category-card category-a">
+          <div class="category-header">
+            <span class="category-badge">A</span>
+            <span class="category-title">{{ 'Travel::AllowanceCategory.A' | abpLocalization }}</span>
+          </div>
+          <div class="category-body">
+            <div class="form-group">
+              <label class="form-label">{{ 'Travel::DailyAmount' | abpLocalization }} <span class="required">*</span></label>
+              <div class="input-group input-group-amount">
+                <span class="input-group-text">
+                  <i class="fa-solid fa-money-bill-wave"></i>
+                </span>
+                <input
+                  type="number"
+                  class="form-control"
+                  [(ngModel)]="rateForm.amountA"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                />
+                <span class="input-group-text currency">OMR</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">{{ 'Travel::TicketClass' | abpLocalization }}</label>
+              <div class="ticket-options">
+                <button
+                  type="button"
+                  class="ticket-option"
+                  [class.selected]="rateForm.ticketClassA === 1"
+                  (click)="rateForm.ticketClassA = 1"
+                >
+                  <i class="fa-solid fa-chair"></i>
+                  <span>{{ 'Travel::TicketClass.Economy' | abpLocalization }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="ticket-option"
+                  [class.selected]="rateForm.ticketClassA === 2"
+                  (click)="rateForm.ticketClassA = 2"
+                >
+                  <i class="fa-solid fa-crown"></i>
+                  <span>{{ 'Travel::TicketClass.Business' | abpLocalization }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Category B -->
+        <div class="category-card category-b">
+          <div class="category-header">
+            <span class="category-badge">B</span>
+            <span class="category-title">{{ 'Travel::AllowanceCategory.B' | abpLocalization }}</span>
+          </div>
+          <div class="category-body">
+            <div class="form-group">
+              <label class="form-label">{{ 'Travel::DailyAmount' | abpLocalization }} <span class="required">*</span></label>
+              <div class="input-group input-group-amount">
+                <span class="input-group-text">
+                  <i class="fa-solid fa-money-bill-wave"></i>
+                </span>
+                <input
+                  type="number"
+                  class="form-control"
+                  [(ngModel)]="rateForm.amountB"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                />
+                <span class="input-group-text currency">OMR</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">{{ 'Travel::TicketClass' | abpLocalization }}</label>
+              <div class="ticket-options">
+                <button
+                  type="button"
+                  class="ticket-option"
+                  [class.selected]="rateForm.ticketClassB === 1"
+                  (click)="rateForm.ticketClassB = 1"
+                >
+                  <i class="fa-solid fa-chair"></i>
+                  <span>{{ 'Travel::TicketClass.Economy' | abpLocalization }}</span>
+                </button>
+                <button
+                  type="button"
+                  class="ticket-option"
+                  [class.selected]="rateForm.ticketClassB === 2"
+                  (click)="rateForm.ticketClassB = 2"
+                >
+                  <i class="fa-solid fa-crown"></i>
+                  <span>{{ 'Travel::TicketClass.Business' | abpLocalization }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Switch -->
+      <div class="form-section form-section-toggle">
+        <div class="toggle-wrapper">
+          <div class="toggle-info">
+            <label class="form-label mb-0">{{ 'Travel::IsActive' | abpLocalization }}</label>
+            <small class="form-hint">{{ 'Travel::ActiveRateHint' | abpLocalization }}</small>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" [(ngModel)]="rateForm.isActive" />
+            <span class="toggle-slider">
+              <span class="toggle-knob"></span>
+            </span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">
+        <i class="fa-solid fa-xmark me-2"></i>{{ 'Travel::Cancel' | abpLocalization }}
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary btn-save"
+        [disabled]="!isFormValid()"
+        (click)="saveRate(); modal.close()"
+      >
+        <i class="fa-solid" [class.fa-plus]="!editingRate" [class.fa-check]="editingRate"></i>
+        <span>{{ editingRate ? ('Travel::Update' | abpLocalization) : ('Travel::Save' | abpLocalization) }}</span>
+      </button>
+    </div>
+  </div>
+</ng-template>

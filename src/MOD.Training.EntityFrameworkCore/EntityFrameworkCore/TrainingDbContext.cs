@@ -4,7 +4,6 @@ using MOD.Training.Training.CasualCourses;
 using MOD.Training.Training.Catalog;
 using MOD.Training.Training.Centers;
 using MOD.Training.Training.Configurations;
-using MOD.Training.Training.Execution;
 using MOD.Training.Training.Finance;
 using MOD.Training.Training.Hr;
 using MOD.Training.Training.Nominations;
@@ -31,6 +30,7 @@ using Volo.FileManagement.EntityFrameworkCore;
 using Volo.Saas.Editions;
 using Volo.Saas.EntityFrameworkCore;
 using Volo.Saas.Tenants;
+using Travel.EntityFrameworkCore;
 
 namespace MOD.Training.EntityFrameworkCore;
 
@@ -96,7 +96,6 @@ public DbSet<CasualCourseNomination>          CasualCourseNominations          {
 
     // Phase 4B-α additions
     public DbSet<GeographicalLocation> HrGeographicalLocations { get; set; }
-    public DbSet<TravelInstruction>    TravelInstructions       { get; set; }
 
     // Phase 4B-β additions
     public DbSet<TravelAllowancePayment> TravelAllowancePayments { get; set; }
@@ -163,6 +162,7 @@ public DbSet<CasualCourseNomination>          CasualCourseNominations          {
         builder.ConfigureBlobStoring();
         builder.ConfigureTraining();
         builder.ConfigureHrReadOnly(); // Must be called
+        builder.ConfigureTravel();
 
      
     }

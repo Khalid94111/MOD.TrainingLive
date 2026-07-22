@@ -272,8 +272,6 @@ const T=[
   f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'CasualCourseId',t:'→ CasualCourses · cascade',k:'fk'},{n:'EmployeeId',t:'→ HrEmployees',k:'fk'},{n:'IsReturned',t:'BIT',k:'f'},{n:'LastReturnNoteId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'ConditionSnapshotJson',t:'NVARCHAR(MAX)?',k:'f'},{n:'…FullAudited',t:'audit cols',k:'f'}]},
 
  // ════════ PAYMENTS & EXECUTION (الصرف والتنفيذ) — #f87171 ════════
- {id:'travelinstr',name:'TrnTravelInstructions',ar:'أمر الحركة/السفر (متعدد المصدر)',ic:'🧳',col:'#f87171',x:2040,y:2200,
-  f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'CasualCourseId',t:'→ CasualCourses? (XOR)',k:'fk'},{n:'SessionId',t:'→ CourseSessions? (XOR)',k:'fk'},{n:'DepartureDate/ArrivalDate',t:'DATETIME2',k:'f'},{n:'ReturnDate/ArrivalBackDate',t:'DATETIME2',k:'f'},{n:'VisaRequired/VisaNotes',t:'BIT/NVARCHAR?',k:'f'},{n:'InsuranceArranged/Provider',t:'BIT/NVARCHAR?',k:'f'},{n:'TicketsBooked/TicketReference',t:'BIT/NVARCHAR?',k:'f'},{n:'CalculatedTravelDays',t:'INT',k:'f'},{n:'OverrideTravelDays',t:'INT?',k:'f'},{n:'Status',t:'TravelInstructionStatus (enum)',k:'f'},{n:'…FullAudited(Root)',t:'audit+stamp',k:'f'}]},
  {id:'travelpay',name:'TrnTravelAllowancePayments',ar:'صرف بدلات السفر (لكل مرشح)',ic:'💸',col:'#f87171',x:2040,y:2680,
   f:[{n:'Id',t:'UNIQUEIDENTIFIER',k:'pk'},{n:'TenantId',t:'UNIQUEIDENTIFIER?',k:'f'},{n:'SessionId',t:'→ CourseSessions? (XOR)',k:'fk'},{n:'CasualCourseId',t:'→ CasualCourses? (XOR)',k:'fk'},{n:'NominationId',t:'→ Nominations (unique)',k:'fk'},{n:'PersonnelType',t:'PersonnelType (enum)',k:'f'},{n:'TicketAmountOMR',t:'DECIMAL(18,3)',k:'f'},{n:'TravelAllowanceOMR',t:'DECIMAL(18,3)',k:'f'},{n:'ClothingAllowanceOMR',t:'DECIMAL(18,3)',k:'f'},{n:'InsuranceOMR/VisaFeesOMR',t:'DECIMAL(18,3)',k:'f'},{n:'TotalOMR',t:'DECIMAL(18,3) computed',k:'f'},{n:'Status',t:'PaymentStatus (enum)',k:'f'},{n:'ConfirmedAt/ById',t:'DATETIME2?/GUID?',k:'f'},{n:'External*',t:'NVARCHAR?/DATETIME2?',k:'f'},{n:'Notes',t:'NVARCHAR?',k:'f'},{n:'…FullAudited(Root)',t:'audit+stamp',k:'f'}]},
  {id:'coursepay',name:'TrnCoursePayments',ar:'صرف فاتورة الدورة (متعدد المصدر)',ic:'🧾',col:'#f87171',x:3040,y:2560,
@@ -361,8 +359,6 @@ const R=[
  {f:'casual',t:'quote',type:'r',lbl:'CasualCourseId? (poly)'},
 
  // ── Payments & Execution (polymorphic · CHECK XOR) ──
- {f:'session',t:'travelinstr',type:'r',lbl:'SessionId? (XOR)'},
- {f:'casual',t:'travelinstr',type:'r',lbl:'CasualCourseId? (XOR)'},
  {f:'session',t:'travelpay',type:'r',lbl:'SessionId? (XOR)'},
  {f:'casual',t:'travelpay',type:'r',lbl:'CasualCourseId? (XOR)'},
  {f:'session',t:'coursepay',type:'r',lbl:'SessionId? (XOR)'},

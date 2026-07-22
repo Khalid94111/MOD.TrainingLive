@@ -1,112 +1,430 @@
-<div class="cc-detail-page">
-  <!-- ── Sticky header + pipeline ──────────────────────────────────── -->
-  <header class="cc-detail-sticky">
-    <div class="cc-detail-header">
-      <div class="cc-detail-header-titles">
-        <button type="button" class="back-link" (click)="goBack()">
-          ← الدورات العرضية
-        </button>
-        <h1 class="cc-detail-title">
-          @if (isNewMode()) {
-            طلب دورة عرضية جديد
-          } @else {
-            {{ course()?.courseNameAr || 'تفاصيل الدورة العرضية' }}
-          }
-        </h1>
-        @if (course(); as c) {
-          <div class="cc-detail-meta">
-            @if (c.unitName) { <span class="muted-xs">{{ c.unitName }}</span> }
-            @if (c.requesterName) { <span class="muted-xs">· {{ c.requesterName }}</span> }
-          </div>
-        }
-      </div>
+<div class="page-shell casual-guided-page">
+  <button type="button" class="back-link" (click)="goBack()">
+    <i class="bi bi-arrow-right" aria-hidden="true"></i>
+    الدورات العرضية
+  </button>
 
-      <div class="cc-detail-header-side">
-        @if (statusBadge(); as sb) {
-          <span class="status-pill {{ sb.cssClass }}">{{ l.t(sb.key) }}</span>
-        }
-      </div>
+  @if (loading() && id() && !course()) {
+    <div class="loading-state" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      جاري تحميل الدورة...
     </div>
-
-    <app-casual-course-header-action-bar
-      [status]="status()"
-      [canEditDraft]="canEditDraft()"
-      [canApproveUgm]="canApproveUgm()"
-      [canReview]="canReview()"
-      [canTdApprove]="canTdApprove()"
-      [canHeadApprove]="canHeadApprove()" />
-
-    <app-casual-course-status-pipeline
-      [status]="status()"
-      [hasSelectedQuote]="hasSelectedQuote()"
-      [hasTravelInstruction]="hasTravelInstruction()"
-      [isInternal]="isInternal()"
-      [isLocal]="isLocal()"
-      [paymentsCanStart]="paymentsCanStart()"
-      [paymentsComplete]="allPaymentsLifecycleComplete()"
-      (nodeClick)="onPipelineNodeClick($event)" />
-
-    <!-- Phase 4C-α Patch 1 (v4.10.1) — sticky course info bar -->
-    @if (infoBarData(); as bar) {
-      <app-course-info-bar
-        class="cc-info-bar"
-        [data]="bar"
-        variant="casual" />
-    }
-  </header>
-
-  <!-- ── Sections ──────────────────────────────────────────────────── -->
-  @if (loading() && !course()) {
-    <div class="gtms-card">
-      <div class="empty-state">
-        <div class="empty-icon">⏳</div>
-        جاري التحميل...
-      </div>
+  } @else if (id() && !course()) {
+    <div class="empty-state error" role="status">
+      <i class="bi bi-journal-x" aria-hidden="true"></i>
+      تعذر العثور على الدورة العرضية.
     </div>
   } @else {
-    <!-- Section 1 — Course Details -->
-    <app-casual-course-section-details
-      [state]="detailsState()"
-      [course]="course()"
-      (toggle)="onDetailsToggle()" />
+    <header class="page-header">
+      <div class="page-title-wrap">
+        <span class="page-icon"><i class="bi bi-lightning-charge" aria-hidden="true"></i></span>
+        <div class="page-title-copy">
+          <span class="page-eyebrow">مسار الدورة العرضية</span>
+          <h1>{{ course()?.courseNameAr || 'طلب دورة عرضية جديد' }}</h1>
+          <div class="title-pills">
+            @if (statusBadge(); as badge) {
+              <span class="status-pill {{ badge.cssClass }}">{{ l.t(badge.key) }}</span>
+            } @else {
+              <span class="status-pill status-draft">طلب جديد</span>
+            }
+            @if (course()) {
+              <span [class]="courseTypeCss()">{{ courseTypeLabel() }}</span>
+            }
+          </div>
+        </div>
+      </div>
 
-    <!-- Section 2 — Financials -->
-    <app-casual-course-section-financials
-      [state]="financialsState()"
-      [course]="course()"
-      [lockReason]="financialsLockReason()"
-      (toggle)="onFinancialsToggle()" />
+      @if (course(); as currentCourse) {
+        <div class="header-stats">
+          <div class="stat-chip">
+            <span>المدة</span>
+            <strong>{{ currentCourse.durationDays ?? 0 }} يوم</strong>
+          </div>
+          <div class="stat-chip">
+            <span>المرشحون</span>
+            <strong>{{ currentCourse.nomineesCount ?? 0 }}</strong>
+          </div>
+          <div class="stat-chip">
+            <span>التكلفة المعتمدة</span>
+            <strong>{{ (currentCourse.estimatedTotalCost ?? 0) | number:'1.0-3' }}</strong>
+          </div>
+        </div>
+      }
+    </header>
 
-    <!-- Section 3 — Price Quotes (hidden entirely for Internal courseType) -->
-    @if (!quotesHidden()) {
-      <app-casual-course-section-quotes
-        [state]="quotesState()"
-        [course]="course()"
-        [quoteCount]="quoteCount()"
-        [selectedQuote]="selectedQuote()"
-        [lockReason]="quotesLockReason()"
-        (toggle)="onQuotesToggle()" />
+    @if (showWorkflowActionBar()) {
+      <app-casual-course-header-action-bar
+        [status]="status()"
+        [canEditDraft]="canEditDraft()"
+        [canApproveUgm]="canApproveUgm()"
+        [canReview]="canReview()"
+        [canTdApprove]="canTdApprove()"
+        [canHeadApprove]="canHeadApprove()" />
     }
 
-    <!-- Section 4 — Travel Instructions (hidden entirely for Internal courseType) -->
-    @if (!travelHidden()) {
-      <app-casual-course-section-travel
-        [state]="travelState()"
-        [course]="course()"
-        [instruction]="travelInstruction()"
-        [lockReason]="travelLockReason()"
-        (toggle)="onTravelToggle()" />
+    @if (course(); as currentCourse) {
+      <div class="context-strip">
+        <div class="context-item">
+          <i class="bi bi-building" aria-hidden="true"></i>
+          <span>
+            <small>الوحدة</small>
+            <strong>{{ currentCourse.unitName || '—' }}</strong>
+          </span>
+        </div>
+        <div class="context-divider" aria-hidden="true"></div>
+        <div class="context-item">
+          <i class="bi bi-calendar3" aria-hidden="true"></i>
+          <span>
+            <small>فترة التنفيذ</small>
+            <strong>
+              @if (currentCourse.actualStartDate && currentCourse.actualEndDate) {
+                {{ fmt(currentCourse.actualStartDate) }} — {{ fmt(currentCourse.actualEndDate) }}
+              } @else {
+                تُحدد عند اختيار العرض
+              }
+            </strong>
+          </span>
+        </div>
+        <div class="context-divider" aria-hidden="true"></div>
+        <div class="context-item">
+          <i class="bi bi-person" aria-hidden="true"></i>
+          <span>
+            <small>مقدم الطلب</small>
+            <strong>{{ currentCourse.requesterName || '—' }}</strong>
+          </span>
+        </div>
+
+        @if (activeStage() !== recommendedStageKey()) {
+          <button type="button" class="recommended-shortcut" (click)="goRecommendedStage()">
+            <span class="pulse-dot" aria-hidden="true"></span>
+            الانتقال إلى الإجراء المطلوب
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
+          </button>
+        }
+      </div>
     }
 
-    <!-- Section 5 — Payments & Reallocation (Phase 4B-β) -->
-    <app-casual-course-section-payments
-      [state]="paymentsState()"
-      [course]="course()"
-      [travelInstruction]="travelInstruction()"
-      [travelAllowancePayments]="travelAllowancePayments()"
-      [coursePayment]="coursePayment()"
-      [reallocations]="reallocations()"
-      [lockReason]="paymentsLockReason()"
-      (toggle)="onPaymentsToggle()" />
+    <div class="guided-layout">
+      <aside class="stage-navigation" aria-label="مراحل الدورة العرضية">
+        <div class="stage-nav-heading">
+          <span>سير العمل</span>
+          <h2>مراحل الدورة</h2>
+          <p>يمكنك الرجوع للمراحل السابقة، وتُفتح المرحلة التالية بعد اكتمال الحالية.</p>
+        </div>
+
+        <ol class="stage-list">
+          @for (stage of visibleStages(); track stage.key; let stageIndex = $index) {
+            <li [class.stage-selected]="activeStage() === stage.key"
+                [class.stage-complete]="stage.state === 'complete'"
+                [class.stage-attention]="stage.state === 'attention'"
+                [class.stage-locked]="stage.state === 'locked'"
+                [class.stage-blocked]="!canAccessStage(stage.key)">
+              <button type="button"
+                      [disabled]="!canAccessStage(stage.key)"
+                      [attr.aria-current]="activeStage() === stage.key ? 'step' : null"
+                      [attr.title]="!canAccessStage(stage.key) ? 'أكمل المرحلة الحالية أولًا' : null"
+                      (click)="selectStage(stage.key)">
+                <span class="stage-marker">
+                  @if (stage.state === 'complete') {
+                    <i class="bi bi-check-lg" aria-hidden="true"></i>
+                  } @else if (stage.state === 'locked') {
+                    <i class="bi bi-lock" aria-hidden="true"></i>
+                  } @else {
+                    <span>{{ stageIndex + 1 }}</span>
+                  }
+                </span>
+                <span class="stage-copy">
+                  <strong>{{ stage.title }}</strong>
+                  <small>{{ stage.description }}</small>
+                </span>
+                <span [class]="'stage-state state-' + stage.state">
+                  {{ stageStateLabel(stage.state) }}
+                </span>
+                @if (recommendedStageKey() === stage.key && stage.state !== 'complete') {
+                  <span class="recommended-mark" title="المرحلة المقترحة الآن"></span>
+                }
+              </button>
+            </li>
+          }
+        </ol>
+      </aside>
+
+      <section id="casual-course-workspace" class="workbench casual-workbench">
+        @if (activeStageMeta(); as stage) {
+          <header class="workbench-header">
+            <span class="workbench-icon"><i [class]="stage.iconClass" aria-hidden="true"></i></span>
+            <div class="workbench-title">
+              <span>الخطوة {{ activeStageIndex() + 1 }} من {{ visibleStages().length }}</span>
+              <h2>{{ stage.title }}</h2>
+              <p>{{ stage.description }}</p>
+            </div>
+            <span [class]="'workbench-state state-' + stage.state">
+              {{ stageStateLabel(stage.state) }}
+            </span>
+          </header>
+
+          <div class="workbench-body casual-stage-content">
+            @switch (activeStage()) {
+              @case ('details') {
+                <app-casual-course-section-details
+                  [state]="'active'"
+                  [course]="course()" />
+              }
+
+              @case ('financials') {
+                <app-casual-course-section-financials
+                  [state]="'active'"
+                  [course]="course()"
+                  [lockReason]="stage.lockReason || ''" />
+              }
+
+              @case ('quotes') {
+                <app-casual-course-section-quotes
+                  [state]="'active'"
+                  [course]="course()"
+                  [quoteCount]="quoteCount()"
+                  [selectedQuote]="selectedQuote()"
+                  [lockReason]="stage.lockReason || ''" />
+              }
+
+              @case ('travel') {
+                @if (stage.state === 'locked') {
+                  <div class="locked-preview">
+                    <span class="locked-icon"><i class="bi bi-lock" aria-hidden="true"></i></span>
+                    <h3>المرحلة غير متاحة بعد</h3>
+                    <p>{{ stage.lockReason }}</p>
+                  </div>
+                } @else {
+                  <div class="travel-panel">
+                    <div class="travel-intro">
+                      <span class="travel-intro-icon"><i class="bi bi-send" aria-hidden="true"></i></span>
+                      <div>
+                        <h3>الربط مع منظومة السفر</h3>
+                        <p>أرسل بيانات الدورة والمرشحين، ثم تابع النتيجة المالية من نفس الصفحة.</p>
+                      </div>
+                    </div>
+
+                    @if (travelActionError()) {
+                      <div class="error-banner" role="alert">{{ travelActionError() }}</div>
+                    }
+
+                    @if (travelProcess(); as travel) {
+                      @if (!travel.integrationAvailable) {
+                        <div class="travel-notice travel-notice-warning">
+                          <i class="bi bi-plug" aria-hidden="true"></i>
+                          <div>
+                            <strong>ربط منظومة السفر غير متاح حاليًا</strong>
+                            <p>تعذر الوصول إلى الموديول، ويمكن إعادة المحاولة لاحقًا.</p>
+                          </div>
+                        </div>
+                      } @else if (!travel.isFound) {
+                        <section class="travel-handoff-card">
+                          <div class="travel-handoff-copy">
+                            <span class="travel-state-icon"><i class="bi bi-box-arrow-up-left" aria-hidden="true"></i></span>
+                            <div>
+                              <h3>الدورة جاهزة للإرسال</h3>
+                              <p>سيُنشأ طلب سفر واحد مرتبط بهذه الدورة العرضية.</p>
+                            </div>
+                          </div>
+
+                          <div class="travel-payload-summary">
+                            <div>
+                              <i class="bi bi-calendar-range" aria-hidden="true"></i>
+                              <span>{{ fmt(course()?.actualStartDate) }} — {{ fmt(course()?.actualEndDate) }}</span>
+                            </div>
+                            <div>
+                              <i class="bi bi-people" aria-hidden="true"></i>
+                              <span>{{ course()?.nominations?.length ?? 0 }} موظف</span>
+                            </div>
+                            <div>
+                              <i class="bi bi-list-check" aria-hidden="true"></i>
+                              <span>خمسة بنود مالية</span>
+                            </div>
+                          </div>
+
+                          @if (travel.blockingReasons.length > 0) {
+                            <div class="travel-requirements">
+                              <strong>أكمل المتطلبات التالية:</strong>
+                              <ul>
+                                @for (reason of travel.blockingReasons; track reason) {
+                                  <li><i class="bi bi-exclamation-circle" aria-hidden="true"></i>{{ reason }}</li>
+                                }
+                              </ul>
+                            </div>
+                          } @else {
+                            <div class="travel-ready">
+                              <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                              جميع البيانات المطلوبة جاهزة للإرسال.
+                            </div>
+                          }
+
+                          @if (canSendTravel()) {
+                            <button type="button" class="btn-primary travel-send-button"
+                                    [disabled]="!travel.canSend || travelActionRunning()"
+                                    (click)="sendToTravel()">
+                              @if (travelActionRunning()) {
+                                <span class="button-spinner" aria-hidden="true"></span>
+                                جارٍ الإرسال...
+                              } @else {
+                                <i class="bi bi-send-fill" aria-hidden="true"></i>
+                                إرسال إلى إجراءات السفر
+                              }
+                            </button>
+                          }
+                        </section>
+                      } @else {
+                        <section class="travel-tracking-card" [class.travel-completed]="travel.isCompleted">
+                          <div class="travel-tracking-header">
+                            <div class="travel-handoff-copy">
+                              <span class="travel-state-icon">
+                                <i [class]="travel.isCompleted ? 'bi bi-check2-circle' : 'bi bi-airplane'" aria-hidden="true"></i>
+                              </span>
+                              <div>
+                                <h3>{{ travel.isCompleted ? 'اكتملت إجراءات السفر' : 'الطلب قيد المعالجة' }}</h3>
+                                <p>{{ travel.isCompleted
+                                  ? 'تم استيراد المصروفات واعتمادها تلقائيًا في التدريب.'
+                                  : 'تتم متابعة الطلب داخل منظومة السفر.' }}</p>
+                              </div>
+                            </div>
+                            <span class="travel-status-pill">
+                              <small>الحالة</small>
+                              <strong>{{ travelStatusLabel() }}</strong>
+                            </span>
+                          </div>
+
+                          @if (travel.warningMessage) {
+                            <div class="travel-notice travel-notice-warning">
+                              <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+                              <div><strong>تنبيه</strong><p>{{ travel.warningMessage }}</p></div>
+                            </div>
+                          }
+
+                          @if (travel.isCompleted) {
+                            <div class="travel-summary-lead">
+                              <div><span>الأيام المحتسبة</span><strong>{{ travel.calculatedDays }}</strong></div>
+                              <div><span>الموظفون</span><strong>{{ travel.employeeCount }}</strong></div>
+                              <div class="travel-grand-total">
+                                <span>الإجمالي</span>
+                                <strong>{{ travel.grandTotal | number:'1.0-3' }} {{ travel.currency }}</strong>
+                              </div>
+                            </div>
+                            <div class="travel-cost-grid">
+                              <div><i class="bi bi-ticket-perforated"></i><span>التذاكر</span><strong>{{ travel.ticketsTotal | number:'1.0-3' }}</strong></div>
+                              <div><i class="bi bi-passport"></i><span>التأشيرات</span><strong>{{ travel.visaTotal | number:'1.0-3' }}</strong></div>
+                              <div><i class="bi bi-shield-check"></i><span>التأمين</span><strong>{{ travel.healthInsuranceTotal | number:'1.0-3' }}</strong></div>
+                              <div><i class="bi bi-cash-coin"></i><span>علاوات السفر</span><strong>{{ travel.travelAllowanceTotal | number:'1.0-3' }}</strong></div>
+                              <div><i class="bi bi-person-badge"></i><span>علاوة الملابس</span><strong>{{ travel.clothingAllowanceTotal | number:'1.0-3' }}</strong></div>
+                              <div class="cost-deduction"><i class="bi bi-dash-circle"></i><span>الخصومات</span><strong>{{ travel.deductionTotal | number:'1.0-3' }}</strong></div>
+                            </div>
+                          }
+
+                          <div class="travel-actions">
+                            <button type="button" class="btn-secondary"
+                                    [disabled]="travelActionRunning()"
+                                    (click)="refreshTravel()">
+                              <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+                              تحديث النتيجة
+                            </button>
+                            <button type="button" class="btn-primary" (click)="openTravelRequest()">
+                              <i class="bi bi-box-arrow-up-left" aria-hidden="true"></i>
+                              فتح طلب السفر
+                            </button>
+                          </div>
+                        </section>
+                      }
+                    }
+                  </div>
+                }
+              }
+
+              @case ('payments') {
+                <app-casual-course-section-payments
+                  [state]="'active'"
+                  [course]="course()"
+                  [travelAllowancePayments]="travelAllowancePayments()"
+                  [coursePayment]="coursePayment()"
+                  [reallocations]="reallocations()"
+                  [lockReason]="stage.lockReason || ''" />
+              }
+
+              @case ('execution') {
+                <div class="execution-panel">
+                  <div class="execution-status">
+                    <span class="execution-status-icon status-icon-1">
+                      <i class="bi bi-play-circle" aria-hidden="true"></i>
+                    </span>
+                    <div>
+                      <span>حالة الجاهزية</span>
+                      <h3>{{ paymentsComplete() && approvalsComplete() ? 'جاهزة للتنفيذ' : 'بانتظار استكمال المتطلبات' }}</h3>
+                      <p>
+                        {{ isInternal()
+                          ? 'الدورة الداخلية لا تتطلب عروض أسعار أو سفرًا أو مدفوعات.'
+                          : 'اكتملت المتطلبات السابقة ويمكن متابعة تنفيذ الدورة.' }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="execution-checks">
+                    <div [class.check-done]="approvalsComplete()">
+                      <i [class]="approvalsComplete() ? 'bi bi-check-circle-fill' : 'bi bi-circle'" aria-hidden="true"></i>
+                      <span>الاعتمادات</span>
+                    </div>
+                    @if (!isInternal()) {
+                      <div [class.check-done]="hasSelectedQuote()">
+                        <i [class]="hasSelectedQuote() ? 'bi bi-check-circle-fill' : 'bi bi-circle'" aria-hidden="true"></i>
+                        <span>العرض الفائز</span>
+                      </div>
+                    }
+                    @if (isInternational()) {
+                      <div [class.check-done]="travelComplete()">
+                        <i [class]="travelComplete() ? 'bi bi-check-circle-fill' : 'bi bi-circle'" aria-hidden="true"></i>
+                        <span>إجراءات السفر</span>
+                      </div>
+                    }
+                    @if (!isInternal()) {
+                      <div [class.check-done]="paymentsComplete()">
+                        <i [class]="paymentsComplete() ? 'bi bi-check-circle-fill' : 'bi bi-circle'" aria-hidden="true"></i>
+                        <span>المدفوعات</span>
+                      </div>
+                    }
+                  </div>
+
+                  <div class="execution-ready-note">
+                    <i class="bi bi-info-circle" aria-hidden="true"></i>
+                    <div>
+                      <strong>مرحلة المتابعة التشغيلية</strong>
+                      <p>تم توحيد تجربة الجاهزية، بينما ستبقى حالة الطلب «معتمدة» حتى إضافة دورة التنفيذ الرسمية.</p>
+                    </div>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+
+          <footer class="workbench-footer">
+            <div>
+              @if (hasPreviousStage()) {
+                <button type="button" class="stage-nav-button previous" (click)="goPreviousStage()">
+                  <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                  <span><small>السابق</small><strong>{{ visibleStages()[activeStageIndex() - 1].title }}</strong></span>
+                </button>
+              }
+            </div>
+            <span class="step-position">{{ activeStageIndex() + 1 }} / {{ visibleStages().length }}</span>
+            <div>
+              @if (hasNextStage()) {
+                <button type="button" class="stage-nav-button next"
+                        [disabled]="!canGoNextStage()"
+                        [attr.title]="!canGoNextStage() ? 'أكمل المرحلة الحالية أولًا' : null"
+                        (click)="goNextStage()">
+                  <span><small>التالي</small><strong>{{ visibleStages()[activeStageIndex() + 1].title }}</strong></span>
+                  <i [class]="canGoNextStage() ? 'bi bi-arrow-left' : 'bi bi-lock'" aria-hidden="true"></i>
+                </button>
+              }
+            </div>
+          </footer>
+        }
+      </section>
+    </div>
   }
 </div>

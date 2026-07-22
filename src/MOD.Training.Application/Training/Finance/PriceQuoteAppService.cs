@@ -7,7 +7,6 @@ using MOD.Training.Training;
 using MOD.Training.Training.Enums;
 using MOD.Training.Training.Finance.Dtos;
 using MOD.Training.Training.Hr;
-using MOD.Training.Training.Nominations;
 using MOD.Training.Training.Permissions;
 using MOD.Training.Training.Plans;
 using Volo.Abp;
@@ -22,7 +21,7 @@ public class PriceQuoteAppService(
     IRepository<PriceQuote, Guid> repository,
     IRepository<TrainingProvider, Guid> providerRepository,
     IRepository<CourseSession, Guid> sessionRepository,
-    IRepository<Nomination, Guid> nominationRepository,
+    IRepository<SessionNomination, Guid> sessionNominationRepository,
     IRepository<GeographicalLocation, Guid> geoRepository,
     PriceQuoteToDtoMapper toDtoMapper,
     CreateUpdatePriceQuoteToEntityMapper toEntityMapper)
@@ -167,7 +166,7 @@ public class PriceQuoteAppService(
         if (entity.QuotedPrice <= 0)
             throw new BusinessException("Training:PriceQuote:InvalidQuotedPrice");
 
-        var nominations = await nominationRepository.GetQueryableAsync();
+        var nominations = await sessionNominationRepository.GetQueryableAsync();
         entity.ParticipantsCount = await AsyncExecuter.CountAsync(
             nominations.Where(nomination => nomination.SessionId == entity.SessionId.Value));
 

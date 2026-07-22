@@ -75,31 +75,8 @@ export interface CreateUpdateCoursePaymentDto {
   notes?: string | null;
 }
 
-export interface CreateUpdateTravelAllowancePaymentDto {
-  casualCourseId?: string | null;
-  sessionId?: string | null;
-  nominationId?: string;
-  ticketAmountOMR?: number;
-  travelAllowanceOMR?: number;
-  clothingAllowanceOMR?: number;
-  insuranceOMR?: number;
-  visaFeesOMR?: number;
-  notes?: string | null;
-}
-
 export interface MarkReallocationApprovedDto {
   approvalNote?: string | null;
-}
-
-export interface TravelAllowancePaymentDefaultsDto {
-  dailyAllowanceRateOMR?: number;
-  travelAllowanceOMR?: number;
-  ticketAmountOMR?: number;
-  clothingAllowanceOMR?: number;
-  insuranceOMR?: number;
-  visaFeesOMR?: number;
-  effectiveTravelDays?: number;
-  personnelType?: PersonnelType;
 }
 
 export interface TravelAllowancePaymentDto extends EntityDto<string> {

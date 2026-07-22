@@ -1,0 +1,12 @@
+{
+  "name": "@travel",
+  "version": "0.0.1",
+  "dependencies": {
+    "@abp/ng.core": "~10.3.0",
+    "@abp/ng.oauth": "~10.3.0",
+    "@abp/ng.theme.shared": "~10.3.0",
+    "@abp/ng.components":"~10.3.0",
+    "@volo/abp.commercial.ng.ui": "~10.3.0",
+    "tslib": "^2.1.0"
+  }
+}

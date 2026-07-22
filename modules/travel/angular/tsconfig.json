@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.prod.json",
+  "compilerOptions": {
+    "paths": {
+      "@travel": ["projects/travel/src/public-api.ts"],
+      "@travel/config": [
+        "projects/travel/config/src/public-api.ts"
+      ]
+    }
+  }
+}

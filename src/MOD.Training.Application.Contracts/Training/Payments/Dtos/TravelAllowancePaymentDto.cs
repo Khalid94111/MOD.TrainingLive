@@ -15,7 +15,7 @@ public class TravelAllowancePaymentDto : EntityDto<Guid>
     public string? RankNameAr { get; set; }
     public PersonnelType PersonnelType { get; set; }
     public string? CourseNameAr { get; set; }
-    public int EffectiveTravelDays { get; set; }   // joined from TravelInstruction
+    public int EffectiveTravelDays { get; set; }   // resolved from the completed Travel request
 
     public decimal TicketAmountOMR { get; set; }
     public decimal TravelAllowanceOMR { get; set; }

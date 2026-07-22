@@ -27,6 +27,10 @@ export const environment = {
       url: 'https://localhost:44324',
       rootNamespace: 'MOD.Training',
     },
+    Travel: {
+      url: 'https://localhost:44324',
+      rootNamespace: 'MOD.Training',
+    },
     AbpAccountPublic: {
       url: oAuthConfig.issuer,
       rootNamespace: 'AbpAccountPublic',

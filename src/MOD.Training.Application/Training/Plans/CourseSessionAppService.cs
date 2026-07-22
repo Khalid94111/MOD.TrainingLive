@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using MOD.Training.Training.Catalog;
 using MOD.Training.Training.Enums;
-using MOD.Training.Training.Execution;
 using MOD.Training.Training.Finance;
 using MOD.Training.Training.Hr;
 using MOD.Training.Training.Managers;
@@ -43,7 +42,6 @@ public class CourseSessionAppService(
     IRepository<CourseCatalog, Guid> catalogRepo,
     IRepository<Employee, Guid> employeeRepo,
     IRepository<Rank, Guid> rankRepo,
-    IRepository<TravelInstruction, Guid> travelInstructionRepo,
     IRepository<TravelAllowancePayment, Guid> travelAllowanceRepo,
     IRepository<CoursePayment, Guid> coursePaymentRepo,
     IRepository<PriceQuote, Guid> priceQuoteRepo,
@@ -167,6 +165,17 @@ public class CourseSessionAppService(
                 .WithData("CurrentStatus", session.Status.ToString())
                 .WithData("AttemptedTransition", "MarkInProgress");
 
+        var context = await LoadEnrichmentContextAsync([session]);
+        var nomineeCount = context.NomineeCountBySession.GetValueOrDefault(session.Id);
+        var executionStage = ComputeStage(
+            session,
+            context.TravelCompletedBySession.GetValueOrDefault(session.Id),
+            context.AllowancesBySession.GetValueOrDefault(session.Id) ?? [],
+            context.CoursePaymentBySession.GetValueOrDefault(session.Id),
+            nomineeCount);
+        if (executionStage != SessionExecutionStage.AwaitingCompletion)
+            throw new BusinessException("Training:Session:CompletePreviousStages");
+
         session.Status = SessionStatus.InProgress;
         await sessionRepo.UpdateAsync(session, autoSave: true);
         return await BuildDetailDtoAsync(session);
@@ -219,7 +228,7 @@ public class CourseSessionAppService(
     private sealed record EnrichmentContext(
         Dictionary<Guid, TenantCourse> TenantCourses,
         Dictionary<Guid, CourseCatalog> Catalogs,
-        Dictionary<Guid, TravelInstruction> TravelInstructionBySession,
+        Dictionary<Guid, bool> TravelCompletedBySession,
         Dictionary<Guid, List<TravelAllowancePayment>> AllowancesBySession,
         Dictionary<Guid, CoursePayment> CoursePaymentBySession,
         Dictionary<Guid, int> NomineeCountBySession);
@@ -235,9 +244,6 @@ public class CourseSessionAppService(
         var catalogs = await AsyncExecuter.ToListAsync(
             (await catalogRepo.GetQueryableAsync()).Where(c => catalogIds.Contains(c.Id)));
 
-        var travels = await AsyncExecuter.ToListAsync(
-            (await travelInstructionRepo.GetQueryableAsync())
-                .Where(t => t.SessionId.HasValue && sessionIds.Contains(t.SessionId!.Value)));
         var allowances = await AsyncExecuter.ToListAsync(
             (await travelAllowanceRepo.GetQueryableAsync())
                 .Where(p => p.SessionId.HasValue && sessionIds.Contains(p.SessionId!.Value)));
@@ -254,10 +260,12 @@ public class CourseSessionAppService(
         return new EnrichmentContext(
             TenantCourses: tenantCourses.ToDictionary(tc => tc.Id),
             Catalogs: catalogs.ToDictionary(c => c.Id),
-            TravelInstructionBySession: travels
-                .Where(t => t.SessionId.HasValue)
-                .GroupBy(t => t.SessionId!.Value)
-                .ToDictionary(g => g.Key, g => g.First()),
+            TravelCompletedBySession: allowances
+                .Where(p => p.SessionId.HasValue
+                    && p.ExternalStatus == "Completed"
+                    && !string.IsNullOrWhiteSpace(p.ExternalRequestId))
+                .GroupBy(p => p.SessionId!.Value)
+                .ToDictionary(g => g.Key, _ => true),
             AllowancesBySession: allowances
                 .Where(p => p.SessionId.HasValue)
                 .GroupBy(p => p.SessionId!.Value)
@@ -302,7 +310,7 @@ public class CourseSessionAppService(
         }
 
         dto.ExecutionStage = ComputeStage(s,
-            ctx.TravelInstructionBySession.GetValueOrDefault(s.Id),
+            ctx.TravelCompletedBySession.GetValueOrDefault(s.Id),
             ctx.AllowancesBySession.GetValueOrDefault(s.Id) ?? new List<TravelAllowancePayment>(),
             ctx.CoursePaymentBySession.GetValueOrDefault(s.Id),
             dto.NomineesCount);
@@ -346,7 +354,7 @@ public class CourseSessionAppService(
         var nomineeCount = ctx.NomineeCountBySession.TryGetValue(s.Id, out var nc) ? nc : 0;
         dto.NomineesCount = nomineeCount;
         dto.ExecutionStage = ComputeStage(s,
-            ctx.TravelInstructionBySession.GetValueOrDefault(s.Id),
+            ctx.TravelCompletedBySession.GetValueOrDefault(s.Id),
             ctx.AllowancesBySession.GetValueOrDefault(s.Id) ?? new List<TravelAllowancePayment>(),
             ctx.CoursePaymentBySession.GetValueOrDefault(s.Id),
             nomineeCount);
@@ -458,7 +466,7 @@ public class CourseSessionAppService(
     /// </summary>
     private static SessionExecutionStage ComputeStage(
         CourseSession s,
-        TravelInstruction? ti,
+        bool travelCompleted,
         List<TravelAllowancePayment> allowances,
         CoursePayment? coursePayment,
         int expectedNomineeCount)
@@ -481,12 +489,12 @@ public class CourseSessionAppService(
         if (s.Status == SessionStatus.Planned)
             return SessionExecutionStage.AwaitingQuoteSelection;
 
-        // Patches 4 + 5 (v4.10.5) — travel instruction + per-nominee allowances apply only to
-        // ExternalInternational. ExternalLocal skips these stages.
+        // Travel handoff and per-nominee allowances apply only to international sessions.
+        // Completion is projected from the idempotently imported Travel result rows.
         var isInternational = s.CourseType == CourseType.ExternalInternational;
 
-        if (isInternational && (ti == null || ti.Status != TravelInstructionStatus.Issued))
-            return SessionExecutionStage.AwaitingTravelInstruction;
+        if (isInternational && !travelCompleted)
+            return SessionExecutionStage.AwaitingTravelCompletion;
 
         if (isInternational && expectedNomineeCount > 0)
         {

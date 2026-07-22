@@ -8,7 +8,6 @@ using MOD.Training.Training.CasualCourses;
 using MOD.Training.Training.Catalog;
 using MOD.Training.Training.Centers;
 using MOD.Training.Training.Enums;
-using MOD.Training.Training.Execution;
 using MOD.Training.Training.Finance;
 using MOD.Training.Training.Hr;
 using MOD.Training.Training.Managers;
@@ -65,7 +64,6 @@ public class TenantDataSeeder(
     IRepository<CasualCourseFinancialItemRank, Guid> casualCourseFinancialRankRepo,
     IRepository<CasualCourseNomination, Guid> casualCourseNominationRepo,
     IRepository<PlanNote, Guid> planNoteRepo,
-    IRepository<TravelInstruction, Guid> travelInstructionRepo,
     FinancialItemDefaultResolver financialItemDefaultResolver,
     IUnitOfWorkManager uowManager,
     ILogger<TenantDataSeeder> logger)
@@ -457,7 +455,7 @@ private async Task SeedFinancialItemsAsync(Guid tenantId)
 
     // ── POST-APPROVAL (FullApproved only) ──
     // Phase 4C-α (v4.10.0): the Phase-3 post-approval fixture (2 CourseSessions + their
-    // dependent Nominations / PriceQuotes / TravelInstruction) used the OLD CourseSession
+    // dependent Nominations / PriceQuotes) used the OLD CourseSession
     // shape (SessionCode / Location / Country / MaxSeats / Cost) that is dropped by the
     // v4_10_0_AnnualPlanSessions migration. This block will be re-seeded with the new
     // shape (TrainingPlanItemId source + SessionStatus.Planned/Scheduled + SessionNomination
@@ -694,9 +692,8 @@ private async Task SeedFinancialItemsAsync(Guid tenantId)
                         "اعتماد القائد", PlanNoteAuthorRole.TH, false) { TenantId = tenantId },
                 }, autoSave: true);
 
-                // Phase 4B-β fixture — selected price quote + issued travel instruction so the
-                // CoursePayment + TravelAllowancePayment AppServices can be smoke-tested without
-                // any extra UI setup. Provider is the SANS seed so the casual arm has a real FK.
+                // Selected price quote fixture. Travel requests and their confirmed financial
+                // results are now created exclusively through the Travel module integration.
                 var quoteId = guidGenerator.Create();
                 var quote = new PriceQuote(quoteId)
                 {
@@ -717,27 +714,6 @@ private async Task SeedFinancialItemsAsync(Guid tenantId)
                 cc.ActualEndDate = to;
                 await casualCourseRepo.UpdateAsync(cc, autoSave: true);
 
-                var travelId = guidGenerator.Create();
-                var depart = from.AddDays(-1);
-                var arriveBack = to.AddDays(1);
-                var travel = new TravelInstruction(travelId)
-                {
-                    TenantId = tenantId,
-                    CasualCourseId = cc.Id,
-                    DepartureDate = depart,
-                    ArrivalDate = from,
-                    ReturnDate = to,
-                    ArrivalBackDate = arriveBack,
-                    VisaRequired = true,
-                    VisaNotes = "تأشيرة زيارة عمل — تم التقديم عبر السفارة",
-                    InsuranceArranged = true,
-                    InsuranceProvider = "Oman Insurance Co.",
-                    TicketsBooked = true,
-                    TicketReference = $"TKT-{cc.Id:N}".Substring(0, 16),
-                    CalculatedTravelDays = (int)(arriveBack.Date - depart.Date).TotalDays + 1,
-                    Status = TravelInstructionStatus.Issued,
-                };
-                await travelInstructionRepo.InsertAsync(travel, autoSave: true);
             }
         }
     }

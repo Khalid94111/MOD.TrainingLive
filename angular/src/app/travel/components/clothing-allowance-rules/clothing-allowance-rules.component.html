@@ -1,0 +1,373 @@
+<div class="clothing-rules-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-icon">
+        <i class="fa-solid fa-shirt"></i>
+      </div>
+      <div class="header-text">
+        <h1>{{ 'Travel::Menu:ClothingAllowanceRules' | abpLocalization }}</h1>
+        <p class="text-muted">{{ 'Travel::ClothingAllowanceRulesHint' | abpLocalization }}</p>
+      </div>
+    </div>
+    <button
+      class="btn btn-primary btn-create"
+      *abpPermission="'TravelManagement.ClothingAllowanceRules.Create'"
+      (click)="openModal()"
+    >
+      <i class="fa-solid fa-plus"></i>
+      <span>{{ 'Travel::CreateNewRule' | abpLocalization }}</span>
+    </button>
+  </div>
+
+  <!-- Stats Bar -->
+  <div class="stats-bar" *ngIf="!isLoading() && rules().length > 0">
+    <div class="stat-item">
+      <span class="stat-value">{{ rules().length }}</span>
+      <span class="stat-label">{{ 'Travel::TotalRules' | abpLocalization }}</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <span class="stat-value">{{ activeRulesCount() }}</span>
+      <span class="stat-label">{{ 'Travel::ActiveRules' | abpLocalization }}</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <span class="stat-value">{{ averageFullAmount() | number:'1.2-2' }}</span>
+      <span class="stat-label">{{ 'Travel::AvgFullAmount' | abpLocalization }}</span>
+    </div>
+  </div>
+
+  <!-- Main Card -->
+  <div class="main-card">
+    <!-- Toolbar -->
+    <div class="card-toolbar">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input
+          type="text"
+          class="form-control"
+          [placeholder]="'Travel::SearchByNameOrRank' | abpLocalization"
+          [(ngModel)]="searchText"
+          (input)="onSearch()"
+        />
+        <button class="btn-clear" *ngIf="searchText" (click)="clearSearch()">
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoading()">
+      <div class="spinner-ring">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+      <p>{{ 'Travel::LoadingRules' | abpLocalization }}</p>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!isLoading() && filteredRules().length === 0">
+      <div class="empty-icon">
+        <i class="fa-solid fa-shirt"></i>
+      </div>
+      <h4>{{ 'Travel::NoRulesFound' | abpLocalization }}</h4>
+      <p class="text-muted">{{ 'Travel::ClothingRulesDescription' | abpLocalization }}</p>
+      <button
+        class="btn btn-primary"
+        *abpPermission="'TravelManagement.ClothingAllowanceRules.Create'"
+        (click)="openModal()"
+      >
+        <i class="fa-solid fa-plus me-2"></i>
+        {{ 'Travel::CreateFirstRule' | abpLocalization }}
+      </button>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-container" *ngIf="!isLoading() && filteredRules().length > 0">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="col-name">
+              <div class="th-content">
+                <i class="fa-solid fa-tag"></i>
+                <span>{{ 'Travel::Name' | abpLocalization }}</span>
+              </div>
+            </th>
+            <th class="col-ranks">
+              <div class="th-content">
+                <i class="fa-solid fa-users"></i>
+                <span>{{ 'Travel::IncludedRanks' | abpLocalization }}</span>
+              </div>
+            </th>
+            <th class="col-amount">
+              <div class="th-content">
+                <i class="fa-solid fa-money-bill-wave"></i>
+                <span>{{ 'Travel::FullClothingAmount' | abpLocalization }}</span>
+              </div>
+            </th>
+            <th class="col-amount">
+              <div class="th-content">
+                <i class="fa-solid fa-coins"></i>
+                <span>{{ 'Travel::AnnualClothingPartialAmount' | abpLocalization }}</span>
+              </div>
+            </th>
+            <th class="col-years">
+              <div class="th-content">
+                <i class="fa-solid fa-calendar"></i>
+                <span>{{ 'Travel::FullPaymentPeriodYears' | abpLocalization }}</span>
+              </div>
+            </th>
+            <th class="col-priority">
+              <div class="th-content">
+                <i class="fa-solid fa-arrow-up-1-9"></i>
+                <span>{{ 'Travel::Priority' | abpLocalization }}</span>
+              </div>
+            </th>
+            <th class="col-status">
+              <div class="th-content">
+                <i class="fa-solid fa-circle-half-stroke"></i>
+                <span>{{ 'Travel::Status' | abpLocalization }}</span>
+              </div>
+            </th>
+            <th class="col-actions">{{ 'Travel::Actions' | abpLocalization }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let rule of filteredRules(); let i = index"
+            class="data-row"
+            [class.inactive]="!rule.isActive"
+            [style.animation-delay]="i * 0.03 + 's'"
+          >
+            <td class="col-name">
+              <div class="name-cell">
+                <span class="name-text">{{ rule.name }}</span>
+              </div>
+            </td>
+            <td class="col-ranks">
+              <div class="ranks-cell">
+                <span class="rank-chip" *ngFor="let rankName of rule.rankNames">{{ rankName }}</span>
+                <span class="text-muted small" *ngIf="!rule.rankNames?.length">{{ 'Travel::NoRanksSelected' | abpLocalization }}</span>
+              </div>
+            </td>
+            <td class="col-amount">
+              <div class="amount-cell">
+                <span class="amount-value">{{ rule.fullAmount | number:'1.2-2' }}</span>
+                <span class="amount-currency">OMR</span>
+              </div>
+            </td>
+            <td class="col-amount">
+              <div class="amount-cell">
+                <span class="amount-value">{{ rule.annualPartialAmount | number:'1.2-2' }}</span>
+                <span class="amount-currency">OMR</span>
+              </div>
+            </td>
+            <td class="col-years">
+              <div class="years-cell">
+                <span class="years-value">{{ rule.fullPaymentPeriodYears }}</span>
+                <span class="years-label">{{ 'Travel::Years' | abpLocalization }}</span>
+              </div>
+            </td>
+            <td class="col-priority">
+              <span class="priority-badge">{{ rule.priority }}</span>
+            </td>
+            <td class="col-status">
+              <span class="status-badge" [class.active]="rule.isActive" [class.inactive]="!rule.isActive">
+                <i class="fa-solid" [class.fa-circle-check]="rule.isActive" [class.fa-circle-xmark]="!rule.isActive"></i>
+                {{ (rule.isActive ? 'Travel::IsActive' : 'Travel::Inactive') | abpLocalization }}
+              </span>
+            </td>
+            <td class="col-actions">
+              <div class="action-buttons">
+                <button
+                  class="btn-action btn-edit"
+                  *abpPermission="'TravelManagement.ClothingAllowanceRules.Edit'"
+                  (click)="openModal(rule)"
+                  [title]="'Travel::Edit' | abpLocalization"
+                >
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button
+                  class="btn-action btn-delete"
+                  *abpPermission="'TravelManagement.ClothingAllowanceRules.Delete'"
+                  (click)="deleteRule(rule.id)"
+                  [title]="'Travel::Delete' | abpLocalization"
+                >
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Footer Summary -->
+    <div class="card-footer-bar" *ngIf="!isLoading() && filteredRules().length > 0">
+      <span class="footer-text">
+        {{ 'Travel::Showing' | abpLocalization }} <strong>{{ filteredRules().length }}</strong>
+        {{ 'Travel::Of' | abpLocalization }} <strong>{{ rules().length }}</strong>
+        {{ 'Travel::Rules' | abpLocalization }}
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<ng-template #ruleModal let-modal>
+  <div class="custom-modal">
+    <div class="modal-header">
+      <div class="modal-header-icon">
+        <i class="fa-solid" [class.fa-plus-circle]="!editingRule()" [class.fa-pen-to-square]="editingRule()"></i>
+      </div>
+      <div class="modal-header-text">
+        <h5 class="modal-title">
+          {{ editingRule() ? ('Travel::EditClothingRule' | abpLocalization) : ('Travel::CreateClothingRule' | abpLocalization) }}
+        </h5>
+        <p class="modal-subtitle">{{ 'Travel::ClothingRuleFormSubtitle' | abpLocalization }}</p>
+      </div>
+      <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-section">
+        <label class="form-label">
+          <i class="fa-solid fa-tag me-1"></i>
+          {{ 'Travel::Name' | abpLocalization }} <span class="required">*</span>
+        </label>
+        <input
+          type="text"
+          class="form-control form-control-lg"
+          [(ngModel)]="form.name"
+          [placeholder]="'Travel::RuleNamePlaceholder' | abpLocalization"
+        />
+      </div>
+
+      <div class="form-section">
+        <label class="form-label">
+          <i class="fa-solid fa-users me-1"></i>
+          {{ 'Travel::IncludedRanks' | abpLocalization }} <span class="required">*</span>
+        </label>
+        <div class="checkbox-list">
+          <div class="checkbox-item" *ngFor="let rank of ranks()">
+            <label class="custom-checkbox">
+              <input
+                type="checkbox"
+                [checked]="isRankSelected(rank.id)"
+                (change)="toggleRank(rank.id, $any($event.target).checked)"
+              />
+              <span class="checkmark"></span>
+              <span class="label-text">{{ rank.name }}</span>
+            </label>
+          </div>
+          <div *ngIf="ranks().length === 0" class="text-muted small p-2">
+            {{ 'Travel::NoRanksAvailable' | abpLocalization }}
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <div class="form-section">
+            <label class="form-label">
+              <i class="fa-solid fa-money-bill-wave me-1"></i>
+              {{ 'Travel::FullClothingAmount' | abpLocalization }} <span class="required">*</span>
+            </label>
+            <div class="input-group input-group-amount">
+              <input
+                type="number"
+                class="form-control"
+                [(ngModel)]="form.fullAmount"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+              />
+              <span class="input-group-text currency">OMR</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-section">
+            <label class="form-label">
+              <i class="fa-solid fa-coins me-1"></i>
+              {{ 'Travel::AnnualClothingPartialAmount' | abpLocalization }} <span class="required">*</span>
+            </label>
+            <div class="input-group input-group-amount">
+              <input
+                type="number"
+                class="form-control"
+                [(ngModel)]="form.annualPartialAmount"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+              />
+              <span class="input-group-text currency">OMR</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-section">
+            <label class="form-label">
+              <i class="fa-solid fa-calendar me-1"></i>
+              {{ 'Travel::FullPaymentPeriodYears' | abpLocalization }} <span class="required">*</span>
+            </label>
+            <input
+              type="number"
+              class="form-control"
+              [(ngModel)]="form.fullPaymentPeriodYears"
+              min="1"
+              step="1"
+            />
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-section">
+            <label class="form-label">
+              <i class="fa-solid fa-arrow-up-1-9 me-1"></i>
+              {{ 'Travel::Priority' | abpLocalization }}
+            </label>
+            <input
+              type="number"
+              class="form-control"
+              [(ngModel)]="form.priority"
+              step="1"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section form-section-toggle">
+        <div class="toggle-wrapper">
+          <div class="toggle-info">
+            <label class="form-label mb-0">{{ 'Travel::IsActive' | abpLocalization }}</label>
+            <small class="form-hint">{{ 'Travel::ActiveRuleHint' | abpLocalization }}</small>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" [(ngModel)]="form.isActive" />
+            <span class="toggle-slider">
+              <span class="toggle-knob"></span>
+            </span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">
+        <i class="fa-solid fa-xmark me-2"></i>{{ 'Travel::Cancel' | abpLocalization }}
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary btn-save"
+        [disabled]="!canSave()"
+        (click)="saveRule(); modal.close()"
+      >
+        <i class="fa-solid" [class.fa-plus]="!editingRule()" [class.fa-check]="editingRule()"></i>
+        <span>{{ editingRule() ? ('Travel::Update' | abpLocalization) : ('Travel::Save' | abpLocalization) }}</span>
+      </button>
+    </div>
+  </div>
+</ng-template>

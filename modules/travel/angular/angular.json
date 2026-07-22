@@ -1,0 +1,55 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "cli": {
+    "analytics": false
+  },
+  "version": 1,
+  "newProjectRoot": "projects",
+  "projects": {
+    "dev-app": {
+      "projectType": "application",
+      "root": "projects/dev-app",
+      "sourceRoot": "projects/dev-app/src"
+    },
+    "travel": {
+      "projectType": "library",
+      "root": "projects/travel",
+      "sourceRoot": "projects/travel/src",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "options": {
+            "project": "projects/travel/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/travel/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/travel/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "tsConfig": "projects/travel/tsconfig.spec.json",
+            "buildTarget": "projects/travel:build",
+            "runner": "vitest"
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "projects/travel/**/*.ts",
+              "projects/travel/**/*.html"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

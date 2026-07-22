@@ -1,0 +1,41 @@
+{
+  "folders": {
+    "items": {
+      "src": {}
+    }
+  },
+  "packages": {
+    "Travel.Domain": {
+      "path": "src/Travel.Domain/Travel.Domain.abppkg",
+      "folder": "src"
+    },
+    "Travel.Application.Contracts": {
+      "path": "src/Travel.Application.Contracts/Travel.Application.Contracts.abppkg",
+      "folder": "src"
+    },
+    "Travel.Application": {
+      "path": "src/Travel.Application/Travel.Application.abppkg",
+      "folder": "src"
+    },
+    "Travel.EntityFrameworkCore": {
+      "path": "src/Travel.EntityFrameworkCore/Travel.EntityFrameworkCore.abppkg",
+      "folder": "src"
+    },
+    "Travel.HttpApi": {
+      "path": "src/Travel.HttpApi/Travel.HttpApi.abppkg",
+      "folder": "src"
+    },
+    "Travel.HttpApi.Client": {
+      "path": "src/Travel.HttpApi.Client/Travel.HttpApi.Client.abppkg",
+      "folder": "src"
+    },
+    "Travel.Domain.Shared": {
+      "path": "src/Travel.Domain.Shared/Travel.Domain.Shared.abppkg",
+      "folder": "src"
+    },
+    "Travel.Installer": {
+       "path": "src/Travel.Installer/Travel.Installer.abppkg",
+       "folder": "src"
+    }
+  }
+}

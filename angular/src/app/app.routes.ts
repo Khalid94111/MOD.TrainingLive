@@ -66,5 +66,10 @@ export const APP_ROUTES: Routes = [
     loadChildren: () =>
       import('./Projects/training.routes').then(m => m.TRAINING_ROUTES),
   },
+  {
+    path: 'travel',
+    canActivate: [authGuard],
+    loadChildren: () => import('./travel/travel.routes').then((m) => m.TRAVEL_ROUTES),
+  },
 
 ];

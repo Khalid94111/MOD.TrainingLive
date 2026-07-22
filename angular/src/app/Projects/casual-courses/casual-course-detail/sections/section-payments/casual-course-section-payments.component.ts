@@ -9,7 +9,6 @@ import {
   TrainingLocalizationHelper,
 } from '../../../../shared';
 import type { CasualCourseDetailDto } from 'src/app/proxy/training/casual-courses/dtos/models';
-import type { TravelInstructionDto } from 'src/app/proxy/training/execution/dtos/models';
 import type {
   TravelAllowancePaymentDto,
   CoursePaymentDto,
@@ -59,7 +58,6 @@ export class CasualCourseSectionPaymentsComponent {
 
   state = input.required<SectionState>();
   course = input<CasualCourseDetailDto | null>(null);
-  travelInstruction = input<TravelInstructionDto | null>(null);
   travelAllowancePayments = input<TravelAllowancePaymentDto[]>([]);
   coursePayment = input<CoursePaymentDto | null>(null);
   reallocations = input<BudgetReallocationDto[]>([]);

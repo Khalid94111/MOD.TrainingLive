@@ -24,4 +24,3 @@ export * from './reallocation-status.enum';
 export * from './result-type.enum';
 export * from './session-execution-stage.enum';
 export * from './session-status.enum';
-export * from './travel-instruction-status.enum';

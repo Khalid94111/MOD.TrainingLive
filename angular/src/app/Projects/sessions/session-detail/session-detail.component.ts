@@ -5,8 +5,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { LocalizationPipe, PermissionService } from '@abp/ng.core';
 import { firstValueFrom } from 'rxjs';
 
-import { TravelInstructionService } from 'src/app/proxy/training/execution/travel-instruction.service';
-import type { TravelInstructionDto } from 'src/app/proxy/training/execution/dtos/models';
 import { CoursePaymentService } from 'src/app/proxy/training/payments/course-payment.service';
 import { TravelAllowancePaymentService } from 'src/app/proxy/training/payments/travel-allowance-payment.service';
 import type {
@@ -18,13 +16,12 @@ import type { CourseSessionDetailDto } from 'src/app/proxy/training/plans/dtos/m
 import { CourseType } from 'src/app/proxy/training/enums/course-type.enum';
 import { PaymentStatus } from 'src/app/proxy/training/enums/payment-status.enum';
 import { SessionStatus } from 'src/app/proxy/training/enums/session-status.enum';
-import { TravelInstructionStatus } from 'src/app/proxy/training/enums/travel-instruction-status.enum';
 
 import { TrainingLocalizationHelper } from '../../shared';
 import { PriceQuotesComponent } from '../../execution/price-quotes/price-quotes.component';
-import { TravelInstructionsComponent } from '../../execution/travel-instructions/travel-instructions.component';
 import { SessionDetailRefreshService } from './session-detail-refresh.service';
 import { SessionSectionPaymentsComponent } from './sections/section-payments/session-section-payments.component';
+import { SessionTravelDto, SessionTravelService } from './session-travel.service';
 
 type StageKey = 'overview' | 'nominees' | 'quotes' | 'travel' | 'payments' | 'execution';
 type StageState = 'complete' | 'attention' | 'available' | 'locked';
@@ -47,13 +44,12 @@ interface SessionStage {
     CommonModule,
     LocalizationPipe,
     PriceQuotesComponent,
-    TravelInstructionsComponent,
     SessionSectionPaymentsComponent,
   ],
 })
 export class SessionDetailComponent implements OnInit {
   private readonly sessionService = inject(CourseSessionService);
-  private readonly travelService = inject(TravelInstructionService);
+  private readonly travelService = inject(SessionTravelService);
   private readonly travelPaymentService = inject(TravelAllowancePaymentService);
   private readonly coursePaymentService = inject(CoursePaymentService);
   private readonly permissions = inject(PermissionService);
@@ -68,12 +64,14 @@ export class SessionDetailComponent implements OnInit {
 
   readonly id = signal<string>('');
   readonly session = signal<CourseSessionDetailDto | null>(null);
-  readonly travelInstruction = signal<TravelInstructionDto | null>(null);
+  readonly travelProcess = signal<SessionTravelDto | null>(null);
   readonly travelAllowancePayments = signal<TravelAllowancePaymentDto[]>([]);
   readonly coursePayment = signal<CoursePaymentDto | null>(null);
   readonly loading = signal<boolean>(false);
   readonly actionRunning = signal<boolean>(false);
   readonly actionError = signal<string | null>(null);
+  readonly travelActionRunning = signal<boolean>(false);
+  readonly travelActionError = signal<string | null>(null);
 
   readonly activeStage = signal<StageKey>('overview');
   private readonly requestedStage = signal<StageKey | null>(null);
@@ -88,6 +86,8 @@ export class SessionDetailComponent implements OnInit {
     this.permissions.getGrantedPolicy('Training.CourseSession.MarkCompleted'));
   readonly canCancel = computed(() =>
     this.permissions.getGrantedPolicy('Training.CourseSession.Cancel'));
+  readonly canSendTravel = computed(() =>
+    this.permissions.getGrantedPolicy('TrainingExecution.TravelRequests.Send'));
 
   readonly isInternal = computed(() => this.session()?.courseType === CourseType.Internal);
   readonly isLocal = computed(() => this.session()?.courseType === CourseType.ExternalLocal);
@@ -95,8 +95,13 @@ export class SessionDetailComponent implements OnInit {
     this.session()?.courseType === CourseType.ExternalInternational);
   readonly status = computed(() => this.session()?.status);
   readonly hasSelectedQuote = computed(() => !!this.session()?.selectedPriceQuoteId);
-  readonly travelIssued = computed(() =>
-    this.travelInstruction()?.status === TravelInstructionStatus.Issued);
+  readonly travelComplete = computed(() => this.travelProcess()?.isCompleted === true);
+  readonly travelStatusLabel = computed(() => {
+    const status = this.travelProcess()?.statusCode;
+    return status
+      ? this.l.t(`::Training.Sessions.Detail.Travel.Status.${status}`)
+      : '—';
+  });
   readonly coursePaymentConfirmed = computed(() =>
     this.coursePayment()?.status === PaymentStatus.Confirmed);
   readonly travelPaymentsComplete = computed(() => {
@@ -157,7 +162,7 @@ export class SessionDetailComponent implements OnInit {
     if (this.status() === SessionStatus.Planned || this.status() === SessionStatus.Cancelled) {
       return true;
     }
-    return this.isInternational() && !this.travelIssued();
+    return this.isInternational() && !this.travelComplete();
   });
   readonly paymentsLockReason = computed(() => {
     if (this.status() === SessionStatus.Cancelled) {
@@ -166,7 +171,7 @@ export class SessionDetailComponent implements OnInit {
     if (this.status() === SessionStatus.Planned) {
       return this.l.t('::Training.Sessions.Detail.PaymentsLockedPlanned');
     }
-    if (this.isInternational() && !this.travelIssued()) {
+    if (this.isInternational() && !this.travelComplete()) {
       return this.l.t('::Training.Sessions.Detail.PaymentsLockedNoTI');
     }
     return '';
@@ -182,7 +187,7 @@ export class SessionDetailComponent implements OnInit {
     }
     if (status === SessionStatus.Planned && this.isInternal()) return 'overview';
     if (!this.isInternal() && !this.hasSelectedQuote()) return 'quotes';
-    if (this.isInternational() && !this.travelIssued()) return 'travel';
+    if (this.isInternational() && !this.travelComplete()) return 'travel';
     if (!this.paymentsComplete()) return 'payments';
     if (status === SessionStatus.Scheduled) return 'execution';
     return 'overview';
@@ -223,7 +228,7 @@ export class SessionDetailComponent implements OnInit {
         titleKey: '::Training.Sessions.Detail.Section4.Title',
         descriptionKey: '::Training.Sessions.Detail.Workspace.TravelDescription',
         iconClass: 'bi bi-airplane',
-        state: this.travelIssued()
+        state: this.travelComplete()
           ? 'complete'
           : this.hasSelectedQuote() ? 'attention' : 'locked',
         lockReason: this.travelLockReason(),
@@ -332,21 +337,20 @@ export class SessionDetailComponent implements OnInit {
     try {
       await this.loadSession();
 
-      const dependentLoads: Promise<void>[] = [];
       if (this.isInternational()) {
-        dependentLoads.push(this.loadTravelInstruction());
+        // Travel completion imports confirmed finance records server-side; load it before payments
+        // so the payment list always reflects the latest completed result.
+        await this.loadTravelProcess();
       } else {
-        this.travelInstruction.set(null);
+        this.travelProcess.set(null);
       }
 
       if (this.isInternal()) {
         this.travelAllowancePayments.set([]);
         this.coursePayment.set(null);
       } else {
-        dependentLoads.push(this.loadPayments());
+        await this.loadPayments();
       }
-
-      await Promise.all(dependentLoads);
       this.normalizeStageSelection();
     } finally {
       this.loading.set(false);
@@ -361,13 +365,45 @@ export class SessionDetailComponent implements OnInit {
     }
   }
 
-  private async loadTravelInstruction(): Promise<void> {
+  private async loadTravelProcess(): Promise<void> {
     try {
-      const instruction = await firstValueFrom(this.travelService.getByParent('', this.id()));
-      this.travelInstruction.set(instruction ?? null);
-    } catch {
-      this.travelInstruction.set(null);
+      this.travelProcess.set(await firstValueFrom(this.travelService.refresh(this.id())));
+    } catch (error) {
+      this.travelProcess.set(null);
+      this.travelActionError.set(this.extractError(error));
     }
+  }
+
+  async sendToTravel(): Promise<void> {
+    if (!this.canSendTravel() || !this.travelProcess()?.canSend) return;
+    this.travelActionError.set(null);
+    this.travelActionRunning.set(true);
+    try {
+      this.travelProcess.set(await firstValueFrom(this.travelService.send(this.id())));
+      await this.loadPayments();
+      this.normalizeStageSelection();
+    } catch (error) {
+      this.travelActionError.set(this.extractError(error));
+    } finally {
+      this.travelActionRunning.set(false);
+    }
+  }
+
+  async refreshTravel(): Promise<void> {
+    this.travelActionError.set(null);
+    this.travelActionRunning.set(true);
+    try {
+      await this.loadTravelProcess();
+      await this.loadPayments();
+      this.normalizeStageSelection();
+    } finally {
+      this.travelActionRunning.set(false);
+    }
+  }
+
+  openTravelRequest(): void {
+    const requestId = this.travelProcess()?.travelRequestId;
+    if (requestId) void this.router.navigate(['/travel/requests', requestId]);
   }
 
   private async loadPayments(): Promise<void> {

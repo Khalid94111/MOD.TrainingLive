@@ -1,0 +1,106 @@
+<div class="funding-rules-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-icon">
+        <i class="fa-solid fa-file-invoice-dollar"></i>
+      </div>
+      <div class="header-text">
+        <h1>{{ 'Travel::Menu:FundingSourceVoteRules' | abpLocalization }}</h1>
+        <p class="text-muted">{{ 'Travel::FundingSourceVoteRulesHint' | abpLocalization }}</p>
+      </div>
+    </div>
+    <button class="btn btn-outline-secondary btn-refresh" (click)="load()" [disabled]="isLoading()">
+      <i class="fa-solid fa-rotate" [class.fa-spin]="isLoading()"></i>
+      <span>{{ 'Travel::Refresh' | abpLocalization }}</span>
+    </button>
+  </div>
+
+  <!-- Rules Grid -->
+  <div class="rules-grid" *ngIf="!isLoading() && rules().length > 0">
+    <div
+      class="rule-card"
+      *ngFor="let rule of rules(); let i = index"
+      [class.inactive]="!rule.isActive"
+      [style.animation-delay]="i * 0.06 + 's'"
+    >
+      <div class="rule-header">
+        <div class="rule-icon" [class]="'icon-' + rule.paymentType.toLowerCase()">
+          <i class="fa-solid" [class]="getPaymentTypeIcon(rule.paymentType)"></i>
+        </div>
+        <div class="rule-title">
+          <h5>{{ getPaymentTypeLabel(rule.paymentType) | abpLocalization }}</h5>
+          <span class="rule-code-label">{{ 'Travel::FundingSourceVoteCode' | abpLocalization }}</span>
+        </div>
+        <label class="toggle-switch">
+          <input
+            type="checkbox"
+            [(ngModel)]="rule.isActive"
+            [disabled]="!canEdit || isSaving()"
+            (change)="onToggleChanged(rule)"
+          />
+          <span class="toggle-slider">
+            <span class="toggle-knob"></span>
+          </span>
+        </label>
+      </div>
+
+      <div class="rule-body">
+        <div class="form-group">
+          <label class="form-label">
+            <i class="fa-solid fa-barcode me-1"></i>
+            {{ 'Travel::FundingSourceVoteCode' | abpLocalization }}
+          </label>
+          <input
+            type="text"
+            class="form-control form-control-lg"
+            maxlength="100"
+            [(ngModel)]="rule.fundingSourceVoteCode"
+            [disabled]="!canEdit || isSaving()"
+            [placeholder]="'Travel::FundingSourceVoteCode' | abpLocalization"
+          />
+        </div>
+
+        <div class="rule-meta">
+          <span class="status-badge" [class.active]="rule.isActive" [class.inactive]="!rule.isActive">
+            <i class="fa-solid" [class.fa-circle-check]="rule.isActive" [class.fa-circle-xmark]="!rule.isActive"></i>
+            {{ (rule.isActive ? 'Travel::IsActive' : 'Travel::Inactive') | abpLocalization }}
+          </span>
+        </div>
+      </div>
+
+      <div class="rule-footer">
+        <button
+          class="btn btn-save"
+          *abpPermission="'TravelManagement.TravelRequests.ManageAllowances'"
+          (click)="save(rule)"
+          [disabled]="isSaving() || !rule.fundingSourceVoteCode?.trim()"
+        >
+          <span class="spinner-border spinner-border-sm me-1" *ngIf="isSaving() && savingRuleId() === rule.id"></span>
+          <i class="fa-solid fa-check" *ngIf="!(isSaving() && savingRuleId() === rule.id)"></i>
+          <span>{{ 'Travel::Save' | abpLocalization }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading()">
+    <div class="spinner-ring">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+    <p>{{ 'Travel::Loading' | abpLocalization }}</p>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!isLoading() && rules().length === 0">
+    <div class="empty-icon">
+      <i class="fa-solid fa-file-invoice-dollar"></i>
+    </div>
+    <h4>{{ 'Travel::NoData' | abpLocalization }}</h4>
+    <p class="text-muted">{{ 'Travel::FundingSourceVoteRulesHint' | abpLocalization }}</p>
+  </div>
+</div>

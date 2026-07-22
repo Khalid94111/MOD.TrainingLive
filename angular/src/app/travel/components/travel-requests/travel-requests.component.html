@@ -1,0 +1,597 @@
+<div class="travel-requests-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-icon">
+        <i class="fa-solid fa-plane-departure"></i>
+      </div>
+      <div class="header-text">
+        <h1>{{ l('Menu:TravelRequests') | abpLocalization }}</h1>
+        <p class="text-muted">{{ 'Travel::TravelRequestsHint' | abpLocalization }}</p>
+      </div>
+    </div>
+    <button
+      class="btn btn-primary btn-create"
+      *abpPermission="'TravelManagement.TravelRequests.Create'"
+      (click)="openCreateModal()"
+    >
+      <i class="fa-solid fa-plus"></i>
+      <span>{{ l('NewTravelRequest') | abpLocalization }}</span>
+    </button>
+  </div>
+
+  <!-- Stats Bar -->
+  <div class="stats-bar" *ngIf="!isLoading() && requests().totalCount > 0">
+    <div class="stat-item">
+      <span class="stat-value">{{ requests().totalCount }}</span>
+      <span class="stat-label">{{ 'Travel::TotalRequests' | abpLocalization }}</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <span class="stat-value">{{ activeRequestsCount() }}</span>
+      <span class="stat-label">{{ 'Travel::ActiveRequests' | abpLocalization }}</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <span class="stat-value">{{ completedRequestsCount() }}</span>
+      <span class="stat-label">{{ 'Travel::CompletedRequests' | abpLocalization }}</span>
+    </div>
+  </div>
+
+  <!-- Filters Card -->
+  <div class="filters-card" *ngIf="!isLoading() || requests().totalCount > 0">
+    <div class="filters-row">
+      <div class="filter-item filter-search">
+        <label class="filter-label">{{ l('Search') | abpLocalization }}</label>
+        <div class="search-input-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input
+            type="text"
+            class="form-control"
+            [ngModel]="searchText()"
+            (ngModelChange)="searchText.set($event)"
+            (keyup.enter)="applyFilters()"
+            [placeholder]="'Travel::SearchRequests' | abpLocalization"
+          />
+        </div>
+      </div>
+      <div class="filter-item">
+        <label class="filter-label">{{ l('TravelType') | abpLocalization }}</label>
+        <select class="form-select" [ngModel]="filterType()" (ngModelChange)="filterType.set($event)">
+          <option [ngValue]="null">{{ l('All') | abpLocalization }}</option>
+          <option *ngFor="let type of travelTypeOptions" [ngValue]="type.value">{{ type.label }}</option>
+        </select>
+      </div>
+      <div class="filter-item">
+        <label class="filter-label">{{ l('RequestStatus') | abpLocalization }}</label>
+        <select class="form-select" [ngModel]="filterStatus()" (ngModelChange)="filterStatus.set($event)">
+          <option [ngValue]="null">{{ l('All') | abpLocalization }}</option>
+          <option *ngFor="let status of statusFilterOptions" [ngValue]="status.value">{{ status.label | abpLocalization }}</option>
+        </select>
+      </div>
+      <div class="filter-item">
+        <label class="filter-label">{{ l('Department') | abpLocalization }}</label>
+        <select class="form-select" [ngModel]="filterDepartment()" (ngModelChange)="filterDepartment.set($event)">
+          <option value="">{{ l('All') | abpLocalization }}</option>
+          <option *ngFor="let tenant of tenants()" [value]="getTenantLabel(tenant)">{{ getTenantLabel(tenant) }}</option>
+        </select>
+      </div>
+      <div class="filter-item filter-date">
+        <label class="filter-label">{{ l('StartDateFrom') | abpLocalization }}</label>
+        <input type="date" class="form-control" [ngModel]="filterStartDateFrom()" (ngModelChange)="filterStartDateFrom.set($event)" />
+      </div>
+      <div class="filter-item filter-date">
+        <label class="filter-label">{{ l('StartDateTo') | abpLocalization }}</label>
+        <input type="date" class="form-control" [ngModel]="filterStartDateTo()" (ngModelChange)="filterStartDateTo.set($event)" />
+      </div>
+      <div class="filter-item filter-actions">
+        <label class="filter-label">&nbsp;</label>
+        <div class="filter-buttons">
+          <button type="button" class="btn btn-filter" (click)="applyFilters()">
+            <i class="fa-solid fa-filter"></i>
+            {{ l('Filter') | abpLocalization }}
+          </button>
+          <button type="button" class="btn btn-reset" (click)="resetFilters()">
+            <i class="fa-solid fa-rotate-left"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Filters -->
+    <div class="quick-filters">
+      <button
+        type="button"
+        class="quick-filter-btn"
+        [class.active]="quickFilter() === 'all'"
+        (click)="setQuickFilter('all')"
+      >
+        <i class="fa-solid fa-layer-group"></i>
+        {{ l('AllRequests') | abpLocalization }}
+      </button>
+      <button
+        type="button"
+        class="quick-filter-btn"
+        [class.active]="quickFilter() === 'needsAction'"
+        (click)="setQuickFilter('needsAction')"
+      >
+        <i class="fa-solid fa-bell"></i>
+        {{ l('RequestsNeedAction') | abpLocalization }}
+      </button>
+      <button
+        type="button"
+        class="quick-filter-btn"
+        [class.active]="quickFilter() === 'travelOffice'"
+        (click)="setQuickFilter('travelOffice')"
+      >
+        <i class="fa-solid fa-building"></i>
+        {{ l('TravelOfficeRequests') | abpLocalization }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Card -->
+  <div class="main-card">
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoading()">
+      <div class="spinner-ring">
+        <div></div><div></div><div></div><div></div>
+      </div>
+      <p>{{ l('Loading') | abpLocalization }}</p>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!isLoading() && requests().items.length === 0">
+      <div class="empty-icon">
+        <i class="fa-solid fa-plane-departure"></i>
+      </div>
+      <h4>{{ 'Travel::NoRequestsFound' | abpLocalization }}</h4>
+      <p class="text-muted">{{ 'Travel::TravelRequestsDescription' | abpLocalization }}</p>
+      <button
+        class="btn btn-primary"
+        *abpPermission="'TravelManagement.TravelRequests.Create'"
+        (click)="openCreateModal()"
+      >
+        <i class="fa-solid fa-plus me-2"></i>
+        {{ l('NewTravelRequest') | abpLocalization }}
+      </button>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-container" *ngIf="!isLoading() && requests().items.length > 0">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="col-title">
+              <div class="th-content">
+                <i class="fa-solid fa-file-lines"></i>
+                <span>{{ l('TravelRequest') | abpLocalization }}</span>
+              </div>
+            </th>
+            <th class="col-type">
+              <div class="th-content">
+                <i class="fa-solid fa-plane"></i>
+                <span>{{ l('TravelType') | abpLocalization }}</span>
+              </div>
+            </th>
+            <th class="col-status">
+              <div class="th-content">
+                <i class="fa-solid fa-circle-half-stroke"></i>
+                <span>{{ l('RequestStatus') | abpLocalization }}</span>
+              </div>
+            </th>
+            <th class="col-destination">
+              <div class="th-content">
+                <i class="fa-solid fa-location-dot"></i>
+                <span>{{ l('Destination') | abpLocalization }}</span>
+              </div>
+            </th>
+            <th class="col-employees">
+              <div class="th-content">
+                <i class="fa-solid fa-users"></i>
+                <span>{{ l('Employees') | abpLocalization }}</span>
+              </div>
+            </th>
+            <th class="col-date">
+              <div class="th-content">
+                <i class="fa-solid fa-calendar"></i>
+                <span>{{ l('StartDate') | abpLocalization }}</span>
+              </div>
+            </th>
+            <th class="col-date">
+              <div class="th-content">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>{{ l('EndDate') | abpLocalization }}</span>
+              </div>
+            </th>
+            <th class="col-actions">{{ l('Actions') | abpLocalization }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let request of requests().items; let i = index"
+            class="data-row"
+            [style.animation-delay]="i * 0.03 + 's'"
+          >
+            <td class="col-title">
+              <div class="title-cell">
+                <span class="title-text">{{ request.title }}</span>
+              </div>
+            </td>
+            <td class="col-type">
+              <span class="type-badge">{{ getTypeLabel(request.travelTypeDefinitionId) | abpLocalization }}</span>
+            </td>
+            <td class="col-status">
+              <span class="status-badge" [class]="getStatusBadgeClass(request.status)">
+                {{ getStatusLabel(request.status) | abpLocalization }}
+              </span>
+            </td>
+            <td class="col-destination">
+              <div class="destination-cell">
+                <i class="fa-solid fa-map-pin"></i>
+                <span>{{ request.destinationCountry }} - {{ request.destinationCity }}</span>
+              </div>
+            </td>
+            <td class="col-employees">
+              <span class="employee-count">
+                <i class="fa-solid fa-user"></i>
+                {{ request.employees?.length || 0 }}
+              </span>
+            </td>
+            <td class="col-date">{{ request.startDate | date:'shortDate' }}</td>
+            <td class="col-date">{{ request.endDate | date:'shortDate' }}</td>
+            <td class="col-actions">
+              <div class="action-buttons">
+                <button
+                  class="btn-action btn-view"
+                  [title]="l('View') | abpLocalization"
+                  (click)="openDetailsModal(request.id)"
+                >
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+                <button
+                  class="btn-action btn-edit"
+                  *abpPermission="'TravelManagement.TravelRequests.Edit'"
+                  [disabled]="!canEditRequest(request)"
+                  [title]="l('Edit') | abpLocalization"
+                  (click)="openEditModal(request.id)"
+                >
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button
+                  class="btn-action btn-delete"
+                  *abpPermission="'TravelManagement.TravelRequests.Delete'"
+                  [disabled]="!canDeleteRequest(request)"
+                  [title]="l('Delete') | abpLocalization"
+                  (click)="deleteRequest(request)"
+                >
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-bar" *ngIf="!isLoading() && requests().totalCount > 0">
+      <span class="pagination-info">
+        {{ '::PagerShowing' | abpLocalization:(listQuery().skipCount + 1).toString():Math.min(listQuery().skipCount + requests().items.length, requests().totalCount).toString():requests().totalCount.toString() }}
+      </span>
+      <nav *ngIf="totalPages() > 1">
+        <ul class="pagination">
+          <li class="page-item" [class.disabled]="pageIndex() === 1">
+            <a class="page-link" href="javascript:void(0)" (click)="goToPage(pageIndex() - 1)">
+              <i class="fa-solid fa-chevron-left"></i>
+            </a>
+          </li>
+          <li
+            class="page-item"
+            *ngFor="let p of pageNumbers()"
+            [class.active]="p === pageIndex()"
+            [class.ellipsis]="p === -1"
+          >
+            <a class="page-link" href="javascript:void(0)" (click)="p !== -1 && goToPage(p)">
+              {{ p === -1 ? '...' : p }}
+            </a>
+          </li>
+          <li class="page-item" [class.disabled]="pageIndex() === totalPages()">
+            <a class="page-link" href="javascript:void(0)" (click)="goToPage(pageIndex() + 1)">
+              <i class="fa-solid fa-chevron-right"></i>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<!-- Create/Edit Modal -->
+<div class="custom-modal-overlay" *ngIf="createModalVisible()" (click)="closeCreateModal()"></div>
+<div class="custom-modal" *ngIf="createModalVisible()">
+  <div class="custom-modal-dialog modal-xl">
+    <div class="custom-modal-content">
+      <form #createForm="ngForm">
+        <!-- Header -->
+        <div class="modal-header">
+          <div class="modal-header-icon">
+            <i class="fa-solid" [class.fa-plus-circle]="!editingRequestId()" [class.fa-pen-to-square]="editingRequestId()"></i>
+          </div>
+          <div class="modal-header-text">
+            <h5 class="modal-title">
+              {{ editingRequestId() ? (l('EditTravelRequest') | abpLocalization) : (l('NewTravelRequest') | abpLocalization) }}
+            </h5>
+          </div>
+          <button type="button" class="btn-close" (click)="closeCreateModal()"></button>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-body">
+          <!-- Integration Warnings -->
+          <div class="alert alert-warning" *ngIf="currentIntegrationWarnings()">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i>
+            {{ currentIntegrationWarnings() }}
+          </div>
+
+          <div class="row g-3">
+            <!-- Title -->
+            <div class="col-md-8">
+              <label class="form-label">{{ l('Title') | abpLocalization }} <span class="required">*</span></label>
+              <input class="form-control form-control-lg" name="title" [(ngModel)]="createInput.title" required maxlength="300" />
+            </div>
+            <!-- Type -->
+            <div class="col-md-4">
+              <label class="form-label">{{ l('TravelType') | abpLocalization }} <span class="required">*</span></label>
+              <select class="form-select" name="travelTypeDefinitionId" [(ngModel)]="createInput.travelTypeDefinitionId" (ngModelChange)="previewAllowances()" required>
+                <option *ngFor="let type of travelTypeOptions" [ngValue]="type.value">{{ type.label }}</option>
+              </select>
+            </div>
+
+            <!-- Description -->
+            <div class="col-12">
+              <label class="form-label">{{ l('Description') | abpLocalization }}</label>
+              <textarea class="form-control" rows="2" name="description" [(ngModel)]="createInput.description" maxlength="2000"></textarea>
+            </div>
+
+            <!-- Dates -->
+            <div class="col-md-6">
+              <label class="form-label">{{ l('StartDate') | abpLocalization }} <span class="required">*</span></label>
+              <input class="form-control" type="date" name="startDate" [(ngModel)]="createInput.startDate" (ngModelChange)="previewAllowances()" required />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">{{ l('EndDate') | abpLocalization }}</label>
+              <input class="form-control" type="date" name="endDate" [(ngModel)]="createInput.endDate" (ngModelChange)="previewAllowances()" />
+            </div>
+
+            <!-- Destination -->
+            <div class="col-md-6">
+              <label class="form-label">{{ l('DestinationCountry') | abpLocalization }} <span class="required">*</span></label>
+              <input class="form-control" name="destinationCountry" [(ngModel)]="createInput.destinationCountry" required maxlength="100" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">{{ l('DestinationCity') | abpLocalization }} <span class="required">*</span></label>
+              <input class="form-control" name="destinationCity" [(ngModel)]="createInput.destinationCity" required maxlength="100" />
+            </div>
+
+            <!-- Department & Category -->
+            <div class="col-md-6">
+              <label class="form-label">{{ l('Department') | abpLocalization }} <span class="required">*</span></label>
+              <select class="form-select" name="department" [(ngModel)]="createInput.department" required>
+                <option value="">{{ l('Select') | abpLocalization }}</option>
+                <option *ngFor="let tenant of tenants()" [value]="getTenantLabel(tenant)">{{ getTenantLabel(tenant) }}</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">{{ l('AllowanceCategory') | abpLocalization }} <span class="required">*</span></label>
+              <select class="form-select" name="category" [(ngModel)]="createInput.category" (ngModelChange)="refreshSelectedEmployeeAllowanceRates()" required>
+                <option *ngFor="let category of categoryOptions" [ngValue]="category.value">{{ category.label | abpLocalization }}</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Checkboxes -->
+          <div class="checkboxes-row">
+            <label class="custom-checkbox">
+              <input type="checkbox" [(ngModel)]="createInput.needsPermission" name="needsPermission" />
+              <span class="checkmark"></span>
+              <span class="label-text">{{ l('NeedsPermission') | abpLocalization }}</span>
+            </label>
+            <label class="custom-checkbox">
+              <input type="checkbox" [(ngModel)]="createInput.needsAwareness" name="needsAwareness" />
+              <span class="checkmark"></span>
+              <span class="label-text">{{ l('NeedsAwareness') | abpLocalization }}</span>
+            </label>
+            <label class="custom-checkbox">
+              <input type="checkbox" [(ngModel)]="createInput.hasTicketCompensation" name="hasTicketCompensation" />
+              <span class="checkmark"></span>
+              <span class="label-text">{{ l('HasTicketCompensation') | abpLocalization }}</span>
+            </label>
+            <label class="custom-checkbox">
+              <input type="checkbox" [(ngModel)]="createInput.needsTransportation" name="needsTransportation" />
+              <span class="checkmark"></span>
+              <span class="label-text">{{ l('NeedsTransportation') | abpLocalization }}</span>
+            </label>
+            <label class="custom-checkbox">
+              <input type="checkbox" [(ngModel)]="createInput.includesAccommodation" name="includesAccommodation" (ngModelChange)="previewAllowances()" />
+              <span class="checkmark"></span>
+              <span class="label-text">{{ l('IncludesAccommodation') | abpLocalization }}</span>
+            </label>
+            <label class="custom-checkbox">
+              <input type="checkbox" [(ngModel)]="createInput.useHighestAllowance" name="useHighestAllowance" (ngModelChange)="previewAllowances()" />
+              <span class="checkmark"></span>
+              <span class="label-text">{{ l('UseHighestAllowance') | abpLocalization }}</span>
+            </label>
+          </div>
+
+          <div class="hint-box" *ngIf="createInput.useHighestAllowance">
+            <i class="fa-solid fa-circle-info"></i>
+            {{ l('UseHighestAllowanceHint') | abpLocalization }}
+          </div>
+
+          <!-- Add Employee -->
+          <div class="add-employee-section">
+            <label class="form-label">{{ l('EmployeeNumber') | abpLocalization }}</label>
+            <div class="add-employee-input">
+              <input
+                type="text"
+                class="form-control"
+                name="employeeNumberDraft"
+                [(ngModel)]="employeeNumberDraft"
+                [placeholder]="'Travel::AddEmployeeByNumberHint' | abpLocalization"
+              />
+              <button type="button" class="btn btn-add-emp" (click)="addEmployeeByNumber()">
+                <i class="fa-solid fa-plus"></i>
+                {{ l('AddEmployee') | abpLocalization }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Employees Table -->
+          <div class="employees-section" *ngIf="selectedEmployees.length > 0">
+            <div class="section-header">
+              <h6><i class="fa-solid fa-users me-2"></i>{{ l('Employees') | abpLocalization }}</h6>
+              <span class="count">{{ selectedEmployees.length }} {{ l('SelectedEmployees') | abpLocalization }}</span>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table data-table-sm">
+                <thead>
+                  <tr>
+                    <th>{{ l('EmployeeNumber') | abpLocalization }}</th>
+                    <th>{{ l('EmployeeName') | abpLocalization }}</th>
+                    <th>{{ l('Department') | abpLocalization }}</th>
+                    <th>{{ l('Rank') | abpLocalization }}</th>
+                    <th>{{ l('DailyAllowanceRate') | abpLocalization }}</th>
+                    <th>{{ l('TicketClass') | abpLocalization }}</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let employee of selectedEmployees">
+                    <td><span class="emp-number">{{ employee.employeeNumber }}</span></td>
+                    <td><strong>{{ employee.name }}</strong></td>
+                    <td>{{ employee.department }}</td>
+                    <td>{{ employee.rankName }}</td>
+                    <td>
+                      <input
+                        class="form-control form-control-sm rate-input"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        [(ngModel)]="employee.dailyAllowanceRate"
+                        [name]="'rate_' + employee.id"
+                        readonly
+                      />
+                    </td>
+                    <td>{{ getTicketClassLabel(employee.ticketClass) | abpLocalization }}</td>
+                    <td>
+                      <button type="button" class="btn-remove-emp" (click)="removeEmployee(employee.id)">
+                        <i class="fa-solid fa-xmark"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="text-danger small mt-2" *ngIf="hasInvalidEmployeeAllowance">
+              <i class="fa-solid fa-circle-exclamation me-1"></i>
+              {{ l('EmployeeAllowanceRequired') | abpLocalization }}
+            </div>
+          </div>
+
+          <!-- Allowance Preview -->
+          <div class="allowance-preview-section" *ngIf="selectedEmployees.length > 0">
+            <div class="section-header">
+              <h6><i class="fa-solid fa-calculator me-2"></i>{{ l('AllowancePreview') | abpLocalization }}</h6>
+              <button type="button" class="btn btn-refresh" [disabled]="allowancePreviewLoading()" (click)="previewAllowances()">
+                <span class="spinner-ring-sm" *ngIf="allowancePreviewLoading()"><div></div></span>
+                <i class="fa-solid fa-rotate" *ngIf="!allowancePreviewLoading()"></i>
+                {{ l('RefreshPreview') | abpLocalization }}
+              </button>
+            </div>
+
+            <div class="preview-cards" *ngIf="allowancePreview()">
+              <div class="preview-card">
+                <span class="preview-label">{{ l('TotalTravelDays') | abpLocalization }}</span>
+                <span class="preview-value">{{ allowancePreview()!.totalDays }}</span>
+              </div>
+              <div class="preview-card">
+                <span class="preview-label">{{ l('TotalDailyRates') | abpLocalization }}</span>
+                <span class="preview-value">{{ allowancePreview()!.dailyBaseRate | number:'1.2-2' }} OMR</span>
+              </div>
+              <div class="preview-card">
+                <span class="preview-label">{{ l('OverseasAllowance') | abpLocalization }}</span>
+                <span class="preview-value">{{ allowancePreview()!.overseasTotal | number:'1.2-2' }} OMR</span>
+              </div>
+              <div class="preview-card highlight">
+                <span class="preview-label">{{ l('NetTotal') | abpLocalization }}</span>
+                <span class="preview-value">{{ allowancePreview()!.netTotal | number:'1.2-2' }} OMR</span>
+              </div>
+            </div>
+
+            <div class="alert alert-warning mt-3 mb-0" *ngIf="allowancePreview()?.warnings?.length">
+              <div *ngFor="let warning of allowancePreview()!.warnings">{{ warning }}</div>
+            </div>
+
+            <div class="employee-allowances mt-3" *ngIf="allowancePreview()?.employeeAllowances?.length">
+              <div class="table-responsive">
+                <table class="data-table data-table-sm">
+                  <thead>
+                    <tr>
+                      <th>{{ l('EmployeeNumber') | abpLocalization }}</th>
+                      <th>{{ l('EmployeeName') | abpLocalization }}</th>
+                      <th>{{ l('Rank') | abpLocalization }}</th>
+                      <th>{{ l('DailyRate') | abpLocalization }}</th>
+                      <th>{{ l('AccommodationPaymentPercentage') | abpLocalization }}</th>
+                      <th>{{ l('OverseasAllowance') | abpLocalization }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let employee of allowancePreview()!.employeeAllowances">
+                      <td>{{ employee.employeeNumber }}</td>
+                      <td><strong>{{ employee.employeeName }}</strong></td>
+                      <td>{{ employee.rankName }}</td>
+                      <td>{{ employee.dailyRate | number:'1.2-2' }} OMR</td>
+                      <td>{{ employee.accommodationPaymentPercentage | number:'1.0-2' }}%</td>
+                      <td><strong>{{ employee.overseasTotal | number:'1.2-2' }} OMR</strong></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="preview-hint" *ngIf="!allowancePreview() && !allowancePreviewLoading()">
+              <i class="fa-solid fa-circle-info me-2"></i>
+              {{ l('AllowancePreviewHint') | abpLocalization }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" (click)="closeCreateModal()">
+            <i class="fa-solid fa-xmark me-2"></i>{{ '::Cancel' | abpLocalization }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-draft"
+            [disabled]="saving() || !createForm.valid || hasInvalidEmployeeAllowance"
+            (click)="saveRequest(false)"
+          >
+            <i class="fa-solid fa-floppy-disk me-2"></i>
+            {{ l('SaveAsDraft') | abpLocalization }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-submit"
+            [disabled]="editingRequestId() || saving() || !createForm.valid || hasInvalidEmployeeAllowance"
+            (click)="saveRequest(true)"
+          >
+            <i class="fa-solid fa-paper-plane me-2"></i>
+            {{ l('SendToTravelOffice') | abpLocalization }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

@@ -15,11 +15,6 @@ import type {
 import { TenantCourseService } from 'src/app/proxy/training/tenant-courses/tenant-course.service';
 import type { TenantCourseDto } from 'src/app/proxy/training/tenant-courses/dtos/models';
 import { HrLookupService } from 'src/app/proxy/training/hr-integration/hr-lookup.service';
-import { PriceQuoteService } from 'src/app/proxy/training/finance';
-import type { PriceQuoteDto } from 'src/app/proxy/training/finance/dtos/models';
-import { TravelInstructionService } from 'src/app/proxy/training/execution/travel-instruction.service';
-import type { TravelInstructionDto } from 'src/app/proxy/training/execution/dtos/models';
-import { TravelInstructionStatus } from 'src/app/proxy/training/enums/travel-instruction-status.enum';
 
 import { CasualCourseStatus, CourseType, TrainingLocalizationHelper } from '../../shared';
 import { NominationPickerComponent } from '../../shared/components/nomination-picker/nomination-picker.component';
@@ -39,8 +34,6 @@ export class CasualCourseRequestComponent implements OnInit {
   private service = inject(CasualCourseService);
   private tenantCourseService = inject(TenantCourseService);
   private hrService = inject(HrLookupService);
-  private quoteService = inject(PriceQuoteService);
-  private travelService = inject(TravelInstructionService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private actions = inject(CasualCourseActionService);
@@ -51,7 +44,6 @@ export class CasualCourseRequestComponent implements OnInit {
   CourseType = CourseType;
   CasualCourseStatus = CasualCourseStatus;
   PlanNoteEntityType = PlanNoteEntityType;
-  TravelInstructionStatus = TravelInstructionStatus;
 
   /** Render slot:
    *   'details'   — course form + nominees only (Section 1 active body)
@@ -61,9 +53,6 @@ export class CasualCourseRequestComponent implements OnInit {
   mode = input<'details' | 'financials' | 'all'>('all');
   showDetails    = computed(() => this.mode() === 'details'    || this.mode() === 'all');
   showFinancials = computed(() => this.mode() === 'financials' || this.mode() === 'all');
-
-  selectedQuote = signal<PriceQuoteDto | null>(null);
-  travelInstruction = signal<TravelInstructionDto | null>(null);
 
   id = signal<string | null>(null);
   embedded = signal<boolean>(false);
@@ -104,45 +93,6 @@ export class CasualCourseRequestComponent implements OnInit {
   nomineeCount = computed(() => this.fNomineeIds().length);
   hasPreview = computed(() => (this.preview()?.items?.length ?? 0) > 0);
   grandTotal = computed(() => this.preview()?.totalOMR ?? 0);
-
-  // Phase 4B-α — Execution Status section
-  hasSelectedQuote = computed(() => !!this.casualCourse()?.selectedPriceQuoteId);
-
-  executionVariance = computed(() => {
-    const q = this.selectedQuote();
-    const est = this.casualCourse()?.estimatedTotalCost ?? 0;
-    if (!q || est <= 0) return 0;
-    return (q.quotedPriceOMR ?? 0) - est;
-  });
-
-  travelStatusLabel = computed(() => {
-    const s = this.travelInstruction()?.status;
-    switch (s) {
-      case TravelInstructionStatus.Issued:    return 'مُصدَرة';
-      case TravelInstructionStatus.Cancelled: return 'ملغاة';
-      case TravelInstructionStatus.Draft:     return 'مسودة';
-      default: return 'لم تُنشأ بعد';
-    }
-  });
-
-  travelStatusCss = computed(() => {
-    const s = this.travelInstruction()?.status;
-    switch (s) {
-      case TravelInstructionStatus.Issued:    return 'status-pill status-issued';
-      case TravelInstructionStatus.Cancelled: return 'status-pill status-cancelled';
-      case TravelInstructionStatus.Draft:     return 'status-pill status-draft';
-      default: return 'status-pill status-pending';
-    }
-  });
-
-  actualDurationDays = computed(() => {
-    const c = this.casualCourse();
-    if (!c?.actualStartDate || !c?.actualEndDate) return 0;
-    const s = new Date(c.actualStartDate);
-    const e = new Date(c.actualEndDate);
-    if (Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return 0;
-    return Math.floor((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1;
-  });
 
   computedDateTo = computed(() => {
     const from = this.fDateFrom();
@@ -289,40 +239,6 @@ export class CasualCourseRequestComponent implements OnInit {
     this.fNomineeIds.set(ids);
     if (detail.unitId) this.currentUnitId.set(detail.unitId);
 
-    // Phase 4B-α — load execution-status data (best-effort, non-fatal)
-    if (detail.selectedPriceQuoteId) {
-      try {
-        const q = await firstValueFrom(this.quoteService.get(detail.selectedPriceQuoteId));
-        this.selectedQuote.set(q);
-      } catch {
-        this.selectedQuote.set(null);
-      }
-      try {
-        const ti = await firstValueFrom(this.travelService.getByParent(id, ''));
-        this.travelInstruction.set(ti ?? null);
-      } catch {
-        this.travelInstruction.set(null);
-      }
-    } else {
-      this.selectedQuote.set(null);
-      this.travelInstruction.set(null);
-    }
-  }
-
-  formatCurrency(value: number | null | undefined): string {
-    return (value ?? 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 3 });
-  }
-
-  goToPriceQuotes(): void {
-    if (this.id()) {
-      this.router.navigate(['/training/casual-courses', this.id()], { fragment: 'quotes' });
-    }
-  }
-
-  goToTravelInstructions(): void {
-    if (this.id()) {
-      this.router.navigate(['/training/casual-courses', this.id()], { fragment: 'travel' });
-    }
   }
 
   private async refreshPreview(): Promise<void> {

@@ -188,3 +188,80 @@
   color: #64748b;
 }
 .empty-icon { font-size: 2rem; }
+
+/* Guided execution shell — shares the annual-session layout and keeps the
+   existing approval forms as embedded stage bodies. */
+.casual-guided-page {
+  --casual-accent: #0f766e;
+}
+
+app-casual-course-header-action-bar {
+  display: block;
+  margin: -0.35rem 0 1rem;
+}
+
+.casual-workbench {
+  min-width: 0;
+}
+
+:host ::ng-deep .casual-stage-content .cc-section {
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  overflow: visible !important;
+  box-shadow: none !important;
+}
+
+:host ::ng-deep .casual-stage-content .cc-section-header {
+  display: none !important;
+}
+
+:host ::ng-deep .casual-stage-content .cc-section-body {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+:host ::ng-deep .casual-stage-content app-casual-course-section-details,
+:host ::ng-deep .casual-stage-content app-casual-course-section-financials,
+:host ::ng-deep .casual-stage-content app-casual-course-section-quotes,
+:host ::ng-deep .casual-stage-content app-casual-course-section-payments {
+  display: block;
+  min-width: 0;
+}
+
+.execution-ready-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  margin-top: 1.1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid #bae6fd;
+  border-radius: 14px;
+  color: #0c4a6e;
+  background: #f0f9ff;
+}
+
+.execution-ready-note i {
+  margin-top: 0.15rem;
+  font-size: 1.15rem;
+}
+
+.execution-ready-note strong,
+.execution-ready-note p {
+  display: block;
+  margin: 0;
+}
+
+.execution-ready-note p {
+  margin-top: 0.2rem;
+  color: #075985;
+  line-height: 1.65;
+}
+
+@media (max-width: 760px) {
+  app-casual-course-header-action-bar {
+    margin-top: 0;
+  }
+}

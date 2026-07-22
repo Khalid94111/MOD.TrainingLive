@@ -4,7 +4,6 @@ using MOD.Training.Training.Catalog;
 using MOD.Training.Training.Centers;
 using MOD.Training.Training.Consts;
 using MOD.Training.Training.Enums;
-using MOD.Training.Training.Execution;
 using MOD.Training.Training.Finance;
 using MOD.Training.Training.Nominations;
 using MOD.Training.Training.Payments;
@@ -34,7 +33,6 @@ public static class TrainingDbContextModelCreatingExtensions
 builder.ConfigureNominations();
 builder.ConfigureFinancePhase3();
 builder.ConfigureCasualCoursesPhase4A();
-builder.ConfigurePreExecutionPhase4BAlpha();
 builder.ConfigurePaymentsPhase4BBeta();
         builder.TrainingCenterConfiguration();
     }
@@ -597,44 +595,6 @@ builder.ConfigurePaymentsPhase4BBeta();
                 .HasForeignKey(x => x.CasualCourseFinancialItemId)
                 .OnDelete(DeleteBehavior.Cascade);
             b.HasIndex(x => new { x.TenantId, x.CasualCourseFinancialItemId, x.RankId }).IsUnique();
-        });
-    }
-
-    public static void ConfigurePreExecutionPhase4BAlpha(this ModelBuilder builder)
-    {
-        builder.Entity<TravelInstruction>(b =>
-        {
-            b.ToTable(TrainingConsts.DbTablePrefix + "TravelInstructions", TrainingConsts.DbSchema);
-            b.ConfigureByConvention();
-
-            // Polymorphic parent — both nullable; DB-level CHECK enforces exactly one set.
-            b.Property(x => x.CasualCourseId).IsRequired(false);
-            b.Property(x => x.SessionId).IsRequired(false);
-
-            b.Property(x => x.DepartureDate).IsRequired();
-            b.Property(x => x.ArrivalDate).IsRequired();
-            b.Property(x => x.ReturnDate).IsRequired();
-            b.Property(x => x.ArrivalBackDate).IsRequired();
-
-            b.Property(x => x.VisaRequired).HasDefaultValue(false);
-            b.Property(x => x.VisaNotes).HasMaxLength(500);
-            b.Property(x => x.InsuranceArranged).HasDefaultValue(false);
-            b.Property(x => x.InsuranceProvider).HasMaxLength(200);
-            b.Property(x => x.TicketsBooked).HasDefaultValue(false);
-            b.Property(x => x.TicketReference).HasMaxLength(100);
-
-            b.Property(x => x.CalculatedTravelDays).IsRequired();
-            b.Property(x => x.OverrideTravelDays).IsRequired(false);
-
-            b.Property(x => x.Status).IsRequired().HasDefaultValue(TravelInstructionStatus.Draft);
-
-            // Unique-per-arm: one travel instruction per casual course OR per session.
-            b.HasIndex(x => x.CasualCourseId)
-                .IsUnique()
-                .HasFilter("[CasualCourseId] IS NOT NULL");
-            b.HasIndex(x => x.SessionId)
-                .IsUnique()
-                .HasFilter("[SessionId] IS NOT NULL");
         });
     }
 

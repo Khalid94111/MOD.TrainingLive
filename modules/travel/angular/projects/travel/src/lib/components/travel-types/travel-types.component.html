@@ -1,0 +1,251 @@
+<div class="travel-types-page">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-icon">
+        <i class="fa-solid fa-tags"></i>
+      </div>
+      <div class="header-text">
+        <h1>{{ 'Travel::Menu:TravelTypes' | abpLocalization }}</h1>
+        <p class="text-muted">{{ 'Travel::TravelTypesSubtitle' | abpLocalization }}</p>
+      </div>
+    </div>
+    <button
+      class="btn btn-primary btn-create"
+      *abpPermission="'TravelManagement.TravelTypes.Create'"
+      (click)="openModal()"
+    >
+      <i class="fa-solid fa-plus"></i>
+      <span>{{ 'Travel::CreateNewType' | abpLocalization }}</span>
+    </button>
+  </div>
+
+  <!-- Stats Bar -->
+  <div class="stats-bar" *ngIf="!isLoading() && travelTypes().length > 0">
+    <div class="stat-item">
+      <span class="stat-value">{{ travelTypes().length }}</span>
+      <span class="stat-label">{{ 'Travel::TotalTypes' | abpLocalization }}</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <span class="stat-value">{{ activeTypesCount() }}</span>
+      <span class="stat-label">{{ 'Travel::ActiveTypes' | abpLocalization }}</span>
+    </div>
+  </div>
+
+  <!-- Main Card -->
+  <div class="main-card">
+    <!-- Toolbar -->
+    <div class="card-toolbar">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input
+          type="text"
+          class="form-control"
+          [placeholder]="'Travel::SearchByNameOrCode' | abpLocalization"
+          [(ngModel)]="searchText"
+          (input)="onSearch()"
+        />
+        <button class="btn-clear" *ngIf="searchText" (click)="clearSearch()">
+          <i class="fa-solid fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" *ngIf="isLoading()">
+      <div class="spinner-ring">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+      <p>{{ 'Travel::LoadingTypes' | abpLocalization }}</p>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!isLoading() && filteredTypes().length === 0">
+      <div class="empty-icon">
+        <i class="fa-solid fa-tags"></i>
+      </div>
+      <h4>{{ 'Travel::NoTypesFound' | abpLocalization }}</h4>
+      <p class="text-muted">{{ 'Travel::NoTypesDescription' | abpLocalization }}</p>
+      <button
+        class="btn btn-primary"
+        *abpPermission="'TravelManagement.TravelTypes.Create'"
+        (click)="openModal()"
+      >
+        <i class="fa-solid fa-plus me-2"></i>
+        {{ 'Travel::CreateFirstType' | abpLocalization }}
+      </button>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-container" *ngIf="!isLoading() && filteredTypes().length > 0">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="col-code">
+              <div class="th-content">
+                <i class="fa-solid fa-hashtag"></i>
+                <span>{{ 'Travel::Code' | abpLocalization }}</span>
+              </div>
+            </th>
+            <th class="col-name">
+              <div class="th-content">
+                <i class="fa-solid fa-tag"></i>
+                <span>{{ 'Travel::Name' | abpLocalization }}</span>
+              </div>
+            </th>
+            <th class="col-status">
+              <div class="th-content">
+                <i class="fa-solid fa-circle-half-stroke"></i>
+                <span>{{ 'Travel::Status' | abpLocalization }}</span>
+              </div>
+            </th>
+            <th class="col-actions">{{ 'Travel::Actions' | abpLocalization }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let type of filteredTypes(); let i = index"
+            class="data-row"
+            [class.inactive]="!type.isActive"
+            [style.animation-delay]="i * 0.03 + 's'"
+          >
+            <td class="col-code">
+              <div class="code-cell">
+                <div class="code-badge" [style.background]="getTypeColor(type.code)">
+                  {{ type.code }}
+                </div>
+              </div>
+            </td>
+            <td class="col-name">
+              <div class="name-cell">
+                <span class="name-text">{{ type.name }}</span>
+                <span class="name-label">{{ getTypeLabel(type.code) | abpLocalization }}</span>
+              </div>
+            </td>
+            <td class="col-status">
+              <span class="status-badge" [class.active]="type.isActive" [class.inactive]="!type.isActive">
+                <i class="fa-solid" [class.fa-circle-check]="type.isActive" [class.fa-circle-xmark]="!type.isActive"></i>
+                {{ (type.isActive ? 'Travel::IsActive' : 'Travel::Inactive') | abpLocalization }}
+              </span>
+            </td>
+            <td class="col-actions">
+              <div class="action-buttons">
+                <button
+                  class="btn-action btn-edit"
+                  *abpPermission="'TravelManagement.TravelTypes.Edit'"
+                  (click)="openModal(type)"
+                  [title]="'Travel::Edit' | abpLocalization"
+                >
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button
+                  class="btn-action btn-delete"
+                  *abpPermission="'TravelManagement.TravelTypes.Delete'"
+                  (click)="deleteType(type.id)"
+                  [title]="'Travel::Delete' | abpLocalization"
+                >
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Footer Summary -->
+    <div class="card-footer-bar" *ngIf="!isLoading() && filteredTypes().length > 0">
+      <span class="footer-text">
+        {{ 'Travel::Showing' | abpLocalization }} <strong>{{ filteredTypes().length }}</strong>
+        {{ 'Travel::Of' | abpLocalization }} <strong>{{ travelTypes().length }}</strong>
+        {{ 'Travel::Types' | abpLocalization }}
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<ng-template #typeModal let-modal>
+  <div class="custom-modal">
+    <div class="modal-header">
+      <div class="modal-header-icon">
+        <i class="fa-solid" [class.fa-plus-circle]="!editingType()" [class.fa-pen-to-square]="editingType()"></i>
+      </div>
+      <div class="modal-header-text">
+        <h5 class="modal-title">
+          {{ editingType() ? ('Travel::EditTravelType' | abpLocalization) : ('Travel::CreateTravelType' | abpLocalization) }}
+        </h5>
+        <p class="modal-subtitle">{{ 'Travel::TravelTypeFormSubtitle' | abpLocalization }}</p>
+      </div>
+      <button type="button" class="btn-close" (click)="modal.dismiss()"></button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-section">
+        <label class="form-label">
+          <i class="fa-solid fa-hashtag me-1"></i>
+          {{ 'Travel::Code' | abpLocalization }} <span class="required">*</span>
+        </label>
+        <input
+          type="number"
+          class="form-control form-control-lg"
+          [(ngModel)]="form.code"
+          min="1"
+          [disabled]="!!editingType()"
+          [placeholder]="'Travel::CodePlaceholder' | abpLocalization"
+        />
+        <small class="form-hint" *ngIf="editingType()">
+          <i class="fa-solid fa-lock me-1"></i>{{ 'Travel::CodeLocked' | abpLocalization }}
+        </small>
+      </div>
+
+      <div class="form-section">
+        <label class="form-label">
+          <i class="fa-solid fa-tag me-1"></i>
+          {{ 'Travel::Name' | abpLocalization }} <span class="required">*</span>
+        </label>
+        <input
+          type="text"
+          class="form-control form-control-lg"
+          [(ngModel)]="form.name"
+          maxlength="128"
+          [placeholder]="'Travel::TypeNamePlaceholder' | abpLocalization"
+        />
+      </div>
+
+      <div class="form-section form-section-toggle">
+        <div class="toggle-wrapper">
+          <div class="toggle-info">
+            <label class="form-label mb-0">{{ 'Travel::IsActive' | abpLocalization }}</label>
+            <small class="form-hint">{{ 'Travel::ActiveTypeHint' | abpLocalization }}</small>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" [(ngModel)]="form.isActive" />
+            <span class="toggle-slider">
+              <span class="toggle-knob"></span>
+            </span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">
+        <i class="fa-solid fa-xmark me-2"></i>{{ 'Travel::Cancel' | abpLocalization }}
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary btn-save"
+        [disabled]="!isFormValid()"
+        (click)="save(); modal.close()"
+      >
+        <i class="fa-solid" [class.fa-plus]="!editingType()" [class.fa-check]="editingType()"></i>
+        <span>{{ editingType() ? ('Travel::Update' | abpLocalization) : ('Travel::Save' | abpLocalization) }}</span>
+      </button>
+    </div>
+  </div>
+</ng-template>

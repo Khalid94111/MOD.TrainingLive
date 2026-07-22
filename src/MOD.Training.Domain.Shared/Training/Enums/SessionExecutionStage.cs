@@ -10,8 +10,8 @@ namespace MOD.Training.Training.Enums;
 public enum SessionExecutionStage
 {
     AwaitingQuoteSelection    = 1,   // External + Planned status
-    AwaitingTravelInstruction = 2,   // External + Scheduled + no issued TravelInstruction
-    AwaitingTravelAllowances  = 3,   // External + TI issued + some allowances not Confirmed
+    AwaitingTravelCompletion  = 2,   // International + Travel request not completed
+    AwaitingTravelAllowances  = 3,   // Travel completed + imported allowances incomplete
     AwaitingCoursePayment     = 4,   // CoursePayment null OR Draft
     AwaitingCompletion        = 5,   // InProgress, all payments Confirmed
     FinanciallyComplete       = 6,   // Completed/FinanciallyClosed with all payments done

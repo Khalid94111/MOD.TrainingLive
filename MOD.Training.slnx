@@ -13,4 +13,13 @@
         <Project Path="src/MOD.Training.DbMigrator/MOD.Training.DbMigrator.csproj" />
         <Project Path="src/MOD.Training.HttpApi.Host/MOD.Training.HttpApi.Host.csproj" />
     </Folder>
+    <Folder Name="/modules/travel/">
+        <Project Path="modules/travel/src/Travel.Domain.Shared/Travel.Domain.Shared.csproj" />
+        <Project Path="modules/travel/src/Travel.Domain/Travel.Domain.csproj" />
+        <Project Path="modules/travel/src/Travel.Application.Contracts/Travel.Application.Contracts.csproj" />
+        <Project Path="modules/travel/src/Travel.Application/Travel.Application.csproj" />
+        <Project Path="modules/travel/src/Travel.EntityFrameworkCore/Travel.EntityFrameworkCore.csproj" />
+        <Project Path="modules/travel/src/Travel.HttpApi/Travel.HttpApi.csproj" />
+        <Project Path="modules/travel/src/Travel.HttpApi.Client/Travel.HttpApi.Client.csproj" />
+    </Folder>
 </Solution>

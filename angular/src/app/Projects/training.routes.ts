@@ -1,7 +1,5 @@
 import { Routes } from '@angular/router';
 
-import { sessionTravelInstructionsGuard } from './execution/travel-instructions/travel-instructions-route.guard';
-
 /**
  * Training module routes — Angular 21 standalone pattern.
  *
@@ -178,19 +176,7 @@ export const TRAINING_ROUTES: Routes = [
       { path: 'casual-courses/:id/review',              redirectTo: 'casual-courses/:id', pathMatch: 'full' },
       { path: 'casual-courses/:id/approve',             redirectTo: 'casual-courses/:id', pathMatch: 'full' },
       { path: 'casual-courses/:id/price-quotes',        redirectTo: 'casual-courses/:id', pathMatch: 'full' },
-      { path: 'casual-courses/:id/travel-instructions', redirectTo: 'casual-courses/:id', pathMatch: 'full' },
-
-      // ===== Phase 4B-α: Session-arm standalone routes (kept for backward links) =====
-      // Components renamed in Phase 4C-α v4.10.0 to PriceQuotesComponent /
-      // TravelInstructionsComponent under Projects/execution/.
-      {
-        path: 'sessions/:id/travel-instructions',
-        data: { parentArm: 'session' },
-        canActivate: [sessionTravelInstructionsGuard],
-        loadComponent: () =>
-          import('./execution/travel-instructions/travel-instructions.component')
-            .then(m => m.TravelInstructionsComponent),
-      },
+      // Standalone price-quote route kept for backward links.
       {
         path: 'sessions/:id/price-quotes',
         data: { parentArm: 'session' },

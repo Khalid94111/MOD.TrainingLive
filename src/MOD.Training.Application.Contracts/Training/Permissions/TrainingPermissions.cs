@@ -249,8 +249,8 @@ public static class AnnualPlanSessionPermissions
 }
 
 /// <summary>
-/// Phase 4B-α — pre-execution preparation permissions (price quote selection
-/// and travel instruction lifecycle). Separate group from <c>TrainingPermissions</c>
+/// Pre-execution preparation permissions (price quote selection and handing
+/// international training over to the Travel module). Separate group from <c>TrainingPermissions</c>
 /// so role grants stay narrowly scoped.
 /// </summary>
 public static class TrainingExecutionPermissions
@@ -267,12 +267,10 @@ public static class TrainingExecutionPermissions
         public const string Select  = Default + ".Select";
     }
 
-    public static class TravelInstructions
+    public static class TravelRequests
     {
-        public const string Default = GroupName + ".TravelInstructions";
-        public const string Edit    = Default + ".Edit";
-        public const string Issue   = Default + ".Issue";
-        public const string Cancel  = Default + ".Cancel";
+        public const string Default = GroupName + ".TravelRequests";
+        public const string Send    = Default + ".Send";
     }
 }
 
@@ -287,11 +285,7 @@ public static class TrainingPaymentsPermissions
 
     public static class TravelAllowance
     {
-        public const string Default  = GroupName + ".TravelAllowance";
-        public const string Create   = Default + ".Create";
-        public const string Update   = Default + ".Update";
-        public const string Delete   = Default + ".Delete";
-        public const string Confirm  = Default + ".Confirm";
+        public const string Default = GroupName + ".TravelAllowance";
     }
 
     public static class CoursePayments

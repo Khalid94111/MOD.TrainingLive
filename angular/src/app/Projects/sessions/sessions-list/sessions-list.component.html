@@ -70,7 +70,7 @@
             {{ '::Training.AnnualPlan.SessionsQueue.Filter.All' | abpLocalization }}
           </option>
           <option [value]="SessionExecutionStage.AwaitingQuoteSelection"    [selected]="fExecutionStage() === SessionExecutionStage.AwaitingQuoteSelection">{{ '::Training.SessionExecutionStage.AwaitingQuoteSelection' | abpLocalization }}</option>
-          <option [value]="SessionExecutionStage.AwaitingTravelInstruction" [selected]="fExecutionStage() === SessionExecutionStage.AwaitingTravelInstruction">{{ '::Training.SessionExecutionStage.AwaitingTravelInstruction' | abpLocalization }}</option>
+          <option [value]="SessionExecutionStage.AwaitingTravelCompletion"  [selected]="fExecutionStage() === SessionExecutionStage.AwaitingTravelCompletion">{{ '::Training.SessionExecutionStage.AwaitingTravelCompletion' | abpLocalization }}</option>
           <option [value]="SessionExecutionStage.AwaitingTravelAllowances"  [selected]="fExecutionStage() === SessionExecutionStage.AwaitingTravelAllowances">{{ '::Training.SessionExecutionStage.AwaitingTravelAllowances' | abpLocalization }}</option>
           <option [value]="SessionExecutionStage.AwaitingCoursePayment"     [selected]="fExecutionStage() === SessionExecutionStage.AwaitingCoursePayment">{{ '::Training.SessionExecutionStage.AwaitingCoursePayment' | abpLocalization }}</option>
           <option [value]="SessionExecutionStage.AwaitingCompletion"        [selected]="fExecutionStage() === SessionExecutionStage.AwaitingCompletion">{{ '::Training.SessionExecutionStage.AwaitingCompletion' | abpLocalization }}</option>

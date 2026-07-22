@@ -1,0 +1,46 @@
+﻿{
+  "packages":[
+    {
+      "appRoutingModuleConfiguration":{
+        "imports":[
+          {
+            "names":[
+              "TRAVEL_ROUTES"
+            ],
+            "namespace": "@travel"
+          } 
+        ],
+        "routes":[
+          "{ path: 'travel', children: TRAVEL_ROUTES, canActivate: [authGuard] }"
+        ]
+      },
+      "appModuleConfiguration":{
+        "imports":[
+          {
+            "names":[
+              "provideTravel"
+            ],
+            "namespace": "@travel/config"
+          }
+        ],
+        "providerNames":[
+          "provideTravel()"
+        ]
+      },
+      "tsJsonPathRecordConfigurations":[
+        {
+          "name": "@travel",
+          "paths": [
+            "angular/projects/travel/src/public-api.ts"
+          ]
+        },
+        {
+          "name": "@travel/config",
+          "paths": [
+            "angular/projects/travel/config/src/public-api.ts"
+          ]
+        }
+      ]
+    }
+  ]
+}

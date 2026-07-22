@@ -8,6 +8,7 @@ using MOD.Training.Training.Permissions;
 using MOD.Training.Training.Plans;
 using MOD.Training.Training.Plans.Dtos;
 using MOD.Training.Training.TenantCourses;
+using MOD.Training.Training.Travel.Integration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,8 +31,7 @@ public class CasualCourseAppService(
     IRepository<Rank, Guid> rankRefRepo,
     IRepository<PlanNote, Guid> planNoteRepo,
     IRepository<PriceQuote, Guid> priceQuoteRepo,
-    // Patch 2 — execution-stage compute on GetList reads these aggregates per post-TH course.
-    IRepository<MOD.Training.Training.Execution.TravelInstruction, Guid> travelInstructionRepo,
+    // Execution-stage compute on GetList reads these aggregates per post-approval course.
     IRepository<MOD.Training.Training.Payments.CoursePayment, Guid> coursePaymentRepo,
     IRepository<MOD.Training.Training.Payments.TravelAllowancePayment, Guid> travelAllowanceRepo,
     IRepository<MOD.Training.Training.Payments.BudgetReallocation, Guid> reallocationRepo,
@@ -48,7 +48,8 @@ public class CasualCourseAppService(
     CasualCourseFinancialItemAppService financialAppService,
     CasualCourseToDtoMapper toDtoMapper,
     CasualCourseFinancialItemToDtoMapper financialToDtoMapper,
-    CasualCourseNominationToDtoMapper nominationToDtoMapper)
+    CasualCourseNominationToDtoMapper nominationToDtoMapper,
+    ITrainingTravelGateway travelGateway)
     : ApplicationService, ICasualCourseAppService
 {
     // ─── READ ──────────────────────────────────────────────────────────
@@ -194,10 +195,11 @@ public class CasualCourseAppService(
     }
 
     // ─── EXECUTION STAGE (Patch 2) ─────────────────────────────────────
-    // Computed once per GetList by batching the four child-entity lookups for the
+    // Computed once per GetList by batching the child-entity lookups for the
     // THApproved subset. Mirrors the documented post-TH lifecycle:
-    //   External: quote → TI → travel allowances → course payment → reallocations → complete
-    //   Internal: payment → complete (skips quote/TI/allowances; no reallocations either)
+    //   International: quote → Travel → imported allowances → course payment → reallocations
+    //   Local: quote → course payment → reallocations
+    //   Internal: ready immediately (no quote, travel, payment, or reallocation)
 
     private async Task PopulateExecutionStagesAsync(
         IReadOnlyList<CasualCourse> entities,
@@ -209,11 +211,21 @@ public class CasualCourseAppService(
             .ToList();
         if (thApprovedIds.Count == 0) return;
 
-        // Batch-load the four child collections for this page's THApproved rows.
-        var tiQ = await travelInstructionRepo.GetQueryableAsync();
-        var travelInstructions = await AsyncExecuter.ToListAsync(
-            tiQ.Where(x => x.CasualCourseId.HasValue && thApprovedIds.Contains(x.CasualCourseId.Value)));
-        var tiByCourseId = travelInstructions.ToDictionary(t => t.CasualCourseId!.Value);
+        var travelCompletedByCourseId = new Dictionary<Guid, bool>();
+        foreach (var course in entities.Where(x =>
+                     x.Status == CasualCourseStatus.THApproved
+                     && x.CourseType == CourseType.ExternalInternational))
+        {
+            try
+            {
+                var travelResult = await travelGateway.GetByTrainingCourseAsync(course.Id);
+                travelCompletedByCourseId[course.Id] = travelResult.IsCompleted;
+            }
+            catch
+            {
+                travelCompletedByCourseId[course.Id] = false;
+            }
+        }
 
         var cpQ = await coursePaymentRepo.GetQueryableAsync();
         var coursePayments = await AsyncExecuter.ToListAsync(
@@ -241,14 +253,14 @@ public class CasualCourseAppService(
             if (entity.Status != CasualCourseStatus.THApproved) continue;
 
             var dto = dtos[i];
-            tiByCourseId.TryGetValue(entity.Id, out var travel);
+            var travelCompleted = travelCompletedByCourseId.GetValueOrDefault(entity.Id);
             coursePaymentByCourseId.TryGetValue(entity.Id, out var payment);
             allowancesByCourseId.TryGetValue(entity.Id, out var allowances);
             reallocationsByCourseId.TryGetValue(entity.Id, out var entityReallocations);
 
             var nomineesCount = dto.NomineesCount;
             var (stage, current, total) = ComputeExecutionStage(
-                entity, travel, payment, allowances, entityReallocations, nomineesCount);
+                entity, travelCompleted, payment, allowances, entityReallocations, nomineesCount);
             dto.ExecutionStage = stage;
             dto.ExecutionStageProgressCurrent = current;
             dto.ExecutionStageProgressTotal = total;
@@ -262,17 +274,15 @@ public class CasualCourseAppService(
     /// </summary>
     private static (ExecutionStage stage, int? current, int? total) ComputeExecutionStage(
         CasualCourse course,
-        MOD.Training.Training.Execution.TravelInstruction? travel,
+        bool travelCompleted,
         MOD.Training.Training.Payments.CoursePayment? payment,
         List<MOD.Training.Training.Payments.TravelAllowancePayment>? allowances,
         List<MOD.Training.Training.Payments.BudgetReallocation>? reallocations,
         int nomineesCount)
     {
-        // Internal courses skip quote/TI/allowances and don't generate reallocations either.
+        // Internal courses have no financial execution workflow.
         if (course.CourseType == CourseType.Internal)
         {
-            if (payment == null || payment.Status != PaymentStatus.Confirmed)
-                return (ExecutionStage.AwaitingCoursePayment, null, null);
             return (ExecutionStage.FinanciallyComplete, null, null);
         }
 
@@ -280,12 +290,11 @@ public class CasualCourseAppService(
         if (course.SelectedPriceQuoteId == null)
             return (ExecutionStage.AwaitingQuoteSelection, null, null);
 
-        // Patches 4 + 5 (v4.10.5) — travel instruction + per-nominee allowances apply only to
-        // ExternalInternational. ExternalLocal skips both stages: jump straight to course payment.
+        // Travel handoff and imported per-nominee allowances apply only to international courses.
         if (course.CourseType == CourseType.ExternalInternational)
         {
-            if (travel == null || travel.Status != TravelInstructionStatus.Issued)
-                return (ExecutionStage.AwaitingTravelInstruction, null, null);
+            if (!travelCompleted)
+                return (ExecutionStage.AwaitingTravelCompletion, null, null);
 
             var confirmedAllowances = allowances?.Count(p => p.Status == PaymentStatus.Confirmed) ?? 0;
             if (confirmedAllowances < nomineesCount)

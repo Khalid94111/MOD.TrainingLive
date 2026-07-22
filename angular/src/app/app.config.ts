@@ -29,6 +29,7 @@ import { APP_ROUTES } from './app.routes';
 import { APP_ROUTE_PROVIDER } from './route.provider';
 import { FOOTER_PROVIDER } from './footer/footer.config';
 import { TRAINING_ROUTE_PROVIDER } from './Projects/training-route.provider';
+import { TRAVEL_ROUTE_PROVIDERS } from './travel/travel-route.provider';
  // old name AppModule is not used anymore since we are using standalone components and loadComponent method for lazy loading. We can directly export the appConfig as shown below and use it in our main module or wherever needed.
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -78,6 +79,7 @@ export const appConfig: ApplicationConfig = {
     provideSaasConfig(),
     provideOpeniddictproConfig(),
     provideTextTemplateManagementConfig(),
-    TRAINING_ROUTE_PROVIDER
+    TRAINING_ROUTE_PROVIDER,
+    ...TRAVEL_ROUTE_PROVIDERS,
    ],
 };

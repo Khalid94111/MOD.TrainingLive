@@ -266,6 +266,8 @@ public class CoursePaymentAppService(
         {
             var course = await casualCourseRepo.FindAsync(casualCourseId.Value)
                 ?? throw new EntityNotFoundException(typeof(CasualCourse), casualCourseId.Value);
+            if (course.CourseType == CourseType.Internal)
+                throw new BusinessException("Training:CoursePayment:InternalCasualCourseNotAllowed");
             if (course.Status != CasualCourseStatus.THApproved)
                 throw new BusinessException("Training:CoursePayment:CourseNotReady");
             if (!course.SelectedPriceQuoteId.HasValue)

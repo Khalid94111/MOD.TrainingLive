@@ -144,7 +144,7 @@ export class SessionsListComponent implements OnInit {
   stageBadge(stage: SessionExecutionStage | undefined): { key: string; css: string } {
     switch (stage) {
       case SessionExecutionStage.AwaitingQuoteSelection:    return { key: '::Training.SessionExecutionStage.AwaitingQuoteSelection',    css: 'stage-badge stage-pending' };
-      case SessionExecutionStage.AwaitingTravelInstruction: return { key: '::Training.SessionExecutionStage.AwaitingTravelInstruction', css: 'stage-badge stage-pending' };
+      case SessionExecutionStage.AwaitingTravelCompletion:  return { key: '::Training.SessionExecutionStage.AwaitingTravelCompletion',  css: 'stage-badge stage-pending' };
       case SessionExecutionStage.AwaitingTravelAllowances:  return { key: '::Training.SessionExecutionStage.AwaitingTravelAllowances',  css: 'stage-badge stage-progress' };
       case SessionExecutionStage.AwaitingCoursePayment:     return { key: '::Training.SessionExecutionStage.AwaitingCoursePayment',     css: 'stage-badge stage-pending' };
       case SessionExecutionStage.AwaitingCompletion:        return { key: '::Training.SessionExecutionStage.AwaitingCompletion',        css: 'stage-badge stage-progress' };
