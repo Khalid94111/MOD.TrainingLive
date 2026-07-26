@@ -1,170 +1,372 @@
-<div class="page-shell">
-  <!-- ── Header ── -->
-  <div class="page-header">
-    <div>
+<div class="annual-dashboard">
+  <section class="dashboard-hero">
+    <div class="hero-copy">
+      <span class="hero-eyebrow">
+        <i class="bi bi-calendar3"></i>
+        {{ '::Training.AnnualPlan.Dashboard.Eyebrow' | abpLocalization }}
+        <b>{{ selectedYear() }}</b>
+      </span>
       <h1>{{ '::Training.AnnualPlan.Dashboard.Title' | abpLocalization }}</h1>
-      <p class="page-subtitle">{{ '::Training.AnnualPlan.Dashboard.Subtitle' | abpLocalization }}</p>
+      <p>{{ '::Training.AnnualPlan.Dashboard.Subtitle' | abpLocalization }}</p>
     </div>
-    <div class="header-controls">
-      <label class="year-field">
-        {{ '::Training.AnnualPlan.SessionsQueue.Filter.Year' | abpLocalization }}:
-        <input type="number" class="year-input" [value]="fYear()" (change)="onYearChange($event)" />
-      </label>
-      <button type="button" class="btn-ghost" (click)="goQueue()">
-        {{ '::Training.AnnualPlan.Dashboard.OpenQueue' | abpLocalization }}
+
+    <div class="hero-controls">
+      <div class="year-control">
+        <label for="dashboard-year">
+          {{ '::Training.AnnualPlan.SessionsQueue.Filter.Year' | abpLocalization }}
+        </label>
+        <select
+          id="dashboard-year"
+          [value]="selectedYear()"
+          (change)="onYearChange($event)"
+          [disabled]="loading()"
+        >
+          @for (year of years(); track year) {
+            <option [value]="year">{{ year }}</option>
+          }
+        </select>
+      </div>
+      <button
+        type="button"
+        class="icon-button"
+        (click)="reload(false)"
+        [disabled]="loading()"
+        [title]="'::Training.AnnualPlan.Dashboard.Refresh' | abpLocalization"
+      >
+        <i class="bi bi-arrow-clockwise" [class.spinning]="loading()"></i>
       </button>
-      <button type="button" class="btn-ghost" (click)="goSessions()">
+    </div>
+
+    <div class="hero-actions">
+      <button type="button" class="secondary-action" (click)="goSessions()">
+        <i class="bi bi-collection"></i>
         {{ '::Training.AnnualPlan.Dashboard.OpenSessions' | abpLocalization }}
       </button>
+      <button type="button" class="primary-action" (click)="goQueue()">
+        <i class="bi bi-plus-circle"></i>
+        {{ '::Training.AnnualPlan.Dashboard.OpenQueue' | abpLocalization }}
+      </button>
     </div>
-  </div>
+  </section>
 
   @if (errorMessage()) {
-    <div class="error-banner">{{ errorMessage() }}</div>
-  }
-
-  @if (loading() && !progress()) {
-    <div class="card empty-state">{{ '::Training.AnnualPlan.SessionsQueue.Loading' | abpLocalization }}</div>
-  } @else if (!progress()) {
-    <div class="card empty-state">{{ '::Training.AnnualPlan.Dashboard.NoData' | abpLocalization }}</div>
+    <section class="state-panel error-state">
+      <i class="bi bi-exclamation-triangle"></i>
+      <div>
+        <strong>{{ '::Training.AnnualPlan.Dashboard.LoadErrorTitle' | abpLocalization }}</strong>
+        <p>{{ errorMessage() }}</p>
+      </div>
+      <button type="button" (click)="reload(false)">
+        {{ '::Training.AnnualPlan.Dashboard.Retry' | abpLocalization }}
+      </button>
+    </section>
+  } @else if (loading() && !progress()) {
+    <section class="dashboard-skeleton" aria-hidden="true">
+      <div class="skeleton-card wide"></div>
+      <div class="skeleton-grid">
+        @for (_ of [1, 2, 3, 4, 5, 6]; track $index) {
+          <div class="skeleton-card"></div>
+        }
+      </div>
+      <div class="skeleton-card tall"></div>
+    </section>
+  } @else if (!hasData()) {
+    <section class="state-panel empty-state">
+      <div class="empty-icon"><i class="bi bi-calendar2-check"></i></div>
+      <div>
+        <strong>{{ '::Training.AnnualPlan.Dashboard.NoData' | abpLocalization }}</strong>
+        <p>{{ '::Training.AnnualPlan.Dashboard.NoDataHint' | abpLocalization }}</p>
+      </div>
+      <button type="button" (click)="goQueue()">
+        {{ '::Training.AnnualPlan.Dashboard.OpenQueue' | abpLocalization }}
+      </button>
+    </section>
   } @else {
-    <!-- ── 5 stat cards ── -->
-    <div class="stat-row">
-      <div class="stat-card stat-total">
-        <div class="stat-label">{{ '::Training.AnnualPlan.Dashboard.Stat.Total' | abpLocalization }}</div>
-        <div class="stat-value">{{ stats().total }}</div>
-      </div>
-      <div class="stat-card stat-planned">
-        <div class="stat-label">{{ '::Training.Session.Status.Planned' | abpLocalization }}</div>
-        <div class="stat-value">{{ stats().planned }}</div>
-      </div>
-      <div class="stat-card stat-scheduled">
-        <div class="stat-label">{{ '::Training.Session.Status.Scheduled' | abpLocalization }}</div>
-        <div class="stat-value">{{ stats().scheduled }}</div>
-      </div>
-      <div class="stat-card stat-completed">
-        <div class="stat-label">{{ '::Training.Session.Status.Completed' | abpLocalization }}</div>
-        <div class="stat-value">{{ stats().completed }}</div>
-      </div>
-      <div class="stat-card stat-overdue" [class.has-value]="stats().overdue > 0">
-        <div class="stat-label">{{ '::Training.AnnualPlan.SessionsQueue.StatOverdue' | abpLocalization }}</div>
-        <div class="stat-value">{{ stats().overdue }}</div>
-      </div>
-    </div>
+    <section class="stat-grid">
+      <article class="stat-card total">
+        <span class="stat-icon"><i class="bi bi-journal-check"></i></span>
+        <div>
+          <span>{{ '::Training.AnnualPlan.Dashboard.Stat.TotalCourses' | abpLocalization }}</span>
+          <strong>{{ stats().total }}</strong>
+          <small>{{ '::Training.AnnualPlan.Dashboard.Stat.ApprovedPlan' | abpLocalization }}</small>
+        </div>
+      </article>
 
-    <!-- ── Overall progress ── -->
-    <div class="card progress-card">
-      <div class="progress-card-header">
-        <h2>{{ '::Training.AnnualPlan.Dashboard.OverallProgress' | abpLocalization }}</h2>
-        <span class="progress-percent">{{ stats().percent }}%</span>
-      </div>
-      <div class="progress-bar progress-bar-large">
-        <div class="progress-fill" [style.width.%]="stats().percent"></div>
-      </div>
-      <div class="progress-card-footer">
-        <span>
-          {{ stats().completed }} / {{ stats().total }}
-          {{ '::Training.AnnualPlan.Dashboard.CompletedOfTotal' | abpLocalization }}
-        </span>
-      </div>
-    </div>
-
-    <!-- ── Two-column: Quarter + Unit progress ── -->
-    <div class="two-column">
-      <!-- Per quarter -->
-      <div class="card panel-card">
-        <h2 class="panel-title">{{ '::Training.AnnualPlan.Dashboard.ByQuarter' | abpLocalization }}</h2>
-        @if (quarterBars().length === 0) {
-          <div class="empty-mini">{{ '::Training.AnnualPlan.Dashboard.NoData' | abpLocalization }}</div>
-        } @else {
-          <div class="quarter-list">
-            @for (q of quarterBars(); track q.quarter) {
-              <div class="quarter-row">
-                <div class="quarter-label">Q{{ q.quarter }}</div>
-                <div class="bar-host">
-                  <div class="progress-bar">
-                    <div class="progress-fill" [style.width.%]="quarterPercent(q)"></div>
-                  </div>
-                  <div class="bar-meta">
-                    <span class="meta-completed">
-                      {{ q.completed ?? 0 }} {{ '::Training.AnnualPlan.Dashboard.Completed' | abpLocalization }}
-                    </span>
-                    @if ((q.inProgress ?? 0) > 0) {
-                      <span class="meta-inprogress">
-                        · {{ q.inProgress }} {{ '::Training.AnnualPlan.Dashboard.InProgress' | abpLocalization }}
-                      </span>
-                    }
-                    @if ((q.pending ?? 0) > 0) {
-                      <span class="meta-pending">
-                        · {{ q.pending }} {{ '::Training.AnnualPlan.Dashboard.Pending' | abpLocalization }}
-                      </span>
-                    }
-                    <span class="meta-total">/ {{ q.total ?? 0 }}</span>
-                  </div>
-                </div>
-                <div class="quarter-percent">{{ quarterPercent(q) }}%</div>
-              </div>
+      <article class="stat-card awaiting" [class.has-value]="stats().awaiting > 0">
+        <span class="stat-icon"><i class="bi bi-calendar-plus"></i></span>
+        <div>
+          <span>{{ '::Training.AnnualPlan.Dashboard.Stat.AwaitingSession' | abpLocalization }}</span>
+          <strong>{{ stats().awaiting }}</strong>
+          <small>
+            @if (stats().cancelled > 0) {
+              {{ '::Training.AnnualPlan.Dashboard.Stat.IncludesCancelled' | abpLocalization }}
+              {{ stats().cancelled }}
+            } @else {
+              {{ '::Training.AnnualPlan.Dashboard.Stat.NeedsCreation' | abpLocalization }}
             }
+          </small>
+        </div>
+      </article>
+
+      <article class="stat-card planned">
+        <span class="stat-icon"><i class="bi bi-hourglass-split"></i></span>
+        <div>
+          <span>{{ '::Training.AnnualPlan.Dashboard.Stat.InPreparation' | abpLocalization }}</span>
+          <strong>{{ stats().planned }}</strong>
+          <small>{{ '::Training.AnnualPlan.Dashboard.Stat.WaitingRequirements' | abpLocalization }}</small>
+        </div>
+      </article>
+
+      <article class="stat-card scheduled">
+        <span class="stat-icon"><i class="bi bi-calendar2-event"></i></span>
+        <div>
+          <span>{{ '::Training.AnnualPlan.Dashboard.Stat.Scheduled' | abpLocalization }}</span>
+          <strong>{{ stats().scheduled }}</strong>
+          <small>{{ '::Training.AnnualPlan.Dashboard.Stat.ReadyForExecution' | abpLocalization }}</small>
+        </div>
+      </article>
+
+      <article class="stat-card running">
+        <span class="stat-icon"><i class="bi bi-play-circle"></i></span>
+        <div>
+          <span>{{ '::Training.AnnualPlan.Dashboard.Stat.InProgress' | abpLocalization }}</span>
+          <strong>{{ stats().inProgress }}</strong>
+          <small>{{ '::Training.AnnualPlan.Dashboard.Stat.CurrentlyRunning' | abpLocalization }}</small>
+        </div>
+      </article>
+
+      <article class="stat-card completed">
+        <span class="stat-icon"><i class="bi bi-check2-circle"></i></span>
+        <div>
+          <span>{{ '::Training.AnnualPlan.Dashboard.Stat.Completed' | abpLocalization }}</span>
+          <strong>{{ stats().completed }}</strong>
+          <small>{{ stats().completion }}% {{ '::Training.AnnualPlan.Dashboard.Stat.OfPlan' | abpLocalization }}</small>
+        </div>
+      </article>
+    </section>
+
+    @if (stats().attention > 0) {
+      <section class="attention-banner">
+        <span class="attention-icon"><i class="bi bi-bell"></i></span>
+        <div>
+          <strong>
+            {{ stats().attention }}
+            {{ '::Training.AnnualPlan.Dashboard.Attention.ItemsNeedAction' | abpLocalization }}
+          </strong>
+          <p>{{ '::Training.AnnualPlan.Dashboard.Attention.Description' | abpLocalization }}</p>
+        </div>
+        <a href="#annual-plan-alerts">
+          {{ '::Training.AnnualPlan.Dashboard.Attention.Review' | abpLocalization }}
+          <i class="bi bi-arrow-down"></i>
+        </a>
+      </section>
+    }
+
+    <section class="overview-grid">
+      <article class="panel completion-panel">
+        <header class="panel-header">
+          <div>
+            <span class="section-kicker">{{ '::Training.AnnualPlan.Dashboard.PlanExecution' | abpLocalization }}</span>
+            <h2>{{ '::Training.AnnualPlan.Dashboard.CompletionRate' | abpLocalization }}</h2>
           </div>
+          <span class="year-badge">{{ selectedYear() }}</span>
+        </header>
+
+        <div class="completion-body">
+          <div class="completion-ring" [style.--progress]="stats().completion + '%'">
+            <div>
+              <strong>{{ stats().completion }}%</strong>
+              <span>{{ '::Training.AnnualPlan.Dashboard.Completed' | abpLocalization }}</span>
+            </div>
+          </div>
+
+          <div class="completion-copy">
+            <strong>
+              {{ stats().completed }}
+              {{ '::Training.AnnualPlan.Dashboard.OutOf' | abpLocalization }}
+              {{ stats().total }}
+            </strong>
+            <p>{{ '::Training.AnnualPlan.Dashboard.CompletionExplanation' | abpLocalization }}</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel distribution-panel">
+        <header class="panel-header">
+          <div>
+            <span class="section-kicker">{{ '::Training.AnnualPlan.Dashboard.CurrentPosition' | abpLocalization }}</span>
+            <h2>{{ '::Training.AnnualPlan.Dashboard.StageDistribution' | abpLocalization }}</h2>
+          </div>
+        </header>
+
+        <div class="stage-bar" role="img">
+          <span
+            class="awaiting"
+            [style.width.%]="stagePercent(stats().awaiting, stats().total)"
+          ></span>
+          <span
+            class="planned"
+            [style.width.%]="stagePercent(stats().planned, stats().total)"
+          ></span>
+          <span
+            class="scheduled"
+            [style.width.%]="stagePercent(stats().scheduled, stats().total)"
+          ></span>
+          <span
+            class="running"
+            [style.width.%]="stagePercent(stats().inProgress, stats().total)"
+          ></span>
+          <span
+            class="completed"
+            [style.width.%]="stagePercent(stats().completed, stats().total)"
+          ></span>
+        </div>
+
+        <div class="stage-legend">
+          <div><i class="awaiting"></i><span>{{ '::Training.AnnualPlan.Dashboard.Stat.AwaitingSession' | abpLocalization }}</span><b>{{ stats().awaiting }}</b></div>
+          <div><i class="planned"></i><span>{{ '::Training.AnnualPlan.Dashboard.Stat.InPreparation' | abpLocalization }}</span><b>{{ stats().planned }}</b></div>
+          <div><i class="scheduled"></i><span>{{ '::Training.AnnualPlan.Dashboard.Stat.Scheduled' | abpLocalization }}</span><b>{{ stats().scheduled }}</b></div>
+          <div><i class="running"></i><span>{{ '::Training.AnnualPlan.Dashboard.Stat.InProgress' | abpLocalization }}</span><b>{{ stats().inProgress }}</b></div>
+          <div><i class="completed"></i><span>{{ '::Training.AnnualPlan.Dashboard.Stat.Completed' | abpLocalization }}</span><b>{{ stats().completed }}</b></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="panel quarter-panel">
+      <header class="panel-header">
+        <div>
+          <span class="section-kicker">{{ '::Training.AnnualPlan.Dashboard.Timeline' | abpLocalization }}</span>
+          <h2>{{ '::Training.AnnualPlan.Dashboard.ByQuarter' | abpLocalization }}</h2>
+          <p>{{ '::Training.AnnualPlan.Dashboard.ByQuarterHint' | abpLocalization }}</p>
+        </div>
+      </header>
+
+      <div class="quarter-grid">
+        @for (quarter of quarters(); track trackQuarter($index, quarter)) {
+          <article class="quarter-card">
+            <header>
+              <div>
+                <span>{{ quarterLabel(quarter.quarter) }}</span>
+                <strong>{{ quarter.total ?? 0 }}</strong>
+              </div>
+              <b>{{ quarterCompletion(quarter) | number:'1.0-0' }}%</b>
+            </header>
+
+            <div class="mini-stage-bar">
+              <span class="awaiting" [style.width.%]="stagePercent(quarter.awaitingSession, quarter.total)"></span>
+              <span class="planned" [style.width.%]="stagePercent(quarter.planned, quarter.total)"></span>
+              <span class="scheduled" [style.width.%]="stagePercent(quarter.scheduled, quarter.total)"></span>
+              <span class="running" [style.width.%]="stagePercent(quarter.inProgress, quarter.total)"></span>
+              <span class="completed" [style.width.%]="stagePercent(quarter.completed, quarter.total)"></span>
+            </div>
+
+            <div class="quarter-counts">
+              <span><i class="awaiting"></i>{{ quarter.awaitingSession ?? 0 }}</span>
+              <span><i class="planned"></i>{{ quarter.planned ?? 0 }}</span>
+              <span><i class="scheduled"></i>{{ quarter.scheduled ?? 0 }}</span>
+              <span><i class="running"></i>{{ quarter.inProgress ?? 0 }}</span>
+              <span><i class="completed"></i>{{ quarter.completed ?? 0 }}</span>
+            </div>
+          </article>
         }
       </div>
+    </section>
 
-      <!-- Per unit -->
-      <div class="card panel-card">
-        <h2 class="panel-title">{{ '::Training.AnnualPlan.Dashboard.ByUnit' | abpLocalization }}</h2>
-        @if (unitBars().length === 0) {
-          <div class="empty-mini">{{ '::Training.AnnualPlan.Dashboard.NoData' | abpLocalization }}</div>
-        } @else {
-          <div class="unit-list">
-            @for (u of unitBars(); track u.unitId) {
-              <div class="unit-row">
-                <div class="unit-name">{{ unitName(u) }}</div>
-                <div class="bar-host">
-                  <div class="progress-bar">
-                    <div class="progress-fill" [style.width.%]="unitPercent(u)"></div>
+    <section class="panel unit-panel">
+      <header class="panel-header">
+        <div>
+          <span class="section-kicker">{{ '::Training.AnnualPlan.Dashboard.Ownership' | abpLocalization }}</span>
+          <h2>{{ '::Training.AnnualPlan.Dashboard.ByUnit' | abpLocalization }}</h2>
+          <p>{{ '::Training.AnnualPlan.Dashboard.ByUnitHint' | abpLocalization }}</p>
+        </div>
+      </header>
+
+      <div class="unit-table-wrap">
+        <table class="unit-table">
+          <thead>
+            <tr>
+              <th>{{ '::Training.AnnualPlan.Dashboard.Unit' | abpLocalization }}</th>
+              <th>{{ '::Training.AnnualPlan.Dashboard.Stat.TotalCourses' | abpLocalization }}</th>
+              <th>{{ '::Training.AnnualPlan.Dashboard.Stat.AwaitingSession' | abpLocalization }}</th>
+              <th>{{ '::Training.AnnualPlan.Dashboard.Stat.InPreparation' | abpLocalization }}</th>
+              <th>{{ '::Training.AnnualPlan.Dashboard.Stat.Scheduled' | abpLocalization }}</th>
+              <th>{{ '::Training.AnnualPlan.Dashboard.Stat.InProgress' | abpLocalization }}</th>
+              <th>{{ '::Training.AnnualPlan.Dashboard.Stat.Completed' | abpLocalization }}</th>
+              <th>{{ '::Training.AnnualPlan.Dashboard.CompletionRate' | abpLocalization }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (unit of units(); track trackUnit($index, unit)) {
+              <tr>
+                <td><strong>{{ unitName(unit) }}</strong></td>
+                <td><span class="count-pill neutral">{{ unit.total ?? 0 }}</span></td>
+                <td><span class="count-pill awaiting">{{ unit.awaitingSession ?? 0 }}</span></td>
+                <td><span class="count-pill planned">{{ unit.planned ?? 0 }}</span></td>
+                <td><span class="count-pill scheduled">{{ unit.scheduled ?? 0 }}</span></td>
+                <td><span class="count-pill running">{{ unit.inProgress ?? 0 }}</span></td>
+                <td><span class="count-pill completed">{{ unit.completed ?? 0 }}</span></td>
+                <td class="unit-completion">
+                  <div>
+                    <span [style.width.%]="unitCompletion(unit)"></span>
                   </div>
-                  <div class="bar-meta">
-                    {{ u.completed ?? 0 }} / {{ u.total ?? 0 }}
-                    {{ '::Training.AnnualPlan.Dashboard.CompletedOfTotal' | abpLocalization }}
-                  </div>
-                </div>
-                <div class="unit-percent">{{ unitPercent(u) }}%</div>
-              </div>
+                  <b>{{ unitCompletion(unit) | number:'1.0-0' }}%</b>
+                </td>
+              </tr>
             }
-          </div>
-        }
+          </tbody>
+        </table>
       </div>
-    </div>
+    </section>
 
-    <!-- ── Alerts ── -->
-    <div class="card alerts-card">
-      <h2 class="panel-title">
-        {{ '::Training.AnnualPlan.Dashboard.AlertsTitle' | abpLocalization }}
-        <span class="alerts-count">({{ alerts().length }})</span>
-      </h2>
+    <section class="panel alerts-panel" id="annual-plan-alerts">
+      <header class="panel-header">
+        <div>
+          <span class="section-kicker">{{ '::Training.AnnualPlan.Dashboard.ActionCenter' | abpLocalization }}</span>
+          <h2>
+            {{ '::Training.AnnualPlan.Dashboard.AlertsTitle' | abpLocalization }}
+            <span>{{ alerts().length }}</span>
+          </h2>
+          <p>{{ '::Training.AnnualPlan.Dashboard.AlertsHint' | abpLocalization }}</p>
+        </div>
+      </header>
+
       @if (alerts().length === 0) {
-        <div class="empty-mini">
-          ✓ {{ '::Training.AnnualPlan.Dashboard.NoAlerts' | abpLocalization }}
+        <div class="all-clear">
+          <span><i class="bi bi-check2"></i></span>
+          <div>
+            <strong>{{ '::Training.AnnualPlan.Dashboard.NoAlerts' | abpLocalization }}</strong>
+            <p>{{ '::Training.AnnualPlan.Dashboard.NoAlertsHint' | abpLocalization }}</p>
+          </div>
         </div>
       } @else {
-        <ul class="alerts-list">
-          @for (alert of alerts(); track alert.entityId) {
-            <li [class]="alertCss(alert)" (click)="onAlertClick(alert)">
-              <div class="alert-icon">
-                @if (alert.type === 'StuckPlanned') { ⏱ } @else { ⚠ }
+        <div class="alert-list">
+          @for (alert of alerts(); track trackAlert($index, alert)) {
+            <article [class]="'alert-item ' + alertTone(alert)">
+              <span class="alert-item-icon"><i [class]="'bi ' + alertIcon(alert)"></i></span>
+              <div class="alert-main">
+                <div class="alert-heading">
+                  <strong>{{ alert.courseNameAr || '—' }}</strong>
+                  <span>{{ courseTypeLabel(alert.courseType) }}</span>
+                  <span>{{ quarterLabel(alert.preferredQuarter) }}</span>
+                </div>
+                <h3>{{ alertTitle(alert) }}</h3>
+                <p>{{ alertDescription(alert) }}</p>
+                @if (alert.dueDate) {
+                  <small>
+                    <i class="bi bi-calendar3"></i>
+                    {{ '::Training.AnnualPlan.Dashboard.DueDate' | abpLocalization }}:
+                    {{ formatDate(alert.dueDate) }}
+                  </small>
+                }
               </div>
-              <div class="alert-body">
-                <div class="alert-type">{{ alertTypeLabelKey(alert) | abpLocalization }}</div>
-                <div class="alert-text">{{ alert.message }}</div>
-              </div>
-              <div class="alert-days">
-                {{ alert.daysOverdue ?? 0 }}
-                {{ '::Training.AnnualPlan.Dashboard.DaysSuffix' | abpLocalization }}
-              </div>
-            </li>
+              <button type="button" (click)="openAlert(alert)">
+                {{ alertActionLabel(alert) }}
+                <i class="bi bi-arrow-left"></i>
+              </button>
+            </article>
           }
-        </ul>
+        </div>
       }
-    </div>
+    </section>
   }
 </div>

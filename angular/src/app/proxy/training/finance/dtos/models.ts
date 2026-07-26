@@ -123,14 +123,37 @@ export interface TrainingBudgetDto extends EntityDto<string> {
   financialItemId?: string;
   financialItemNameAr?: string;
   financialItemNameEn?: string;
+  financialItemVoteCode?: string;
+  financialItemType?: FinancialItemType | null;
+  budgetCategoryNameAr?: string;
   totalAmount?: number;
   spentAmount?: number;
-  remaining?: number;
+  allocatedAmountOMR?: number;
+  grossSpentAmountOMR?: number;
+  recoveredAmountOMR?: number;
   amountToRecoverOMR?: number;
+  netSpentAmountOMR?: number;
+  remaining?: number;
   alertThreshold?: number;
   isOverThreshold?: boolean;
+  isOverBudget?: boolean;
   spentPercent?: number;
   isFinancialItemActive?: boolean;
+  activities?: TrainingBudgetActivityDto[];
+}
+
+export interface TrainingBudgetActivityDto {
+  activityType?: string;
+  sourceId?: string;
+  trainingCourseId?: string | null;
+  courseNameAr?: string;
+  activityDate?: string;
+  allocatedAmountOMR?: number;
+  spentAmountOMR?: number;
+  recoveredAmountOMR?: number;
+  pendingRecoveryAmountOMR?: number;
+  statusCode?: string;
+  reference?: string | null;
 }
 
 export interface TrainingBudgetGetListInput extends PagedAndSortedResultRequestDto {

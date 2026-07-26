@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using MOD.Training.Training.CasualCourses;
 using MOD.Training.Training.Enums;
 using MOD.Training.Training.Finance.Dtos;
+using MOD.Training.Training.Managers;
 using MOD.Training.Training.Payments;
 using MOD.Training.Training.Permissions;
+using MOD.Training.Training.Plans;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
@@ -17,159 +20,456 @@ namespace MOD.Training.Training.Finance;
 public class TrainingBudgetAppService(
     IRepository<TrainingBudget, Guid> budgetRepo,
     IRepository<FinancialItem, Guid> financialItemRepo,
-    IRepository<BudgetReallocation, Guid> reallocationRepo,
-    TrainingBudgetToDtoMapper toDtoMapper)
+    IRepository<TrainingPlan, Guid> planRepo,
+    IRepository<TrainingPlanItem, Guid> planItemRepo,
+    IRepository<PlanItemFinancialItem, Guid> planFinancialRepo,
+    IRepository<CourseSession, Guid> sessionRepo,
+    IRepository<CoursePayment, Guid> coursePaymentRepo,
+    IRepository<TravelAllowancePayment, Guid> travelPaymentRepo,
+    IRepository<CasualCourse, Guid> casualCourseRepo,
+    IRepository<TrainingExpenseRecovery, Guid> recoveryRepo,
+    IRepository<TrainingExpenseRecoveryItem, Guid> recoveryItemRepo,
+    CourseNameResolver courseNameResolver)
     : ApplicationService, ITrainingBudgetAppService
 {
+    private const string AllocationActivity = "AnnualPlanAllocation";
+    private const string CoursePaymentActivity = "CoursePayment";
+    private const string TravelPaymentActivity = "TravelPayment";
+    private const string CasualTravelExpenseActivity = "CasualTravelExpense";
+
     public async Task<TrainingBudgetDto> GetAsync(Guid id)
     {
-        var entity = await budgetRepo.GetAsync(id);
-        var fi = await financialItemRepo.GetAsync(entity.FinancialItemId);
-        return await MapToDtoAsync(entity, new Dictionary<Guid, FinancialItem> { [fi.Id] = fi });
+        var budget = await budgetRepo.GetAsync(id);
+        return (await BuildBudgetDtosAsync(budget.Year, budget.FinancialItemId)).Single();
     }
 
-    public async Task<PagedResultDto<TrainingBudgetDto>> GetListAsync(TrainingBudgetGetListInput input)
+    public async Task<PagedResultDto<TrainingBudgetDto>> GetListAsync(
+        TrainingBudgetGetListInput input)
     {
-        if (input.Year.HasValue)
-        {
-            var anyExist = await budgetRepo.AnyAsync(x => x.Year == input.Year.Value);
-            if (!anyExist)
-            {
-                var activeItems = await financialItemRepo.GetListAsync(
-                    x => x.IsActive);
+        var year = input.Year ?? Clock.Now.Year;
+        var items = await BuildBudgetDtosAsync(year, input.FinancialItemId);
+        var totalCount = items.Count;
+        var page = items
+            .Skip(input.SkipCount)
+            .Take(input.MaxResultCount > 0 ? input.MaxResultCount : totalCount)
+            .ToList();
 
-                foreach (var item in activeItems)
-                {
-                    await budgetRepo.InsertAsync(new TrainingBudget
-                    {
-                        Year = input.Year.Value,
-                        FinancialItemId = item.Id,
-                        TotalAmount = 0,
-                        SpentAmount = 0,
-                        AlertThreshold = 80
-                    }, autoSave: true);
-                }
-            }
-        }
+        return new PagedResultDto<TrainingBudgetDto>(totalCount, page);
+    }
 
-        var queryable = await budgetRepo.GetQueryableAsync();
+    public async Task<List<int>> GetYearsAsync()
+    {
+        var years = new HashSet<int> { Clock.Now.Year };
 
-        if (input.Year.HasValue)
-        {
-            queryable = queryable.Where(x => x.Year == input.Year.Value);
-        }
+        var budgetQuery = await budgetRepo.GetQueryableAsync();
+        years.UnionWith(await AsyncExecuter.ToListAsync(budgetQuery.Select(x => x.Year).Distinct()));
 
-        if (input.FinancialItemId.HasValue)
-        {
-            queryable = queryable.Where(x => x.FinancialItemId == input.FinancialItemId.Value);
-        }
+        var planQuery = await planRepo.GetQueryableAsync();
+        years.UnionWith(await AsyncExecuter.ToListAsync(planQuery.Select(x => x.Year).Distinct()));
 
-        var totalCount = await AsyncExecuter.CountAsync(queryable);
+        var sessionQuery = await sessionRepo.GetQueryableAsync();
+        years.UnionWith(await AsyncExecuter.ToListAsync(sessionQuery.Select(x => x.PlanYear).Distinct()));
 
-        queryable = queryable.OrderBy(x => x.FinancialItemId);
+        var recoveryQuery = await recoveryRepo.GetQueryableAsync();
+        years.UnionWith(await AsyncExecuter.ToListAsync(
+            recoveryQuery.Select(x => x.ExpenseDate.Year).Distinct()));
 
-        if (input.SkipCount > 0)
-            queryable = queryable.Skip(input.SkipCount);
-        if (input.MaxResultCount > 0)
-            queryable = queryable.Take(input.MaxResultCount);
-
-        var entities = await AsyncExecuter.ToListAsync(queryable);
-
-        var fiIds = entities.Select(e => e.FinancialItemId).Distinct().ToList();
-        var financialItems = await financialItemRepo.GetListAsync(x => fiIds.Contains(x.Id));
-        var fiMap = financialItems.ToDictionary(f => f.Id);
-
-        // Batch-compute recoverable amounts for all items in this year
-        var recoverMap = await GetRecoverableAmountsAsync(entities);
-
-        var dtos = new List<TrainingBudgetDto>();
-        foreach (var entity in entities)
-        {
-            var dto = await MapToDtoAsync(entity, fiMap, recoverMap);
-            dtos.Add(dto);
-        }
-
-        return new PagedResultDto<TrainingBudgetDto>(totalCount, dtos);
+        return years.Where(x => x > 0).OrderByDescending(x => x).ToList();
     }
 
     [Authorize(TrainingPermissions.TrainingBudgets.Edit)]
-    public async Task<TrainingBudgetDto> UpdateAsync(Guid id, UpdateAlertThresholdDto input)
+    public async Task<TrainingBudgetDto> UpdateAsync(
+        Guid id,
+        UpdateAlertThresholdDto input)
     {
         var entity = await budgetRepo.GetAsync(id);
         entity.AlertThreshold = input.AlertThreshold;
         await budgetRepo.UpdateAsync(entity, autoSave: true);
 
-        var fi = await financialItemRepo.GetAsync(entity.FinancialItemId);
-        return await MapToDtoAsync(entity, new Dictionary<Guid, FinancialItem> { [fi.Id] = fi });
+        return (await BuildBudgetDtosAsync(entity.Year, entity.FinancialItemId)).Single();
     }
 
-    private async Task<TrainingBudgetDto> MapToDtoAsync(
-        TrainingBudget entity,
-        IDictionary<Guid, FinancialItem> fiMap,
-        IDictionary<(Guid FinancialItemId, int Year), decimal>? recoverMap = null)
+    [Authorize(TrainingPermissions.TrainingBudgets.Edit)]
+    public async Task<TrainingBudgetDto> SetThresholdAsync(
+        Guid financialItemId,
+        int year,
+        UpdateAlertThresholdDto input)
     {
-        var dto = toDtoMapper.Map(entity);
-        if (fiMap.TryGetValue(entity.FinancialItemId, out var fi))
-        {
-            dto.FinancialItemNameAr = fi.NameAr;
-            dto.FinancialItemNameEn = fi.NameEn;
-            dto.IsFinancialItemActive = fi.IsActive;
-        }
+        await financialItemRepo.GetAsync(financialItemId);
+        var entity = await budgetRepo.FindAsync(x =>
+            x.Year == year && x.FinancialItemId == financialItemId);
 
-        dto.Remaining = entity.TotalAmount - entity.SpentAmount;
-        dto.SpentPercent = entity.TotalAmount > 0
-            ? Math.Round(entity.SpentAmount / entity.TotalAmount * 100, 1)
-            : 0;
-        dto.IsOverThreshold = dto.SpentPercent > entity.AlertThreshold;
-
-        // Recoverable amount
-        if (recoverMap != null && recoverMap.TryGetValue((entity.FinancialItemId, entity.Year), out var recoverAmount))
+        if (entity == null)
         {
-            dto.AmountToRecoverOMR = recoverAmount;
+            entity = new TrainingBudget(GuidGenerator.Create())
+            {
+                TenantId = CurrentTenant.Id,
+                Year = year,
+                FinancialItemId = financialItemId,
+                TotalAmount = 0m,
+                SpentAmount = 0m,
+                AlertThreshold = input.AlertThreshold
+            };
+            await budgetRepo.InsertAsync(entity, autoSave: true);
         }
         else
         {
-            dto.AmountToRecoverOMR = await GetRecoverableAmountAsync(entity.FinancialItemId, entity.Year);
+            entity.AlertThreshold = input.AlertThreshold;
+            await budgetRepo.UpdateAsync(entity, autoSave: true);
         }
 
-        return dto;
+        return (await BuildBudgetDtosAsync(year, financialItemId)).Single();
     }
 
-    private async Task<decimal> GetRecoverableAmountAsync(Guid financialItemId, int year)
+    private async Task<List<TrainingBudgetDto>> BuildBudgetDtosAsync(
+        int year,
+        Guid? financialItemFilter)
     {
-        // Sum pending reallocations targeting this financial item
-        var queryable = await reallocationRepo.GetQueryableAsync();
-        var sum = await AsyncExecuter.SumAsync(
-            queryable.Where(x =>
-                x.ToFinancialItemId == financialItemId &&
-                x.Status == ReallocationStatus.Pending)
-            .Select(x => x.AmountOMR));
+        var financialItems = await financialItemRepo.GetListAsync();
+        var financialItemsById = financialItems.ToDictionary(x => x.Id);
+        var financialItemsByVoteCode = financialItems
+            .Where(x => !string.IsNullOrWhiteSpace(x.VoteCode))
+            .GroupBy(x => x.VoteCode.Trim(), StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(x => x.Key, x => x.Last(), StringComparer.OrdinalIgnoreCase);
 
-        return sum;
-    }
+        var budgets = await budgetRepo.GetListAsync(x => x.Year == year);
+        var budgetsByFinancialItem = budgets
+            .GroupBy(x => x.FinancialItemId)
+            .ToDictionary(x => x.Key, x => x.Last());
 
-    private async Task<IDictionary<(Guid FinancialItemId, int Year), decimal>> GetRecoverableAmountsAsync(
-        List<TrainingBudget> budgets)
-    {
-        var fiIds = budgets.Select(b => b.FinancialItemId).Distinct().ToList();
-        var years = budgets.Select(b => b.Year).Distinct().ToList();
+        var planQuery = await planRepo.GetQueryableAsync();
+        var approvedPlans = await AsyncExecuter.ToListAsync(planQuery.Where(x =>
+            x.Year == year && x.Status == PlanStatus.THApproved));
+        var approvedPlanIds = approvedPlans.Select(x => x.Id).ToList();
 
-        var queryable = await reallocationRepo.GetQueryableAsync();
-        var reallocations = await AsyncExecuter.ToListAsync(
-            queryable.Where(x =>
-                fiIds.Contains(x.ToFinancialItemId) &&
-                x.Status == ReallocationStatus.Pending));
+        var planItemQuery = await planItemRepo.GetQueryableAsync();
+        var planItems = approvedPlanIds.Count == 0
+            ? []
+            : await AsyncExecuter.ToListAsync(
+                planItemQuery.Where(x => approvedPlanIds.Contains(x.PlanId)));
+        var planItemsById = planItems.ToDictionary(x => x.Id);
+        var planItemIds = planItems.Select(x => x.Id).ToList();
 
-        // Group by financial item (year not stored on reallocation, use budget year lookup)
-        var result = new Dictionary<(Guid, int), decimal>();
-        foreach (var budget in budgets)
+        var planFinancialQuery = await planFinancialRepo.GetQueryableAsync();
+        var planFinancials = planItemIds.Count == 0
+            ? []
+            : await AsyncExecuter.ToListAsync(
+                planFinancialQuery.Where(x => planItemIds.Contains(x.PlanItemId)));
+        var planFinancialsByPlanItem = planFinancials
+            .GroupBy(x => x.PlanItemId)
+            .ToDictionary(x => x.Key, x => x.ToList());
+
+        var sessionQuery = await sessionRepo.GetQueryableAsync();
+        var sessions = await AsyncExecuter.ToListAsync(sessionQuery.Where(x =>
+            x.PlanYear == year && x.Status != SessionStatus.Cancelled));
+        var sessionsById = sessions.ToDictionary(x => x.Id);
+        var sessionIds = sessions.Select(x => x.Id).ToList();
+
+        var coursePaymentQuery = await coursePaymentRepo.GetQueryableAsync();
+        var annualCoursePayments = sessionIds.Count == 0
+            ? []
+            : await AsyncExecuter.ToListAsync(coursePaymentQuery.Where(x =>
+                x.Status == PaymentStatus.Confirmed
+                && x.SessionId.HasValue
+                && sessionIds.Contains(x.SessionId.Value)));
+
+        var travelPaymentQuery = await travelPaymentRepo.GetQueryableAsync();
+        var annualTravelPayments = sessionIds.Count == 0
+            ? []
+            : await AsyncExecuter.ToListAsync(travelPaymentQuery.Where(x =>
+                x.Status == PaymentStatus.Confirmed
+                && x.SessionId.HasValue
+                && sessionIds.Contains(x.SessionId.Value)));
+
+        var recoveryQuery = await recoveryRepo.GetQueryableAsync();
+        var recoveries = await AsyncExecuter.ToListAsync(recoveryQuery.Where(x =>
+            x.ExpenseDate.Year == year));
+        var recoveriesById = recoveries.ToDictionary(x => x.Id);
+        var recoveryIds = recoveries.Select(x => x.Id).ToList();
+
+        var recoveryItemQuery = await recoveryItemRepo.GetQueryableAsync();
+        var recoveryItems = recoveryIds.Count == 0
+            ? []
+            : await AsyncExecuter.ToListAsync(recoveryItemQuery.Where(x =>
+                recoveryIds.Contains(x.TrainingExpenseRecoveryId)));
+
+        var casualCourseIds = recoveries.Select(x => x.CasualCourseId).Distinct().ToList();
+        var casualCourseQuery = await casualCourseRepo.GetQueryableAsync();
+        var casualCourses = casualCourseIds.Count == 0
+            ? []
+            : await AsyncExecuter.ToListAsync(
+                casualCourseQuery.Where(x => casualCourseIds.Contains(x.Id)));
+        var casualCoursesById = casualCourses.ToDictionary(x => x.Id);
+
+        var tenantCourseIds = planItems.Select(x => x.TenantCourseId)
+            .Concat(sessions.Select(x => x.TenantCourseId))
+            .Concat(casualCourses.Select(x => x.TenantCourseId))
+            .Distinct()
+            .ToList();
+        var courseNames = await courseNameResolver.BatchResolveAsync(tenantCourseIds);
+
+        var accumulators = new Dictionary<Guid, BudgetAccumulator>();
+
+        BudgetAccumulator GetAccumulator(Guid financialItemId)
         {
-            var amount = reallocations
-                .Where(r => r.ToFinancialItemId == budget.FinancialItemId)
-                .Sum(r => r.AmountOMR);
-            result[(budget.FinancialItemId, budget.Year)] = amount;
+            if (!accumulators.TryGetValue(financialItemId, out var accumulator))
+            {
+                accumulator = new BudgetAccumulator();
+                accumulators[financialItemId] = accumulator;
+            }
+            return accumulator;
+        }
+
+        string ResolveCourseName(Guid tenantCourseId)
+            => courseNames.TryGetValue(tenantCourseId, out var name)
+                ? name.NameAr
+                : string.Empty;
+
+        Guid? ResolveFinancialItemId(
+            Guid? trainingPlanItemId,
+            FinancialItemType type)
+        {
+            if (trainingPlanItemId.HasValue
+                && planFinancialsByPlanItem.TryGetValue(trainingPlanItemId.Value, out var assigned))
+            {
+                var assignedMatch = assigned.FirstOrDefault(x =>
+                    financialItemsById.TryGetValue(x.FinancialItemId, out var item)
+                    && item.ItemType == type);
+                if (assignedMatch != null)
+                {
+                    return assignedMatch.FinancialItemId;
+                }
+            }
+
+            return financialItems
+                .Where(x => x.IsActive && x.ItemType == type)
+                .OrderBy(x => x.CreationTime)
+                .Select(x => (Guid?)x.Id)
+                .FirstOrDefault();
+        }
+
+        foreach (var assignment in planFinancials)
+        {
+            if (!planItemsById.TryGetValue(assignment.PlanItemId, out var planItem))
+            {
+                continue;
+            }
+
+            var accumulator = GetAccumulator(assignment.FinancialItemId);
+            accumulator.Allocated += assignment.EstimatedAmountOMR;
+            if (assignment.EstimatedAmountOMR == 0m)
+            {
+                continue;
+            }
+
+            accumulator.Activities.Add(new TrainingBudgetActivityDto
+            {
+                ActivityType = AllocationActivity,
+                SourceId = assignment.Id,
+                TrainingCourseId = planItem.Id,
+                CourseNameAr = ResolveCourseName(planItem.TenantCourseId),
+                ActivityDate = assignment.CreationTime,
+                AllocatedAmountOMR = assignment.EstimatedAmountOMR,
+                StatusCode = PlanStatus.THApproved.ToString()
+            });
+        }
+
+        foreach (var payment in annualCoursePayments)
+        {
+            if (!payment.SessionId.HasValue
+                || !sessionsById.TryGetValue(payment.SessionId.Value, out var session))
+            {
+                continue;
+            }
+
+            var financialItemId = ResolveFinancialItemId(
+                session.TrainingPlanItemId,
+                FinancialItemType.CourseCost);
+            if (!financialItemId.HasValue)
+            {
+                continue;
+            }
+
+            var accumulator = GetAccumulator(financialItemId.Value);
+            accumulator.GrossSpent += payment.InvoiceAmountOMR;
+            accumulator.Activities.Add(new TrainingBudgetActivityDto
+            {
+                ActivityType = CoursePaymentActivity,
+                SourceId = payment.Id,
+                TrainingCourseId = session.Id,
+                CourseNameAr = ResolveCourseName(session.TenantCourseId),
+                ActivityDate = payment.InvoiceDate,
+                SpentAmountOMR = payment.InvoiceAmountOMR,
+                StatusCode = payment.Status.ToString()
+            });
+        }
+
+        foreach (var sessionGroup in annualTravelPayments
+                     .Where(x => x.SessionId.HasValue)
+                     .GroupBy(x => x.SessionId!.Value))
+        {
+            if (!sessionsById.TryGetValue(sessionGroup.Key, out var session))
+            {
+                continue;
+            }
+
+            var activityDate = sessionGroup
+                .Select(x => x.ConfirmedAt ?? x.ExternalResponseAt ?? x.CreationTime)
+                .Max();
+            var components = new[]
+            {
+                (Type: FinancialItemType.Ticket, Amount: sessionGroup.Sum(x => x.TicketAmountOMR)),
+                (Type: FinancialItemType.Visa, Amount: sessionGroup.Sum(x => x.VisaFeesOMR)),
+                (Type: FinancialItemType.Insurance, Amount: sessionGroup.Sum(x => x.InsuranceOMR)),
+                (Type: FinancialItemType.Allowance, Amount: sessionGroup.Sum(x => x.TravelAllowanceOMR)),
+                (Type: FinancialItemType.Clothing, Amount: sessionGroup.Sum(x => x.ClothingAllowanceOMR))
+            };
+
+            foreach (var component in components.Where(x => x.Amount != 0m))
+            {
+                var financialItemId = ResolveFinancialItemId(
+                    session.TrainingPlanItemId,
+                    component.Type);
+                if (!financialItemId.HasValue)
+                {
+                    continue;
+                }
+
+                var accumulator = GetAccumulator(financialItemId.Value);
+                accumulator.GrossSpent += component.Amount;
+                accumulator.Activities.Add(new TrainingBudgetActivityDto
+                {
+                    ActivityType = TravelPaymentActivity,
+                    SourceId = session.Id,
+                    TrainingCourseId = session.Id,
+                    CourseNameAr = ResolveCourseName(session.TenantCourseId),
+                    ActivityDate = activityDate,
+                    SpentAmountOMR = component.Amount,
+                    StatusCode = PaymentStatus.Confirmed.ToString()
+                });
+            }
+        }
+
+        foreach (var item in recoveryItems)
+        {
+            if (!recoveriesById.TryGetValue(item.TrainingExpenseRecoveryId, out var recovery))
+            {
+                continue;
+            }
+
+            var financialItemId = item.FinancialItemId;
+            if (!financialItemId.HasValue
+                && financialItemsByVoteCode.TryGetValue(item.FundingSourceVoteCode, out var mappedItem))
+            {
+                financialItemId = mappedItem.Id;
+            }
+            if (!financialItemId.HasValue)
+            {
+                continue;
+            }
+
+            casualCoursesById.TryGetValue(recovery.CasualCourseId, out var casualCourse);
+            var accumulator = GetAccumulator(financialItemId.Value);
+            accumulator.GrossSpent += item.AmountOMR;
+            if (item.IsSettled)
+            {
+                accumulator.Recovered += item.AmountOMR;
+            }
+            else
+            {
+                accumulator.PendingRecovery += item.AmountOMR;
+            }
+
+            accumulator.Activities.Add(new TrainingBudgetActivityDto
+            {
+                ActivityType = CasualTravelExpenseActivity,
+                SourceId = recovery.Id,
+                TrainingCourseId = recovery.CasualCourseId,
+                CourseNameAr = casualCourse == null
+                    ? string.Empty
+                    : ResolveCourseName(casualCourse.TenantCourseId),
+                ActivityDate = recovery.ExpenseDate,
+                SpentAmountOMR = item.AmountOMR,
+                RecoveredAmountOMR = item.IsSettled ? item.AmountOMR : 0m,
+                PendingRecoveryAmountOMR = item.IsSettled ? 0m : item.AmountOMR,
+                StatusCode = item.IsSettled ? "Settled" : "PendingRecovery",
+                Reference = item.SettlementReference
+            });
+        }
+
+        var financialItemIdsWithValues = accumulators.Keys.ToHashSet();
+        var candidateItems = financialItems
+            .Where(x =>
+                (!financialItemFilter.HasValue || x.Id == financialItemFilter.Value)
+                && (x.ItemType.HasValue || financialItemIdsWithValues.Contains(x.Id))
+                && (x.IsActive || financialItemIdsWithValues.Contains(x.Id)))
+            .OrderBy(x => x.ParentId)
+            .ThenBy(x => x.ItemType)
+            .ThenBy(x => x.NameAr)
+            .ToList();
+
+        var result = new List<TrainingBudgetDto>(candidateItems.Count);
+        foreach (var financialItem in candidateItems)
+        {
+            accumulators.TryGetValue(financialItem.Id, out var accumulator);
+            accumulator ??= new BudgetAccumulator();
+            budgetsByFinancialItem.TryGetValue(financialItem.Id, out var budget);
+
+            var allocated = accumulator.Allocated;
+            var grossSpent = accumulator.GrossSpent;
+            var recovered = accumulator.Recovered;
+            var netSpent = Math.Max(0m, grossSpent - recovered);
+            var remaining = allocated - netSpent;
+            var threshold = budget?.AlertThreshold ?? 80m;
+            var spentPercent = allocated > 0m
+                ? Math.Round(netSpent / allocated * 100m, 1)
+                : netSpent > 0m ? 100m : 0m;
+
+            var categoryName = financialItem.ParentId.HasValue
+                && financialItemsById.TryGetValue(financialItem.ParentId.Value, out var parent)
+                    ? parent.NameAr
+                    : string.Empty;
+
+            result.Add(new TrainingBudgetDto
+            {
+                Id = budget?.Id ?? Guid.Empty,
+                Year = year,
+                FinancialItemId = financialItem.Id,
+                FinancialItemNameAr = financialItem.NameAr,
+                FinancialItemNameEn = financialItem.NameEn,
+                FinancialItemVoteCode = financialItem.VoteCode,
+                FinancialItemType = financialItem.ItemType,
+                BudgetCategoryNameAr = categoryName,
+                TotalAmount = allocated,
+                SpentAmount = netSpent,
+                AllocatedAmountOMR = allocated,
+                GrossSpentAmountOMR = grossSpent,
+                RecoveredAmountOMR = recovered,
+                AmountToRecoverOMR = accumulator.PendingRecovery,
+                NetSpentAmountOMR = netSpent,
+                Remaining = remaining,
+                AlertThreshold = threshold,
+                IsOverBudget = remaining < 0m,
+                IsOverThreshold = netSpent > 0m
+                    && (allocated <= 0m || spentPercent >= threshold),
+                SpentPercent = spentPercent,
+                IsFinancialItemActive = financialItem.IsActive,
+                Activities = accumulator.Activities
+                    .OrderByDescending(x => x.ActivityDate)
+                    .ThenBy(x => x.ActivityType)
+                    .ToList()
+            });
         }
 
         return result;
+    }
+
+    private sealed class BudgetAccumulator
+    {
+        public decimal Allocated { get; set; }
+        public decimal GrossSpent { get; set; }
+        public decimal Recovered { get; set; }
+        public decimal PendingRecovery { get; set; }
+        public List<TrainingBudgetActivityDto> Activities { get; } = [];
     }
 }

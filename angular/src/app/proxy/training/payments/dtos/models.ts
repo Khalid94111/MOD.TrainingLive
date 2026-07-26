@@ -1,40 +1,47 @@
 import type { EntityDto, PagedAndSortedResultRequestDto } from '@abp/ng.core';
 import type { FundingScenario } from '../../enums/funding-scenario.enum';
-import type { ReallocationStatus } from '../../enums/reallocation-status.enum';
+import type { TrainingExpenseRecoveryStatus } from '../../enums/training-expense-recovery-status.enum';
 import type { PaymentStatus } from '../../enums/payment-status.enum';
 import type { PersonnelType } from '../../enums/personnel-type.enum';
 
-export interface BudgetReallocationDto extends EntityDto<string> {
+export interface TrainingExpenseRecoveryDto extends EntityDto<string> {
   casualCourseId?: string;
-  casualCourseNameAr?: string | null;
-  fundingScenario?: FundingScenario | null;
-  coursePaymentId?: string;
-  fundingSourceVoteCode?: string;
-  fundingSourceName?: string | null;
-  toFinancialItemId?: string;
-  toFinancialItemNameAr?: string | null;
-  amountOMR?: number;
-  status?: ReallocationStatus;
-  approvedAt?: string | null;
-  approvedById?: string | null;
-  approvedByName?: string | null;
-  approvalNote?: string | null;
+  casualCourseNameAr?: string;
+  travelRequestId?: string;
+  expenseDate?: string;
+  currency?: string;
+  totalAmountOMR?: number;
+  settledAmountOMR?: number;
+  remainingAmountOMR?: number;
+  status?: TrainingExpenseRecoveryStatus;
+  reviewedAt?: string | null;
+  reviewedById?: string | null;
+  reviewedByName?: string | null;
+  reviewNote?: string | null;
   creationTime?: string;
+  items?: TrainingExpenseRecoveryItemDto[];
 }
 
-export interface BudgetReallocationGetListInput extends PagedAndSortedResultRequestDto {
+export interface TrainingExpenseRecoveryItemDto extends EntityDto<string> {
+  financialItemId?: string | null;
+  financialItemNameAr?: string | null;
+  expenseTypeCode?: string;
+  fundingSourceVoteCode?: string;
+  amountOMR?: number;
+  isSettled?: boolean;
+  settledAmountOMR?: number;
+  remainingAmountOMR?: number;
+  settledAt?: string | null;
+  settledById?: string | null;
+  settledByName?: string | null;
+  settlementReference?: string | null;
+  settlementNote?: string | null;
+}
+
+export interface TrainingExpenseRecoveryGetListInput extends PagedAndSortedResultRequestDto {
   casualCourseId?: string | null;
-  coursePaymentId?: string | null;
-  toFinancialItemId?: string | null;
-  fundingSourceVoteCode?: string | null;
-  status?: ReallocationStatus | null;
-  createdFrom?: string | null;
-  createdTo?: string | null;
-}
-
-export interface CoursePaymentConfirmResultDto {
-  payment?: CoursePaymentDto;
-  generatedReallocationsCount?: number;
+  status?: TrainingExpenseRecoveryStatus | null;
+  search?: string | null;
 }
 
 export interface CoursePaymentDto extends EntityDto<string> {
@@ -75,8 +82,13 @@ export interface CreateUpdateCoursePaymentDto {
   notes?: string | null;
 }
 
-export interface MarkReallocationApprovedDto {
-  approvalNote?: string | null;
+export interface MarkTrainingExpenseRecoveryReviewedDto {
+  reviewNote?: string | null;
+}
+
+export interface MarkTrainingExpenseRecoverySettledDto {
+  settlementReference: string;
+  settlementNote?: string | null;
 }
 
 export interface TravelAllowancePaymentDto extends EntityDto<string> {

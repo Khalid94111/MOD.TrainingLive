@@ -602,7 +602,7 @@ builder.ConfigurePaymentsPhase4BBeta();
     /// <summary>
     /// Phase 4B-β — payments + auto-reallocation tables.
     /// Three new entities: TravelAllowancePayment + CoursePayment (both polymorphic with CHECK constraint)
-    /// and BudgetReallocation (casual-course-only by design).
+    /// and TrainingExpenseRecovery (casual-course travel expenses paid by Training).
     /// </summary>
     public static void ConfigurePaymentsPhase4BBeta(this ModelBuilder builder)
     {
@@ -682,25 +682,44 @@ builder.ConfigurePaymentsPhase4BBeta();
             b.HasIndex(x => new { x.TenantId, x.Status });
         });
 
-        builder.Entity<BudgetReallocation>(b =>
+        builder.Entity<TrainingExpenseRecovery>(b =>
         {
-            b.ToTable(TrainingConsts.DbTablePrefix + "BudgetReallocations", TrainingConsts.DbSchema);
+            b.ToTable(TrainingConsts.DbTablePrefix + "TrainingExpenseRecoveries", TrainingConsts.DbSchema);
             b.ConfigureByConvention();
 
             b.Property(x => x.CasualCourseId).IsRequired();
-            b.Property(x => x.CoursePaymentId).IsRequired();
-            b.Property(x => x.FundingSourceVoteCode).IsRequired().HasMaxLength(TrainingConsts.MaxFundingSourceLength);
-            b.Property(x => x.ToFinancialItemId).IsRequired();
-            b.Property(x => x.AmountOMR).IsRequired().HasColumnType("decimal(18,3)");
-
-            b.Property(x => x.Status).IsRequired().HasDefaultValue(ReallocationStatus.Pending);
-            b.Property(x => x.ApprovedAt).IsRequired(false);
-            b.Property(x => x.ApprovedById).IsRequired(false);
-            b.Property(x => x.ApprovalNote).HasMaxLength(TrainingConsts.MaxNotesLength);
+            b.Property(x => x.TravelRequestId).IsRequired();
+            b.Property(x => x.ExpenseDate).IsRequired();
+            b.Property(x => x.Currency).IsRequired().HasMaxLength(3);
+            b.Property(x => x.TotalAmountOMR).IsRequired().HasColumnType("decimal(18,3)");
+            b.Property(x => x.Status).IsRequired().HasDefaultValue(TrainingExpenseRecoveryStatus.PendingReview);
+            b.Property(x => x.ReviewNote).HasMaxLength(TrainingConsts.MaxNotesLength);
 
             b.HasIndex(x => new { x.TenantId, x.CasualCourseId });
-            b.HasIndex(x => new { x.TenantId, x.CoursePaymentId });
             b.HasIndex(x => new { x.TenantId, x.Status });
+            b.HasIndex(x => new { x.TenantId, x.CasualCourseId, x.TravelRequestId }).IsUnique();
+
+            b.HasMany(x => x.Items)
+                .WithOne()
+                .HasForeignKey(x => x.TrainingExpenseRecoveryId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<TrainingExpenseRecoveryItem>(b =>
+        {
+            b.ToTable(TrainingConsts.DbTablePrefix + "TrainingExpenseRecoveryItems", TrainingConsts.DbSchema);
+            b.ConfigureByConvention();
+
+            b.Property(x => x.ExpenseTypeCode).IsRequired().HasMaxLength(64);
+            b.Property(x => x.FundingSourceVoteCode).IsRequired().HasMaxLength(TrainingConsts.MaxFundingSourceLength);
+            b.Property(x => x.AmountOMR).IsRequired().HasColumnType("decimal(18,3)");
+            b.Property(x => x.IsSettled).IsRequired().HasDefaultValue(false);
+            b.Property(x => x.SettlementReference).HasMaxLength(128);
+            b.Property(x => x.SettlementNote).HasMaxLength(TrainingConsts.MaxNotesLength);
+
+            b.HasIndex(x => new { x.TenantId, x.TrainingExpenseRecoveryId });
+            b.HasIndex(x => new { x.TenantId, x.FinancialItemId });
+            b.HasIndex(x => new { x.TrainingExpenseRecoveryId, x.ExpenseTypeCode, x.FundingSourceVoteCode }).IsUnique();
         });
     }
 }

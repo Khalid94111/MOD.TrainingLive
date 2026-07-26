@@ -305,7 +305,7 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
             TrainingExecutionPermissions.TravelRequests.Send,
             L("Permission:TrainingExecution.TravelRequests.Send"));
 
-        // ── Phase 4B-β — payments + auto-reallocation (separate group) ──────
+        // Payments and Travel-expense settlement (separate group).
         var paymentsGroup = context.AddGroup(
             TrainingPaymentsPermissions.GroupName,
             L("Permission:TrainingPayments"));
@@ -343,8 +343,11 @@ public class TrainingPermissionDefinitionProvider : PermissionDefinitionProvider
             TrainingPaymentsPermissions.Reallocations.View,
             L("Permission:TrainingPayments.Reallocations.View"));
         reallocations.AddChild(
-            TrainingPaymentsPermissions.Reallocations.MarkApproved,
+            TrainingPaymentsPermissions.Reallocations.Review,
             L("Permission:TrainingPayments.Reallocations.MarkApproved"));
+        reallocations.AddChild(
+            TrainingPaymentsPermissions.Reallocations.MarkSettled,
+            L("Permission:TrainingPayments.Reallocations.MarkSettled"));
 
         // ── Phase 4C-α — annual plan session creation + dashboard (separate group) ──
         var annualPlanSessions = context.AddGroup(

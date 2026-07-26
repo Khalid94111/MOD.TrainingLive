@@ -1,289 +1,385 @@
-<div class="fi-page">
-  <!-- ════════════════════════════════════════
-       HEADER BANNER — Gradient hero
-       ════════════════════════════════════════ -->
-  <div class="header-banner">
-    <div class="header-banner-bg"></div>
-    <div class="header-banner-pattern"></div>
-    <div class="header-banner-content">
-      <div class="header-banner-left">
-        <div class="header-banner-icon"><span>💰</span></div>
-        <div class="header-banner-text">
-          <h1 class="header-banner-title">{{ '::Training.TrainingBudgets.Title' | abpLocalization }}</h1>
-          <p class="header-banner-desc">{{ '::Training.BudgetAutoCalculated' | abpLocalization }}</p>
-        </div>
-      </div>
-      <div class="header-banner-right">
-        <div class="year-select-wrap">
-          <label class="year-select-label">{{ '::Training.TrainingBudgets.Year' | abpLocalization }}</label>
-          <select
-            class="year-select-modern"
-            [value]="selectedYear()"
-            (change)="onYearChange(+$any($event.target).value)"
-          >
-            @for (year of yearOptions; track year) {
-              <option [value]="year">{{ year }}</option>
-            }
-          </select>
-        </div>
+<div class="budget-page">
+  <section class="budget-hero">
+    <div class="hero-copy">
+      <div class="hero-icon">ر.ع</div>
+      <div>
+        <h1>{{ '::Training.TrainingBudgets.Title' | abpLocalization }}</h1>
+        <p>{{ '::Training.TrainingBudgets.NewDescription' | abpLocalization }}</p>
       </div>
     </div>
-  </div>
 
-  <!-- ════════════════════════════════════════
-       STAT CARDS
-       ════════════════════════════════════════ -->
-  <div class="stat-cards-row">
-    <div class="stat-card-modern card-total">
-      <div class="stat-card-glow"></div>
-      <div class="stat-card-body">
-        <div class="stat-card-icon">📊</div>
-        <div class="stat-card-value">{{ totalCount() }}</div>
-        <div class="stat-card-label">{{ '::Training.TrainingBudgets.TotalBudgets' | abpLocalization }}</div>
-      </div>
-      <div class="stat-card-bar" [style.width.%]="100"></div>
-    </div>
-    <div class="stat-card-modern card-active">
-      <div class="stat-card-glow"></div>
-      <div class="stat-card-body">
-        <div class="stat-card-icon">✅</div>
-        <div class="stat-card-value">{{ activeCount() }}</div>
-        <div class="stat-card-label">{{ '::Training.TrainingBudgets.ActiveBudgets' | abpLocalization }}</div>
-      </div>
-      <div class="stat-card-bar" [style.width.%]="totalCount() ? (activeCount() / totalCount() * 100) : 0"></div>
-    </div>
-    <div class="stat-card-modern card-warning">
-      <div class="stat-card-glow"></div>
-      <div class="stat-card-body">
-        <div class="stat-card-icon">⚠️</div>
-        <div class="stat-card-value">{{ overThresholdCount() }}</div>
-        <div class="stat-card-label">{{ '::Training.TrainingBudgets.OverThreshold' | abpLocalization }}</div>
-      </div>
-      <div class="stat-card-bar" [style.width.%]="totalCount() ? (overThresholdCount() / totalCount() * 100) : 0"></div>
-    </div>
-  </div>
-
-  <!-- ════════════════════════════════════════
-       ACTIVE BUDGET CARDS (detailed per-item)
-       ════════════════════════════════════════ -->
-  @if (activeBudgets().length > 0) {
-    <div class="budget-cards-section-header">
-      <div class="budget-cards-section-title">
-        <span class="section-icon">💳</span>
-        <span>{{ '::Training.TrainingBudgets.BudgetCards' | abpLocalization }}</span>
-        <span class="budget-cards-count">({{ activeBudgets().length }})</span>
-      </div>
-      <button type="button" class="btn btn-toggle-cards" (click)="toggleBudgetCards()">
-        @if (areBudgetCardsExpanded()) {
-          <span class="btn-icon-symbol">−</span>
-          <span>{{ '::Training.TrainingBudgets.HideCards' | abpLocalization }}</span>
-        } @else {
-          <span class="btn-icon-symbol">+</span>
-          <span>{{ '::Training.TrainingBudgets.ShowCards' | abpLocalization }}</span>
-        }
+    <div class="hero-actions">
+      <label>
+        <span>{{ '::Training.TrainingBudgets.Year' | abpLocalization }}</span>
+        <select
+          [value]="selectedYear()"
+          (change)="onYearChange(+$any($event.target).value)"
+        >
+          @for (year of yearOptions(); track year) {
+            <option [value]="year">{{ year }}</option>
+          }
+        </select>
+      </label>
+      <button type="button" class="refresh-btn" (click)="loadData()" [disabled]="isLoading()">
+        <span [class.spinning]="isLoading()">↻</span>
+        {{ '::Training.TrainingBudgets.Refresh' | abpLocalization }}
       </button>
     </div>
+  </section>
 
-    @if (areBudgetCardsExpanded()) {
-      <div class="budget-cards-row">
-      @for (budget of activeBudgets(); track budget.id; let i = $index) {
-        @let palette = paletteFor(i);
-        <div
-          class="budget-card-modern"
-          [style.border-color]="palette.borderColor"
-          [style.background]="palette.bgGradient"
-        >
-          <div class="budget-card-header">
-            <div>
-              <div class="budget-card-title" [style.color]="palette.badgeColor">{{ budget.financialItemNameAr }}</div>
-              <div class="budget-card-en">{{ budget.financialItemNameEn }}</div>
-            </div>
-            <span
-              class="percent-badge"
-              [style.background]="palette.badgeBg"
-              [style.color]="palette.badgeColor"
-              [class.alert-badge]="budget.isOverThreshold"
-            >
-              {{ budget.spentPercent }}%
-              @if (budget.isOverThreshold) { ⚠ }
-            </span>
-          </div>
-
-          <div class="budget-bar">
-            <div
-              class="budget-fill"
-              [style.width.%]="budget.spentPercent"
-              [style.background]="palette.barGradient"
-            ></div>
-          </div>
-
-          <div class="budget-card-details">
-            <div class="budget-detail-item">
-              <span class="detail-label">{{ '::Training.TrainingBudgets.TotalAmount' | abpLocalization }}</span>
-              <span class="detail-value">{{ formatCurrency(budget.totalAmount!) }} {{ '::Training.Currency.OMR' | abpLocalization }}</span>
-            </div>
-            <div class="budget-detail-item">
-              <span class="detail-label">{{ '::Training.TrainingBudgets.SpentAmount' | abpLocalization }}</span>
-              <span class="detail-value" [style.color]="palette.spentColor">{{ formatCurrency(budget.spentAmount!) }} {{ '::Training.Currency.OMR' | abpLocalization }}</span>
-            </div>
-            <div class="budget-detail-item">
-              <span class="detail-label">{{ '::Training.Remaining' | abpLocalization }}</span>
-              <span class="detail-value remaining-value" [class.danger]="budget.isOverThreshold">{{ formatCurrency(budget.remaining!) }} {{ '::Training.Currency.OMR' | abpLocalization }}</span>
-            </div>
-            <div class="budget-detail-item">
-              <span class="detail-label">{{ '::Training.AmountToRecover' | abpLocalization }}</span>
-              <span class="detail-value recover-value">{{ formatCurrency(budget.amountToRecoverOMR!) }} {{ '::Training.Currency.OMR' | abpLocalization }}</span>
-            </div>
-            <div class="budget-detail-item">
-              <span class="detail-label">{{ '::Training.AlertThreshold' | abpLocalization }}</span>
-              <span class="detail-value">{{ budget.alertThreshold }}%</span>
-            </div>
-          </div>
-        </div>
-      }
-    </div>
-    }
-  } @else if (!isLoading()) {
-    <div class="empty-budgets-banner">
-      <span class="empty-budgets-icon">📭</span>
-      <span>{{ '::Training.TrainingBudgets.NoActiveBudgets' | abpLocalization }}</span>
+  @if (loadError()) {
+    <div class="message-banner error">
+      <span>!</span>
+      <p>{{ loadError() }}</p>
+      <button type="button" (click)="loadData()">{{ '::Training.TrainingBudgets.Retry' | abpLocalization }}</button>
     </div>
   }
 
-  <!-- ════════════════════════════════════════
-       INFO BANNER
-       ════════════════════════════════════════ -->
-  <div class="info-banner-modern">
-    <span class="info-icon">ℹ️</span>
-    {{ '::Training.TrainingBudgets.DetailedTableInfo' | abpLocalization }}
-  </div>
+  <section class="money-summary" aria-label="ملخص الميزانية">
+    <article class="summary-card allocated">
+      <div class="summary-icon">▦</div>
+      <div>
+        <span>{{ '::Training.TrainingBudgets.Summary.Allocated' | abpLocalization }}</span>
+        <strong>{{ formatCurrency(totalAllocated()) }}</strong>
+        <small>{{ '::Training.Currency.OMR' | abpLocalization }}</small>
+      </div>
+    </article>
 
-  <!-- ════════════════════════════════════════
-       DATA TABLE
-       ════════════════════════════════════════ -->
-  <div class="table-card">
-    <div class="table-scroll-wrap">
-      <table class="data-table">
+    <article class="summary-card net" [class.danger]="totalRemaining() < 0">
+      <div class="summary-icon">↘</div>
+      <div>
+        <span>{{ '::Training.TrainingBudgets.Summary.NetSpent' | abpLocalization }}</span>
+        <strong>{{ formatCurrency(totalNetSpent()) }}</strong>
+        <small>
+          {{ '::Training.TrainingBudgets.Summary.Gross' | abpLocalization }}:
+          {{ formatCurrency(totalGrossSpent()) }}
+        </small>
+      </div>
+    </article>
+
+    <article class="summary-card available" [class.danger]="totalRemaining() < 0">
+      <div class="summary-icon">✓</div>
+      <div>
+        <span>{{ '::Training.TrainingBudgets.Summary.Available' | abpLocalization }}</span>
+        <strong>{{ formatCurrency(totalRemaining()) }}</strong>
+        <small>{{ '::Training.Currency.OMR' | abpLocalization }}</small>
+      </div>
+    </article>
+
+    <article class="summary-card recovery">
+      <div class="summary-icon">⟳</div>
+      <div>
+        <span>{{ '::Training.TrainingBudgets.Summary.PendingRecovery' | abpLocalization }}</span>
+        <strong>{{ formatCurrency(totalPendingRecovery()) }}</strong>
+        <small>{{ '::Training.TrainingBudgets.Summary.NotAvailableYet' | abpLocalization }}</small>
+      </div>
+    </article>
+
+    <article class="summary-card recovered">
+      <div class="summary-icon">✓</div>
+      <div>
+        <span>{{ '::Training.TrainingBudgets.Summary.Recovered' | abpLocalization }}</span>
+        <strong>{{ formatCurrency(totalRecovered()) }}</strong>
+        <small>{{ '::Training.TrainingBudgets.Summary.ReturnedToBudget' | abpLocalization }}</small>
+      </div>
+    </article>
+  </section>
+
+  @if (attentionCount() > 0) {
+    <div class="message-banner warning">
+      <span>!</span>
+      <div>
+        <strong>{{ '::Training.TrainingBudgets.AttentionTitle' | abpLocalization }}</strong>
+        <p>
+          {{ textWithCount('::Training.TrainingBudgets.AttentionText', attentionCount()) }}
+        </p>
+      </div>
+      <button type="button" (click)="setFilter('attention')">
+        {{ '::Training.TrainingBudgets.ShowAttention' | abpLocalization }}
+      </button>
+    </div>
+  }
+
+  <section class="budget-register">
+    <header class="register-header">
+      <div>
+        <h2>{{ '::Training.TrainingBudgets.RegisterTitle' | abpLocalization }}</h2>
+        <p>{{ '::Training.TrainingBudgets.RegisterDescription' | abpLocalization }}</p>
+      </div>
+      <div class="register-tools">
+        <div class="search-box">
+          <span>⌕</span>
+          <input
+            type="search"
+            [value]="searchText()"
+            (input)="onSearchInput($event)"
+            [placeholder]="'::Training.TrainingBudgets.SearchPlaceholder' | abpLocalization"
+          />
+        </div>
+        <div class="filter-pills">
+          <button
+            type="button"
+            [class.active]="activeFilter() === 'all'"
+            (click)="setFilter('all')"
+          >
+            {{ '::Training.TrainingBudgets.Filter.All' | abpLocalization }}
+          </button>
+          <button
+            type="button"
+            [class.active]="activeFilter() === 'attention'"
+            (click)="setFilter('attention')"
+          >
+            {{ '::Training.TrainingBudgets.Filter.Attention' | abpLocalization }}
+          </button>
+          <button
+            type="button"
+            [class.active]="activeFilter() === 'recovery'"
+            (click)="setFilter('recovery')"
+          >
+            {{ '::Training.TrainingBudgets.Filter.Recovery' | abpLocalization }}
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="table-scroll">
+      <table class="budget-table">
         <thead>
           <tr>
-            <th class="th-name">{{ '::Training.TrainingBudgets.FinancialItem' | abpLocalization }}</th>
-            <th class="th-amount">{{ '::Training.TrainingBudgets.TotalAmount' | abpLocalization }}</th>
-            <th class="th-amount">{{ '::Training.TrainingBudgets.SpentAmount' | abpLocalization }}</th>
-            <th class="th-amount">{{ '::Training.Remaining' | abpLocalization }}</th>
-            <th class="th-amount">{{ '::Training.AmountToRecover' | abpLocalization }}</th>
-            <th class="th-threshold">{{ '::Training.AlertThreshold' | abpLocalization }}</th>
-            <th class="th-actions">{{ '::Training.Common.Actions' | abpLocalization }}</th>
+            <th class="item-column">{{ '::Training.TrainingBudgets.FinancialItem' | abpLocalization }}</th>
+            <th>{{ '::Training.TrainingBudgets.Column.Allocated' | abpLocalization }}</th>
+            <th>{{ '::Training.TrainingBudgets.Column.GrossSpent' | abpLocalization }}</th>
+            <th>{{ '::Training.TrainingBudgets.Column.Recovered' | abpLocalization }}</th>
+            <th>{{ '::Training.TrainingBudgets.Column.PendingRecovery' | abpLocalization }}</th>
+            <th>{{ '::Training.TrainingBudgets.Column.NetSpent' | abpLocalization }}</th>
+            <th>{{ '::Training.TrainingBudgets.Column.Available' | abpLocalization }}</th>
+            <th>{{ '::Training.TrainingBudgets.Column.Usage' | abpLocalization }}</th>
+            <th class="actions-column">{{ '::Training.Common.Actions' | abpLocalization }}</th>
           </tr>
         </thead>
 
         @if (isLoading()) {
           <tbody>
-            @for (_ of [1,2,3,4,5]; track $index) {
-              <tr class="skel-row"><td colspan="7"><div class="skel-line-long"></div></td></tr>
+            @for (_ of [1,2,3,4,5,6]; track $index) {
+              <tr class="skeleton-row">
+                <td colspan="9"><span></span></td>
+              </tr>
             }
           </tbody>
-        } @else if (visibleBudgets().length === 0) {
+        } @else if (filteredBudgets().length === 0) {
           <tbody>
             <tr>
-              <td colspan="7" class="empty-cell">
-                <div class="empty-hero">
-                  <div class="empty-hero-icon">📭</div>
-                  <div class="empty-hero-title">{{ '::Training.TrainingBudgets.NoBudgets' | abpLocalization }}</div>
-                  <div class="empty-hero-desc">{{ '::Training.BudgetAutoCalculated' | abpLocalization }}</div>
+              <td colspan="9">
+                <div class="empty-state">
+                  <div>▤</div>
+                  <strong>{{ '::Training.TrainingBudgets.NoMatchingBudgets' | abpLocalization }}</strong>
+                  <p>{{ '::Training.TrainingBudgets.NoMatchingBudgetsHint' | abpLocalization }}</p>
                 </div>
               </td>
             </tr>
           </tbody>
         } @else {
-          <tbody>
-            @for (budget of visibleBudgets(); track budget.id; let idx = $index) {
-              <tr class="data-row" [class.row-alert]="budget.isOverThreshold" [style.animation-delay.ms]="idx * 30">
-                <td class="td-name">
-                  <span class="budget-type-pill">{{ budget.financialItemNameAr }}</span>
-                  @if (budget.financialItemNameEn) {
-                    <div class="budget-name-en">{{ budget.financialItemNameEn }}</div>
-                  }
-                </td>
-                <td class="td-amount">
-                  <span class="amount-bold">{{ formatCurrency(budget.totalAmount!) }} {{ '::Training.Currency.OMR' | abpLocalization }}</span>
-                </td>
-                <td class="td-amount">
-                  <span class="amount-spent">{{ formatCurrency(budget.spentAmount!) }} {{ '::Training.Currency.OMR' | abpLocalization }}</span>
-                </td>
-                <td class="td-amount">
-                  <span class="amount-remaining" [class.danger]="budget.isOverThreshold">
-                    {{ formatCurrency(budget.remaining!) }} {{ '::Training.Currency.OMR' | abpLocalization }}
-                  </span>
-                </td>
-                <td class="td-amount">
-                  <span class="amount-recover">{{ formatCurrency(budget.amountToRecoverOMR!) }} {{ '::Training.Currency.OMR' | abpLocalization }}</span>
-                </td>
-                <td class="td-threshold">
-                  <span class="threshold-badge" [class.threshold-alert]="budget.isOverThreshold">
-                    {{ budget.alertThreshold }}%
-                  </span>
-                </td>
-                <td class="td-actions">
-                  <div class="actions-group">
-                    <button
-                      class="action-btn action-edit"
-                      (click)="onEditThreshold(budget)"
-                      [title]="'::Training.EditThreshold' | abpLocalization"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                    </button>
+          @for (budget of filteredBudgets(); track trackBudget($index, budget)) {
+            <tbody class="budget-group" [class.expanded]="isExpanded(budget.financialItemId)">
+              <tr
+                class="budget-row"
+                [class.over-budget]="budget.isOverBudget"
+                [class.warning-row]="budget.isOverThreshold && !budget.isOverBudget"
+              >
+                <td class="item-cell">
+                  <button
+                    type="button"
+                    class="expand-button"
+                    (click)="toggleDetails(budget.financialItemId)"
+                    [attr.aria-expanded]="isExpanded(budget.financialItemId)"
+                  >
+                    <span>{{ isExpanded(budget.financialItemId) ? '−' : '+' }}</span>
+                  </button>
+                  <div class="item-copy">
+                    <strong>{{ budget.financialItemNameAr }}</strong>
+                    <div class="item-meta">
+                      <span>{{ itemTypeLabel(budget.financialItemType) }}</span>
+                      @if (budget.budgetCategoryNameAr) {
+                        <span>{{ budget.budgetCategoryNameAr }}</span>
+                      }
+                      @if (budget.financialItemVoteCode) {
+                        <code>{{ budget.financialItemVoteCode }}</code>
+                      }
+                    </div>
                   </div>
                 </td>
+                <td><span class="money neutral">{{ formatCurrency(budget.allocatedAmountOMR) }}</span></td>
+                <td><span class="money spent">{{ formatCurrency(budget.grossSpentAmountOMR) }}</span></td>
+                <td><span class="money positive">{{ formatCurrency(budget.recoveredAmountOMR) }}</span></td>
+                <td>
+                  <span class="money pending" [class.has-value]="(budget.amountToRecoverOMR ?? 0) > 0">
+                    {{ formatCurrency(budget.amountToRecoverOMR) }}
+                  </span>
+                </td>
+                <td><span class="money strong">{{ formatCurrency(budget.netSpentAmountOMR) }}</span></td>
+                <td>
+                  <span class="money available-value" [class.negative]="(budget.remaining ?? 0) < 0">
+                    {{ formatCurrency(budget.remaining) }}
+                  </span>
+                </td>
+                <td class="usage-cell">
+                  <div class="usage-top">
+                    <span [class.danger]="budget.isOverThreshold">{{ budget.spentPercent ?? 0 }}%</span>
+                    @if (budget.isOverBudget) {
+                      <small class="status-tag danger">{{ '::Training.TrainingBudgets.OverBudget' | abpLocalization }}</small>
+                    } @else if (budget.isOverThreshold) {
+                      <small class="status-tag warning">{{ '::Training.TrainingBudgets.NearLimit' | abpLocalization }}</small>
+                    }
+                  </div>
+                  <div class="usage-track">
+                    <span
+                      [style.width.%]="progressWidth(budget)"
+                      [class.danger]="budget.isOverBudget"
+                      [class.warning]="budget.isOverThreshold && !budget.isOverBudget"
+                    ></span>
+                  </div>
+                </td>
+                <td class="row-actions">
+                  <button
+                    type="button"
+                    class="threshold-button"
+                    (click)="onEditThreshold(budget)"
+                    [title]="'::Training.EditThreshold' | abpLocalization"
+                  >
+                    {{ budget.alertThreshold }}%
+                  </button>
+                </td>
               </tr>
-            }
-          </tbody>
+
+              @if (isExpanded(budget.financialItemId)) {
+                <tr class="details-row">
+                  <td colspan="9">
+                    <div class="details-panel">
+                      <header>
+                        <div>
+                          <strong>{{ '::Training.TrainingBudgets.Details.Title' | abpLocalization }}</strong>
+                          <span>
+                            {{ textWithCount('::Training.TrainingBudgets.Details.Count', budget.activities?.length ?? 0) }}
+                          </span>
+                        </div>
+                        <span class="threshold-note">
+                          {{ '::Training.AlertThreshold' | abpLocalization }}:
+                          {{ budget.alertThreshold }}%
+                        </span>
+                      </header>
+
+                      @if (!budget.activities?.length) {
+                        <div class="no-activities">
+                          {{ '::Training.TrainingBudgets.Details.Empty' | abpLocalization }}
+                        </div>
+                      } @else {
+                        <div class="activities-scroll">
+                          <table class="activities-table">
+                            <thead>
+                              <tr>
+                                <th>{{ '::Training.TrainingBudgets.Details.Activity' | abpLocalization }}</th>
+                                <th>{{ '::Training.TrainingBudgets.Details.Course' | abpLocalization }}</th>
+                                <th>{{ '::Training.TrainingBudgets.Details.Date' | abpLocalization }}</th>
+                                <th>{{ '::Training.TrainingBudgets.Column.Allocated' | abpLocalization }}</th>
+                                <th>{{ '::Training.TrainingBudgets.Column.GrossSpent' | abpLocalization }}</th>
+                                <th>{{ '::Training.TrainingBudgets.Column.Recovered' | abpLocalization }}</th>
+                                <th>{{ '::Training.TrainingBudgets.Column.PendingRecovery' | abpLocalization }}</th>
+                                <th>{{ '::Training.TrainingBudgets.Details.Status' | abpLocalization }}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              @for (activity of budget.activities; track trackActivity($index, activity)) {
+                                <tr>
+                                  <td>
+                                    <span class="activity-kind" [class]="activityClass(activity)">
+                                      {{ activityLabel(activity) }}
+                                    </span>
+                                  </td>
+                                  <td>
+                                    <strong class="activity-course">{{ activity.courseNameAr || '—' }}</strong>
+                                    @if (activity.reference) {
+                                      <small>{{ '::Training.TrainingBudgets.Details.Reference' | abpLocalization }}: {{ activity.reference }}</small>
+                                    }
+                                  </td>
+                                  <td>{{ formatDate(activity.activityDate) }}</td>
+                                  <td>{{ formatCurrency(activity.allocatedAmountOMR) }}</td>
+                                  <td>{{ formatCurrency(activity.spentAmountOMR) }}</td>
+                                  <td class="positive-text">{{ formatCurrency(activity.recoveredAmountOMR) }}</td>
+                                  <td class="pending-text">{{ formatCurrency(activity.pendingRecoveryAmountOMR) }}</td>
+                                  <td>
+                                    <span class="activity-status" [class.settled]="activity.statusCode === 'Settled'">
+                                      {{ activityStatusLabel(activity) }}
+                                    </span>
+                                  </td>
+                                </tr>
+                              }
+                            </tbody>
+                          </table>
+                        </div>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          }
         }
       </table>
     </div>
-  </div>
+
+    <footer class="register-footer">
+      <p>{{ '::Training.TrainingBudgets.FooterFormula' | abpLocalization }}</p>
+      <span>{{ filteredBudgets().length }} / {{ budgets().length }}</span>
+    </footer>
+  </section>
 </div>
 
-<!-- ════════════════════════════════════════
-     EDIT THRESHOLD MODAL
-     ════════════════════════════════════════ -->
 @if (isThresholdDialogVisible()) {
-  <div class="modal-backdrop-modern" (click)="$event.target === $event.currentTarget ? isThresholdDialogVisible.set(false) : null">
-    <div class="modal-modern modal-sm">
-      <div class="modal-modern-header header-edit">
-        <div class="modal-modern-header-content">
-          <div class="modal-header-icon">✏️</div>
+  <div
+    class="modal-backdrop"
+    (click)="$event.target === $event.currentTarget ? isThresholdDialogVisible.set(false) : null"
+  >
+    <div class="threshold-modal" role="dialog" aria-modal="true">
+      <header>
+        <div>
+          <span class="modal-icon">%</span>
           <div>
-            <div class="modal-modern-title">{{ '::Training.EditThreshold' | abpLocalization }}</div>
-            <div class="modal-modern-subtitle">{{ '::Training.AlertThreshold' | abpLocalization }}</div>
+            <h3>{{ '::Training.EditThreshold' | abpLocalization }}</h3>
+            <p>{{ editingFinancialItemName() }}</p>
           </div>
         </div>
-        <button class="modal-modern-close" (click)="isThresholdDialogVisible.set(false)">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        <button type="button" (click)="isThresholdDialogVisible.set(false)">×</button>
+      </header>
+      <div class="modal-body">
+        <label>
+          <span>{{ '::Training.AlertThreshold' | abpLocalization }}</span>
+          <div class="threshold-input">
+            <input
+              type="number"
+              [value]="thresholdValue()"
+              (input)="thresholdValue.set(+$any($event.target).value)"
+              min="0"
+              max="100"
+              step="1"
+            />
+            <span>%</span>
+          </div>
+        </label>
+        <p>{{ '::Training.TrainingBudgets.ThresholdHint' | abpLocalization }}</p>
+      </div>
+      <footer>
+        <button type="button" class="cancel" (click)="isThresholdDialogVisible.set(false)">
+          {{ '::Training.Common.Cancel' | abpLocalization }}
         </button>
-      </div>
-
-      <div class="modal-modern-body">
-        <div class="form-group">
-          <label class="form-label">{{ '::Training.AlertThreshold' | abpLocalization }} (%)</label>
-          <input
-            type="number"
-            class="form-input form-input-modern"
-            [value]="thresholdValue()"
-            (input)="thresholdValue.set(+$any($event.target).value)"
-            min="0"
-            max="100"
-            step="1"
-          />
-          <span class="form-hint">{{ '::Training.TrainingBudgets.ThresholdHint' | abpLocalization }}</span>
-        </div>
-      </div>
-
-      <div class="modal-modern-footer">
-        <button class="btn btn-ghost" (click)="isThresholdDialogVisible.set(false)">{{ '::Training.Common.Cancel' | abpLocalization }}</button>
-        <button class="btn btn-primary btn-glow" (click)="onSaveThreshold()" [disabled]="isSaving()">
-          <span>{{ '::Training.Common.Save' | abpLocalization }}</span>
+        <button
+          type="button"
+          class="save"
+          (click)="onSaveThreshold()"
+          [disabled]="isSaving() || thresholdValue() < 0 || thresholdValue() > 100"
+        >
+          {{ '::Training.Common.Save' | abpLocalization }}
         </button>
-      </div>
+      </footer>
     </div>
   </div>
 }

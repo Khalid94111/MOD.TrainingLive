@@ -211,12 +211,7 @@ export class TravelAllowancePaymentsComponent implements OnInit {
     try {
       const input: TravelAllowancePaymentGetListInput = { maxResultCount: 1000 };
       const result = await firstValueFrom(this.paymentService.getList(input));
-      const items = result.items ?? [];
-      this.rows.set(items);
-      if (this.expandedGroups().size === 0 && items.length > 0) {
-        const firstRow = items.find(row => !!row.sessionId) ?? items[0];
-        this.expandedGroups.set(new Set([this.groupKey(firstRow)]));
-      }
+      this.rows.set(result.items ?? []);
     } catch (error) {
       this.loadError.set(this.extractError(error));
     } finally {

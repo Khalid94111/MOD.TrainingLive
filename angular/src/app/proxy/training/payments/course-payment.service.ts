@@ -1,4 +1,4 @@
-import type { CoursePaymentConfirmResultDto, CoursePaymentDto, CoursePaymentGetListInput, CreateUpdateCoursePaymentDto } from './dtos/models';
+import type { CoursePaymentDto, CoursePaymentGetListInput, CreateUpdateCoursePaymentDto } from './dtos/models';
 import { RestService, Rest } from '@abp/ng.core';
 import type { PagedResultDto } from '@abp/ng.core';
 import { Injectable, inject } from '@angular/core';
@@ -12,7 +12,7 @@ export class CoursePaymentService {
   
 
   confirm = (id: string, config?: Partial<Rest.Config>) =>
-    this.restService.request<any, CoursePaymentConfirmResultDto>({
+    this.restService.request<any, CoursePaymentDto>({
       method: 'POST',
       url: `/api/app/course-payment/${id}/confirm`,
     },

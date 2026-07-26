@@ -4,6 +4,7 @@ using MOD.Training.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Volo.Abp.EntityFrameworkCore;
 
@@ -12,9 +13,11 @@ using Volo.Abp.EntityFrameworkCore;
 namespace MOD.Training.Migrations
 {
     [DbContext(typeof(TrainingDbContext))]
-    partial class TrainingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260722181559_ReplaceBudgetReallocationsWithExpenseRecoveries")]
+    partial class ReplaceBudgetReallocationsWithExpenseRecoveries
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2020,6 +2023,20 @@ namespace MOD.Training.Migrations
                     b.Property<Guid?>("ReviewedById")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTime?>("SettledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("SettledById")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("SettlementNote")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("SettlementReference")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
                     b.Property<int>("Status")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
@@ -2091,11 +2108,6 @@ namespace MOD.Training.Migrations
                         .HasDefaultValue(false)
                         .HasColumnName("IsDeleted");
 
-                    b.Property<bool>("IsSettled")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
                     b.Property<DateTime?>("LastModificationTime")
                         .HasColumnType("datetime2")
                         .HasColumnName("LastModificationTime");
@@ -2103,20 +2115,6 @@ namespace MOD.Training.Migrations
                     b.Property<Guid?>("LastModifierId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("LastModifierId");
-
-                    b.Property<DateTime?>("SettledAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("SettledById")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("SettlementNote")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<string>("SettlementReference")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
 
                     b.Property<Guid?>("TenantId")
                         .HasColumnType("uniqueidentifier")

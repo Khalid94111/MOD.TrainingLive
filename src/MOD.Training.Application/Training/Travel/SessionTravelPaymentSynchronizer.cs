@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using MOD.Training.Training.CasualCourses;
 using MOD.Training.Training.Enums;
 using MOD.Training.Training.Hr;
+using MOD.Training.Training.Finance;
 using MOD.Training.Training.Payments;
 using MOD.Training.Training.Plans;
 using MOD.Training.Training.Travel.Integration;
@@ -25,8 +26,12 @@ public class SessionTravelPaymentSynchronizer(
     IRepository<TravelAllowancePayment, Guid> paymentRepo,
     IRepository<SessionNomination, Guid> nominationRepo,
     IRepository<CasualCourseNomination, Guid> casualNominationRepo,
+    IRepository<CasualCourse, Guid> casualCourseRepo,
     IRepository<Employee, Guid> employeeRepo,
-    IRepository<Rank, Guid> rankRepo)
+    IRepository<Rank, Guid> rankRepo,
+    IRepository<FinancialItem, Guid> financialItemRepo,
+    IRepository<TrainingExpenseRecovery, Guid> recoveryRepo,
+    IRepository<TrainingExpenseRecoveryItem, Guid> recoveryItemRepo)
     : ApplicationService
 {
     public async Task SyncAsync(Guid sessionId, TrainingTravelGatewayResult result)
@@ -63,6 +68,141 @@ public class SessionTravelPaymentSynchronizer(
             casualCourseId,
             nominations.Select(x => new NominationLink(x.Id, x.EmployeeId)).ToList(),
             result);
+
+        await SyncExpenseRecoveryAsync(casualCourseId, result);
+    }
+
+    private async Task SyncExpenseRecoveryAsync(
+        Guid casualCourseId,
+        TrainingTravelGatewayResult result)
+    {
+        var course = await casualCourseRepo.GetAsync(casualCourseId);
+        if (course.FundingScenario != FundingScenario.FundingSourceCoversCourse
+            || !result.TravelRequestId.HasValue)
+        {
+            return;
+        }
+
+        var importedItems = result.Employees
+            .SelectMany(x => x.Payments)
+            .Where(x => x.Amount != 0m && !string.IsNullOrWhiteSpace(x.FundingSourceVoteCode))
+            .Select(x => new
+            {
+                TypeCode = NormalizeExpenseType(x.TypeCode),
+                VoteCode = x.FundingSourceVoteCode.Trim(),
+                x.Amount
+            })
+            .GroupBy(x => new
+            {
+                TypeCode = x.TypeCode.ToUpperInvariant(),
+                VoteCode = x.VoteCode.ToUpperInvariant()
+            })
+            .Select(group => new ImportedExpenseItem(
+                group.First().TypeCode,
+                group.First().VoteCode,
+                group.Sum(x => x.Amount)))
+            .Where(x => x.AmountOMR != 0m)
+            .OrderBy(x => x.TypeCode)
+            .ToList();
+
+        if (importedItems.Count == 0)
+        {
+            return;
+        }
+
+        var recoveryQuery = await recoveryRepo.WithDetailsAsync(x => x.Items);
+        var recovery = await AsyncExecuter.FirstOrDefaultAsync(recoveryQuery.Where(x =>
+            x.CasualCourseId == casualCourseId
+            && x.TravelRequestId == result.TravelRequestId.Value));
+
+        if (recovery?.Status is TrainingExpenseRecoveryStatus.PartiallySettled
+            or TrainingExpenseRecoveryStatus.Settled)
+        {
+            return;
+        }
+
+        var financialItems = await financialItemRepo.GetListAsync(x => x.IsActive);
+        var financialItemsByVoteCode = financialItems
+            .Where(x => !string.IsNullOrWhiteSpace(x.VoteCode))
+            .GroupBy(x => x.VoteCode.Trim(), StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(x => x.Key, x => x.Last(), StringComparer.OrdinalIgnoreCase);
+
+        var valuesChanged = recovery != null && !ExpenseItemsMatch(recovery.Items, importedItems);
+        if (recovery != null && !valuesChanged)
+        {
+            recovery.ExpenseDate = result.CompletedAt ?? recovery.ExpenseDate;
+            recovery.Currency = string.IsNullOrWhiteSpace(result.Currency) ? recovery.Currency : result.Currency.Trim();
+            recovery.TotalAmountOMR = importedItems.Sum(x => x.AmountOMR);
+            return;
+        }
+
+        if (recovery == null)
+        {
+            recovery = new TrainingExpenseRecovery(GuidGenerator.Create())
+            {
+                TenantId = CurrentTenant.Id,
+                CasualCourseId = casualCourseId,
+                TravelRequestId = result.TravelRequestId.Value
+            };
+            await recoveryRepo.InsertAsync(recovery);
+        }
+        else
+        {
+            foreach (var oldItem in recovery.Items.ToList())
+            {
+                await recoveryItemRepo.DeleteAsync(oldItem);
+            }
+
+            if (valuesChanged && recovery.Status == TrainingExpenseRecoveryStatus.Reviewed)
+            {
+                recovery.Status = TrainingExpenseRecoveryStatus.PendingReview;
+                recovery.ReviewedAt = null;
+                recovery.ReviewedById = null;
+                recovery.ReviewNote = null;
+            }
+        }
+
+        recovery.ExpenseDate = result.CompletedAt ?? Clock.Now;
+        recovery.Currency = string.IsNullOrWhiteSpace(result.Currency) ? "OMR" : result.Currency.Trim();
+        recovery.TotalAmountOMR = importedItems.Sum(x => x.AmountOMR);
+
+        foreach (var importedItem in importedItems)
+        {
+            var item = new TrainingExpenseRecoveryItem(GuidGenerator.Create())
+            {
+                TenantId = CurrentTenant.Id,
+                TrainingExpenseRecoveryId = recovery.Id,
+                FinancialItemId = financialItemsByVoteCode.TryGetValue(importedItem.VoteCode, out var financialItem)
+                    ? financialItem.Id
+                    : null,
+                ExpenseTypeCode = importedItem.TypeCode,
+                FundingSourceVoteCode = importedItem.VoteCode,
+                AmountOMR = importedItem.AmountOMR
+            };
+            await recoveryItemRepo.InsertAsync(item);
+        }
+
+    }
+
+    private static string NormalizeExpenseType(string typeCode)
+        => string.Equals(typeCode, "Deduction", StringComparison.OrdinalIgnoreCase)
+            ? "DailyAllowance"
+            : typeCode.Trim();
+
+    private static bool ExpenseItemsMatch(
+        IEnumerable<TrainingExpenseRecoveryItem> existing,
+        IReadOnlyCollection<ImportedExpenseItem> imported)
+    {
+        var existingValues = existing.ToDictionary(
+            x => $"{x.ExpenseTypeCode}|{x.FundingSourceVoteCode}",
+            x => x.AmountOMR,
+            StringComparer.OrdinalIgnoreCase);
+        var importedValues = imported.ToDictionary(
+            x => $"{x.TypeCode}|{x.VoteCode}",
+            x => x.AmountOMR,
+            StringComparer.OrdinalIgnoreCase);
+        return existingValues.Count == importedValues.Count
+            && existingValues.All(x => importedValues.TryGetValue(x.Key, out var amount) && amount == x.Value);
     }
 
     private async Task SyncAsync(
@@ -164,4 +304,5 @@ public class SessionTravelPaymentSynchronizer(
     }
 
     private sealed record NominationLink(Guid Id, Guid EmployeeId);
+    private sealed record ImportedExpenseItem(string TypeCode, string VoteCode, decimal AmountOMR);
 }

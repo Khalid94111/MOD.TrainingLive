@@ -12,6 +12,8 @@ using MOD.Training.Training.TenantCourses.Dtos;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
+using Volo.Abp.Data;
+using Volo.Abp.Domain.Entities;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Users;
 
@@ -21,6 +23,7 @@ namespace MOD.Training.Training.TenantCourses;
 public class TenantCourseAppService(
     IRepository<TenantCourse, Guid> tenantCourseRepo,
     IRepository<CourseCatalog, Guid> catalogRepo,
+    IDataFilter<ISoftDelete> softDeleteFilter,
     IMapper mapper)
     : ApplicationService, ITenantCourseAppService
 {
@@ -65,16 +68,28 @@ public class TenantCourseAppService(
 
         foreach (var catalogCourseId in input.CatalogCourseIds)
         {
-            // Explicit tenant scoping — mirrors the unique index (TenantId, CatalogCourseId)
-            // instead of relying solely on ABP's implicit multi-tenancy filter.
-            if (await tenantCourseRepo.AnyAsync(x =>
-                    x.TenantId == currentTenantId && x.CatalogCourseId == catalogCourseId))
+            TenantCourse? existing;
+            using (softDeleteFilter.Disable())
+            {
+                existing = await tenantCourseRepo.FindAsync(x =>
+                    x.TenantId == currentTenantId && x.CatalogCourseId == catalogCourseId);
+            }
+
+            if (existing is { IsDeleted: false })
                 throw new BusinessException("Training:TenantCourse:AlreadyAdded")
                     .WithData("catalogCourseId", catalogCourseId);
 
             var catalogCourse = await catalogRepo.GetAsync(catalogCourseId);
             if (!catalogCourse.IsActive)
                 throw new BusinessException("Training:TenantCourse:CatalogCourseInactive");
+
+            if (existing != null)
+            {
+                RestoreFromCatalog(existing, catalogCourse);
+                await tenantCourseRepo.UpdateAsync(existing, autoSave: true);
+                result.Add(await GetAsync(existing.Id));
+                continue;
+            }
 
             var tenantCourse = new TenantCourse
             {
@@ -158,6 +173,21 @@ public class TenantCourseAppService(
         dto.CatalogCourseCategory = entity.CatalogCourse?.Category;
         dto.AddedAtFormatted = entity.AddedAt.ToString("yyyy-MM-dd HH:mm", global::System.Globalization.CultureInfo.InvariantCulture);
         return dto;
+    }
+
+    private void RestoreFromCatalog(TenantCourse tenantCourse, CourseCatalog catalogCourse)
+    {
+        tenantCourse.IsDeleted = false;
+        tenantCourse.DeleterId = null;
+        tenantCourse.DeletionTime = null;
+        tenantCourse.IsActive = true;
+        tenantCourse.AddedById = CurrentUser.GetId();
+        tenantCourse.AddedAt = Clock.Now;
+        tenantCourse.ResultType = catalogCourse.ResultType;
+        tenantCourse.RequiresEvaluation = catalogCourse.RequiresEvaluation;
+        tenantCourse.RequiresProviderEvaluation = catalogCourse.RequiresProviderEvaluation;
+        tenantCourse.HasCertificate = catalogCourse.HasCertificate;
+        tenantCourse.EvaluationBlocksCertificate = catalogCourse.EvaluationBlocksCertificate;
     }
 
     private static IQueryable<TenantCourse> ApplyFilters(

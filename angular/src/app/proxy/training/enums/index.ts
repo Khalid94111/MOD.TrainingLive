@@ -20,7 +20,7 @@ export * from './preferred-quarter.enum';
 export * from './pricing-type.enum';
 export * from './proposal-status.enum';
 export * from './provider-scope.enum';
-export * from './reallocation-status.enum';
+export * from './training-expense-recovery-status.enum';
 export * from './result-type.enum';
 export * from './session-execution-stage.enum';
 export * from './session-status.enum';

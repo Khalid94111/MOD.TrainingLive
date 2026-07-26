@@ -189,14 +189,10 @@ public class CoursePaymentAppService(
             contentType: PdfContentType);
     }
 
-    /// <summary>
-    /// Atomically: flips Status → Confirmed AND generates BudgetReallocations for casual courses
-    /// (Scenario 2/3). Wrapped in a transactional UnitOfWork — if the generator throws, the
-    /// status update rolls back. Idempotency is guarded by the generator's AnyAsync check.
-    /// </summary>
+    /// <summary>Confirms the course-fee invoice. Travel expenses are imported separately from Travel.</summary>
     [Authorize(TrainingPaymentsPermissions.CoursePayments.Confirm)]
     [UnitOfWork(isTransactional: true)]
-    public async Task<CoursePaymentConfirmResultDto> ConfirmAsync(Guid id)
+    public async Task<CoursePaymentDto> ConfirmAsync(Guid id)
     {
         var entity = await repository.GetAsync(id);
 
@@ -217,12 +213,7 @@ public class CoursePaymentAppService(
 
         await repository.UpdateAsync(entity, autoSave: true);
 
-        var dto = await BuildDtoAsync(entity);
-        return new CoursePaymentConfirmResultDto
-        {
-            Payment = dto,
-            GeneratedReallocationsCount = 0
-        };
+        return await BuildDtoAsync(entity);
     }
 
     // ── Validation helpers ──────────────────────────────────────────────

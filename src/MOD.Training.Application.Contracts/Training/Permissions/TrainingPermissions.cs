@@ -275,7 +275,7 @@ public static class TrainingExecutionPermissions
 }
 
 /// <summary>
-/// Phase 4B-β — payments + auto-reallocation permissions. Separate top-level group from
+/// Payments and Travel-expense settlement permissions. Separate top-level group from
 /// <c>TrainingPermissions</c> and <c>TrainingExecutionPermissions</c> so role grants (Finance,
 /// Staff, TD) stay narrowly scoped and the admin permissions UI keeps the modules visually distinct.
 /// </summary>
@@ -303,6 +303,8 @@ public static class TrainingPaymentsPermissions
     {
         public const string Default       = GroupName + ".Reallocations";
         public const string View          = Default + ".View";
-        public const string MarkApproved  = Default + ".MarkApproved";
+        // Keep the existing policy value so current finance-role grants remain valid.
+        public const string Review        = Default + ".MarkApproved";
+        public const string MarkSettled   = Default + ".MarkSettled";
     }
 }

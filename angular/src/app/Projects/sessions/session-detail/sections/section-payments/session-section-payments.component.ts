@@ -274,7 +274,7 @@ export class SessionSectionPaymentsComponent {
     this.dialogSuccess.set(null);
     try {
       const result = await firstValueFrom(this.paymentService.confirm(payment.id));
-      if (result.payment) this.workingPayment.set(result.payment);
+      this.workingPayment.set(result);
       this.confirmRequested.set(false);
       this.dialogSuccess.set(this.l.t('::Training.Sessions.Detail.Section5.PaymentConfirmed'));
       this.refreshParent();

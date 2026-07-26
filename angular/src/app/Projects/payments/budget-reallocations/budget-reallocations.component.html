@@ -1,256 +1,310 @@
-<div class="page-container">
-  <div class="page-header">
+<div class="recovery-page">
+  <header class="recovery-hero">
+    <div class="hero-copy">
+      <span class="hero-icon"><i class="bi bi-receipt-cutoff"></i></span>
+      <div>
+        <span class="hero-eyebrow">{{ '::Training.Payments.ExpenseRecovery.Eyebrow' | abpLocalization }}</span>
+        <h1>{{ '::Training.Payments.ExpenseRecovery.Title' | abpLocalization }}</h1>
+        <p>{{ '::Training.Payments.ExpenseRecovery.Subtitle' | abpLocalization }}</p>
+      </div>
+    </div>
+    <button type="button" class="refresh-button" [disabled]="loading()" (click)="reload()"
+            [attr.title]="'::Training.Payments.ExpenseRecovery.Refresh' | abpLocalization">
+      <i class="bi bi-arrow-clockwise" [class.spin]="loading()"></i>
+    </button>
+  </header>
+
+  <section class="workflow-note">
+    <span><i class="bi bi-diagram-3"></i></span>
     <div>
-      <h2>{{ '::Training.Payments.Reallocation.Title' | abpLocalization }}</h2>
-      <p class="subtitle">{{ '::Training.Payments.Reallocation.Subtitle' | abpLocalization }}</p>
+      <strong>{{ '::Training.Payments.ExpenseRecovery.WorkflowTitle' | abpLocalization }}</strong>
+      <p>{{ '::Training.Payments.ExpenseRecovery.WorkflowText' | abpLocalization }}</p>
     </div>
-  </div>
+  </section>
 
-  <!-- Read-only banner explaining auto-generation -->
-  <div class="info-banner">
-    <span class="info-icon">ℹ️</span>
-    <div [innerHTML]="'::Training.Payments.Reallocation.AutoBanner' | abpLocalization"></div>
-  </div>
+  <section class="summary-grid">
+    <article class="summary-card pending">
+      <span class="summary-icon"><i class="bi bi-exclamation-circle"></i></span>
+      <div>
+        <small>{{ '::Training.Payments.ExpenseRecovery.PendingSummary' | abpLocalization }}</small>
+        <strong>{{ formatOMR(pendingTotal()) }} <b>ر.ع</b></strong>
+        <span>{{ pendingRecords().length }} {{ '::Training.Payments.ExpenseRecovery.RecordUnit' | abpLocalization }}</span>
+      </div>
+    </article>
+    <article class="summary-card reviewed">
+      <span class="summary-icon"><i class="bi bi-clipboard2-check"></i></span>
+      <div>
+        <small>{{ '::Training.Payments.ExpenseRecovery.ReviewedSummary' | abpLocalization }}</small>
+        <strong>{{ formatOMR(reviewedTotal()) }} <b>ر.ع</b></strong>
+        <span>{{ reviewedRecords().length }} {{ '::Training.Payments.ExpenseRecovery.RecordUnit' | abpLocalization }}</span>
+      </div>
+    </article>
+    <article class="summary-card settled">
+      <span class="summary-icon"><i class="bi bi-check2-circle"></i></span>
+      <div>
+        <small>{{ '::Training.Payments.ExpenseRecovery.SettledSummary' | abpLocalization }}</small>
+        <strong>{{ formatOMR(settledTotal()) }} <b>ر.ع</b></strong>
+        <span>{{ settledItemsCount() }} {{ '::Training.Payments.ExpenseRecovery.ItemUnit' | abpLocalization }}</span>
+      </div>
+    </article>
+  </section>
 
-  <!-- Stats -->
-  <div class="stats-grid">
-    <div class="stat-card stat-pending">
-      <div class="stat-label">{{ '::Training.Payments.Reallocation.Stat.Pending' | abpLocalization }}</div>
-      <div class="stat-value">{{ pendingCount() }}</div>
-      <div class="stat-sub">{{ formatOMR(pendingTotalOMR()) }} ر.ع</div>
-    </div>
-    <div class="stat-card stat-approved">
-      <div class="stat-label">{{ '::Training.Payments.Reallocation.Stat.Approved' | abpLocalization }}</div>
-      <div class="stat-value">{{ approvedCount() }}</div>
-      <div class="stat-sub">{{ formatOMR(approvedTotalOMR()) }} ر.ع</div>
-    </div>
-    <div class="stat-card stat-month">
-      <div class="stat-label">{{ '::Training.Payments.Reallocation.Stat.ThisMonth' | abpLocalization }}</div>
-      <div class="stat-value">{{ thisMonthCount() }}</div>
-      <div class="stat-sub">{{ formatOMR(thisMonthTotalOMR()) }} ر.ع</div>
-    </div>
-    <div class="stat-card stat-last">
-      <div class="stat-label">{{ '::Training.Payments.Reallocation.Stat.LastApproval' | abpLocalization }}</div>
-      <div class="stat-value-sm">{{ lastApprovalRelative() }}</div>
-      <div class="stat-sub">{{ lastApproval()?.approvedByName || '—' }}</div>
-    </div>
-  </div>
-
-  <!-- Filter bar -->
-  <div class="filter-bar">
-    <span class="filter-label">{{ '::Training.Payments.Filter' | abpLocalization }}:</span>
-    <dx-select-box
-      [items]="statusOptions"
-      displayExpr="text"
-      valueExpr="value"
-      [value]="filterStatus()"
-      [showClearButton]="true"
-      [placeholder]="'::Training.Payments.AllStatuses' | abpLocalization"
-      width="140"
-      (onValueChanged)="onStatusFilterChange($event.value)">
-    </dx-select-box>
-    <dx-select-box
-      [items]="allCourses()"
-      displayExpr="courseNameAr"
-      valueExpr="id"
-      [value]="filterCourseId()"
-      [searchEnabled]="true"
-      [showClearButton]="true"
-      [placeholder]="'::Training.Payments.AllCourses' | abpLocalization"
-      width="220"
-      (onValueChanged)="onCourseFilterChange($event.value)">
-    </dx-select-box>
-    <dx-select-box
-      [items]="financialItems()"
-      displayExpr="nameAr"
-      valueExpr="id"
-      [value]="filterFinancialItemId()"
-      [searchEnabled]="true"
-      [showClearButton]="true"
-      [placeholder]="'::Training.Payments.Reallocation.AllItems' | abpLocalization"
-      width="200"
-      (onValueChanged)="onItemFilterChange($event.value)">
-    </dx-select-box>
-    <dx-date-box
-      [value]="filterCreatedFrom()"
-      type="date"
-      displayFormat="yyyy-MM-dd"
-      [placeholder]="'::Training.Payments.Reallocation.DateFrom' | abpLocalization"
-      width="140"
-      (onValueChanged)="onCreatedFromChange($event.value)">
-    </dx-date-box>
-    <dx-date-box
-      [value]="filterCreatedTo()"
-      type="date"
-      displayFormat="yyyy-MM-dd"
-      [placeholder]="'::Training.Payments.Reallocation.DateTo' | abpLocalization"
-      width="140"
-      (onValueChanged)="onCreatedToChange($event.value)">
-    </dx-date-box>
-    <dx-text-box
-      [value]="filterVoteCode()"
-      [placeholder]="'::Training.Payments.Reallocation.SearchVoteCode' | abpLocalization"
-      width="200"
-      (onValueChanged)="onVoteCodeInput($event.value)">
-    </dx-text-box>
-    <dx-button [text]="'::Training.Payments.Clear' | abpLocalization" stylingMode="text" (onClick)="clearFilters()"></dx-button>
-    <span class="row-count">{{ '::Training.Payments.Reallocation.RowCount' | abpLocalization }}: {{ filteredRows().length }}</span>
-  </div>
-
-  <!-- Grid (10 columns including arrow) -->
-  <dx-data-grid
-    [dataSource]="filteredRows()"
-    [showBorders]="true"
-    [columnAutoWidth]="false"
-    [rowAlternationEnabled]="true"
-    keyExpr="id">
-
-    <dxi-column dataField="casualCourseNameAr"   [caption]="'::Training.Payments.Reallocation.Grid.Course'    | abpLocalization" [width]="200" cellTemplate="courseTpl"></dxi-column>
-    <dxi-column dataField="fundingScenario"      [caption]="'::Training.Payments.Reallocation.Grid.Scenario'  | abpLocalization" [width]="130" alignment="center" cellTemplate="scenarioTpl"></dxi-column>
-    <dxi-column dataField="fundingSourceVoteCode" [caption]="'::Training.Payments.Reallocation.Grid.From'     | abpLocalization" [width]="180" cellTemplate="fromTpl"></dxi-column>
-    <dxi-column                                  caption=""                  [width]="40" alignment="center" cellTemplate="arrowTpl" [allowSorting]="false"></dxi-column>
-    <dxi-column dataField="toFinancialItemNameAr" [caption]="'::Training.Payments.Reallocation.Grid.To'       | abpLocalization" [width]="180" cellTemplate="toTpl"></dxi-column>
-    <dxi-column dataField="amountOMR"            [caption]="'::Training.Payments.Reallocation.Grid.Amount'    | abpLocalization" [width]="130" alignment="end" cellTemplate="moneyTpl"></dxi-column>
-    <dxi-column dataField="status"               [caption]="'::Training.Payments.Reallocation.Grid.Status'    | abpLocalization" [width]="110" alignment="center" cellTemplate="statusTpl"></dxi-column>
-    <dxi-column dataField="creationTime"         [caption]="'::Training.Payments.Reallocation.Grid.Created'   | abpLocalization" [width]="140" cellTemplate="createdTpl"></dxi-column>
-    <dxi-column dataField="approvedByName"       [caption]="'::Training.Payments.Reallocation.Grid.Approver'  | abpLocalization" [width]="160" cellTemplate="approverTpl"></dxi-column>
-    <dxi-column                                  caption=""                  [width]="120" cellTemplate="actionsTpl" [allowSorting]="false"></dxi-column>
-
-    <div *dxTemplate="let cell of 'courseTpl'">
-      <div class="course-name">{{ cell.data.casualCourseNameAr || '—' }}</div>
-      <div class="muted">{{ '::Training.Payments.Reallocation.CasualCourseLabel' | abpLocalization }}</div>
-    </div>
-
-    <div *dxTemplate="let cell of 'scenarioTpl'">
-      <span [class]="scenarioPillCss(cell.data.fundingScenario)">{{ scenarioLabel(cell.data.fundingScenario) }}</span>
-    </div>
-
-    <div *dxTemplate="let cell of 'fromTpl'">
-      <code class="vote-code">{{ cell.data.fundingSourceVoteCode || '—' }}</code>
-      @if (cell.data.fundingSourceName) {
-        <div class="muted">{{ cell.data.fundingSourceName }}</div>
-      }
-    </div>
-
-    <div *dxTemplate="let _ of 'arrowTpl'">
-      <span class="reallocation-arrow">→</span>
-    </div>
-
-    <div *dxTemplate="let cell of 'toTpl'">
-      <b>{{ cell.data.toFinancialItemNameAr || '—' }}</b>
-    </div>
-
-    <div *dxTemplate="let cell of 'moneyTpl'">
-      <span class="currency-omr">{{ formatOMR(cell.value) }}</span>
-    </div>
-
-    <div *dxTemplate="let cell of 'statusTpl'">
-      <span [class]="statusBadgeCss(cell.data.status)">{{ statusBadgeText(cell.data.status) }}</span>
-    </div>
-
-    <div *dxTemplate="let cell of 'createdTpl'">
-      <span>{{ (cell.value || '').substring(0, 10) || '—' }}</span>
-    </div>
-
-    <div *dxTemplate="let cell of 'approverTpl'">
-      @if (cell.data.approvedByName) {
-        <div class="approver-name">{{ cell.data.approvedByName }}</div>
-        @if (cell.data.approvedAt) {
-          <div class="muted">{{ (cell.data.approvedAt || '').substring(0, 10) }}</div>
+  <section class="recovery-workspace">
+    <div class="workspace-toolbar">
+      <label class="search-field">
+        <i class="bi bi-search"></i>
+        <input type="search" [value]="search()" (input)="onSearchInput($event)"
+               [placeholder]="'::Training.Payments.ExpenseRecovery.SearchPlaceholder' | abpLocalization" />
+        @if (search()) {
+          <button type="button" (click)="clearSearch()" aria-label="Clear"><i class="bi bi-x-lg"></i></button>
         }
-      } @else {
-        <span class="muted">—</span>
-      }
+      </label>
+      <span class="record-count">
+        {{ filteredRecords().length }} {{ '::Training.Payments.ExpenseRecovery.RecordUnit' | abpLocalization }}
+      </span>
     </div>
 
-    <div *dxTemplate="let cell of 'actionsTpl'">
-      @if (cell.data.status === ReallocationStatus.Pending && canMarkApproved()) {
-        <dx-button
-          [text]="'::Training.Payments.Reallocation.ApproveButton' | abpLocalization"
-          type="success"
-          stylingMode="contained"
-          (onClick)="onApprove(cell.data)">
-        </dx-button>
-      } @else {
-        <dx-button icon="eyeopen" stylingMode="text" [hint]="'::Training.Payments.View' | abpLocalization" (onClick)="onApprove(cell.data)" [disabled]="cell.data.status === ReallocationStatus.Approved"></dx-button>
-      }
-    </div>
-  </dx-data-grid>
+    @if (loadError()) {
+      <div class="load-error" role="alert">
+        <i class="bi bi-exclamation-triangle"></i>
+        <span>{{ loadError() }}</span>
+        <button type="button" (click)="reload()">{{ '::Training.Payments.ExpenseRecovery.Retry' | abpLocalization }}</button>
+      </div>
+    } @else if (loading()) {
+      <div class="loading-list">
+        @for (item of [1, 2, 3]; track item) { <div class="loading-card"><span></span><span></span><span></span></div> }
+      </div>
+    } @else if (filteredRecords().length === 0) {
+      <div class="empty-state">
+        <span><i class="bi bi-inbox"></i></span>
+        <h3>{{ '::Training.Payments.ExpenseRecovery.EmptyTitle' | abpLocalization }}</h3>
+        <p>{{ (search()
+          ? '::Training.Payments.ExpenseRecovery.EmptySearch'
+          : '::Training.Payments.ExpenseRecovery.EmptyText') | abpLocalization }}</p>
+      </div>
+    } @else {
+      <div class="recovery-records">
+        @for (record of filteredRecords(); track record.id) {
+          <article class="recovery-record" [class.expanded]="isExpanded(record.id)"
+                   [class.requires-action]="record.status !== Status.Settled">
+            <div class="record-head">
+              <button type="button" class="record-toggle" (click)="toggleRecord(record.id)"
+                      [attr.aria-expanded]="isExpanded(record.id)">
+                <span class="course-icon"><i class="bi bi-mortarboard"></i></span>
+                <span class="record-identity">
+                  <span class="record-labels">
+                    <span class="source-pill">{{ '::Training.Payments.ExpenseRecovery.CasualCourse' | abpLocalization }}</span>
+                    <span [class]="statusCss(record.status)">
+                      <i [class]="statusIcon(record.status)"></i>
+                      {{ statusKey(record.status) | abpLocalization }}
+                    </span>
+                  </span>
+                  <strong>{{ record.casualCourseNameAr || '—' }}</strong>
+                  <small>
+                    <span><i class="bi bi-calendar3"></i> {{ shortDate(record.expenseDate) }}</span>
+                    <span><i class="bi bi-list-check"></i> {{ record.items?.length || 0 }} {{ '::Training.Payments.ExpenseRecovery.ItemUnit' | abpLocalization }}</span>
+                  </small>
+                </span>
+                <span class="record-total">
+                  <small>{{ '::Training.Payments.ExpenseRecovery.Total' | abpLocalization }}</small>
+                  <strong>{{ formatOMR(record.totalAmountOMR) }} <b>ر.ع</b></strong>
+                  <span class="settlement-progress">
+                    {{ formatOMR(record.settledAmountOMR) }} {{ '::Training.Payments.ExpenseRecovery.SettledOfTotal' | abpLocalization }}
+                  </span>
+                </span>
+                <span class="expand-icon"><i class="bi bi-chevron-down"></i></span>
+              </button>
 
-  <!-- Toast -->
-  @if (toast().visible) {
-    <div class="toast-banner" [class.toast-success]="toast().kind === 'success'" [class.toast-error]="toast().kind === 'error'">
-      <span>{{ toast().text }}</span>
-      <button class="toast-close" (click)="dismissToast()">✕</button>
-    </div>
-  }
-
-  <!-- Approval dialog -->
-  <dx-popup
-    [visible]="dialog().visible"
-    [title]="'::Training.Payments.Reallocation.Dialog.Title' | abpLocalization"
-    [showCloseButton]="true"
-    [width]="640"
-    [height]="640"
-    [toolbarItems]="dialogToolbarItems"
-    (onHidden)="closeDialog()">
-
-    <div class="dialog-form">
-      @if (dialog().row; as row) {
-        <!-- Reallocation summary -->
-        <div class="summary-box">
-          <div class="summary-grid">
-            <div>
-              <div class="muted">{{ '::Training.Payments.Reallocation.Dialog.SummaryCourse' | abpLocalization }}</div>
-              <div class="summary-value">{{ row.casualCourseNameAr || '—' }}</div>
+              <div class="record-actions">
+                <button type="button" class="link-button travel" (click)="openTravelRequest(record)">
+                  <i class="bi bi-airplane"></i>
+                  {{ '::Training.Payments.ExpenseRecovery.OpenTravel' | abpLocalization }}
+                </button>
+                <button type="button" class="link-button" (click)="openCourse(record)">
+                  <i class="bi bi-box-arrow-up-left"></i>
+                  {{ '::Training.Payments.ExpenseRecovery.OpenCourse' | abpLocalization }}
+                </button>
+              </div>
             </div>
-            <div>
-              <div class="muted">{{ '::Training.Payments.Reallocation.Dialog.SummaryScenario' | abpLocalization }}</div>
-              <div><span [class]="scenarioPillCss(row.fundingScenario)">{{ scenarioLabel(row.fundingScenario) }}</span></div>
-            </div>
-            <div>
-              <div class="muted">{{ '::Training.Payments.Reallocation.Dialog.SummaryFrom' | abpLocalization }}</div>
-              <div class="summary-value">{{ row.fundingSourceName || '—' }}</div>
-              <code class="vote-code">{{ row.fundingSourceVoteCode || '' }}</code>
-            </div>
-            <div>
-              <div class="muted">{{ '::Training.Payments.Reallocation.Dialog.SummaryTo' | abpLocalization }}</div>
-              <div class="summary-value">{{ row.toFinancialItemNameAr || '—' }}</div>
-            </div>
-          </div>
-          <div class="amount-callout">
-            <div class="amount-label">{{ '::Training.Payments.Reallocation.Dialog.AmountLabel' | abpLocalization }}</div>
-            <div class="amount-omr">{{ formatOMR(row.amountOMR) }} <span class="omr-sm">ر.ع</span></div>
-          </div>
-        </div>
 
-        <!-- Note -->
-        <div class="form-field">
-          <label>{{ '::Training.Payments.Reallocation.Dialog.NoteLabel' | abpLocalization }}</label>
-          <dx-text-area
-            [value]="fApprovalNote()"
-            [height]="80"
-            [placeholder]="'::Training.Payments.Reallocation.Dialog.NotePlaceholder' | abpLocalization"
-            (onValueChanged)="updateApprovalNote($event.value)">
-          </dx-text-area>
-        </div>
+            @if (isExpanded(record.id)) {
+              <div class="record-details">
+                <div class="travel-source">
+                  <i class="bi bi-patch-check-fill"></i>
+                  <div>
+                    <strong>{{ '::Training.Payments.ExpenseRecovery.SourceTitle' | abpLocalization }}</strong>
+                    <p>{{ '::Training.Payments.ExpenseRecovery.SourceText' | abpLocalization }}</p>
+                  </div>
+                  <code>{{ record.travelRequestId }}</code>
+                </div>
 
-        <!-- Irreversibility warning -->
-        <div class="warn-box" [innerHTML]="'::Training.Payments.Reallocation.Dialog.IrreversibilityWarning' | abpLocalization"></div>
+                <div class="items-table-wrap">
+                  <table class="items-table">
+                    <thead>
+                      <tr>
+                        <th>{{ '::Training.Payments.ExpenseRecovery.ColumnExpense' | abpLocalization }}</th>
+                        <th>{{ '::Training.Payments.ExpenseRecovery.ColumnItem' | abpLocalization }}</th>
+                        <th>{{ '::Training.Payments.ExpenseRecovery.ColumnVoteCode' | abpLocalization }}</th>
+                        <th>{{ '::Training.Payments.ExpenseRecovery.ColumnAmount' | abpLocalization }}</th>
+                        <th>{{ '::Training.Payments.ExpenseRecovery.ColumnSettled' | abpLocalization }}</th>
+                        <th>{{ '::Training.Payments.ExpenseRecovery.ColumnRemaining' | abpLocalization }}</th>
+                        <th>{{ '::Training.Payments.ExpenseRecovery.ColumnSettlementStatus' | abpLocalization }}</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (item of record.items || []; track item.id) {
+                        <tr [class.settled-item]="item.isSettled">
+                          <td><span class="expense-kind">{{ expenseTypeKey(item.expenseTypeCode) | abpLocalization }}</span></td>
+                          <td>
+                            <strong>{{ item.financialItemNameAr || ('::Training.Payments.ExpenseRecovery.UnmatchedItem' | abpLocalization) }}</strong>
+                            @if (!item.financialItemId) { <small class="unmatched"><i class="bi bi-exclamation-triangle"></i> {{ '::Training.Payments.ExpenseRecovery.UnmatchedHint' | abpLocalization }}</small> }
+                          </td>
+                          <td><code>{{ item.fundingSourceVoteCode || '—' }}</code></td>
+                          <td class="money">{{ formatOMR(item.amountOMR) }} <b>ر.ع</b></td>
+                          <td class="money settled-money">{{ formatOMR(item.settledAmountOMR) }} <b>ر.ع</b></td>
+                          <td class="money remaining-money">{{ formatOMR(item.remainingAmountOMR) }} <b>ر.ع</b></td>
+                          <td class="item-settlement-cell">
+                            @if (item.isSettled) {
+                              <span class="item-status settled"><i class="bi bi-check2-circle"></i>{{ '::Training.Payments.ExpenseRecovery.ItemSettled' | abpLocalization }}</span>
+                              <small><b>{{ item.settlementReference }}</b> · {{ shortDate(item.settledAt) }}</small>
+                              <small>{{ item.settledByName || '—' }}</small>
+                            } @else {
+                              <span class="item-status pending"><i class="bi bi-hourglass-split"></i>{{ '::Training.Payments.ExpenseRecovery.ItemPending' | abpLocalization }}</span>
+                            }
+                          </td>
+                          <td class="item-action-cell">
+                            @if (!item.isSettled && record.status !== Status.PendingReview && canSettle()) {
+                              <button type="button" class="settle-item-button" (click)="openDialog(record, 'settle-item', item)">
+                                <i class="bi bi-check2"></i>{{ '::Training.Payments.ExpenseRecovery.SettleItemAction' | abpLocalization }}
+                              </button>
+                            }
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td colspan="3">{{ '::Training.Payments.ExpenseRecovery.Total' | abpLocalization }}</td>
+                        <td class="money">{{ formatOMR(record.totalAmountOMR) }} <b>ر.ع</b></td>
+                        <td class="money settled-money">{{ formatOMR(record.settledAmountOMR) }} <b>ر.ع</b></td>
+                        <td class="money remaining-money">{{ formatOMR(record.remainingAmountOMR) }} <b>ر.ع</b></td>
+                        <td colspan="2"></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
 
-        @if (dialogError()) {
-          <div class="error-banner">⚠ {{ dialogError() }}</div>
+                <div class="audit-row">
+                  <div class="audit-step done">
+                    <span><i class="bi bi-airplane-engines"></i></span>
+                    <div><small>{{ '::Training.Payments.ExpenseRecovery.AuditImported' | abpLocalization }}</small><strong>{{ shortDate(record.expenseDate) }}</strong></div>
+                  </div>
+                  <i class="audit-line" [class.done]="record.status !== Status.PendingReview"></i>
+                  <div class="audit-step" [class.done]="record.status !== Status.PendingReview">
+                    <span><i class="bi bi-clipboard2-check"></i></span>
+                    <div><small>{{ '::Training.Payments.ExpenseRecovery.AuditReviewed' | abpLocalization }}</small><strong>{{ record.reviewedByName || '—' }}</strong></div>
+                  </div>
+                  <i class="audit-line" [class.done]="record.status === Status.Settled"></i>
+                  <div class="audit-step" [class.done]="record.status === Status.Settled">
+                    <span><i class="bi bi-check2-circle"></i></span>
+                    <div><small>{{ '::Training.Payments.ExpenseRecovery.AuditSettled' | abpLocalization }}</small><strong>{{ formatOMR(record.settledAmountOMR) }} / {{ formatOMR(record.totalAmountOMR) }}</strong></div>
+                  </div>
+                </div>
+
+                @if (record.reviewNote) {
+                  <div class="notes-row">
+                    <p><strong>{{ '::Training.Payments.ExpenseRecovery.ReviewNote' | abpLocalization }}:</strong> {{ record.reviewNote }}</p>
+                  </div>
+                }
+
+                <footer class="detail-footer">
+                  <p>
+                    @if (record.status === Status.PendingReview) { {{ '::Training.Payments.ExpenseRecovery.PendingHelp' | abpLocalization }} }
+                    @else if (record.status === Status.Reviewed || record.status === Status.PartiallySettled) { {{ '::Training.Payments.ExpenseRecovery.ReviewedHelp' | abpLocalization }} }
+                    @else { {{ '::Training.Payments.ExpenseRecovery.SettledHelp' | abpLocalization }} }
+                  </p>
+                  @if (record.status === Status.PendingReview && canReview()) {
+                    <button type="button" class="primary-action review" (click)="openDialog(record, 'review')">
+                      <i class="bi bi-clipboard2-check"></i>{{ '::Training.Payments.ExpenseRecovery.ReviewAction' | abpLocalization }}
+                    </button>
+                  } @else if ((record.status === Status.Reviewed || record.status === Status.PartiallySettled) && canSettle()) {
+                    <button type="button" class="primary-action settle" (click)="openDialog(record, 'settle-all')">
+                      <i class="bi bi-check2-all"></i>{{ '::Training.Payments.ExpenseRecovery.SettleAllAction' | abpLocalization }}
+                    </button>
+                  }
+                </footer>
+              </div>
+            }
+          </article>
         }
-
-        @if (row.status === ReallocationStatus.Approved) {
-          <div class="confirmed-banner">
-            <span [innerHTML]="'::Training.Payments.Reallocation.Dialog.AlreadyApprovedPrefix' | abpLocalization"></span>
-            {{ row.approvedByName || '—' }}
-            @if (row.approvedAt) { {{ '::Training.Payments.Reallocation.Dialog.AlreadyApprovedAt' | abpLocalization }} {{ (row.approvedAt || '').substring(0, 10) }} }
-            @if (row.approvalNote) { · {{ '::Training.Payments.Reallocation.Dialog.AlreadyApprovedNote' | abpLocalization }} {{ row.approvalNote }} }
-          </div>
-        }
-      }
-    </div>
-  </dx-popup>
+      </div>
+    }
+  </section>
 </div>
+
+@if (dialog().visible && dialog().record; as record) {
+  <div class="modal-backdrop" (click)="closeDialog()">
+    <section class="action-modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <header>
+        <span [class]="dialog().mode === 'review' ? 'modal-icon review' : 'modal-icon settle'">
+          <i [class]="dialog().mode === 'review' ? 'bi bi-clipboard2-check' : 'bi bi-check2-circle'"></i>
+        </span>
+        <div>
+          <h2>{{ settlementDialogTitleKey() | abpLocalization }}</h2>
+          <p>{{ record.casualCourseNameAr }}</p>
+          @if (dialog().mode === 'settle-item' && dialog().item; as item) {
+            <p class="modal-item-name">{{ expenseTypeKey(item.expenseTypeCode) | abpLocalization }} · {{ item.financialItemNameAr }}</p>
+          }
+        </div>
+        <button type="button" class="modal-close" [disabled]="dialogSaving()" (click)="closeDialog()"><i class="bi bi-x-lg"></i></button>
+      </header>
+
+      <div class="modal-amount">
+        <small>{{ (dialog().mode === 'review'
+          ? '::Training.Payments.ExpenseRecovery.Total'
+          : '::Training.Payments.ExpenseRecovery.AmountToSettle') | abpLocalization }}</small>
+        <strong>{{ formatOMR(dialogAmount()) }} <b>ر.ع</b></strong>
+      </div>
+
+      @if (dialog().mode === 'review') {
+        <label class="form-field">
+          <span>{{ '::Training.Payments.ExpenseRecovery.ReviewNote' | abpLocalization }} <small>({{ '::Training.Optional' | abpLocalization }})</small></span>
+          <textarea rows="4" [value]="reviewNote()" (input)="updateReviewNote($event)"
+                    [placeholder]="'::Training.Payments.ExpenseRecovery.ReviewPlaceholder' | abpLocalization"></textarea>
+        </label>
+      } @else {
+        <label class="form-field">
+          <span>{{ '::Training.Payments.ExpenseRecovery.SettlementReference' | abpLocalization }} <b>*</b></span>
+          <input type="text" maxlength="128" [value]="settlementReference()" (input)="updateSettlementReference($event)"
+                 [placeholder]="'::Training.Payments.ExpenseRecovery.ReferencePlaceholder' | abpLocalization" />
+        </label>
+        <label class="form-field">
+          <span>{{ '::Training.Payments.ExpenseRecovery.SettlementNote' | abpLocalization }} <small>({{ '::Training.Optional' | abpLocalization }})</small></span>
+          <textarea rows="3" [value]="settlementNote()" (input)="updateSettlementNote($event)"></textarea>
+        </label>
+      }
+
+      @if (dialogError()) { <div class="modal-error"><i class="bi bi-exclamation-triangle"></i>{{ dialogError() }}</div> }
+
+      <footer>
+        <button type="button" class="cancel-action" [disabled]="dialogSaving()" (click)="closeDialog()">{{ '::Cancel' | abpLocalization }}</button>
+        <button type="button" [class]="dialog().mode === 'review' ? 'confirm-action review' : 'confirm-action settle'"
+                [disabled]="dialogSaving()" (click)="submitDialog()">
+          @if (dialogSaving()) { <i class="bi bi-arrow-repeat spin"></i> }
+          @else { <i [class]="dialog().mode === 'review' ? 'bi bi-clipboard2-check' : 'bi bi-check2-circle'"></i> }
+          {{ (dialog().mode === 'review'
+            ? '::Training.Payments.ExpenseRecovery.ConfirmReview'
+            : '::Training.Payments.ExpenseRecovery.ConfirmSettlement') | abpLocalization }}
+        </button>
+      </footer>
+    </section>
+  </div>
+}
+
+@if (toast(); as message) {
+  <div [class]="message.kind === 'success' ? 'page-toast success' : 'page-toast error'">
+    <i [class]="message.kind === 'success' ? 'bi bi-check2-circle' : 'bi bi-exclamation-triangle'"></i>
+    {{ message.text }}
+  </div>
+}

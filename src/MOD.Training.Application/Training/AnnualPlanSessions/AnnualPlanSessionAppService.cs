@@ -17,6 +17,7 @@ using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Application.Services;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Identity;
 
 namespace MOD.Training.Training.AnnualPlanSessions;
 
@@ -49,6 +50,7 @@ public class AnnualPlanSessionAppService(
     IRepository<CourseCatalog, Guid> catalogRepo,
     IRepository<Employee, Guid> employeeRepo,
     IRepository<Rank, Guid> rankRepo,
+    IOrganizationUnitRepository orgUnitRepository,
     SessionCreationValidator validator)
     : ApplicationService, IAnnualPlanSessionAppService
 {
@@ -295,163 +297,278 @@ public class AnnualPlanSessionAppService(
     [Authorize(AnnualPlanSessionPermissions.Dashboard)]
     public async Task<AnnualPlanProgressDto> GetProgressDashboardAsync(int? year)
     {
-        var targetYear = year ?? DateTime.UtcNow.Year;
+        var now = Clock.Now;
+        var targetYear = year ?? now.Year;
 
-        // Plans in scope.
+        // Load the approved-plan years once so the UI can offer valid choices
+        // instead of accepting an arbitrary number.
         var planQ = await planRepo.GetQueryableAsync();
-        var planList = await AsyncExecuter.ToListAsync(
-            planQ.Where(p => p.Status == PlanStatus.THApproved && p.Year == targetYear)
+        var approvedPlans = await AsyncExecuter.ToListAsync(
+            planQ.Where(p => p.Status == PlanStatus.THApproved)
                  .Select(p => new { p.Id, p.Year }));
+        var availableYears = approvedPlans
+            .Select(x => x.Year)
+            .Distinct()
+            .OrderByDescending(x => x)
+            .ToList();
+        var planIds = approvedPlans
+            .Where(x => x.Year == targetYear)
+            .Select(x => x.Id)
+            .ToList();
 
-        if (planList.Count == 0)
+        if (planIds.Count == 0)
         {
-            return new AnnualPlanProgressDto { Year = targetYear };
+            return new AnnualPlanProgressDto
+            {
+                Year = targetYear,
+                AvailableYears = availableYears
+            };
         }
 
-        var planIds = planList.Select(p => p.Id).ToList();
-
-        // All plan items in scope.
         var allItems = await AsyncExecuter.ToListAsync(
             (await planItemRepo.GetQueryableAsync()).Where(x => planIds.Contains(x.PlanId)));
+        var planItemIds = allItems.Select(x => x.Id).ToList();
 
-        // All sessions for those plan items (joined later in-memory).
-        var allSessions = await AsyncExecuter.ToListAsync(
-            (await sessionRepo.GetQueryableAsync())
-                .Where(s => s.TrainingPlanItemId.HasValue
-                            && s.PlanYear == targetYear));
+        // Sessions must belong to an item in the approved plans being measured.
+        // PlanYear alone can include sessions from returned or non-approved plans.
+        var allSessions = planItemIds.Count == 0
+            ? []
+            : await AsyncExecuter.ToListAsync(
+                (await sessionRepo.GetQueryableAsync())
+                    .Where(s => s.TrainingPlanItemId.HasValue
+                                && planItemIds.Contains(s.TrainingPlanItemId.Value)));
 
         var sessionsByPlanItem = allSessions
             .Where(s => s.TrainingPlanItemId.HasValue)
             .GroupBy(s => s.TrainingPlanItemId!.Value)
             .ToDictionary(g => g.Key, g => g.ToList());
 
-        // Aggregate counts. A plan item has an "effective" session = the latest non-Cancelled session.
-        int planned = 0, scheduled = 0, inProgress = 0, completed = 0, cancelled = 0;
-        var now = DateTime.UtcNow;
-        var currentQuarter = (now.Month - 1) / 3 + 1;
-        var overduePlanItems = new List<TrainingPlanItem>();
-        var quarterStats = new Dictionary<int, (int total, int completed, int inProgress, int pending)>
+        // Resolve the course and unit names on the server. This keeps the dashboard
+        // usable for roles that do not have Identity OrganizationUnit permissions.
+        var tenantCourseIds = allItems.Select(x => x.TenantCourseId).Distinct().ToList();
+        var tenantCourses = tenantCourseIds.Count == 0
+            ? []
+            : await AsyncExecuter.ToListAsync(
+                (await tenantCourseRepo.GetQueryableAsync())
+                    .Where(x => tenantCourseIds.Contains(x.Id)));
+        var catalogIds = tenantCourses.Select(x => x.CatalogCourseId).Distinct().ToList();
+        var catalogs = catalogIds.Count == 0
+            ? []
+            : await AsyncExecuter.ToListAsync(
+                (await catalogRepo.GetQueryableAsync())
+                    .Where(x => catalogIds.Contains(x.Id)));
+        var catalogById = catalogs.ToDictionary(x => x.Id);
+        var catalogByTenantCourseId = tenantCourses
+            .Where(x => catalogById.ContainsKey(x.CatalogCourseId))
+            .ToDictionary(x => x.Id, x => catalogById[x.CatalogCourseId]);
+
+        var unitIds = allItems
+            .Where(x => x.UnitId.HasValue)
+            .Select(x => x.UnitId!.Value)
+            .Distinct()
+            .ToList();
+        var unitNames = new Dictionary<Guid, string>();
+        foreach (var unitId in unitIds)
         {
-            { 1, (0, 0, 0, 0) }, { 2, (0, 0, 0, 0) }, { 3, (0, 0, 0, 0) }, { 4, (0, 0, 0, 0) }
+            var unit = await orgUnitRepository.FindAsync(unitId);
+            if (unit != null)
+            {
+                unitNames[unitId] = unit.DisplayName;
+            }
+        }
+
+        var overallStats = new DashboardStageStats();
+        var cancelled = 0;
+        var quarterStats = new Dictionary<int, DashboardStageStats>
+        {
+            { 1, new() }, { 2, new() }, { 3, new() }, { 4, new() }
         };
-        // Guid.Empty sentinel represents "no unit" — translated back to null when emitting DTOs.
-        var unitStats = new Dictionary<Guid, (int total, int completed)>();
+        var unitStats = new Dictionary<Guid, DashboardStageStats>();
+        var activeSessions = new Dictionary<Guid, CourseSession>();
+        var alerts = new List<OverdueAlertDto>();
 
         foreach (var item in allItems)
         {
             var quarter = (int)item.PreferredQuarter;
-            var hasActive = false;
-            SessionStatus? effectiveStatus = null;
+            CourseSession? activeSession = null;
 
             if (sessionsByPlanItem.TryGetValue(item.Id, out var sessions))
             {
-                var active = sessions.Where(s => s.Status != SessionStatus.Cancelled)
-                                     .OrderByDescending(s => s.CreationTime)
-                                     .FirstOrDefault();
-                if (active != null)
-                {
-                    hasActive = true;
-                    effectiveStatus = active.Status;
-                    switch (active.Status)
-                    {
-                        case SessionStatus.Planned: planned++; break;
-                        case SessionStatus.Scheduled: scheduled++; break;
-                        case SessionStatus.InProgress: inProgress++; break;
-                        case SessionStatus.Completed:
-                        case SessionStatus.FinanciallyClosed: completed++; break;
-                    }
-                }
-                else
+                activeSession = sessions
+                    .Where(s => s.Status != SessionStatus.Cancelled)
+                    .OrderByDescending(s => s.CreationTime)
+                    .FirstOrDefault();
+                if (activeSession == null)
                 {
                     cancelled++;
                 }
             }
 
-            // Overdue: PreferredQuarter has passed without an active session.
-            // Cancelled-only counts as no-session for overdue purposes.
-            var isOverdue = quarter < currentQuarter && !hasActive;
-            if (isOverdue) overduePlanItems.Add(item);
-
-            // Per-quarter rollup.
-            var qStats = quarterStats[quarter];
-            qStats.total++;
-            if (effectiveStatus is SessionStatus.Completed or SessionStatus.FinanciallyClosed) qStats.completed++;
-            else if (effectiveStatus == SessionStatus.InProgress) qStats.inProgress++;
-            else qStats.pending++;
-            quarterStats[quarter] = qStats;
-
-            // Per-unit rollup. Guid.Empty stands in for "no unit assigned".
+            var effectiveStatus = activeSession?.Status;
+            overallStats.Add(effectiveStatus);
+            quarterStats[quarter].Add(effectiveStatus);
             var unitKey = item.UnitId ?? Guid.Empty;
-            var uStats = unitStats.GetValueOrDefault(unitKey);
-            uStats.total++;
-            if (effectiveStatus is SessionStatus.Completed or SessionStatus.FinanciallyClosed) uStats.completed++;
-            unitStats[unitKey] = uStats;
-        }
-
-        // Stuck-Planned alerts: external sessions in Planned status older than threshold.
-        var threshold = now.AddDays(-StuckPlannedThresholdDays);
-        var stuck = allSessions
-            .Where(s => s.Status == SessionStatus.Planned && s.CreationTime <= threshold)
-            .Select(s => new OverdueAlertDto
+            if (!unitStats.TryGetValue(unitKey, out var unitStat))
             {
-                Type = "StuckPlanned",
-                EntityId = s.Id,
-                EntityType = "Session",
-                DaysOverdue = (int)(now - s.CreationTime).TotalDays,
-                Message = $"Session in Planned status for {(int)(now - s.CreationTime).TotalDays} days",
-            })
-            .ToList();
+                unitStat = new DashboardStageStats();
+                unitStats[unitKey] = unitStat;
+            }
+            unitStat.Add(effectiveStatus);
 
-        var overdueAlerts = overduePlanItems
-            .Select(item =>
+            if (activeSession != null)
             {
-                var quartersPast = currentQuarter - (int)item.PreferredQuarter;
-                return new OverdueAlertDto
+                activeSessions[item.Id] = activeSession;
+            }
+
+            // A plan item is overdue only after its actual quarter end. This works
+            // correctly for the current, past, and future plan years.
+            var quarterEnd = GetQuarterEnd(targetYear, quarter);
+            if (activeSession == null && now.Date > quarterEnd)
+            {
+                var course = catalogByTenantCourseId.GetValueOrDefault(item.TenantCourseId);
+                alerts.Add(new OverdueAlertDto
                 {
                     Type = "OverduePlanItem",
                     EntityId = item.Id,
                     EntityType = "PlanItem",
-                    DaysOverdue = quartersPast * 90,
-                    Message = $"Plan item overdue by {quartersPast} quarter(s)",
+                    DaysOverdue = (now.Date - quarterEnd).Days,
+                    CourseNameAr = course?.CourseNameAr ?? string.Empty,
+                    CourseNameEn = course?.CourseNameEn ?? string.Empty,
+                    CourseType = item.CourseType,
+                    PreferredQuarter = quarter,
+                    DueDate = quarterEnd
+                });
+            }
+        }
+
+        // Generate one actionable session alert per active session, in priority order.
+        var threshold = now.AddDays(-StuckPlannedThresholdDays);
+        foreach (var item in allItems)
+        {
+            if (!activeSessions.TryGetValue(item.Id, out var session))
+            {
+                continue;
+            }
+
+            var course = catalogByTenantCourseId.GetValueOrDefault(item.TenantCourseId);
+            var quarterEnd = GetQuarterEnd(targetYear, (int)item.PreferredQuarter);
+            OverdueAlertDto? alert = null;
+
+            if (session.Status == SessionStatus.Planned && session.CreationTime <= threshold)
+            {
+                alert = new OverdueAlertDto
+                {
+                    Type = "StuckPlanned",
+                    DaysOverdue = (int)(now - session.CreationTime).TotalDays,
+                    DueDate = session.CreationTime.AddDays(StuckPlannedThresholdDays)
                 };
-            })
-            .ToList();
+            }
+            else if (session.Status is SessionStatus.Scheduled or SessionStatus.InProgress)
+            {
+                if (session.ActualEndDate.HasValue && now.Date > session.ActualEndDate.Value.Date)
+                {
+                    alert = new OverdueAlertDto
+                    {
+                        Type = "CompletionOverdue",
+                        DaysOverdue = (now.Date - session.ActualEndDate.Value.Date).Days,
+                        DueDate = session.ActualEndDate.Value.Date
+                    };
+                }
+                else if (session.Status == SessionStatus.Scheduled
+                         && session.ActualStartDate.HasValue
+                         && now.Date > session.ActualStartDate.Value.Date)
+                {
+                    alert = new OverdueAlertDto
+                    {
+                        Type = "ExecutionNotStarted",
+                        DaysOverdue = (now.Date - session.ActualStartDate.Value.Date).Days,
+                        DueDate = session.ActualStartDate.Value.Date
+                    };
+                }
+                else if (!session.ActualStartDate.HasValue || !session.ActualEndDate.HasValue)
+                {
+                    alert = new OverdueAlertDto
+                    {
+                        Type = "ScheduleMissingDates"
+                    };
+                }
+                else if (session.Status == SessionStatus.Scheduled
+                         && session.ActualStartDate.Value.Date > quarterEnd)
+                {
+                    alert = new OverdueAlertDto
+                    {
+                        Type = "ScheduledAfterQuarter",
+                        DaysOverdue = (session.ActualStartDate.Value.Date - quarterEnd).Days,
+                        DueDate = quarterEnd
+                    };
+                }
+            }
+
+            if (alert == null)
+            {
+                continue;
+            }
+
+            alert.EntityId = session.Id;
+            alert.EntityType = "Session";
+            alert.CourseNameAr = course?.CourseNameAr ?? string.Empty;
+            alert.CourseNameEn = course?.CourseNameEn ?? string.Empty;
+            alert.CourseType = item.CourseType;
+            alert.PreferredQuarter = (int)item.PreferredQuarter;
+            alerts.Add(alert);
+        }
 
         var total = allItems.Count;
-        var overallPercent = total == 0 ? 0 : (int)Math.Round(100.0 * completed / total);
+        var overallPercent = total == 0
+            ? 0
+            : (int)Math.Round(100.0 * overallStats.Completed / total);
 
         return new AnnualPlanProgressDto
         {
             Year = targetYear,
+            AvailableYears = availableYears,
             TotalPlanItems = total,
-            PlannedSessionCount = planned,
-            ScheduledSessionCount = scheduled,
-            InProgressSessionCount = inProgress,
-            CompletedSessionCount = completed,
+            AwaitingSessionCount = overallStats.AwaitingSession,
+            PlannedSessionCount = overallStats.Planned,
+            ScheduledSessionCount = overallStats.Scheduled,
+            InProgressSessionCount = overallStats.InProgress,
+            CompletedSessionCount = overallStats.Completed,
             CancelledSessionCount = cancelled,
-            OverdueCount = overduePlanItems.Count,
+            OverdueCount = alerts.Count(x => x.Type == "OverduePlanItem"),
+            AttentionCount = alerts.Count,
             OverallProgressPercent = overallPercent,
             ProgressByQuarter = quarterStats
                 .OrderBy(kv => kv.Key)
                 .Select(kv => new QuarterProgressDto
                 {
                     Quarter = kv.Key,
-                    Total = kv.Value.total,
-                    Completed = kv.Value.completed,
-                    InProgress = kv.Value.inProgress,
-                    Pending = kv.Value.pending,
+                    Total = kv.Value.Total,
+                    AwaitingSession = kv.Value.AwaitingSession,
+                    Planned = kv.Value.Planned,
+                    Scheduled = kv.Value.Scheduled,
+                    InProgress = kv.Value.InProgress,
+                    Completed = kv.Value.Completed,
+                    Pending = kv.Value.Total - kv.Value.Completed
                 })
                 .ToList(),
             ProgressByUnit = unitStats
                 .Select(kv => new UnitProgressDto
                 {
                     UnitId = kv.Key == Guid.Empty ? null : kv.Key,
-                    UnitName = null, // resolved client-side via OU lookup; step 5/6 may join.
-                    Total = kv.Value.total,
-                    Completed = kv.Value.completed,
+                    UnitName = kv.Key == Guid.Empty
+                        ? null
+                        : unitNames.GetValueOrDefault(kv.Key),
+                    Total = kv.Value.Total,
+                    AwaitingSession = kv.Value.AwaitingSession,
+                    Planned = kv.Value.Planned,
+                    Scheduled = kv.Value.Scheduled,
+                    InProgress = kv.Value.InProgress,
+                    Completed = kv.Value.Completed
                 })
+                .OrderByDescending(x => x.Total)
+                .ThenBy(x => x.UnitName)
                 .ToList(),
-            Alerts = overdueAlerts.Concat(stuck)
+            Alerts = alerts
                 .OrderByDescending(a => a.DaysOverdue)
                 .ToList(),
         };
@@ -460,6 +577,46 @@ public class AnnualPlanSessionAppService(
     // ────────────────────────────────────────────────────────────────────
     // Helpers
     // ────────────────────────────────────────────────────────────────────
+
+    private static DateTime GetQuarterEnd(int year, int quarter)
+    {
+        var month = quarter * 3;
+        return new DateTime(year, month, DateTime.DaysInMonth(year, month));
+    }
+
+    private sealed class DashboardStageStats
+    {
+        public int Total { get; private set; }
+        public int AwaitingSession { get; private set; }
+        public int Planned { get; private set; }
+        public int Scheduled { get; private set; }
+        public int InProgress { get; private set; }
+        public int Completed { get; private set; }
+
+        public void Add(SessionStatus? status)
+        {
+            Total++;
+            switch (status)
+            {
+                case SessionStatus.Planned:
+                    Planned++;
+                    break;
+                case SessionStatus.Scheduled:
+                    Scheduled++;
+                    break;
+                case SessionStatus.InProgress:
+                    InProgress++;
+                    break;
+                case SessionStatus.Completed:
+                case SessionStatus.FinanciallyClosed:
+                    Completed++;
+                    break;
+                default:
+                    AwaitingSession++;
+                    break;
+            }
+        }
+    }
 
     /// <summary>
     /// Builds SessionNomination rows for a freshly created session by copying the plan item's

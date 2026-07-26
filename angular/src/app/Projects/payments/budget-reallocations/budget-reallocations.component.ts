@@ -1,358 +1,285 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { LocalizationPipe, PermissionService } from '@abp/ng.core';
+import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import {
-  DxDataGridModule,
-  DxPopupModule,
-  DxSelectBoxModule,
-  DxTextBoxModule,
-  DxTextAreaModule,
-  DxButtonModule,
-  DxDateBoxModule,
-} from 'devextreme-angular';
-import type { ToolbarItem } from 'devextreme/ui/popup';
 
-import { BudgetReallocationService } from 'src/app/proxy/training/payments/budget-reallocation.service';
-import type {
-  BudgetReallocationDto,
-  BudgetReallocationGetListInput,
-  MarkReallocationApprovedDto,
-} from 'src/app/proxy/training/payments/dtos/models';
-import { ReallocationStatus } from 'src/app/proxy/training/enums/reallocation-status.enum';
-import { FundingScenario } from 'src/app/proxy/training/enums/funding-scenario.enum';
-
-import { CasualCourseService } from 'src/app/proxy/training/casual-courses';
-import type { CasualCourseDto } from 'src/app/proxy/training/casual-courses/dtos/models';
-import { CasualCourseStatus } from 'src/app/proxy/training/enums/casual-course-status.enum';
-
-import { FinancialItemService } from 'src/app/proxy/training/finance';
-import type { FinancialItemDto } from 'src/app/proxy/training/finance/dtos/models';
-
+import { TrainingExpenseRecoveryService } from 'src/app/proxy/training/payments/training-expense-recovery.service';
+import type { TrainingExpenseRecoveryDto, TrainingExpenseRecoveryItemDto } from 'src/app/proxy/training/payments/dtos/models';
+import { TrainingExpenseRecoveryStatus } from 'src/app/proxy/training/enums/training-expense-recovery-status.enum';
 import { TrainingLocalizationHelper } from '../../shared';
 
-interface ApprovalDialogState {
-  visible: boolean;
-  row: BudgetReallocationDto | null;
-}
+type DialogMode = 'review' | 'settle-item' | 'settle-all';
 
-interface ToastState {
+interface DialogState {
   visible: boolean;
-  text: string;
-  kind: 'success' | 'error';
+  mode: DialogMode;
+  record: TrainingExpenseRecoveryDto | null;
+  item: TrainingExpenseRecoveryItemDto | null;
 }
 
 @Component({
   standalone: true,
-  selector: 'app-budget-reallocations',
+  selector: 'app-training-expense-recoveries',
   templateUrl: './budget-reallocations.component.html',
-  styleUrls: [
-    './budget-reallocations.component.scss',
-    '../../shared/gtms-design.scss',
-  ],
-  imports: [
-    CommonModule,
-    LocalizationPipe,
-    DxDataGridModule,
-    DxPopupModule,
-    DxSelectBoxModule,
-    DxTextBoxModule,
-    DxTextAreaModule,
-    DxButtonModule,
-    DxDateBoxModule,
-  ],
+  styleUrls: ['./budget-reallocations.component.scss', '../../shared/gtms-design.scss'],
+  imports: [CommonModule, LocalizationPipe],
 })
-export class BudgetReallocationsComponent implements OnInit {
-  private service = inject(BudgetReallocationService);
-  private courseService = inject(CasualCourseService);
-  private financialItemService = inject(FinancialItemService);
+export class TrainingExpenseRecoveriesComponent implements OnInit {
+  private service = inject(TrainingExpenseRecoveryService);
   private permissions = inject(PermissionService);
-  l = inject(TrainingLocalizationHelper);
+  private router = inject(Router);
+  private l = inject(TrainingLocalizationHelper);
 
-  ReallocationStatus = ReallocationStatus;
-  FundingScenario = FundingScenario;
+  readonly Status = TrainingExpenseRecoveryStatus;
 
-  // ── State ──
-  rows = signal<BudgetReallocationDto[]>([]);
-  allCourses = signal<CasualCourseDto[]>([]);
-  financialItems = signal<FinancialItemDto[]>([]);
+  records = signal<TrainingExpenseRecoveryDto[]>([]);
   loading = signal(true);
+  loadError = signal<string | null>(null);
+  search = signal('');
+  expandedRecords = signal<Set<string>>(new Set());
 
-  // ── Filters ──
-  filterStatus = signal<ReallocationStatus | null>(null);
-  filterCourseId = signal<string | null>(null);
-  filterFinancialItemId = signal<string | null>(null);
-  filterCreatedFrom = signal<string | null>(null);
-  filterCreatedTo = signal<string | null>(null);
-  filterVoteCode = signal<string>('');
-
-  // ── Permissions ──
-  canMarkApproved = computed(() => this.permissions.getGrantedPolicy('TrainingPayments.Reallocations.MarkApproved'));
-
-  // ── Approval dialog ──
-  dialog = signal<ApprovalDialogState>({ visible: false, row: null });
-  dialogToolbarItems: ToolbarItem[] | undefined;
-  dialogError = signal<string | null>(null);
+  dialog = signal<DialogState>({ visible: false, mode: 'review', record: null, item: null });
+  reviewNote = signal('');
+  settlementReference = signal('');
+  settlementNote = signal('');
   dialogSaving = signal(false);
+  dialogError = signal<string | null>(null);
+  toast = signal<{ text: string; kind: 'success' | 'error' } | null>(null);
 
-  fApprovalNote = signal<string>('');
+  canReview = computed(() =>
+    this.permissions.getGrantedPolicy('TrainingPayments.Reallocations.MarkApproved'));
+  canSettle = computed(() =>
+    this.permissions.getGrantedPolicy('TrainingPayments.Reallocations.MarkSettled'));
 
-  toast = signal<ToastState>({ visible: false, text: '', kind: 'success' });
-
-  statusOptions: { value: ReallocationStatus; text: string }[] = [];
-
-  // ── Derived rows / stats ──
-  filteredRows = computed(() => {
-    const status = this.filterStatus();
-    const courseId = this.filterCourseId();
-    const itemId = this.filterFinancialItemId();
-    const from = this.filterCreatedFrom();
-    const to = this.filterCreatedTo();
-    const voteQ = this.filterVoteCode().trim().toLowerCase();
-
-    return this.rows().filter(r => {
-      if (status !== null && r.status !== status) return false;
-      if (courseId && r.casualCourseId !== courseId) return false;
-      if (itemId && r.toFinancialItemId !== itemId) return false;
-      if (from && (r.creationTime ?? '') < from) return false;
-      if (to && (r.creationTime ?? '') > to) return false;
-      if (voteQ) {
-        const code = (r.fundingSourceVoteCode ?? '').toLowerCase();
-        const name = (r.fundingSourceName ?? '').toLowerCase();
-        if (!code.includes(voteQ) && !name.includes(voteQ)) return false;
-      }
-      return true;
-    });
+  filteredRecords = computed(() => {
+    const query = this.search().trim().toLowerCase();
+    if (!query) return this.records();
+    return this.records().filter(record =>
+      (record.casualCourseNameAr ?? '').toLowerCase().includes(query)
+      || (record.travelRequestId ?? '').toLowerCase().includes(query)
+      || (record.items ?? []).some(item =>
+        (item.financialItemNameAr ?? '').toLowerCase().includes(query)
+        || (item.fundingSourceVoteCode ?? '').toLowerCase().includes(query)));
   });
 
-  pendingRows = computed(() => this.rows().filter(r => r.status === ReallocationStatus.Pending));
-  approvedRows = computed(() => this.rows().filter(r => r.status === ReallocationStatus.Approved));
+  pendingRecords = computed(() =>
+    this.records().filter(x => x.status === TrainingExpenseRecoveryStatus.PendingReview));
+  reviewedRecords = computed(() =>
+    this.records().filter(x => x.status === TrainingExpenseRecoveryStatus.Reviewed
+      || x.status === TrainingExpenseRecoveryStatus.PartiallySettled));
+  pendingTotal = computed(() => this.sum(this.pendingRecords()));
+  reviewedTotal = computed(() => this.reviewedRecords()
+    .reduce((total, item) => total + (item.remainingAmountOMR ?? 0), 0));
+  settledTotal = computed(() => this.records()
+    .reduce((total, item) => total + (item.settledAmountOMR ?? 0), 0));
+  settledItemsCount = computed(() => this.records()
+    .reduce((total, record) => total + (record.items ?? []).filter(item => item.isSettled).length, 0));
 
-  pendingCount = computed(() => this.pendingRows().length);
-  pendingTotalOMR = computed(() => this.pendingRows().reduce((s, r) => s + (r.amountOMR ?? 0), 0));
-
-  approvedCount = computed(() => this.approvedRows().length);
-  approvedTotalOMR = computed(() => this.approvedRows().reduce((s, r) => s + (r.amountOMR ?? 0), 0));
-
-  thisMonthRows = computed(() => {
-    const now = new Date();
-    const yearMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    return this.rows().filter(r => (r.creationTime ?? '').startsWith(yearMonth));
-  });
-  thisMonthCount = computed(() => this.thisMonthRows().length);
-  thisMonthTotalOMR = computed(() => this.thisMonthRows().reduce((s, r) => s + (r.amountOMR ?? 0), 0));
-
-  lastApproval = computed<BudgetReallocationDto | null>(() => {
-    const approved = this.approvedRows();
-    if (approved.length === 0) return null;
-    return [...approved].sort((a, b) => (b.approvedAt ?? '').localeCompare(a.approvedAt ?? ''))[0];
-  });
-
-  lastApprovalRelative = computed<string>(() => {
-    const last = this.lastApproval();
-    if (!last?.approvedAt) return '—';
-    return this.relativeTime(last.approvedAt);
-  });
-
-  // ── Lifecycle ──
-  async ngOnInit(): Promise<void> {
-    this.statusOptions = [
-      { value: ReallocationStatus.Pending,  text: this.l.t('::Training.ReallocationStatus.Pending') },
-      { value: ReallocationStatus.Approved, text: this.l.t('::Training.ReallocationStatus.Approved') },
-    ];
-
-    this.dialogToolbarItems = [
-      { widget: 'dxButton', location: 'after', toolbar: 'bottom',
-        options: { text: this.l.t('::Cancel'), onClick: () => this.closeDialog() } },
-      { widget: 'dxButton', location: 'after', toolbar: 'bottom',
-        options: {
-          text: this.l.t('::Training.Payments.Reallocation.Dialog.ConfirmAction'),
-          type: 'success',
-          onClick: () => this.onConfirmApproval(),
-        },
-      },
-    ];
-
-    await Promise.all([
-      this.loadRows(),
-      this.loadCourses(),
-      this.loadFinancialItems(),
-    ]);
+  ngOnInit(): void {
+    void this.reload();
   }
 
-  private async loadRows(): Promise<void> {
+  async reload(): Promise<void> {
     this.loading.set(true);
+    this.loadError.set(null);
     try {
-      const input: BudgetReallocationGetListInput = { maxResultCount: 1000 };
-      const result = await firstValueFrom(this.service.getList(input));
-      this.rows.set(result.items ?? []);
+      // Backfills requests completed before this register was introduced. Future requests arrive
+      // through Travel's completion event, so this remains an idempotent recovery path.
+      try { await firstValueFrom(this.service.refresh()); } catch { /* Keep existing records readable. */ }
+      const result = await firstValueFrom(this.service.getList({ maxResultCount: 1000 }));
+      this.records.set(result.items ?? []);
+    } catch (error) {
+      this.loadError.set(this.extractError(error));
     } finally {
       this.loading.set(false);
     }
   }
 
-  private async loadCourses(): Promise<void> {
-    try {
-      const result = await firstValueFrom(
-        this.courseService.getList({
-          status: [CasualCourseStatus.THApproved],
-          maxResultCount: 500,
-        }),
-      );
-      this.allCourses.set(result.items ?? []);
-    } catch {
-      this.allCourses.set([]);
+  onSearchInput(event: Event): void {
+    this.search.set((event.target as HTMLInputElement).value ?? '');
+  }
+
+  clearSearch(): void {
+    this.search.set('');
+  }
+
+  isExpanded(id: string | undefined): boolean {
+    return !!id && this.expandedRecords().has(id);
+  }
+
+  toggleRecord(id: string | undefined): void {
+    if (!id) return;
+    const expanded = new Set(this.expandedRecords());
+    if (expanded.has(id)) expanded.delete(id);
+    else expanded.add(id);
+    this.expandedRecords.set(expanded);
+  }
+
+  openTravelRequest(record: TrainingExpenseRecoveryDto): void {
+    if (record.travelRequestId) void this.router.navigate(['/travel/requests', record.travelRequestId]);
+  }
+
+  openCourse(record: TrainingExpenseRecoveryDto): void {
+    if (record.casualCourseId) {
+      void this.router.navigate(['/training/casual-courses', record.casualCourseId], {
+        queryParams: { stage: 'payments' },
+      });
     }
   }
 
-  private async loadFinancialItems(): Promise<void> {
-    try {
-      const result = await firstValueFrom(
-        this.financialItemService.getList({ isActive: true, maxResultCount: 500 }),
-      );
-      this.financialItems.set(result.items ?? []);
-    } catch {
-      this.financialItems.set([]);
-    }
-  }
-
-  // ── Filter handlers ──
-  onStatusFilterChange(v: ReallocationStatus | null): void { this.filterStatus.set(v); }
-  onCourseFilterChange(v: string | null): void { this.filterCourseId.set(v); }
-  onItemFilterChange(v: string | null): void { this.filterFinancialItemId.set(v); }
-  onCreatedFromChange(v: string | null | Date): void { this.filterCreatedFrom.set(this.toIsoOrNull(v)); }
-  onCreatedToChange(v: string | null | Date): void { this.filterCreatedTo.set(this.toIsoOrNull(v)); }
-  onVoteCodeInput(v: string): void { this.filterVoteCode.set(v ?? ''); }
-
-  clearFilters(): void {
-    this.filterStatus.set(null);
-    this.filterCourseId.set(null);
-    this.filterFinancialItemId.set(null);
-    this.filterCreatedFrom.set(null);
-    this.filterCreatedTo.set(null);
-    this.filterVoteCode.set('');
-  }
-
-  // ── Display helpers ──
-  formatOMR(value: number | null | undefined): string {
-    return (value ?? 0).toLocaleString('en-US', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
-  }
-
-  statusBadgeText(s: ReallocationStatus | undefined): string {
-    switch (s) {
-      case ReallocationStatus.Approved: return this.l.t('::Training.Payments.Reallocation.StatusApproved');
-      case ReallocationStatus.Pending:  return this.l.t('::Training.Payments.Reallocation.StatusPending');
-      default: return '';
-    }
-  }
-
-  statusBadgeCss(s: ReallocationStatus | undefined): string {
-    switch (s) {
-      case ReallocationStatus.Approved: return 'status-badge status-approved';
-      default: return 'status-badge status-pending';
-    }
-  }
-
-  scenarioPillCss(scenario: FundingScenario | null | undefined): string {
-    switch (scenario) {
-      case FundingScenario.FundingSourceCoversAll:    return 'scenario-pill scenario-1';
-      case FundingScenario.FundingSourceCoversCourse: return 'scenario-pill scenario-2';
-      case FundingScenario.FinancialItemsCoverAll:    return 'scenario-pill scenario-3';
-      default: return 'scenario-pill';
-    }
-  }
-
-  scenarioLabel(scenario: FundingScenario | null | undefined): string {
-    switch (scenario) {
-      case FundingScenario.FundingSourceCoversAll:    return this.l.t('::Training.Payments.Reallocation.Scenario1');
-      case FundingScenario.FundingSourceCoversCourse: return this.l.t('::Training.Payments.Reallocation.Scenario2');
-      case FundingScenario.FinancialItemsCoverAll:    return this.l.t('::Training.Payments.Reallocation.Scenario3');
-      default: return '—';
-    }
-  }
-
-  /** Coarse relative time — localized. The Arabic prefix "قبل" comes from the JSON;
-   *  English uses "minutes ago"-style suffixes with the prefix kept empty. */
-  private relativeTime(iso: string): string {
-    const date = new Date(iso);
-    if (Number.isNaN(date.getTime())) return iso;
-    const diffMs = Date.now() - date.getTime();
-    const minutes = Math.floor(diffMs / 60_000);
-    if (minutes < 1) return this.l.t('::Training.Payments.Reallocation.RelativeNow');
-    const prefix = this.l.t('::Training.Payments.Reallocation.RelativeMinutesPrefix');
-    const compose = (n: number, unitKey: string): string => {
-      const unit = this.l.t(unitKey);
-      return prefix ? `${prefix} ${n} ${unit}` : `${n} ${unit}`;
-    };
-    if (minutes < 60) return compose(minutes, '::Training.Payments.Reallocation.RelativeMinutesUnit');
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return compose(hours, '::Training.Payments.Reallocation.RelativeHoursUnit');
-    const days = Math.floor(hours / 24);
-    if (days < 30) return compose(days, '::Training.Payments.Reallocation.RelativeDaysUnit');
-    const months = Math.floor(days / 30);
-    if (months < 12) return compose(months, '::Training.Payments.Reallocation.RelativeMonthsUnit');
-    const years = Math.floor(months / 12);
-    return compose(years, '::Training.Payments.Reallocation.RelativeYearsUnit');
-  }
-
-  private toIsoOrNull(v: string | null | Date | undefined): string | null {
-    if (!v) return null;
-    if (v instanceof Date) return v.toISOString().substring(0, 10);
-    return v.substring(0, 10);
-  }
-
-  // ── Approval flow ──
-  onApprove(row: BudgetReallocationDto): void {
-    if (!this.canMarkApproved() || row.status !== ReallocationStatus.Pending) return;
-    this.dialog.set({ visible: true, row });
-    this.fApprovalNote.set('');
+  openDialog(
+    record: TrainingExpenseRecoveryDto,
+    mode: DialogMode,
+    item: TrainingExpenseRecoveryItemDto | null = null,
+  ): void {
+    this.dialog.set({ visible: true, mode, record, item });
+    this.reviewNote.set('');
+    this.settlementReference.set('');
+    this.settlementNote.set('');
     this.dialogError.set(null);
   }
 
   closeDialog(): void {
-    this.dialog.set({ visible: false, row: null });
-    this.fApprovalNote.set('');
+    if (this.dialogSaving()) return;
+    this.dialog.set({ visible: false, mode: 'review', record: null, item: null });
     this.dialogError.set(null);
   }
 
-  async onConfirmApproval(): Promise<void> {
-    const row = this.dialog().row;
-    if (!row) return;
+  async submitDialog(): Promise<void> {
+    const state = this.dialog();
+    if (!state.record?.id) return;
+    if (state.mode !== 'review' && !this.settlementReference().trim()) {
+      this.dialogError.set(this.l.t('::Training.Payments.ExpenseRecovery.ReferenceRequired'));
+      return;
+    }
+
     this.dialogSaving.set(true);
     this.dialogError.set(null);
     try {
-      const dto: MarkReallocationApprovedDto = {
-        approvalNote: this.fApprovalNote() || null,
-      };
-      await firstValueFrom(this.service.markApproved(row.id, dto));
-      await this.loadRows();
+      if (state.mode === 'review') {
+        await firstValueFrom(this.service.markReviewed(state.record.id, {
+          reviewNote: this.reviewNote().trim() || null,
+        }));
+      } else if (state.mode === 'settle-item' && state.item?.id) {
+        await firstValueFrom(this.service.markItemSettled(state.record.id, state.item.id, {
+          settlementReference: this.settlementReference().trim(),
+          settlementNote: this.settlementNote().trim() || null,
+        }));
+      } else if (state.mode === 'settle-all') {
+        await firstValueFrom(this.service.markAllSettled(state.record.id, {
+          settlementReference: this.settlementReference().trim(),
+          settlementNote: this.settlementNote().trim() || null,
+        }));
+      }
+      this.dialogSaving.set(false);
       this.closeDialog();
-      this.showToast(this.l.t('::Training.Payments.Reallocation.ApprovalSuccess'), 'success');
-    } catch (err) {
-      this.dialogError.set(this.extractError(err));
-    } finally {
+      await this.reload();
+      this.showToast(this.l.t(state.mode === 'review'
+        ? '::Training.Payments.ExpenseRecovery.ReviewSuccess'
+        : '::Training.Payments.ExpenseRecovery.SettleSuccess'), 'success');
+    } catch (error) {
+      this.dialogError.set(this.extractError(error));
       this.dialogSaving.set(false);
     }
   }
 
-  // ── Form setters ──
-  updateApprovalNote(v: string): void { this.fApprovalNote.set(v ?? ''); }
+  statusKey(status: TrainingExpenseRecoveryStatus | undefined): string {
+    switch (status) {
+      case TrainingExpenseRecoveryStatus.Reviewed:
+        return '::Training.Payments.ExpenseRecovery.StatusReviewed';
+      case TrainingExpenseRecoveryStatus.PartiallySettled:
+        return '::Training.Payments.ExpenseRecovery.StatusPartiallySettled';
+      case TrainingExpenseRecoveryStatus.Settled:
+        return '::Training.Payments.ExpenseRecovery.StatusSettled';
+      default:
+        return '::Training.Payments.ExpenseRecovery.StatusPending';
+    }
+  }
+
+  statusCss(status: TrainingExpenseRecoveryStatus | undefined): string {
+    switch (status) {
+      case TrainingExpenseRecoveryStatus.Reviewed: return 'status-pill reviewed';
+      case TrainingExpenseRecoveryStatus.PartiallySettled: return 'status-pill partial';
+      case TrainingExpenseRecoveryStatus.Settled: return 'status-pill settled';
+      default: return 'status-pill pending';
+    }
+  }
+
+  statusIcon(status: TrainingExpenseRecoveryStatus | undefined): string {
+    switch (status) {
+      case TrainingExpenseRecoveryStatus.Reviewed: return 'bi bi-clipboard2-check';
+      case TrainingExpenseRecoveryStatus.PartiallySettled: return 'bi bi-pie-chart';
+      case TrainingExpenseRecoveryStatus.Settled: return 'bi bi-check2-circle';
+      default: return 'bi bi-exclamation-circle';
+    }
+  }
+
+  expenseTypeKey(typeCode: string | undefined): string {
+    switch ((typeCode ?? '').toLowerCase()) {
+      case 'ticket': return '::Training.Payments.ExpenseRecovery.Type.Ticket';
+      case 'visa': return '::Training.Payments.ExpenseRecovery.Type.Visa';
+      case 'healthinsurance': return '::Training.Payments.ExpenseRecovery.Type.HealthInsurance';
+      case 'dailyallowance': return '::Training.Payments.ExpenseRecovery.Type.DailyAllowance';
+      case 'clothingallowance': return '::Training.Payments.ExpenseRecovery.Type.ClothingAllowance';
+      default: return '::Training.Payments.ExpenseRecovery.Type.Other';
+    }
+  }
+
+  settlementDialogTitleKey(): string {
+    switch (this.dialog().mode) {
+      case 'review': return '::Training.Payments.ExpenseRecovery.ReviewDialogTitle';
+      case 'settle-item': return '::Training.Payments.ExpenseRecovery.SettleItemDialogTitle';
+      default: return '::Training.Payments.ExpenseRecovery.SettleAllDialogTitle';
+    }
+  }
+
+  dialogAmount(): number {
+    const state = this.dialog();
+    return state.mode === 'settle-item'
+      ? state.item?.remainingAmountOMR ?? state.item?.amountOMR ?? 0
+      : state.record?.remainingAmountOMR ?? state.record?.totalAmountOMR ?? 0;
+  }
+
+  formatOMR(value: number | null | undefined): string {
+    return (value ?? 0).toLocaleString('en-US', {
+      minimumFractionDigits: 3,
+      maximumFractionDigits: 3,
+    });
+  }
+
+  shortDate(value: string | null | undefined): string {
+    return (value ?? '').substring(0, 10) || '—';
+  }
+
+  updateReviewNote(event: Event): void {
+    this.reviewNote.set((event.target as HTMLTextAreaElement).value ?? '');
+  }
+
+  updateSettlementReference(event: Event): void {
+    this.settlementReference.set((event.target as HTMLInputElement).value ?? '');
+  }
+
+  updateSettlementNote(event: Event): void {
+    this.settlementNote.set((event.target as HTMLTextAreaElement).value ?? '');
+  }
+
+  private sum(records: TrainingExpenseRecoveryDto[]): number {
+    return records.reduce((total, item) => total + (item.totalAmountOMR ?? 0), 0);
+  }
 
   private showToast(text: string, kind: 'success' | 'error'): void {
-    this.toast.set({ visible: true, text, kind });
-    setTimeout(() => this.toast.set({ visible: false, text: '', kind }), 4500);
+    this.toast.set({ text, kind });
+    window.setTimeout(() => this.toast.set(null), 4000);
   }
 
-  dismissToast(): void {
-    this.toast.update(t => ({ ...t, visible: false }));
-  }
-
-  private extractError(err: unknown): string {
-    const fallback = this.l.t('::Training.Payments.GenericError');
-    if (err && typeof err === 'object') {
-      const anyErr = err as { error?: { error?: { message?: string } }; message?: string };
-      return anyErr.error?.error?.message ?? anyErr.message ?? fallback;
+  private extractError(error: unknown): string {
+    if (error && typeof error === 'object') {
+      const apiError = error as { error?: { error?: { message?: string } }; message?: string };
+      return apiError.error?.error?.message
+        ?? apiError.message
+        ?? this.l.t('::Training.Payments.Errors.Generic');
     }
-    return fallback;
+    return this.l.t('::Training.Payments.Errors.Generic');
   }
 }

@@ -4,13 +4,16 @@ import type { CourseType } from '../../enums/course-type.enum';
 
 export interface AnnualPlanProgressDto {
   year?: number;
+  availableYears?: number[];
   totalPlanItems?: number;
+  awaitingSessionCount?: number;
   plannedSessionCount?: number;
   scheduledSessionCount?: number;
   inProgressSessionCount?: number;
   completedSessionCount?: number;
   cancelledSessionCount?: number;
   overdueCount?: number;
+  attentionCount?: number;
   overallProgressPercent?: number;
   progressByQuarter?: QuarterProgressDto[];
   progressByUnit?: UnitProgressDto[];
@@ -52,6 +55,11 @@ export interface OverdueAlertDto {
   entityType?: string;
   message?: string;
   daysOverdue?: number;
+  courseNameAr?: string;
+  courseNameEn?: string;
+  courseType?: CourseType;
+  preferredQuarter?: number;
+  dueDate?: string | null;
 }
 
 export interface PlanItemQueueGetListInput extends PagedAndSortedResultRequestDto {
@@ -81,6 +89,9 @@ export interface PlanItemQueueItemDto {
 export interface QuarterProgressDto {
   quarter?: number;
   total?: number;
+  awaitingSession?: number;
+  planned?: number;
+  scheduled?: number;
   completed?: number;
   inProgress?: number;
   pending?: number;
@@ -90,5 +101,9 @@ export interface UnitProgressDto {
   unitId?: string | null;
   unitName?: string | null;
   total?: number;
+  awaitingSession?: number;
+  planned?: number;
+  scheduled?: number;
+  inProgress?: number;
   completed?: number;
 }

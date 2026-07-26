@@ -100,7 +100,8 @@ public DbSet<CasualCourseNomination>          CasualCourseNominations          {
     // Phase 4B-β additions
     public DbSet<TravelAllowancePayment> TravelAllowancePayments { get; set; }
     public DbSet<CoursePayment>          CoursePayments          { get; set; }
-    public DbSet<BudgetReallocation>     BudgetReallocations     { get; set; }
+    public DbSet<TrainingExpenseRecovery> TrainingExpenseRecoveries { get; set; }
+    public DbSet<TrainingExpenseRecoveryItem> TrainingExpenseRecoveryItems { get; set; }
 
 
 

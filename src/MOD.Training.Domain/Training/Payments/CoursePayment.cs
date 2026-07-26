@@ -8,7 +8,7 @@ namespace MOD.Training.Training.Payments;
 /// <summary>
 /// Course-level invoice for a casual course OR an annual-plan session.
 /// Polymorphic parent: exactly one of CasualCourseId / SessionId is set (DB CHECK enforces).
-/// On Confirm, casual-course payments fire the BudgetReallocationGenerator (Phase 4B-β).
+/// Course-fee invoice for annual-plan sessions and legacy casual-course records.
 /// Invoice file is stored via BlobStoring.FileSystem in the CourseInvoiceContainer.
 /// </summary>
 public class CoursePayment : FullAuditedAggregateRoot<Guid>, IMultiTenant

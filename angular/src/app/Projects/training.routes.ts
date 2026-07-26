@@ -240,7 +240,7 @@ export const TRAINING_ROUTES: Routes = [
         path: 'payments/reallocations',
         loadComponent: () =>
           import('./payments/budget-reallocations/budget-reallocations.component')
-            .then(m => m.BudgetReallocationsComponent),
+            .then(m => m.TrainingExpenseRecoveriesComponent),
       },
 
       // Phase 5 (future)

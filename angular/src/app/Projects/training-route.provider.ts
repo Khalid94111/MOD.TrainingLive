@@ -191,9 +191,9 @@ export const TRAINING_ROUTE_PROVIDER = {
       },
       {
         path: '/training/payments/reallocations',
-        name: '::Training.Menu.BudgetReallocations',
+        name: '::Training.Menu.ExpenseRecoveries',
         parentName: '::Training.Menu.Payments',
-        iconClass: 'fas fa-exchange-alt',
+        iconClass: 'fas fa-receipt',
         order: 3,
         requiredPolicy: 'TrainingPayments.Reallocations',
       },

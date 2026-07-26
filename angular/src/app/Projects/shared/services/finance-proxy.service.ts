@@ -67,7 +67,19 @@ export class TrainingBudgetService {
     return firstValueFrom(this.proxy.get(id));
   }
 
+  getYears(): Promise<number[]> {
+    return firstValueFrom(this.proxy.getYears());
+  }
+
   updateThreshold(id: string, input: UpdateAlertThresholdDto): Promise<TrainingBudgetDto> {
     return firstValueFrom(this.proxy.update(id, input));
+  }
+
+  setThreshold(
+    financialItemId: string,
+    year: number,
+    input: UpdateAlertThresholdDto,
+  ): Promise<TrainingBudgetDto> {
+    return firstValueFrom(this.proxy.setThreshold(financialItemId, year, input));
   }
 }

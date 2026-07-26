@@ -18,8 +18,7 @@ public class CasualCourseFinancialItem : FullAuditedEntity<Guid>, IMultiTenant
     public FinancialAmountSource Source { get; set; }
     public string? Notes { get; set; }
 
-    // Phase 4B-β — rank breakdown lives in CasualCourseFinancialItemRanks; navigation
-    // added so BudgetReallocationGenerator can sum subtotals via WithDetailsAsync.
+    // Rank breakdown used while estimating the course before approval.
     public ICollection<CasualCourseFinancialItemRank>? Ranks { get; set; }
 
     protected CasualCourseFinancialItem() { }

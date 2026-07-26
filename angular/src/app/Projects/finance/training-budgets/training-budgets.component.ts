@@ -1,19 +1,15 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { LocalizationPipe } from '@abp/ng.core';
+import {
+  TrainingBudgetActivityDto,
+  TrainingBudgetDto,
+} from 'src/app/proxy/training/finance/dtos';
+import { FinancialItemType } from 'src/app/proxy/training/enums/financial-item-type.enum';
 import { TrainingBudgetService } from '../../shared/services/finance-proxy.service';
 import { TrainingLocalizationHelper } from '../../shared';
-import { TrainingBudgetDto } from 'src/app/proxy/training/finance/dtos';
 
-interface BudgetCardPalette {
-  colorClass: string;
-  barGradient: string;
-  borderColor: string;
-  bgGradient: string;
-  badgeBg: string;
-  badgeColor: string;
-  spentColor: string;
-}
+type BudgetFilter = 'all' | 'attention' | 'recovery';
 
 @Component({
   selector: 'app-training-budgets',
@@ -29,130 +25,135 @@ export class TrainingBudgetsComponent implements OnInit {
   budgets = signal<TrainingBudgetDto[]>([]);
   isLoading = signal(false);
   isSaving = signal(false);
+  loadError = signal<string | null>(null);
 
-  activeBudgets = computed(() =>
-    this.budgets().filter(b => b.isFinancialItemActive)
-  );
-  visibleBudgets = computed(() =>
-    this.budgets().filter(b => b.isFinancialItemActive || (b.totalAmount ?? 0) > 0)
-  );
+  selectedYear = signal(new Date().getFullYear());
+  yearOptions = signal<number[]>([new Date().getFullYear()]);
+  searchText = signal('');
+  activeFilter = signal<BudgetFilter>('all');
+  expandedFinancialItemId = signal<string | null>(null);
 
-  // Stat counts
-  totalCount = computed(() => this.visibleBudgets().length);
-  activeCount = computed(() => this.activeBudgets().length);
-  overThresholdCount = computed(() => this.budgets().filter(b => b.isOverThreshold).length);
-
-  selectedYear = signal<number>(new Date().getFullYear());
   isThresholdDialogVisible = signal(false);
-  areBudgetCardsExpanded = signal(false);
+  editingFinancialItemId = signal<string | null>(null);
+  editingFinancialItemName = signal('');
+  thresholdValue = signal(80);
 
-  editingId: string | null = null;
-  thresholdValue = signal<number>(80);
+  filteredBudgets = computed(() => {
+    const query = this.searchText().trim().toLowerCase();
+    const filter = this.activeFilter();
 
-  yearOptions: number[] = [];
+    return this.budgets().filter(budget => {
+      const matchesSearch =
+        !query ||
+        (budget.financialItemNameAr ?? '').toLowerCase().includes(query) ||
+        (budget.financialItemNameEn ?? '').toLowerCase().includes(query) ||
+        (budget.financialItemVoteCode ?? '').toLowerCase().includes(query) ||
+        (budget.budgetCategoryNameAr ?? '').toLowerCase().includes(query);
+      if (!matchesSearch) return false;
+      if (filter === 'attention') return !!budget.isOverThreshold || !!budget.isOverBudget;
+      if (filter === 'recovery') return (budget.amountToRecoverOMR ?? 0) > 0;
+      return true;
+    });
+  });
 
-  private readonly palettes: BudgetCardPalette[] = [
-    {
-      colorClass: 'blue',
-      barGradient: 'linear-gradient(90deg, #3b82f6, #2563eb)',
-      borderColor: '#bfdbfe',
-      bgGradient: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
-      badgeBg: '#bfdbfe',
-      badgeColor: '#1e40af',
-      spentColor: '#2563eb',
-    },
-    {
-      colorClass: 'green',
-      barGradient: 'linear-gradient(90deg, #22c55e, #16a34a)',
-      borderColor: '#bbf7d0',
-      bgGradient: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
-      badgeBg: '#bbf7d0',
-      badgeColor: '#15803d',
-      spentColor: '#16a34a',
-    },
-    {
-      colorClass: 'purple',
-      barGradient: 'linear-gradient(90deg, #a855f7, #9333ea)',
-      borderColor: '#e9d5ff',
-      bgGradient: 'linear-gradient(135deg, #faf5ff, #f3e8ff)',
-      badgeBg: '#e9d5ff',
-      badgeColor: '#7e22ce',
-      spentColor: '#9333ea',
-    },
-    {
-      colorClass: 'red',
-      barGradient: 'linear-gradient(90deg, #ef4444, #dc2626)',
-      borderColor: '#fecaca',
-      bgGradient: 'linear-gradient(135deg, #fef2f2, #fee2e2)',
-      badgeBg: '#fecaca',
-      badgeColor: '#b91c1c',
-      spentColor: '#dc2626',
-    },
-    {
-      colorClass: 'amber',
-      barGradient: 'linear-gradient(90deg, #f59e0b, #d97706)',
-      borderColor: '#fde68a',
-      bgGradient: 'linear-gradient(135deg, #fffbeb, #fef3c7)',
-      badgeBg: '#fde68a',
-      badgeColor: '#b45309',
-      spentColor: '#d97706',
-    },
-    {
-      colorClass: 'teal',
-      barGradient: 'linear-gradient(90deg, #14b8a6, #0d9488)',
-      borderColor: '#99f6e4',
-      bgGradient: 'linear-gradient(135deg, #f0fdfa, #ccfbf1)',
-      badgeBg: '#99f6e4',
-      badgeColor: '#0f766e',
-      spentColor: '#0d9488',
-    },
-  ];
+  totalAllocated = computed(() =>
+    this.budgets().reduce((sum, item) => sum + (item.allocatedAmountOMR ?? 0), 0),
+  );
+  totalGrossSpent = computed(() =>
+    this.budgets().reduce((sum, item) => sum + (item.grossSpentAmountOMR ?? 0), 0),
+  );
+  totalRecovered = computed(() =>
+    this.budgets().reduce((sum, item) => sum + (item.recoveredAmountOMR ?? 0), 0),
+  );
+  totalPendingRecovery = computed(() =>
+    this.budgets().reduce((sum, item) => sum + (item.amountToRecoverOMR ?? 0), 0),
+  );
+  totalNetSpent = computed(() =>
+    this.budgets().reduce((sum, item) => sum + (item.netSpentAmountOMR ?? 0), 0),
+  );
+  totalRemaining = computed(() =>
+    this.budgets().reduce((sum, item) => sum + (item.remaining ?? 0), 0),
+  );
+  attentionCount = computed(() =>
+    this.budgets().filter(item => item.isOverThreshold || item.isOverBudget).length,
+  );
 
   async ngOnInit(): Promise<void> {
-    const currentYear = new Date().getFullYear();
-    this.yearOptions = [currentYear + 1, currentYear, currentYear - 1, currentYear - 2];
+    await this.loadYears();
     await this.loadData();
+  }
+
+  private async loadYears(): Promise<void> {
+    try {
+      const years = await this.service.getYears();
+      const current = new Date().getFullYear();
+      const available = [...new Set([current, ...(years ?? [])])].sort((a, b) => b - a);
+      this.yearOptions.set(available);
+      if (!available.includes(this.selectedYear())) {
+        this.selectedYear.set(available[0] ?? current);
+      }
+    } catch {
+      // The current year remains usable if the year lookup is temporarily unavailable.
+    }
   }
 
   async loadData(): Promise<void> {
     this.isLoading.set(true);
+    this.loadError.set(null);
     try {
       const result = await this.service.getList({
         year: this.selectedYear(),
-        maxResultCount: 100,
+        maxResultCount: 500,
         skipCount: 0,
         sorting: '',
       });
       this.budgets.set(result.items ?? []);
+      this.expandedFinancialItemId.set(null);
+    } catch {
+      this.loadError.set(this.l.t('::Training.TrainingBudgets.LoadError'));
     } finally {
       this.isLoading.set(false);
     }
   }
 
-  paletteFor(index: number): BudgetCardPalette {
-    return this.palettes[index % this.palettes.length];
-  }
-
-  onYearChange(year: number): void {
+  async onYearChange(year: number): Promise<void> {
     this.selectedYear.set(year);
-    this.loadData();
+    await this.loadData();
   }
 
-  toggleBudgetCards(): void {
-    this.areBudgetCardsExpanded.update(v => !v);
+  setFilter(filter: BudgetFilter): void {
+    this.activeFilter.set(filter);
+  }
+
+  onSearchInput(event: Event): void {
+    this.searchText.set((event.target as HTMLInputElement).value);
+  }
+
+  toggleDetails(financialItemId?: string): void {
+    if (!financialItemId) return;
+    this.expandedFinancialItemId.update(current =>
+      current === financialItemId ? null : financialItemId,
+    );
+  }
+
+  isExpanded(financialItemId?: string): boolean {
+    return !!financialItemId && this.expandedFinancialItemId() === financialItemId;
   }
 
   onEditThreshold(item: TrainingBudgetDto): void {
-    this.editingId = item.id ?? null;
+    this.editingFinancialItemId.set(item.financialItemId ?? null);
+    this.editingFinancialItemName.set(item.financialItemNameAr ?? '');
     this.thresholdValue.set(item.alertThreshold ?? 80);
     this.isThresholdDialogVisible.set(true);
   }
 
   async onSaveThreshold(): Promise<void> {
-    if (!this.editingId || this.isSaving()) return;
+    const financialItemId = this.editingFinancialItemId();
+    if (!financialItemId || this.isSaving()) return;
+
     this.isSaving.set(true);
     try {
-      await this.service.updateThreshold(this.editingId, {
+      await this.service.setThreshold(financialItemId, this.selectedYear(), {
         alertThreshold: this.thresholdValue(),
       });
       this.isThresholdDialogVisible.set(false);
@@ -162,10 +163,85 @@ export class TrainingBudgetsComponent implements OnInit {
     }
   }
 
-  formatCurrency(amount: number): string {
-    return amount.toLocaleString('en-US', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+  progressWidth(item: TrainingBudgetDto): number {
+    return Math.min(100, Math.max(0, item.spentPercent ?? 0));
+  }
+
+  formatCurrency(amount?: number | null): string {
+    return (amount ?? 0).toLocaleString('en-US', {
+      minimumFractionDigits: 3,
+      maximumFractionDigits: 3,
     });
+  }
+
+  formatDate(value?: string | null): string {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    return date.toLocaleDateString('en-GB');
+  }
+
+  itemTypeLabel(type?: FinancialItemType | null): string {
+    switch (type) {
+      case FinancialItemType.CourseCost:
+        return this.l.t('::Training.FinancialItems.ItemType.CourseCost');
+      case FinancialItemType.Ticket:
+        return this.l.t('::Training.FinancialItems.ItemType.Ticket');
+      case FinancialItemType.Insurance:
+        return this.l.t('::Training.FinancialItems.ItemType.Insurance');
+      case FinancialItemType.Visa:
+        return this.l.t('::Training.FinancialItems.ItemType.Visa');
+      case FinancialItemType.Allowance:
+        return this.l.t('::Training.FinancialItems.ItemType.Allowance');
+      case FinancialItemType.Clothing:
+        return this.l.t('::Training.FinancialItems.ItemType.Clothing');
+      default:
+        return this.l.t('::Training.FinancialItems.ItemType.Other');
+    }
+  }
+
+  activityLabel(activity: TrainingBudgetActivityDto): string {
+    switch (activity.activityType) {
+      case 'AnnualPlanAllocation':
+        return this.l.t('::Training.TrainingBudgets.Activity.AnnualPlanAllocation');
+      case 'CoursePayment':
+        return this.l.t('::Training.TrainingBudgets.Activity.CoursePayment');
+      case 'TravelPayment':
+        return this.l.t('::Training.TrainingBudgets.Activity.TravelPayment');
+      case 'CasualTravelExpense':
+        return this.l.t('::Training.TrainingBudgets.Activity.CasualTravelExpense');
+      default:
+        return activity.activityType || '—';
+    }
+  }
+
+  activityClass(activity: TrainingBudgetActivityDto): string {
+    switch (activity.activityType) {
+      case 'AnnualPlanAllocation': return 'allocation';
+      case 'CasualTravelExpense': return 'casual';
+      default: return 'spending';
+    }
+  }
+
+  activityStatusLabel(activity: TrainingBudgetActivityDto): string {
+    if (activity.statusCode === 'Settled') {
+      return this.l.t('::Training.TrainingBudgets.Activity.Settled');
+    }
+    if (activity.statusCode === 'PendingRecovery') {
+      return this.l.t('::Training.TrainingBudgets.Activity.PendingRecovery');
+    }
+    return this.l.t('::Training.TrainingBudgets.Activity.Confirmed');
+  }
+
+  textWithCount(key: string, count: number): string {
+    return this.l.t(key, count);
+  }
+
+  trackBudget(_: number, item: TrainingBudgetDto): string {
+    return item.financialItemId ?? '';
+  }
+
+  trackActivity(index: number, item: TrainingBudgetActivityDto): string {
+    return `${item.activityType}-${item.sourceId}-${index}`;
   }
 }
